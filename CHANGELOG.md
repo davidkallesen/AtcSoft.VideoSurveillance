@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/davidkallesen/Linksoft.VideoSurveillance/compare/v1.1.0...v1.1.1) (2026-09-17)
+
+
+### Bug fixes
+
+* **ci:** point the FFmpeg download at a URL that still exists ([d4bfaef](https://github.com/davidkallesen/Linksoft.VideoSurveillance/commit/d4bfaefbcf0817dc324e1c8a2615603e756b3c4b))
+
 ## [1.1.0](https://github.com/davidkallesen/Linksoft.VideoSurveillance/compare/v1.0.11...v1.1.0) (2026-09-17)
 
 
