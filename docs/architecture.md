@@ -283,7 +283,7 @@ sequenceDiagram
 | Theming | Atc.Wpf.Theming |
 | Logging | Serilog (console + file sink) |
 | Testing | xUnit v3, AutoFixture, FluentAssertions, NSubstitute |
-| Versioning | Nerdbank.GitVersioning |
+| Versioning | release-please (Conventional Commits) |
 | Code Analysis | StyleCop, Meziantou, SonarAnalyzer, SecurityCodeScan |
 | Installer | WiX Toolset v5 |
 
