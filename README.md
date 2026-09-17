@@ -97,7 +97,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 | Framework | .NET 10.0 / .NET 10.0-windows |
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Server | ASP.NET Core, SignalR |
-| API Definition | OpenAPI 3.0 (atc-rest-api-source-generator) |
+| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator) |
 | Video Engine | Linksoft.VideoEngine (desktop + server, in-process FFmpeg) |
 | Orchestration | .NET Aspire |
 | MVVM | Atc.XamlToolkit |
@@ -121,7 +121,7 @@ Linksoft.VideoSurveillance/
 │   ├── Linksoft.CameraWall.Wpf.App/            # 🚀 Standalone WPF desktop app (Fluent.Ribbon)
 │   ├── Linksoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, SignalR)
 │   ├── Linksoft.VideoSurveillance.Wpf.App/     # 🚀 WPF API client app (Fluent.Ribbon)
-│   ├── VideoSurveillance.yaml                  # 📝 OpenAPI 3.0 spec (shared contract)
+│   ├── VideoSurveillance.yaml                  # 📝 OpenAPI 3.2 spec (shared contract)
 │   ├── Linksoft.VideoSurveillance.Api.Contracts/ # 📋 Generated: endpoints, models, handler interfaces
 │   ├── Linksoft.VideoSurveillance.Api.Domain/  # ⚙️ Handler implementations calling Core services
 │   ├── Linksoft.VideoSurveillance.Api/         # 🌍 ASP.NET Core host with SignalR hub

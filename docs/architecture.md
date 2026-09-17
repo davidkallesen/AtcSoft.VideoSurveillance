@@ -161,7 +161,7 @@ graph LR
 
 ```mermaid
 graph LR
-    YAML["VideoSurveillance.yaml<br/><i>OpenAPI 3.0 Spec</i>"]
+    YAML["VideoSurveillance.yaml<br/><i>OpenAPI 3.2 Spec</i>"]
 
     subgraph ServerSide["Server-Side Generation"]
         Contracts["Api.Contracts<br/><i>DTOs, Handler Interfaces</i>"]
@@ -273,7 +273,7 @@ sequenceDiagram
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Web UI | Blazor WebAssembly with MudBlazor |
 | Server | ASP.NET Core, SignalR |
-| API Definition | OpenAPI 3.0 (atc-rest-api-source-generator) |
+| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator) |
 | Video Engine | Linksoft.VideoEngine (in-process FFmpeg via Flyleaf.FFmpeg.Bindings) |
 | GPU Acceleration | Direct3D 11 (D3D11VA) via Vortice bindings |
 | Rendering | DirectComposition swap chain |
