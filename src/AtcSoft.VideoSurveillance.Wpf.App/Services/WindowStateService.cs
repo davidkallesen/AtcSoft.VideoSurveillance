@@ -8,7 +8,7 @@ public sealed class WindowStateService : JsonFileServiceBase<WindowStateData>
 {
     private static readonly string StateFilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Linksoft",
+        "AtcSoft",
         "VideoSurveillance",
         "window-state.json");
 

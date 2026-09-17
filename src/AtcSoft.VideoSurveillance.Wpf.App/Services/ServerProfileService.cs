@@ -8,7 +8,7 @@ public sealed class ServerProfileService : JsonFileServiceBase<ServerProfileData
 {
     private static readonly string ProfilesFilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Linksoft",
+        "AtcSoft",
         "VideoSurveillance",
         "servers.json");
 

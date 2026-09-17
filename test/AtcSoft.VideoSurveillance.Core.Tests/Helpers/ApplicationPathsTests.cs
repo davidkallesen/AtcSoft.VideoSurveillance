@@ -14,11 +14,20 @@ public class ApplicationPathsTests
     }
 
     [Fact]
-    public void DefaultPaths_Contain_Linksoft_Folder()
+    public void DefaultPaths_Contain_AtcSoft_Folder()
     {
         // Assert
-        ApplicationPaths.DefaultLogsPath.Should().Contain("Linksoft");
-        ApplicationPaths.DefaultSnapshotsPath.Should().Contain("Linksoft");
-        ApplicationPaths.DefaultRecordingsPath.Should().Contain("Linksoft");
+        ApplicationPaths.DefaultLogsPath.Should().Contain("AtcSoft");
+        ApplicationPaths.DefaultSnapshotsPath.Should().Contain("AtcSoft");
+        ApplicationPaths.DefaultRecordingsPath.Should().Contain("AtcSoft");
+    }
+
+    [Fact]
+    public void DefaultPaths_Do_Not_Contain_The_Pre_Rename_Folder()
+    {
+        // Assert
+        ApplicationPaths.DefaultLogsPath.Should().NotContain("Linksoft");
+        ApplicationPaths.DefaultSnapshotsPath.Should().NotContain("Linksoft");
+        ApplicationPaths.DefaultRecordingsPath.Should().NotContain("Linksoft");
     }
 }

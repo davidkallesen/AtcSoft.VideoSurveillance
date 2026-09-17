@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup Label="Metadata configuration">
-    <OrganizationName>Linksoft</OrganizationName>
+    <OrganizationName>AtcSoft</OrganizationName>
     <RepositoryName>AtcSoft.VideoSurveillance</RepositoryName>
   </PropertyGroup>
 

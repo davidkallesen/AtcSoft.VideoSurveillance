@@ -12,6 +12,13 @@ public sealed partial class AutoStartService : IAutoStartService
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "AtcSoft.VideoSurveillance.Wpf.App";
 
+    /// <summary>
+    /// The Run value name used before the Linksoft to AtcSoft rename. Removed
+    /// on sight so an upgraded install does not keep a startup entry pointing
+    /// at an executable that no longer exists.
+    /// </summary>
+    private const string LegacyValueName = "Linksoft.VideoSurveillance.Wpf.App";
+
     private readonly ILogger<AutoStartService> logger;
 
     public AutoStartService(ILogger<AutoStartService> logger)
@@ -50,6 +57,8 @@ public sealed partial class AutoStartService : IAutoStartService
         {
             using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath, writable: true);
 
+            key.DeleteValue(LegacyValueName, throwOnMissingValue: false);
+
             // Quote the path so spaces in the install location don't split
             // the command line.
             key.SetValue(ValueName, $"\"{exePath}\"");
@@ -66,6 +75,7 @@ public sealed partial class AutoStartService : IAutoStartService
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+            key?.DeleteValue(LegacyValueName, throwOnMissingValue: false);
             key?.DeleteValue(ValueName, throwOnMissingValue: false);
             LogAutoStartDisabled();
         }
