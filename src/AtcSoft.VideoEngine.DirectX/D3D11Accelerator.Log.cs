@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 public sealed partial class D3D11Accelerator
 {

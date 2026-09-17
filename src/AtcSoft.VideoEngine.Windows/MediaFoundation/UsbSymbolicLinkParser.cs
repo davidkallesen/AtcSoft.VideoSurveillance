@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.MediaFoundation;
+namespace AtcSoft.VideoEngine.Windows.MediaFoundation;
 
 /// <summary>
 /// Extracts vendor-id / product-id from a Windows USB symbolic link

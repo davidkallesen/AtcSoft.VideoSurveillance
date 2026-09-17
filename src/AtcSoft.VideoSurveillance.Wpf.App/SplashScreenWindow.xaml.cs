@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App;
+namespace AtcSoft.VideoSurveillance.Wpf.App;
 
 /// <summary>
 /// Splash screen window displayed during application startup.

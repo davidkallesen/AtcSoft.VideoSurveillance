@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 
 public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
 {

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Dialogs;
 
 /// <summary>
 /// View model for the server profile add/edit dialog.

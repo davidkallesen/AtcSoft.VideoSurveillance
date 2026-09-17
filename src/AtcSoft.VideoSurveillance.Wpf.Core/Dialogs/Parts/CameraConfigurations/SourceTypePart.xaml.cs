@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
 
 /// <summary>
 /// Source-type radio (Network / USB) shown at the top of the camera

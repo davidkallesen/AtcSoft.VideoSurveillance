@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Helpers;
+namespace AtcSoft.VideoEngine.Helpers;
 
 /// <summary>
 /// Strips credentials from a URI string for safe logging. RTSP camera

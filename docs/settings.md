@@ -1,4 +1,4 @@
-# ⚙️ Linksoft.VideoSurveillance Settings Reference
+# ⚙️ AtcSoft.VideoSurveillance Settings Reference
 
 Complete reference for all application settings and parameters. Settings are stored as JSON in `%ProgramData%\Linksoft\CameraWall\settings.json` and are shared between the WPF desktop app and the REST API server.
 
@@ -253,7 +253,7 @@ In addition to the override system, each camera has its own direct configuration
 | `Path` | string | `null` | Network camera only — optional stream path (e.g., `/stream`) |
 | `Usb` | object | `null` | USB camera only — see [USB Connection Settings](#usb-connection-settings-per-camera) |
 
-Network and USB shapes are mutually exclusive. The unused branch's fields are ignored at runtime. The `Linksoft.VideoSurveillance.Wpf.Core` dialog (`CameraConfigurationDialog`) presents `Source` as a radio at the top; the IP/Port/Auth fields and the USB device picker swap into view based on the selection.
+Network and USB shapes are mutually exclusive. The unused branch's fields are ignored at runtime. The `AtcSoft.VideoSurveillance.Wpf.Core` dialog (`CameraConfigurationDialog`) presents `Source` as a radio at the top; the IP/Port/Auth fields and the USB device picker swap into view based on the selection.
 
 #### Camera Source Options
 

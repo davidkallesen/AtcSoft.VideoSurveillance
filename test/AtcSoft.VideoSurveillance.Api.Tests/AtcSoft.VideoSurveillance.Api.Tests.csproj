@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Linksoft.VideoSurveillance.Api</RootNamespace>
+    <RootNamespace>AtcSoft.VideoSurveillance.Api</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Linksoft.VideoSurveillance.Api.Domain\Linksoft.VideoSurveillance.Api.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Api.Domain\AtcSoft.VideoSurveillance.Api.Domain.csproj" />
   </ItemGroup>
 
 </Project>

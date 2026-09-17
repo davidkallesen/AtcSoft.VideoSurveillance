@@ -1,6 +1,6 @@
-using CoreModels = Linksoft.VideoSurveillance.Models;
+using CoreModels = AtcSoft.VideoSurveillance.Models;
 
-namespace Linksoft.VideoSurveillance.Wpf.Core.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
 /// <summary>
 /// Wraps <see cref="CoreModels.CameraConfiguration"/> with change notification for WPF binding.
@@ -178,8 +178,8 @@ public partial class CameraConfiguration : ObservableObject
     /// USB cameras. Prefer this over <see cref="BuildUri"/> in new
     /// code.
     /// </summary>
-    public Linksoft.VideoSurveillance.Helpers.SourceLocator BuildSourceLocator()
-        => Linksoft.VideoSurveillance.Helpers.CameraUriHelper.BuildSourceLocator(Core);
+    public AtcSoft.VideoSurveillance.Helpers.SourceLocator BuildSourceLocator()
+        => AtcSoft.VideoSurveillance.Helpers.CameraUriHelper.BuildSourceLocator(Core);
 
     /// <summary>
     /// Returns the display name of the camera.

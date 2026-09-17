@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Factories;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Factories;
 
 /// <summary>
 /// Factory for creating common dropdown/combobox items used across dialogs.

@@ -27,19 +27,19 @@ global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;
 
-global using Linksoft.VideoEngine;
-global using Linksoft.VideoEngine.DirectX;
+global using AtcSoft.VideoEngine;
+global using AtcSoft.VideoEngine.DirectX;
 
-global using Linksoft.VideoSurveillance.Services;
-global using Linksoft.VideoSurveillance.Wpf.App.Models;
-global using Linksoft.VideoSurveillance.Wpf.App.Services;
-global using Linksoft.VideoSurveillance.Wpf.Core;
-global using Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
-global using Linksoft.VideoSurveillance.Wpf.Core.Resources;
-global using Linksoft.VideoSurveillance.Wpf.Core.Services;
-global using Linksoft.VideoSurveillance.Wpf.Models;
-global using Linksoft.VideoSurveillance.Wpf.Services;
-global using Linksoft.VideoSurveillance.Wpf.ViewModels;
+global using AtcSoft.VideoSurveillance.Services;
+global using AtcSoft.VideoSurveillance.Wpf.App.Models;
+global using AtcSoft.VideoSurveillance.Wpf.App.Services;
+global using AtcSoft.VideoSurveillance.Wpf.Core;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Resources;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
+global using AtcSoft.VideoSurveillance.Wpf.Models;
+global using AtcSoft.VideoSurveillance.Wpf.Services;
+global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
@@ -53,5 +53,5 @@ global using Serilog.Events;
 global using VideoSurveillance.Generated;
 global using VideoSurveillance.Generated.Cameras.Models;
 
-global using ApplicationHelper = Linksoft.VideoSurveillance.Helpers.ApplicationHelper;
-global using IApplicationSettingsService = Linksoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
+global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
+global using IApplicationSettingsService = AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;

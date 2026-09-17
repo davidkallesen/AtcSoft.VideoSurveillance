@@ -3,7 +3,7 @@
 var advancedSettings = LoadAdvancedSettingsForLogging();
 
 // Drop framework Debug noise (Kestrel connection lifecycle, SignalR protocol
-// negotiation, request matching, static file middleware) but keep Linksoft.*
+// negotiation, request matching, static file middleware) but keep AtcSoft.*
 // at Debug and keep Microsoft.* Information+ events (request finished,
 // hosting lifetime, etc) for ops visibility.
 var loggerConfig = new LoggerConfiguration()
@@ -71,7 +71,7 @@ try
     builder.Services.AddSingleton<IUsbCameraWatcher, NullUsbCameraWatcher>();
     if (OperatingSystem.IsWindows())
     {
-        Linksoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+        AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
             .AddWindowsUsbCameraSupport(builder.Services);
     }
 

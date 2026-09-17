@@ -3,8 +3,8 @@ global using System.Globalization;
 global using System.Threading;
 global using System.Threading.Tasks;
 
-global using Linksoft.VideoSurveillance.Api.Domain.Mapping;
-global using Linksoft.VideoSurveillance.Services;
+global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Services;
 
 global using VideoSurveillance.Generated.Cameras.Handlers;
 global using VideoSurveillance.Generated.Cameras.Models;

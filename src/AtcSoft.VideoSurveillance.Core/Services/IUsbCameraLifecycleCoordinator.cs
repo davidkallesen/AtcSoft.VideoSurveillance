@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// Owns the <see cref="IUsbCameraWatcher"/> subscription on behalf of

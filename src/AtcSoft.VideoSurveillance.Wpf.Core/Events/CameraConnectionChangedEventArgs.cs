@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Events;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Events;
 
 /// <summary>
 /// Event arguments for camera connection state changes.

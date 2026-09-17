@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// View model for the layout list view with full CRUD and apply operations.

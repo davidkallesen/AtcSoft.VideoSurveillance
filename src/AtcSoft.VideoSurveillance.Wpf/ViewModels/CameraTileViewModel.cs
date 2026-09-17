@@ -1,6 +1,6 @@
 using ConnectionState = Atc.Network.ConnectionState;
 
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// Per-camera view model for a single tile in the live view grid.
@@ -31,7 +31,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// Symbolic-link / device-id of the underlying USB device when this
     /// tile is bound to a USB camera. Empty for network cameras. Used
     /// by <see cref="LiveViewViewModel"/> to match
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
     /// events back to the right tile.
     /// </summary>
     [ObservableProperty(DependentPropertyNames = [nameof(IsUsbSource)])]

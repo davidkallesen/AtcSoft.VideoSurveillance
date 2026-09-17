@@ -1,8 +1,8 @@
 using ConnectionState = Atc.Network.ConnectionState;
-using IUsbCameraWatcher = Linksoft.VideoSurveillance.Services.IUsbCameraWatcher;
-using UsbCameraEventArgs = Linksoft.VideoSurveillance.Events.UsbCameraEventArgs;
+using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;
+using UsbCameraEventArgs = AtcSoft.VideoSurveillance.Events.UsbCameraEventArgs;
 
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// View model for the live camera grid view.

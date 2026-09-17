@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Linksoft.VideoEngine.Windows\Linksoft.VideoEngine.Windows.csproj" />
+    <ProjectReference Include="..\..\src\AtcSoft.VideoEngine.Windows\AtcSoft.VideoEngine.Windows.csproj" />
   </ItemGroup>
 
 </Project>

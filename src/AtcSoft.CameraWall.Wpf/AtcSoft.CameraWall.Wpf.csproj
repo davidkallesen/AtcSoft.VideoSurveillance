@@ -11,8 +11,8 @@
 
   <PropertyGroup Label="NuGet Package Metadata">
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Wpf.Core\Linksoft.VideoSurveillance.Wpf.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Wpf.Core\AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

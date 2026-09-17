@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// Adapts the API Recording model for display in the recordings browser.

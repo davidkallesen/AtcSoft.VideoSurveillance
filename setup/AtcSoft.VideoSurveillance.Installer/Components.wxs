@@ -9,7 +9,7 @@
       <Shortcut Id="ApplicationStartMenuShortcut"
                 Name="Linksoft Video Surveillance"
                 Description="Video Surveillance application for monitoring multiple camera streams"
-                Target="[INSTALLFOLDER]Linksoft.VideoSurveillance.Wpf.App.exe"
+                Target="[INSTALLFOLDER]AtcSoft.VideoSurveillance.Wpf.App.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="VideoSurveillanceIcon" />
       <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall" />
@@ -21,7 +21,7 @@
       <Shortcut Id="DesktopShortcutLink"
                 Name="Linksoft Video Surveillance"
                 Description="Video Surveillance application for monitoring multiple camera streams"
-                Target="[INSTALLFOLDER]Linksoft.VideoSurveillance.Wpf.App.exe"
+                Target="[INSTALLFOLDER]AtcSoft.VideoSurveillance.Wpf.App.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="VideoSurveillanceIcon" />
       <RegistryValue Root="HKCU" Key="Software\Linksoft\VideoSurveillance" Name="desktopshortcut" Type="integer" Value="1" KeyPath="yes" />

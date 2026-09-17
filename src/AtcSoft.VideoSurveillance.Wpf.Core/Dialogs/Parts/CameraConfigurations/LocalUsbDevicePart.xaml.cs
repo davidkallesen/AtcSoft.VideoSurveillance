@@ -1,5 +1,5 @@
 // ReSharper disable InvertIf
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
 
 /// <summary>
 /// Standalone-mode (local hardware) USB picker shown when

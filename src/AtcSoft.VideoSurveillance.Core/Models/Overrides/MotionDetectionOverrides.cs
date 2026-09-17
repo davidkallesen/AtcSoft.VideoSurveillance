@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models.Overrides;
+namespace AtcSoft.VideoSurveillance.Models.Overrides;
 
 /// <summary>
 /// Per-camera motion detection setting overrides.

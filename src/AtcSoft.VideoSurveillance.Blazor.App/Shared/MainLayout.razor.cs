@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Blazor.App.Shared;
+namespace AtcSoft.VideoSurveillance.Blazor.App.Shared;
 
 public partial class MainLayout
 {

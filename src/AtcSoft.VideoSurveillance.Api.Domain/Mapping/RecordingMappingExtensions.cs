@@ -1,6 +1,6 @@
-using CoreRecordingEntry = Linksoft.VideoSurveillance.Models.RecordingEntry;
+using CoreRecordingEntry = AtcSoft.VideoSurveillance.Models.RecordingEntry;
 
-namespace Linksoft.VideoSurveillance.Api.Domain.Mapping;
+namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 
 internal static class RecordingMappingExtensions
 {

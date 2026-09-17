@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Helpers;
+namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// Computes capped exponential backoff delays for reconnect attempts to

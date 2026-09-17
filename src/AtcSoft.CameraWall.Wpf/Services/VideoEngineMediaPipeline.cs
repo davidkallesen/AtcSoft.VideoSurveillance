@@ -1,8 +1,8 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
-using CoreConnectionState = Linksoft.VideoSurveillance.Enums.ConnectionState;
-using CoreConnectionStateChangedEventArgs = Linksoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs;
-using CoreStreamSettings = Linksoft.VideoSurveillance.Models.Settings.StreamSettings;
+using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
+using CoreConnectionStateChangedEventArgs = AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs;
+using CoreStreamSettings = AtcSoft.VideoSurveillance.Models.Settings.StreamSettings;
 
 /// <summary>
 /// VideoEngine-based implementation of <see cref="IMediaPipeline"/>.
@@ -47,7 +47,7 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
 
     /// <inheritdoc />
     public void Open(
-        Linksoft.VideoSurveillance.Helpers.SourceLocator locator,
+        AtcSoft.VideoSurveillance.Helpers.SourceLocator locator,
         CoreStreamSettings settings)
     {
         ArgumentNullException.ThrowIfNull(locator);

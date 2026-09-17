@@ -1,4 +1,4 @@
-namespace Linksoft.VideoPlayer.Wpf;
+namespace AtcSoft.VideoPlayer.Wpf;
 
 /// <summary>
 /// WPF control that presents a <see cref="IVideoPlayer"/>'s GPU-decoded video

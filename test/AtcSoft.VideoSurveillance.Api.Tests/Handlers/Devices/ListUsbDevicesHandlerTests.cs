@@ -1,7 +1,7 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Devices;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Devices;
 
 using ApiUsbDeviceDescriptor = global::VideoSurveillance.Generated.Devices.Models.UsbDeviceDescriptor;
-using CoreUsbDeviceDescriptor = global::Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using CoreUsbDeviceDescriptor = global::AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 public class ListUsbDevicesHandlerTests
 {

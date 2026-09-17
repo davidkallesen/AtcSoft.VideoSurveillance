@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Options;
+namespace AtcSoft.CameraWall.Wpf.Options;
 
 /// <summary>
 /// Configuration options for the camera wall library.

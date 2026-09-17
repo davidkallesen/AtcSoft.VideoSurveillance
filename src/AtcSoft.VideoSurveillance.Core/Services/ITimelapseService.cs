@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// Service for managing timelapse capture sessions.

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.MediaFoundation;
+namespace AtcSoft.VideoEngine.Windows.MediaFoundation;
 
 /// <summary>
 /// <see cref="IUsbCameraEnumerator"/> backed by Media Foundation's

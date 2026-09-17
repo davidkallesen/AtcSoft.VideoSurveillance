@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Mapping;
+namespace AtcSoft.VideoSurveillance.Api.Mapping;
 
 public class LayoutMappingExtensionsTests
 {

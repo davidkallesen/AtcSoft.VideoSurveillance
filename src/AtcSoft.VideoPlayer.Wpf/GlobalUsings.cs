@@ -6,5 +6,5 @@ global using System.Windows.Controls;
 global using System.Windows.Interop;
 global using System.Windows.Media;
 
-global using Linksoft.VideoEngine;
-global using Linksoft.VideoEngine.DirectX;
+global using AtcSoft.VideoEngine;
+global using AtcSoft.VideoEngine.DirectX;

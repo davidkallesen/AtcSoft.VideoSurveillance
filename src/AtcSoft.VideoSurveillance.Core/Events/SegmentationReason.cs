@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Events;
+namespace AtcSoft.VideoSurveillance.Events;
 
 /// <summary>
 /// Reasons for recording segmentation.

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Decoding;
+namespace AtcSoft.VideoEngine.Decoding;
 
 /// <summary>
 /// Wraps FFmpeg video decoding with optional D3D11VA hardware acceleration.

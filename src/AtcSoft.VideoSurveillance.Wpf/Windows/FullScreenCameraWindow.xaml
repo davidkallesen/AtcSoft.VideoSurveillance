@@ -1,12 +1,12 @@
 <Window
-    x:Class="Linksoft.VideoSurveillance.Wpf.Windows.FullScreenCameraWindow"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.Windows.FullScreenCameraWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:lve="clr-namespace:Linksoft.VideoPlayer.Wpf;assembly=Linksoft.VideoPlayer.Wpf"
+    xmlns:lve="clr-namespace:AtcSoft.VideoPlayer.Wpf;assembly=AtcSoft.VideoPlayer.Wpf"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:coreControls="clr-namespace:Linksoft.VideoSurveillance.Wpf.Core.UserControls;assembly=Linksoft.VideoSurveillance.Wpf.Core"
-    xmlns:windows="clr-namespace:Linksoft.VideoSurveillance.Wpf.Windows"
+    xmlns:coreControls="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.UserControls;assembly=AtcSoft.VideoSurveillance.Wpf.Core"
+    xmlns:windows="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Windows"
     Title="{Binding Path=CameraName}"
     d:DataContext="{d:DesignInstance Type=windows:FullScreenCameraWindowViewModel,
                                      IsDesignTimeCreatable=False}"
@@ -20,7 +20,7 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <ResourceDictionary Source="/Linksoft.VideoSurveillance.Wpf.Core;component/Themes/FullScreenStyles.xaml" />
+        <ResourceDictionary Source="/AtcSoft.VideoSurveillance.Wpf.Core;component/Themes/FullScreenStyles.xaml" />
     </Window.Resources>
 
     <!--  ReSharper disable Xaml.BindingWithContextNotResolved  -->

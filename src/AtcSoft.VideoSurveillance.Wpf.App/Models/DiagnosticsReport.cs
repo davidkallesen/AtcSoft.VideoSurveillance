@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Models;
 
 /// <summary>
 /// Snapshot of client-side diagnostic info — what the user sees from

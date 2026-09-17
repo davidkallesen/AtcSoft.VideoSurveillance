@@ -4,12 +4,12 @@ using ApiCameraProtocol = VideoSurveillance.Generated.Cameras.Models.CameraProto
 using ApiCameraSource = VideoSurveillance.Generated.Cameras.Models.CameraSource;
 using ApiCameraStreamRtspTransport = VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport;
 
-using CoreCameraProtocol = Linksoft.VideoSurveillance.Enums.CameraProtocol;
-using CoreOverlayPosition = Linksoft.VideoSurveillance.Enums.OverlayPosition;
+using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
+using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
 
-using WpfCoreModels = Linksoft.VideoSurveillance.Wpf.Core.Models;
+using WpfCoreModels = AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
-namespace Linksoft.VideoSurveillance.Wpf.Extensions;
+namespace AtcSoft.VideoSurveillance.Wpf.Extensions;
 
 /// <summary>
 /// Extension methods for mapping between API camera models and Wpf.Core CameraConfiguration models.

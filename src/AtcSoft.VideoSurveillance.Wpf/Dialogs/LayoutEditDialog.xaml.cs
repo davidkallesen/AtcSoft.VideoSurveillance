@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Dialogs;
 
 /// <summary>
 /// Interaction logic for LayoutEditDialog.

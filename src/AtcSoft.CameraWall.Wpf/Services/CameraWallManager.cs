@@ -1,5 +1,5 @@
 // ReSharper disable RedundantArgumentDefaultValue
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 /// <summary>
 /// Default implementation of <see cref="ICameraWallManager"/>.

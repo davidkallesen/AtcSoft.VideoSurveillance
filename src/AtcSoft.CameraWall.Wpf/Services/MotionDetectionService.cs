@@ -1,5 +1,5 @@
 // ReSharper disable RedundantArgumentDefaultValue
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 /// <summary>
 /// Service for detecting motion in camera video streams using frame differencing.

@@ -3,7 +3,7 @@
 // ReSharper disable ParameterHidesMember
 // ReSharper disable ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 // ReSharper disable GrammarMistakeInComment
-namespace Linksoft.VideoSurveillance.Wpf.Core.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
 /// Control for displaying a single camera stream with overlay and context menu.
@@ -24,8 +24,8 @@ public partial class CameraTile : IDisposable
     /// <summary>
     /// True when this tile's USB camera is currently unplugged. Set by
     /// the manager / dashboard from the
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher"/> events; cleared automatically on
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>. Cascades to the
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher"/> events; cleared automatically on
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>. Cascades to the
     /// overlay so the operator sees a distinct affordance without
     /// fighting the connection-state row (the two are orthogonal — see
     /// <see cref="CameraOverlay.IsDeviceUnplugged"/>).

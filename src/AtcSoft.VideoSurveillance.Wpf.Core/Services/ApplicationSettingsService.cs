@@ -1,5 +1,5 @@
 // ReSharper disable RedundantArgumentDefaultValue
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// JSON file-based implementation of <see cref="IApplicationSettingsService"/>.

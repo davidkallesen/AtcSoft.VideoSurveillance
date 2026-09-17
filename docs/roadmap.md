@@ -1,12 +1,12 @@
-# 🗺️ Linksoft.VideoSurveillance Roadmap
+# 🗺️ AtcSoft.VideoSurveillance Roadmap
 
-## 🖥️ Linksoft.VideoSurveillance.WpfApp
+## 🖥️ AtcSoft.VideoSurveillance.WpfApp
 
-A new WPF management application for the `Linksoft.VideoSurveillance.Api` server. Combines the management features of the existing Blazor WebAssembly UI with live multi-camera streaming and recording playback over HTTP.
+A new WPF management application for the `AtcSoft.VideoSurveillance.Api` server. Combines the management features of the existing Blazor WebAssembly UI with live multi-camera streaming and recording playback over HTTP.
 
 ### 💡 Motivation
 
-The existing `Linksoft.Wpf.CameraWall.App` is a standalone desktop application that connects directly to cameras via RTSP/HTTP. The new `WpfApp` is a **client** for the REST API server, enabling:
+The existing `AtcSoft.Wpf.CameraWall.App` is a standalone desktop application that connects directly to cameras via RTSP/HTTP. The new `WpfApp` is a **client** for the REST API server, enabling:
 
 - Centralized server-side camera management and recording
 - Live camera streaming over HTTP/HLS from the server
@@ -17,14 +17,14 @@ The existing `Linksoft.Wpf.CameraWall.App` is a standalone desktop application t
 
 ```mermaid
 graph TB
-    subgraph WpfApp["Linksoft.VideoSurveillance.WpfApp"]
+    subgraph WpfApp["AtcSoft.VideoSurveillance.WpfApp"]
         UI["WPF UI<br/><i>Fluent.Ribbon</i>"]
         Gateway["GatewayService<br/><i>REST Client</i>"]
         HubService["SurveillanceHubService<br/><i>SignalR Client</i>"]
         HLS["HLS Player<br/><i>VideoEngine or MediaElement</i>"]
     end
 
-    subgraph Server["Linksoft.VideoSurveillance.Api"]
+    subgraph Server["AtcSoft.VideoSurveillance.Api"]
         API["REST Endpoints"]
         Hub["SignalR Hub"]
         Streams["/streams/{cameraId}/playlist.m3u8"]
@@ -41,8 +41,8 @@ graph TB
 
 ```
 src/
-└── Linksoft.VideoSurveillance.WpfApp/
-    ├── Linksoft.VideoSurveillance.WpfApp.csproj  (net10.0-windows, WPF)
+└── AtcSoft.VideoSurveillance.WpfApp/
+    ├── AtcSoft.VideoSurveillance.WpfApp.csproj  (net10.0-windows, WPF)
     ├── App.xaml / App.xaml.cs                     (Host, DI, Serilog)
     ├── MainWindow.xaml / MainWindow.xaml.cs        (Fluent.Ribbon shell)
     ├── Services/
@@ -78,12 +78,12 @@ src/
 ### 📦 Dependencies
 
 ```
-Linksoft.VideoSurveillance.WpfApp
-├── Linksoft.VideoSurveillance.Core          (models, enums, settings)
-├── Linksoft.VideoSurveillance.Api.Contracts (generated API client types)
-├── Linksoft.VideoEngine                     (HLS playback via FFmpeg)
-├── Linksoft.VideoEngine.DirectX             (GPU-accelerated rendering)
-├── Linksoft.Wpf.VideoPlayer                 (VideoHost control for HLS)
+AtcSoft.VideoSurveillance.WpfApp
+├── AtcSoft.VideoSurveillance.Core          (models, enums, settings)
+├── AtcSoft.VideoSurveillance.Api.Contracts (generated API client types)
+├── AtcSoft.VideoEngine                     (HLS playback via FFmpeg)
+├── AtcSoft.VideoEngine.DirectX             (GPU-accelerated rendering)
+├── AtcSoft.Wpf.VideoPlayer                 (VideoHost control for HLS)
 ├── Fluent.Ribbon                            (Ribbon UI)
 ├── Atc.XamlToolkit                          (MVVM source generators)
 ├── Atc.Wpf.Controls                         (UI controls)
@@ -100,12 +100,12 @@ Core infrastructure and basic camera management.
 
 ### 1.1 Project Setup
 
-- [x] Create `Linksoft.VideoSurveillance.WpfApp` project (net10.0-windows, WPF)
+- [x] Create `AtcSoft.VideoSurveillance.WpfApp` project (net10.0-windows, WPF)
 - [x] Configure `Microsoft.Extensions.Hosting` with DI container
 - [x] Configure Serilog with file sink (matching existing App patterns)
 - [x] Add Fluent.Ribbon `MainWindow` shell with tab structure
 - [x] Add configurable API base URL (via appsettings.json or connection dialog)
-- [x] Add project to `Linksoft.VideoSurveillance.slnx` solution
+- [x] Add project to `AtcSoft.VideoSurveillance.slnx` solution
 
 ### 1.2 API Client Layer
 
@@ -180,8 +180,8 @@ The key differentiating feature: live camera streaming from the server over HTTP
 
 ### 3.1 HLS Stream Infrastructure
 
-- [x] Integrate `Linksoft.VideoEngine` for HLS playback (FFmpeg demux + decode)
-- [x]Use `Linksoft.Wpf.VideoPlayer.VideoHost` for GPU-accelerated rendering
+- [x] Integrate `AtcSoft.VideoEngine` for HLS playback (FFmpeg demux + decode)
+- [x]Use `AtcSoft.Wpf.VideoPlayer.VideoHost` for GPU-accelerated rendering
 - [x] Handle `StreamStarted` SignalR events to receive HLS playlist URLs
 - [x] Start/Stop stream via SignalR hub invocation (`StartStream`, `StopStream`)
 - [x] Fallback to `MediaElement` for HLS if VideoEngine unavailable

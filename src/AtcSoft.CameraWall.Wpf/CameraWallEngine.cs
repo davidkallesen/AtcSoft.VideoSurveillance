@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf;
+namespace AtcSoft.CameraWall.Wpf;
 
 /// <summary>
 /// Engine initialization for the CameraWall library.

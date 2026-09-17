@@ -1,5 +1,5 @@
 // ReSharper disable StringLiteralTypo
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Static entry point for initializing the video engine.

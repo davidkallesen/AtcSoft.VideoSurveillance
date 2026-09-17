@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App;
+namespace AtcSoft.VideoSurveillance.Wpf.App;
 
 /// <summary>
 /// View model for the main window.
@@ -166,10 +166,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand("ShowSettings")]
     private async Task ShowSettingsAsync()
     {
-        var viewModel = new Linksoft.VideoSurveillance.Wpf.Dialogs.SettingsDialogViewModel(gatewayService, settingsService);
+        var viewModel = new AtcSoft.VideoSurveillance.Wpf.Dialogs.SettingsDialogViewModel(gatewayService, settingsService);
         await viewModel.LoadSettingsAsync().ConfigureAwait(true);
 
-        var dialog = new Linksoft.VideoSurveillance.Wpf.Dialogs.SettingsDialog(viewModel)
+        var dialog = new AtcSoft.VideoSurveillance.Wpf.Dialogs.SettingsDialog(viewModel)
         {
             Owner = Application.Current.MainWindow,
         };

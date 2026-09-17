@@ -1,6 +1,6 @@
 # 🏃 Motion Detection Guide
 
-Setup and configuration guide for the motion detection system in Linksoft.VideoSurveillance. Covers both the WPF desktop app and the REST API server.
+Setup and configuration guide for the motion detection system in AtcSoft.VideoSurveillance. Covers both the WPF desktop app and the REST API server.
 
 ## 📖 Overview
 

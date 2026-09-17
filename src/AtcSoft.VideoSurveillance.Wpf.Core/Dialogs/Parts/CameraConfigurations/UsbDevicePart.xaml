@@ -1,11 +1,11 @@
 <UserControl
-    x:Class="Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations.UsbDevicePart"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations.UsbDevicePart"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dialogs="clr-namespace:Linksoft.VideoSurveillance.Wpf.Core.Dialogs"
+    xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=dialogs:CameraConfigurationDialogViewModel,
                                      IsDesignTimeCreatable=False}"
@@ -25,7 +25,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                            Key=SelectUsbDevice}" />
 
             <ComboBox
@@ -42,7 +42,7 @@
             VerticalAlignment="Center"
             Padding="12,6"
             Command="{Binding Path=RefreshUsbDevicesCommand}"
-            Content="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                           Key=Refresh}"
             IsEnabled="{Binding Path=CanEditUsbDevice}" />
 
@@ -56,7 +56,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                            Key=UsbResolution}" />
 
             <ComboBox
@@ -71,7 +71,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                            Key=UsbFrameRate}" />
 
             <ComboBox
@@ -86,7 +86,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                            Key=UsbPixelFormat}" />
 
             <ComboBox
@@ -99,7 +99,7 @@
             Grid.Row="4"
             Grid.Column="0"
             Margin="0,8,0,0"
-            Content="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                           Key=UsbCaptureAudio}"
             IsChecked="{Binding Path=UsbCaptureAudio, Mode=TwoWay}" />
 
@@ -112,7 +112,7 @@
             Grid.Column="0"
             Margin="0,8,0,0"
             IsEnabled="{Binding Path=UsbCaptureAudio}"
-            LabelText="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                             Key=UsbAudioDeviceName}"
             Text="{Binding Path=UsbAudioDeviceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 

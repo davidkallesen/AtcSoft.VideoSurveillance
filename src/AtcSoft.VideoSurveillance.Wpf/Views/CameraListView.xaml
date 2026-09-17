@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Linksoft.VideoSurveillance.Wpf.Views.CameraListView"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.Views.CameraListView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atcNetworkValueConverters="clr-namespace:Atc.Wpf.Network.ValueConverters;assembly=Atc.Wpf.Network"
@@ -7,7 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fontIcons="clr-namespace:Atc.Wpf.FontIcons;assembly=Atc.Wpf.FontIcons"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewModels="clr-namespace:Linksoft.VideoSurveillance.Wpf.ViewModels"
+    xmlns:viewModels="clr-namespace:AtcSoft.VideoSurveillance.Wpf.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewModels:CameraListViewModel}"
     Loaded="OnLoaded"
     mc:Ignorable="d">

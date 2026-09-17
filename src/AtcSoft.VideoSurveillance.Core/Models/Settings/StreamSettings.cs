@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models.Settings;
+namespace AtcSoft.VideoSurveillance.Models.Settings;
 
 /// <summary>
 /// Represents streaming settings for a network camera (Core POCO).

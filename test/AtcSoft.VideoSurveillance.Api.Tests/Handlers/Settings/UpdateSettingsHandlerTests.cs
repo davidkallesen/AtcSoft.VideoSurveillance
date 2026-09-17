@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Settings;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Settings;
 
 public class UpdateSettingsHandlerTests
 {

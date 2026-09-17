@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Factories;
+namespace AtcSoft.VideoSurveillance.Factories;
 
 public class DropDownItemsFactoryTests
 {

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Dialogs;
 
 /// <summary>
 /// View model for the settings dialog.
@@ -10,7 +10,7 @@ namespace Linksoft.VideoSurveillance.Wpf.Dialogs;
 public partial class SettingsDialogViewModel : ViewModelBase
 {
     private readonly GatewayService gatewayService;
-    private readonly Linksoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService settingsService;
+    private readonly AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService settingsService;
 
     // Snapshot of full API settings for preserving server-only fields on save
     private AppSettings? originalApiSettings;
@@ -22,7 +22,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
     public SettingsDialogViewModel(
         GatewayService gatewayService,
-        Linksoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService settingsService)
+        AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService settingsService)
     {
         this.gatewayService = gatewayService ?? throw new ArgumentNullException(nameof(gatewayService));
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Demuxing;
+namespace AtcSoft.VideoEngine.Demuxing;
 
 public class DemuxerOptionPairsTests
 {

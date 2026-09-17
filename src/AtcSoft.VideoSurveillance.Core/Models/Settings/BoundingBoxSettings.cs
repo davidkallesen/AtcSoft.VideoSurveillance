@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models.Settings;
+namespace AtcSoft.VideoSurveillance.Models.Settings;
 
 /// <summary>
 /// Settings for motion detection bounding box display.

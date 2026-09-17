@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.MediaFoundation;
+namespace AtcSoft.VideoEngine.Windows.MediaFoundation;
 
 /// <summary>
 /// Maps Media Foundation <c>MF_MT_SUBTYPE</c> GUIDs to the FFmpeg

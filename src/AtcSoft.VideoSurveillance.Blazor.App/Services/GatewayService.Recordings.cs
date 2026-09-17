@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Blazor.App.Services;
+namespace AtcSoft.VideoSurveillance.Blazor.App.Services;
 
 /// <summary>
 /// Gateway service - Recordings operations using generated endpoints.

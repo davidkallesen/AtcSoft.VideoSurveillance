@@ -1,14 +1,14 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 using ApiUsbDeviceDescriptor = global::VideoSurveillance.Generated.Devices.Models.UsbDeviceDescriptor;
-using CoreUsbDeviceDescriptor = Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using CoreUsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 /// <summary>
 /// Concrete <see cref="IUsbCameraGateway"/> backed by the OpenAPI
 /// generated <see cref="GatewayService"/> client. Maps the API DTO to
 /// the Core <see cref="CoreUsbDeviceDescriptor"/> so consumers stay
 /// behind the existing
-/// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator"/>
+/// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator"/>
 /// contract.
 /// </summary>
 public sealed class GatewayUsbCameraGateway : IUsbCameraGateway
@@ -44,12 +44,12 @@ public sealed class GatewayUsbCameraGateway : IUsbCameraGateway
 
     private static CoreUsbDeviceDescriptor MapToCore(ApiUsbDeviceDescriptor api)
     {
-        var caps = new List<Linksoft.VideoSurveillance.Models.UsbStreamFormat>(api.Capabilities?.Count ?? 0);
+        var caps = new List<AtcSoft.VideoSurveillance.Models.UsbStreamFormat>(api.Capabilities?.Count ?? 0);
         if (api.Capabilities is not null)
         {
             foreach (var c in api.Capabilities)
             {
-                caps.Add(new Linksoft.VideoSurveillance.Models.UsbStreamFormat
+                caps.Add(new AtcSoft.VideoSurveillance.Models.UsbStreamFormat
                 {
                     Width = c.Width,
                     Height = c.Height,

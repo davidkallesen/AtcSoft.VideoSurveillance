@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Helpers;
+namespace AtcSoft.VideoSurveillance.Wpf.Helpers;
 
 /// <summary>
 /// Thin convenience wrapper around <see cref="InfoDialogBox"/> /

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Layouts;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Layouts;
 
 public class UpdateLayoutHandlerTests
 {

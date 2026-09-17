@@ -1,6 +1,6 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers.Devices;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Devices;
 
-using CoreUsbDeviceDescriptor = Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using CoreUsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 /// <summary>
 /// Handler business logic for the ListUsbDevices operation. Returns

@@ -9,7 +9,7 @@ Architectural overview, configuration model, and operator-facing behaviour for t
 - 💻 **Where it works.** Windows. The Linux V4L2 + macOS AVFoundation paths are scaffolded but deferred (Phase 10 in the roadmap).
 - ✅ **What you can do today.** Open a USB camera, record it (MP4/MKV via the in-process FFmpeg pipeline), capture snapshots, rotate, and recover gracefully from unplug/replug. HLS re-streaming to a browser is not yet implemented for USB sources.
 - ⏸️ **What's deferred.** UVC PTZ + property pages (brightness / focus / exposure) — Phase 11.
-- 🏠 **Hosts.** `Linksoft.CameraWall.Wpf.App` (standalone) wires the Windows enumerator into DI directly. `Linksoft.VideoSurveillance.Api` (server) does the same when running on Windows. `Linksoft.VideoSurveillance.Wpf.App` (API client) talks to the server over `GET /devices/usb` instead of enumerating locally.
+- 🏠 **Hosts.** `AtcSoft.CameraWall.Wpf.App` (standalone) wires the Windows enumerator into DI directly. `AtcSoft.VideoSurveillance.Api` (server) does the same when running on Windows. `AtcSoft.VideoSurveillance.Wpf.App` (API client) talks to the server over `GET /devices/usb` instead of enumerating locally.
 
 ---
 
@@ -95,12 +95,12 @@ services.AddSingleton<IUsbCameraEnumerator>(NullUsbCameraEnumerator.Instance);
 services.AddSingleton<IUsbCameraWatcher, NullUsbCameraWatcher>();
 
 // Replace with the Windows implementation
-Linksoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
     .AddWindowsUsbCameraSupport(services);
 ```
 
 Keep the Null fallbacks registered first so:
-- The composition root works on hosts that don't reference `Linksoft.VideoEngine.Windows`.
+- The composition root works on hosts that don't reference `AtcSoft.VideoEngine.Windows`.
 - `GET /devices/usb` can detect the fallback case (`enumerator is NullUsbCameraEnumerator`) and return **HTTP 503** instead of an empty list — clients then know "platform doesn't support USB" vs. "no devices attached".
 
 ---
@@ -141,7 +141,7 @@ Group policy estates can enforce `LetAppsAccessCamera = Deny` system-wide. The e
 | Capability discovery (resolution × FPS × pixfmt) | `MediaFoundationEnumerator` | Phase 3 first cut returns devices with empty `Capabilities`. The dialog will populate the capability picker by opening each device on demand once Phase 4.3 lands. |
 | Audio companion track | `Demuxer` + `Remuxer` | Phase 9. The toggle exists in `UsbConnectionSettings.PreferAudio` but the audio packet path isn't wired through the remuxer yet. |
 | UVC property pages (brightness, focus, …) | New `IUsbCameraPropertyService` | Phase 11. Blue-Iris-grade — pulls in `IAMCameraControl` / `IAMVideoProcAmp` interop. |
-| V4L2 + AVFoundation enumerators | `Linksoft.VideoEngine.Linux` (future), `Linksoft.VideoEngine.macOS` | Phase 10. The demuxer already accepts `InputFormatKind.V4l2` / `AVFoundation` and translates the option dict correctly — only the enumerator + DI binding are missing. |
+| V4L2 + AVFoundation enumerators | `AtcSoft.VideoEngine.Linux` (future), `AtcSoft.VideoEngine.macOS` | Phase 10. The demuxer already accepts `InputFormatKind.V4l2` / `AVFoundation` and translates the option dict correctly — only the enumerator + DI binding are missing. |
 
 ---
 

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
 /// Source-generated high-performance log methods for <see cref="CameraGrid"/>.

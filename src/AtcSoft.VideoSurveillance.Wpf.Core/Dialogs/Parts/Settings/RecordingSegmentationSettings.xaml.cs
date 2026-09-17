@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.Settings;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.Settings;
 
 /// <summary>
 /// Recording segmentation settings (hourly split, max duration).

@@ -1,5 +1,5 @@
 // ReSharper disable IdentifierTypo
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Video player with optional GPU acceleration: demuxes, decodes, records,

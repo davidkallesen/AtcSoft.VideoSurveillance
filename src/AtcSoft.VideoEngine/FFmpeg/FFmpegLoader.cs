@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.FFmpeg;
+namespace AtcSoft.VideoEngine.FFmpeg;
 
 /// <summary>
 /// Handles loading and initializing FFmpeg native libraries.

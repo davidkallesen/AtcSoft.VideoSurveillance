@@ -1,4 +1,4 @@
-namespace Linksoft.VideoPlayer.Wpf;
+namespace AtcSoft.VideoPlayer.Wpf;
 
 /// <summary>
 /// Bridge for overlay content bindings. The overlay window's DataContext

@@ -1,5 +1,5 @@
 // ReSharper disable AsyncVoidEventHandlerMethod
-namespace Linksoft.CameraWall.Wpf.App;
+namespace AtcSoft.CameraWall.Wpf.App;
 
 public partial class CameraWallApp
 {
@@ -12,7 +12,7 @@ public partial class CameraWallApp
         var advancedSettings = LoadAdvancedSettingsForLogging();
 
         // Configure Serilog based on settings. Drop framework Debug noise but
-        // keep Linksoft.* at Debug and Microsoft.* Information+ for ops.
+        // keep AtcSoft.* at Debug and Microsoft.* Information+ for ops.
         var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -48,7 +48,7 @@ public partial class CameraWallApp
                 // compose; AddWindowsUsbCameraSupport replaces them.
                 services.AddSingleton<IUsbCameraEnumerator>(NullUsbCameraEnumerator.Instance);
                 services.AddSingleton<IUsbCameraWatcher, NullUsbCameraWatcher>();
-                Linksoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+                AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
                     .AddWindowsUsbCameraSupport(services);
 
                 // Library services (auto-registered via [Registration] attribute)

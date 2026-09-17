@@ -1,7 +1,7 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
-using CameraConfiguration = Linksoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
-using IWpfCoreSettingsService = Linksoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
+using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+using IWpfCoreSettingsService = AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
 
 public class CameraConfigurationDialogViewModelUsbPickerTests
 {

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
+namespace AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
 
 public sealed class SettingsState
 {

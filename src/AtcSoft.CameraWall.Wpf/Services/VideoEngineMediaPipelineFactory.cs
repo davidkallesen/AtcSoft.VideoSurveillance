@@ -1,7 +1,7 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
-using CoreCameraConfiguration = Linksoft.VideoSurveillance.Models.CameraConfiguration;
-using IMediaPipelineFactory = Linksoft.VideoSurveillance.Services.IMediaPipelineFactory;
+using CoreCameraConfiguration = AtcSoft.VideoSurveillance.Models.CameraConfiguration;
+using IMediaPipelineFactory = AtcSoft.VideoSurveillance.Services.IMediaPipelineFactory;
 
 /// <summary>
 /// Factory that creates <see cref="VideoEngineMediaPipeline"/> instances

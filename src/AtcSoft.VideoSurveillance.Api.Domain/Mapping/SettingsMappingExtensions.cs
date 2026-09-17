@@ -1,12 +1,12 @@
-using CoreAdvancedSettings = Linksoft.VideoSurveillance.Models.Settings.AdvancedSettings;
-using CoreCameraDisplayAppSettings = Linksoft.VideoSurveillance.Models.Settings.CameraDisplayAppSettings;
-using CoreConnectionAppSettings = Linksoft.VideoSurveillance.Models.Settings.ConnectionAppSettings;
-using CoreGeneralSettings = Linksoft.VideoSurveillance.Models.Settings.GeneralSettings;
-using CoreMotionDetectionSettings = Linksoft.VideoSurveillance.Models.Settings.MotionDetectionSettings;
-using CorePerformanceSettings = Linksoft.VideoSurveillance.Models.Settings.PerformanceSettings;
-using CoreRecordingSettings = Linksoft.VideoSurveillance.Models.Settings.RecordingSettings;
+using CoreAdvancedSettings = AtcSoft.VideoSurveillance.Models.Settings.AdvancedSettings;
+using CoreCameraDisplayAppSettings = AtcSoft.VideoSurveillance.Models.Settings.CameraDisplayAppSettings;
+using CoreConnectionAppSettings = AtcSoft.VideoSurveillance.Models.Settings.ConnectionAppSettings;
+using CoreGeneralSettings = AtcSoft.VideoSurveillance.Models.Settings.GeneralSettings;
+using CoreMotionDetectionSettings = AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings;
+using CorePerformanceSettings = AtcSoft.VideoSurveillance.Models.Settings.PerformanceSettings;
+using CoreRecordingSettings = AtcSoft.VideoSurveillance.Models.Settings.RecordingSettings;
 
-namespace Linksoft.VideoSurveillance.Api.Domain.Mapping;
+namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 
 internal static class SettingsMappingExtensions
 {
@@ -338,41 +338,41 @@ internal static class SettingsMappingExtensions
     }
 
     private static AppSettingsOverlayPosition? ParseOverlayPosition(
-        Linksoft.VideoSurveillance.Enums.OverlayPosition position)
+        AtcSoft.VideoSurveillance.Enums.OverlayPosition position)
         => position switch
         {
-            Linksoft.VideoSurveillance.Enums.OverlayPosition.TopRight => AppSettingsOverlayPosition.TopRight,
-            Linksoft.VideoSurveillance.Enums.OverlayPosition.BottomLeft => AppSettingsOverlayPosition.BottomLeft,
-            Linksoft.VideoSurveillance.Enums.OverlayPosition.BottomRight => AppSettingsOverlayPosition.BottomRight,
+            AtcSoft.VideoSurveillance.Enums.OverlayPosition.TopRight => AppSettingsOverlayPosition.TopRight,
+            AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomLeft => AppSettingsOverlayPosition.BottomLeft,
+            AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomRight => AppSettingsOverlayPosition.BottomRight,
             _ => AppSettingsOverlayPosition.TopLeft,
         };
 
-    private static Linksoft.VideoSurveillance.Enums.OverlayPosition ToCoreOverlayPosition(
+    private static AtcSoft.VideoSurveillance.Enums.OverlayPosition ToCoreOverlayPosition(
         AppSettingsOverlayPosition position)
         => position switch
         {
-            AppSettingsOverlayPosition.TopRight => Linksoft.VideoSurveillance.Enums.OverlayPosition.TopRight,
-            AppSettingsOverlayPosition.BottomLeft => Linksoft.VideoSurveillance.Enums.OverlayPosition.BottomLeft,
-            AppSettingsOverlayPosition.BottomRight => Linksoft.VideoSurveillance.Enums.OverlayPosition.BottomRight,
-            _ => Linksoft.VideoSurveillance.Enums.OverlayPosition.TopLeft,
+            AppSettingsOverlayPosition.TopRight => AtcSoft.VideoSurveillance.Enums.OverlayPosition.TopRight,
+            AppSettingsOverlayPosition.BottomLeft => AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomLeft,
+            AppSettingsOverlayPosition.BottomRight => AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomRight,
+            _ => AtcSoft.VideoSurveillance.Enums.OverlayPosition.TopLeft,
         };
 
     private static AppSettingsDefaultProtocol? ParseDefaultProtocol(
-        Linksoft.VideoSurveillance.Enums.CameraProtocol protocol)
+        AtcSoft.VideoSurveillance.Enums.CameraProtocol protocol)
         => protocol switch
         {
-            Linksoft.VideoSurveillance.Enums.CameraProtocol.Http => AppSettingsDefaultProtocol.Http,
-            Linksoft.VideoSurveillance.Enums.CameraProtocol.Https => AppSettingsDefaultProtocol.Https,
+            AtcSoft.VideoSurveillance.Enums.CameraProtocol.Http => AppSettingsDefaultProtocol.Http,
+            AtcSoft.VideoSurveillance.Enums.CameraProtocol.Https => AppSettingsDefaultProtocol.Https,
             _ => AppSettingsDefaultProtocol.Rtsp,
         };
 
-    private static Linksoft.VideoSurveillance.Enums.CameraProtocol ToCoreProtocol(
+    private static AtcSoft.VideoSurveillance.Enums.CameraProtocol ToCoreProtocol(
         AppSettingsDefaultProtocol protocol)
         => protocol switch
         {
-            AppSettingsDefaultProtocol.Http => Linksoft.VideoSurveillance.Enums.CameraProtocol.Http,
-            AppSettingsDefaultProtocol.Https => Linksoft.VideoSurveillance.Enums.CameraProtocol.Https,
-            _ => Linksoft.VideoSurveillance.Enums.CameraProtocol.Rtsp,
+            AppSettingsDefaultProtocol.Http => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Http,
+            AppSettingsDefaultProtocol.Https => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Https,
+            _ => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Rtsp,
         };
 
     private static AppSettingsVideoQuality? ParseVideoQuality(string? quality)
@@ -406,20 +406,20 @@ internal static class SettingsMappingExtensions
     }
 
     private static AppSettingsCleanupSchedule? ParseCleanupSchedule(
-        Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule schedule)
+        AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule schedule)
         => schedule switch
         {
-            Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartup => AppSettingsCleanupSchedule.OnStartup,
-            Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically => AppSettingsCleanupSchedule.OnStartupAndPeriodically,
+            AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartup => AppSettingsCleanupSchedule.OnStartup,
+            AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically => AppSettingsCleanupSchedule.OnStartupAndPeriodically,
             _ => AppSettingsCleanupSchedule.Disabled,
         };
 
-    private static Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule ToCoreCleanupSchedule(
+    private static AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule ToCoreCleanupSchedule(
         AppSettingsCleanupSchedule schedule)
         => schedule switch
         {
-            AppSettingsCleanupSchedule.OnStartup => Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartup,
-            AppSettingsCleanupSchedule.OnStartupAndPeriodically => Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically,
-            _ => Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule.Disabled,
+            AppSettingsCleanupSchedule.OnStartup => AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartup,
+            AppSettingsCleanupSchedule.OnStartupAndPeriodically => AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically,
+            _ => AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.Disabled,
         };
 }

@@ -1,10 +1,10 @@
 // ReSharper disable RedundantArgumentDefaultValue
-using CameraOverrides = Linksoft.VideoSurveillance.Models.CameraOverrides;
-using CameraProtocol = Linksoft.VideoSurveillance.Enums.CameraProtocol;
-using MediaCleanupSchedule = Linksoft.VideoSurveillance.Enums.MediaCleanupSchedule;
-using OverlayPosition = Linksoft.VideoSurveillance.Enums.OverlayPosition;
+using CameraOverrides = AtcSoft.VideoSurveillance.Models.CameraOverrides;
+using CameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
+using MediaCleanupSchedule = AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule;
+using OverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
 
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
 /// API-backed implementation of <see cref="IApplicationSettingsService"/>

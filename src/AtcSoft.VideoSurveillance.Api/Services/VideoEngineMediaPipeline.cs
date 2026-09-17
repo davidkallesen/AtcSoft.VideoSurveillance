@@ -1,8 +1,8 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Server-side <see cref="IMediaPipeline"/> implementation using the in-process
-/// <see cref="IVideoPlayer"/> from <c>Linksoft.VideoEngine</c>.
+/// <see cref="IVideoPlayer"/> from <c>AtcSoft.VideoEngine</c>.
 /// Replaces the previous FFmpeg subprocess approach for recording and snapshots.
 /// </summary>
 public sealed class VideoEngineMediaPipeline : IMediaPipeline

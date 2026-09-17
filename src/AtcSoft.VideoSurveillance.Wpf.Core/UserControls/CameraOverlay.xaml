@@ -1,6 +1,6 @@
 <!--  ReSharper disable once Xaml.RedundantResource  -->
 <UserControl
-    x:Class="Linksoft.VideoSurveillance.Wpf.Core.UserControls.CameraOverlay"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.Core.UserControls.CameraOverlay"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
@@ -131,7 +131,7 @@
                         FontSize="9"
                         FontWeight="SemiBold"
                         Foreground="#FFB347"
-                        Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                    Key=UsbDeviceUnplugged}" />
                 </StackPanel>
 
@@ -155,7 +155,7 @@
                         FontSize="9"
                         FontWeight="SemiBold"
                         Foreground="#FFB347"
-                        Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                    Key=UsbDeviceBusy}" />
                 </StackPanel>
 
@@ -228,7 +228,7 @@
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
-                    <TextBlock FontSize="9" Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Motion}">
+                    <TextBlock FontSize="9" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Motion}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#44AAAAAA" />

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Converts NV12 decoded textures to BGRA using the D3D11 Video Processor,

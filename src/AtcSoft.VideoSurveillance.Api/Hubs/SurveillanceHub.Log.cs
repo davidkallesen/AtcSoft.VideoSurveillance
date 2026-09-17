@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Hubs;
+namespace AtcSoft.VideoSurveillance.Api.Hubs;
 
 public sealed partial class SurveillanceHub
 {

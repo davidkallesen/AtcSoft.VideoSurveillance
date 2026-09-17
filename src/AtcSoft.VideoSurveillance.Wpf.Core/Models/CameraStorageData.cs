@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
 /// <summary>
 /// Root container for camera and layout persistence.

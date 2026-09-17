@@ -1,6 +1,6 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
-using IUsbCameraWatcher = Linksoft.VideoSurveillance.Services.IUsbCameraWatcher;
+using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;
 
 /// <summary>
 /// Pins the seed-camera contract for the AddCamera / AddUsbCamera flow.
@@ -145,9 +145,9 @@ public class CameraWallManagerUsbTests
             Dialog = Substitute.For<IDialogService>(),
             Settings = Substitute.For<IApplicationSettingsService>(),
             Recording = Substitute.For<IRecordingService>(),
-            MotionDetection = Substitute.For<Linksoft.VideoSurveillance.Services.IMotionDetectionService>(),
+            MotionDetection = Substitute.For<AtcSoft.VideoSurveillance.Services.IMotionDetectionService>(),
             Timelapse = Substitute.For<ITimelapseService>(),
-            GitHub = Substitute.For<Linksoft.VideoSurveillance.Services.IGitHubReleaseService>(),
+            GitHub = Substitute.For<AtcSoft.VideoSurveillance.Services.IGitHubReleaseService>(),
             Toast = Substitute.For<IToastNotificationService>(),
             PlayerFactory = Substitute.For<IVideoPlayerFactory>(),
             UsbWatcher = Substitute.For<IUsbCameraWatcher>(),
@@ -209,11 +209,11 @@ public class CameraWallManagerUsbTests
 
         public IRecordingService Recording { get; set; } = null!;
 
-        public Linksoft.VideoSurveillance.Services.IMotionDetectionService MotionDetection { get; set; } = null!;
+        public AtcSoft.VideoSurveillance.Services.IMotionDetectionService MotionDetection { get; set; } = null!;
 
         public ITimelapseService Timelapse { get; set; } = null!;
 
-        public Linksoft.VideoSurveillance.Services.IGitHubReleaseService GitHub { get; set; } = null!;
+        public AtcSoft.VideoSurveillance.Services.IGitHubReleaseService GitHub { get; set; } = null!;
 
         public IToastNotificationService Toast { get; set; } = null!;
 

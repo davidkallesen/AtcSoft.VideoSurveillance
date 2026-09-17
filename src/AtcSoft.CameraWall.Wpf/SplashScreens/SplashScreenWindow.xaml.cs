@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.SplashScreens;
+namespace AtcSoft.CameraWall.Wpf.SplashScreens;
 
 /// <summary>
 /// Splash screen window displayed during application startup.

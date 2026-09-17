@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Models;
 
 /// <summary>
 /// A single notification entry for the history log.

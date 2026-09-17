@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Models;
 
 /// <summary>
 /// Types of notification events raised by the surveillance hub.

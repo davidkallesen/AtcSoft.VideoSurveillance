@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Composition root implementing <see cref="IGpuAccelerator"/> for D3D11VA.

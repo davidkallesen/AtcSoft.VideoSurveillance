@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Creates an FFmpeg <see cref="AVHWDeviceContext"/> wrapping the D3D11 device

@@ -1,3 +1,3 @@
-global using Linksoft.VideoSurveillance.Events;
-global using Linksoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Events;
+global using AtcSoft.VideoSurveillance.Models;
 global using Microsoft.Extensions.Time.Testing;

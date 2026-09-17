@@ -4,19 +4,19 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <IsPackable>true</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Description>Windows-only USB camera enumeration and hot-plug watching for Linksoft.VideoEngine — Media Foundation enumerator + WMI hot-plug watcher.</Description>
+    <Description>Windows-only USB camera enumeration and hot-plug watching for AtcSoft.VideoEngine — Media Foundation enumerator + WMI hot-plug watcher.</Description>
     <PackageTags>video;engine;mediafoundation;dshow;usb;webcam;windows</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet Package Metadata">
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Core\Linksoft.VideoSurveillance.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Linksoft.VideoEngine.Windows.Tests" />
+    <InternalsVisibleTo Include="AtcSoft.VideoEngine.Windows.Tests" />
   </ItemGroup>
 
 </Project>

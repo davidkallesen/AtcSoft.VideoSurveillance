@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.CameraWall.Wpf.App\Linksoft.CameraWall.Wpf.App.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Api\Linksoft.VideoSurveillance.Api.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Blazor.App\Linksoft.VideoSurveillance.Blazor.App.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Wpf.App\Linksoft.VideoSurveillance.Wpf.App.csproj" />
+    <ProjectReference Include="..\AtcSoft.CameraWall.Wpf.App\AtcSoft.CameraWall.Wpf.App.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Api\AtcSoft.VideoSurveillance.Api.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Blazor.App\AtcSoft.VideoSurveillance.Blazor.App.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Wpf.App\AtcSoft.VideoSurveillance.Wpf.App.csproj" />
   </ItemGroup>
 
 </Project>

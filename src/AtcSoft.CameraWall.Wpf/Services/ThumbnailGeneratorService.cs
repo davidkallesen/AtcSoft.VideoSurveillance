@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 using Drawing = System.Drawing;
 using Drawing2D = System.Drawing.Drawing2D;

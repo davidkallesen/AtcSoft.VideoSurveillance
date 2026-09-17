@@ -1,7 +1,7 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
-using IUsbCameraEnumerator = Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator;
-using UsbDeviceDescriptor = Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using IUsbCameraEnumerator = AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator;
+using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 /// <summary>
 /// API-client implementation of <see cref="IUsbCameraEnumerator"/>.

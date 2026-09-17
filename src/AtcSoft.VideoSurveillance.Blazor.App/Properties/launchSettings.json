@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Linksoft.VideoSurveillance.Blazor.App": {
+    "AtcSoft.VideoSurveillance.Blazor.App": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

@@ -1,7 +1,7 @@
 // ReSharper disable GCSuppressFinalizeForTypeWithoutDestructor
 using ConnectionState = Atc.Network.ConnectionState;
 
-namespace Linksoft.VideoSurveillance.Wpf.Windows;
+namespace AtcSoft.VideoSurveillance.Wpf.Windows;
 
 /// <summary>
 /// ViewModel for the fullscreen camera window.

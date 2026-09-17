@@ -1,8 +1,8 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// Abstraction over a media playback/capture pipeline.
-/// Both WPF and Server implement via Linksoft.VideoEngine (in-process FFmpeg).
+/// Both WPF and Server implement via AtcSoft.VideoEngine (in-process FFmpeg).
 /// </summary>
 public interface IMediaPipeline : IDisposable
 {

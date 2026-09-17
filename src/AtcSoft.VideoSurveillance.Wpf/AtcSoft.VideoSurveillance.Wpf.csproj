@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Core\Linksoft.VideoSurveillance.Core.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Wpf.Core\Linksoft.VideoSurveillance.Wpf.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Wpf.Core\AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Linksoft.VideoSurveillance.Wpf.Tests" />
+    <InternalsVisibleTo Include="AtcSoft.VideoSurveillance.Wpf.Tests" />
   </ItemGroup>
 
 </Project>

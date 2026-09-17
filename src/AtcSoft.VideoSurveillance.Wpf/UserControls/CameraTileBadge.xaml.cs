@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.UserControls;
 
 /// <summary>
 /// Camera tile control displaying a single camera stream with overlay.

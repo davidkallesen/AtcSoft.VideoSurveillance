@@ -4,8 +4,8 @@ global using System.Text.Json;
 
 global using Atc.Rest.Api.SourceGenerator;
 
-global using Linksoft.VideoSurveillance.Blazor.App;
-global using Linksoft.VideoSurveillance.Blazor.App.Services;
+global using AtcSoft.VideoSurveillance.Blazor.App;
+global using AtcSoft.VideoSurveillance.Blazor.App.Services;
 
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Web;

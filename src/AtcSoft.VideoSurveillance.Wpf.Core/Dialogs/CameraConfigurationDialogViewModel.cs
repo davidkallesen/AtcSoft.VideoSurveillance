@@ -1,5 +1,5 @@
 // ReSharper disable InvertIf
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
 [SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
 public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
@@ -9,7 +9,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     private readonly IReadOnlyCollection<(string IpAddress, string? Path)> existingEndpoints;
     private readonly IApplicationSettingsService settingsService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
-    private readonly Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator;
+    private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnIsTestingChanged))]
     private bool isTesting;
@@ -45,7 +45,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         IReadOnlyCollection<(string IpAddress, string? Path)> existingEndpoints,
         IApplicationSettingsService settingsService,
         IVideoPlayerFactory videoPlayerFactory,
-        Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator)
+        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator)
     {
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentNullException.ThrowIfNull(settingsService);
@@ -1505,7 +1505,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             // USB (dshow:video=...) paths transparently; the player
             // reads the locator's InputFormat / RawDeviceSpec to pick
             // the right FFmpeg open path.
-            var locator = Linksoft.VideoSurveillance.Helpers.CameraUriHelper.BuildSourceLocator(Camera.Core);
+            var locator = AtcSoft.VideoSurveillance.Helpers.CameraUriHelper.BuildSourceLocator(Camera.Core);
             await TestStreamWithPlayerAsync(locator).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -1519,7 +1519,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     }
 
     private async Task TestStreamWithPlayerAsync(
-        Linksoft.VideoSurveillance.Helpers.SourceLocator locator)
+        AtcSoft.VideoSurveillance.Helpers.SourceLocator locator)
     {
         using var player = videoPlayerFactory.Create();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -1640,14 +1640,14 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     /// <see cref="ObservableCollection{T}"/> so the XAML combo binds
     /// directly without an intermediate copy.
     /// </summary>
-    public ObservableCollection<Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor> UsbDevices { get; }
+    public ObservableCollection<AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor> UsbDevices { get; }
 
     /// <summary>
     /// Currently-selected device. Setting this writes back to
     /// <see cref="CameraConfiguration.Connection"/>.<c>Usb</c> so the
     /// camera carries the right symbolic-link identity at Save time.
     /// </summary>
-    public Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor? SelectedUsbDevice
+    public AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor? SelectedUsbDevice
     {
         get
         {
@@ -2221,7 +2221,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
                 // "mjpeg"). Without this the picker would store "NV12"
                 // and FFmpeg would reject pixel_format=NV12 with
                 // "Unable to parse option value as pixel format".
-                var pf = Linksoft.VideoSurveillance.Helpers.MediaSubtypeMapper.MapToFFmpeg(f.Subtype);
+                var pf = AtcSoft.VideoSurveillance.Helpers.MediaSubtypeMapper.MapToFFmpeg(f.Subtype);
                 yield return ((int)f.Width, (int)f.Height, f.FrameRate, pf);
             }
 
@@ -2289,6 +2289,6 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     private void EnsureUsbFormat()
     {
         EnsureUsbConnectionSettings();
-        Camera.Connection.Usb!.Format ??= new Linksoft.VideoSurveillance.Models.UsbStreamFormat();
+        Camera.Connection.Usb!.Format ??= new AtcSoft.VideoSurveillance.Models.UsbStreamFormat();
     }
 }

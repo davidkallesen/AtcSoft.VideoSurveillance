@@ -1,8 +1,8 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
-using IUsbCameraWatcher = Linksoft.VideoSurveillance.Services.IUsbCameraWatcher;
-using UsbCameraEventArgs = Linksoft.VideoSurveillance.Events.UsbCameraEventArgs;
-using UsbDeviceDescriptor = Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;
+using UsbCameraEventArgs = AtcSoft.VideoSurveillance.Events.UsbCameraEventArgs;
+using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 /// <summary>
 /// API-client implementation of <see cref="IUsbCameraWatcher"/>.
