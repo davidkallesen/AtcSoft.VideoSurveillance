@@ -67,6 +67,30 @@ jobs:
             dotnet nuget push $pkg.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
 
+      # --skip-duplicate turns every 409 into a warning and exit 0, including
+      # rejections that are not duplicates at all. Two releases were published
+      # this way with a green job and nothing on NuGet.org, because the old
+      # LinkSoft.* id was blocked by another organisation's reserved prefix.
+      # Assert the version really landed rather than trusting the push.
+      - name: Verify the package is actually on NuGet.org
+        run: |
+          $version = "${{ needs.release-please.outputs.version }}"
+          $url = "https://api.nuget.org/v3-flatcontainer/atcsoft.camerawall.wpf/index.json"
+          for ($i = 1; $i -le 10; $i++) {
+            try {
+              $versions = (Invoke-RestMethod -Uri $url).versions
+              if ($versions -contains $version) {
+                Write-Host "Confirmed $version on NuGet.org"
+                exit 0
+              }
+              Write-Host "Attempt ${i}: $version not indexed yet"
+            } catch {
+              Write-Host "Attempt ${i}: package index not found yet"
+            }
+            Start-Sleep -Seconds 30
+          }
+          throw "Version $version never appeared on NuGet.org - the push reported success but published nothing"
+
   build-installers:
     name: Build MSI (${{ matrix.name }})
     runs-on: windows-latest
