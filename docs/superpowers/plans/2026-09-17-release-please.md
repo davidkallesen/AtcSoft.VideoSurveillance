@@ -218,9 +218,27 @@ npx --yes release-please release-pr \
   --dry-run
 ```
 
-Expected: output naming the next version as `1.1.0` and listing the changelog entries, with no pull request created. This is the strongest available check that the config parses and that `bootstrap-sha` is right.
+**This does not work before the config is merged to `main`.** release-please reads
+its config from the remote default branch, not from the working tree, so on a
+feature branch it fails with `Missing required manifest config`. That is a
+limitation of the dry run, not a fault in the config.
 
-If `gh auth token` is unavailable or the command cannot reach the network, skip this step and record it as unverified rather than claiming it passed. The remaining steps still stand on their own.
+Validate against the official schemas instead, which is a stronger check of the
+config itself:
+
+```bash
+curl -s -o /tmp/rp-config.schema.json https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json
+curl -s -o /tmp/rp-manifest.schema.json https://raw.githubusercontent.com/googleapis/release-please/main/schemas/manifest.json
+npx --yes -p ajv-cli@5 -p ajv-formats@2 ajv validate --spec=draft7 -c ajv-formats -s /tmp/rp-config.schema.json -d release-please-config.json
+npx --yes ajv-cli@5 validate --spec=draft7 -s /tmp/rp-manifest.schema.json -d .release-please-manifest.json
+```
+
+Expected: `release-please-config.json valid` and `.release-please-manifest.json valid`.
+`ajv-formats` is required for the config schema because it uses the
+`uri-reference` format, which ajv does not know by default.
+
+Re-run the `--dry-run` above once the config is on `main` if you want the
+proposed version confirmed before cutting the first release.
 
 - [ ] **Step 6: Commit**
 
@@ -422,14 +440,42 @@ console.log('workflow shape OK');
 
 Expected: `workflow shape OK`.
 
-- [ ] **Step 4: Run actionlint if available**
+- [ ] **Step 4: Parse the workflow with a real YAML parser**
+
+`npx --yes actionlint` does not work — the npm package of that name ships no
+executable, and actionlint is distributed as a Go binary. Use a real YAML parse
+plus structural assertions instead, which catches the failure that matters
+(invalid YAML, a mis-wired `needs` or a missing gate):
+
+```bash
+npm install --silent js-yaml@4   # in a scratch directory, then point NODE_PATH at it
+node -e "
+const yaml=require('js-yaml'), fs=require('fs');
+const wf=yaml.load(fs.readFileSync('.github/workflows/release-please.yml','utf8'));
+for (const j of ['publish-nuget','build-installers','upload-assets']) {
+  const job=wf.jobs[j];
+  const needs=Array.isArray(job.needs)?job.needs:[job.needs];
+  if(!needs.includes('release-please')) throw new Error(j+' does not need release-please');
+  if(!String(job.if).includes('release_created')) throw new Error(j+' not gated on release_created');
+}
+console.log('jobs =', Object.keys(wf.jobs).join(', '));
+console.log('outputs =', Object.keys(wf.jobs['release-please'].outputs).join(', '));
+"
+```
+
+Expected: the four job names, the three outputs, and no thrown error.
+
+- [ ] **Step 4b: Verify pack picks up the props version**
 
 Run:
 ```bash
-npx --yes actionlint .github/workflows/release-please.yml
+dotnet pack src/Linksoft.CameraWall.Wpf/Linksoft.CameraWall.Wpf.csproj -c Release --no-build -o <scratch>/nuget-probe -p:IsPackable=true
 ```
 
-Expected: no output (actionlint is silent on success). If the package cannot be fetched, record this step as unverified rather than passed — Step 3 already covers the structural checks that matter most.
+Expected: `Linksoft.CameraWall.Wpf.1.0.11.nupkg`. This matters because the
+`publish-nuget` job passes no `-p:Version`, and `--skip-duplicate` means a
+wrong version would fail silently as a no-op rather than erroring. Write the
+output to a scratch directory outside the repository so the tree stays clean.
 
 - [ ] **Step 5: Confirm no other workflow still triggers on tags**
 
