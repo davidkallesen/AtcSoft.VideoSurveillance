@@ -2,8 +2,8 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package
-    Name="Linksoft Camera Wall"
-    Manufacturer="Linksoft"
+    Name="AtcSoft Camera Wall"
+    Manufacturer="AtcSoft"
     Version="$(ProductVersion)"
     UpgradeCode="E5A8B4C1-9D2F-4E3A-8B7C-6D5E4F3A2B1C"
     Scope="perMachine">
@@ -14,7 +14,7 @@
 
     <MediaTemplate EmbedCab="yes" />
 
-    <Feature Id="ProductFeature" Title="Linksoft Camera Wall" Level="1">
+    <Feature Id="ProductFeature" Title="AtcSoft Camera Wall" Level="1">
       <ComponentGroupRef Id="HarvestedComponents" />
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="DesktopShortcut" />
