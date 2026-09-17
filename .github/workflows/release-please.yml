@@ -1,0 +1,144 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          # A PAT is used rather than GITHUB_TOKEN so the release pull request
+          # triggers pr-validation.yml — events raised by GITHUB_TOKEN do not
+          # trigger workflows. The fallback keeps releases working if the
+          # secret is missing; the release PR then simply gets no CI run.
+          token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
+
+  publish-nuget:
+    name: Publish NuGet Package
+    runs-on: windows-latest
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore src/Linksoft.CameraWall.Wpf/Linksoft.CameraWall.Wpf.csproj
+
+      # No -p:Version here: the version comes from Directory.Build.props,
+      # which release-please stamped in the release commit.
+      - name: Pack NuGet
+        run: dotnet pack src/Linksoft.CameraWall.Wpf/Linksoft.CameraWall.Wpf.csproj --configuration ${{ env.CONFIGURATION }} --no-restore --output ./nuget -p:IsPackable=true
+
+      - name: Push to NuGet.org
+        run: |
+          $packages = Get-ChildItem ./nuget -Filter *.nupkg
+          if ($packages.Count -eq 0) { throw "No .nupkg files found in ./nuget" }
+          foreach ($pkg in $packages) {
+            Write-Host "Pushing $($pkg.Name)"
+            dotnet nuget push $pkg.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }
+
+  build-installers:
+    name: Build MSI (${{ matrix.name }})
+    runs-on: windows-latest
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: CameraWall
+            app: src/Linksoft.CameraWall.Wpf.App/Linksoft.CameraWall.Wpf.App.csproj
+            publish_dir: publish-camerawall
+            installer: setup/Linksoft.CameraWall.Installer/Linksoft.CameraWall.Installer.wixproj
+            installer_bin: setup/Linksoft.CameraWall.Installer/bin
+            artifact: msi-installer-camerawall
+          - name: VideoSurveillance
+            app: src/Linksoft.VideoSurveillance.Wpf.App/Linksoft.VideoSurveillance.Wpf.App.csproj
+            publish_dir: publish-videosurveillance
+            installer: setup/Linksoft.VideoSurveillance.Installer/Linksoft.VideoSurveillance.Installer.wixproj
+            installer_bin: setup/Linksoft.VideoSurveillance.Installer/bin
+            artifact: msi-installer-videosurveillance
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish Application
+        run: dotnet publish ${{ matrix.app }} --configuration ${{ env.CONFIGURATION }} --output ./${{ matrix.publish_dir }}
+
+      - name: Download FFmpeg
+        run: |
+          $ffmpegUrl = "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.0.1-full_build-shared.7z"
+          Invoke-WebRequest -Uri $ffmpegUrl -OutFile ffmpeg.7z
+          7z x ffmpeg.7z -offmpeg-temp
+          $binDir = Get-ChildItem -Path ffmpeg-temp -Recurse -Directory -Filter "bin" | Select-Object -First 1
+          New-Item -ItemType Directory -Path "./${{ matrix.publish_dir }}/ffmpeg" -Force
+          Copy-Item "$($binDir.FullName)\*.dll" -Destination "./${{ matrix.publish_dir }}/ffmpeg/"
+
+      # No -p:ProductVersion here: it comes from setup/Directory.Build.props.
+      - name: Build Installer
+        run: dotnet build ${{ matrix.installer }} --configuration ${{ env.CONFIGURATION }} -p:PublishDir=${{ github.workspace }}/${{ matrix.publish_dir }}
+
+      - name: Upload MSI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.installer_bin }}/${{ env.CONFIGURATION }}/*.msi
+          retention-days: 5
+
+  upload-assets:
+    name: Upload Release Assets
+    runs-on: ubuntu-latest
+    needs: [release-please, build-installers]
+    if: needs.release-please.outputs.release_created == 'true'
+
+    steps:
+      - name: Download MSI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: msi-installer-*
+          merge-multiple: true
+          path: ./msi
+
+      - name: Attach MSIs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" ./msi/*.msi --clobber --repo "${{ github.repository }}"
