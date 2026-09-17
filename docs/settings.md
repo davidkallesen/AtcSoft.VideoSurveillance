@@ -1,6 +1,6 @@
 # ⚙️ AtcSoft.VideoSurveillance Settings Reference
 
-Complete reference for all application settings and parameters. Settings are stored as JSON in `%ProgramData%\Linksoft\CameraWall\settings.json` and are shared between the WPF desktop app and the REST API server.
+Complete reference for all application settings and parameters. Settings are stored as JSON in `%ProgramData%\AtcSoft\CameraWall\settings.json` and are shared between the WPF desktop app and the REST API server.
 
 ## 📊 Settings Hierarchy
 
@@ -402,7 +402,7 @@ Per-camera overrides are managed through camera endpoints:
 
 ## 📁 Application Paths
 
-All default paths are relative to `%ProgramData%\Linksoft\CameraWall\`:
+All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
 
 | Path | Purpose |
 |------|---------|
@@ -435,7 +435,7 @@ All default paths are relative to `%ProgramData%\Linksoft\CameraWall\`:
     "overlayPosition": "topLeft",
     "allowDragAndDropReorder": true,
     "autoSaveLayoutChanges": true,
-    "snapshotPath": "C:\\ProgramData\\Linksoft\\CameraWall\\snapshots"
+    "snapshotPath": "C:\\ProgramData\\AtcSoft\\CameraWall\\snapshots"
   },
   "connection": {
     "defaultProtocol": "rtsp",
@@ -474,7 +474,7 @@ All default paths are relative to `%ProgramData%\Linksoft\CameraWall\`:
     }
   },
   "recording": {
-    "recordingPath": "C:\\ProgramData\\Linksoft\\CameraWall\\recordings",
+    "recordingPath": "C:\\ProgramData\\AtcSoft\\CameraWall\\recordings",
     "recordingFormat": "mkv",
     "transcodeVideoCodec": "none",
     "enableRecordingOnMotion": false,
@@ -501,7 +501,7 @@ All default paths are relative to `%ProgramData%\Linksoft\CameraWall\`:
   },
   "advanced": {
     "enableDebugLogging": false,
-    "logPath": "C:\\ProgramData\\Linksoft\\CameraWall\\logs"
+    "logPath": "C:\\ProgramData\\AtcSoft\\CameraWall\\logs"
   }
 }
 ```
