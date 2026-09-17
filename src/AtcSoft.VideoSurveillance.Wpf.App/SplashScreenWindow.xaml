@@ -31,7 +31,7 @@
             FontSize="28"
             FontWeight="SemiBold"
             Foreground="#FF0078D7"
-            Text="{Binding Path=Header, FallbackValue='Linksoft Video Surveillance'}">
+            Text="{Binding Path=Header, FallbackValue='AtcSoft Video Surveillance'}">
             <TextBlock.Effect>
                 <DropShadowEffect
                     BlurRadius="8"

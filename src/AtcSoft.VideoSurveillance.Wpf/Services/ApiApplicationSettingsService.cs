@@ -16,7 +16,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 /// genuinely belong to *this* Windows account on *this* PC and would be
 /// wrong to share across every client connected to the same server, so
 /// they're persisted to a tiny local file under
-/// <c>%LocalAppData%\Linksoft\VideoSurveillance.Client\client-prefs.json</c>.
+/// <c>%LocalAppData%\AtcSoft\VideoSurveillance.Client\client-prefs.json</c>.
 /// <para>
 /// The service holds an in-memory <see cref="ApplicationSettings"/> cache
 /// so the synchronous <c>General</c> / <c>CameraDisplay</c> / etc. property

@@ -70,11 +70,11 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to About Linksoft Camera Wall.
+        ///   Looks up a localized string similar to About AtcSoft Camera Wall.
         /// </summary>
-        public static string AboutLinksoftCameraWall {
+        public static string AboutAtcSoftCameraWall {
             get {
-                return ResourceManager.GetString("AboutLinksoftCameraWall", resourceCulture);
+                return ResourceManager.GetString("AboutAtcSoftCameraWall", resourceCulture);
             }
         }
         
@@ -241,7 +241,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Linksoft Camera Wall.
+        ///   Looks up a localized string similar to AtcSoft Camera Wall.
         /// </summary>
         public static string ApplicationTitle {
             get {

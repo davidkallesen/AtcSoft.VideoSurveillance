@@ -8,7 +8,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 public sealed class GitHubReleaseService : IGitHubReleaseService, IDisposable
 {
     private const string GitHubApiUrl = "https://api.github.com/repos/davidkallesen/AtcSoft.VideoSurveillance/releases/latest";
-    private const string UserAgent = "Linksoft-VideoSurveillance";
+    private const string UserAgent = "AtcSoft-VideoSurveillance";
     private static readonly TimeSpan LockAcquisitionTimeout = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan HttpRequestTimeout = TimeSpan.FromSeconds(10);
 
