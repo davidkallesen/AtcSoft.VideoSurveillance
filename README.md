@@ -104,7 +104,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 | Source Generators | Atc.SourceGenerators |
 | Theming | Atc.Wpf.Theming |
 | Logging | Serilog (file sink) |
-| Versioning | Nerdbank.GitVersioning |
+| Versioning | release-please (Conventional Commits) |
 | Installer | WiX Toolset v5 |
 
 ## 🏗️ Solution Structure
