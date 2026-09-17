@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Factory that creates <see cref="D3D11Accelerator"/> instances.

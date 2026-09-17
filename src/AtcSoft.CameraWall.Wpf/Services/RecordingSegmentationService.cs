@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 /// <summary>
 /// Service for automatically segmenting recordings at clock-aligned interval boundaries

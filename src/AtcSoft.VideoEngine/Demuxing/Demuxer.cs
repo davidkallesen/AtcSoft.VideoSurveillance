@@ -1,5 +1,5 @@
 // ReSharper disable StringLiteralTypo
-namespace Linksoft.VideoEngine.Demuxing;
+namespace AtcSoft.VideoEngine.Demuxing;
 
 /// <summary>
 /// Wraps FFmpeg demuxing for RTSP/HTTP video streams with interrupt-based timeout.

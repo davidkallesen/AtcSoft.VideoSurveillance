@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Models;
 
 /// <summary>
 /// Root JSON model for server profile persistence.

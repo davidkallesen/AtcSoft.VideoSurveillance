@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 /// <summary>
 /// A capture-format triple negotiated with a USB camera: resolution,

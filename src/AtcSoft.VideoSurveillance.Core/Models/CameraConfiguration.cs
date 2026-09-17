@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 /// <summary>
 /// Represents the configuration for a network camera (Core POCO).

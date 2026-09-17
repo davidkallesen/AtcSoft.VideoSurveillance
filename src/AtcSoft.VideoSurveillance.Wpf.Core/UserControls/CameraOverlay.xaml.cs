@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
 /// Overlay control displaying camera information on a camera tile.
@@ -80,7 +80,7 @@ public partial class CameraOverlay
     /// affordance over the existing status row so operators can tell
     /// "physical device gone" apart from "stream error" or "still
     /// reconnecting" — backoff doesn't help here; the host must wait
-    /// for <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>.
+    /// for <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>.
     /// Modelled as an orthogonal bool (not a new <c>ConnectionState</c>
     /// value) because the overlay's <see cref="ConnectionState"/> DP is
     /// the <c>Atc.Network.ConnectionState</c> enum, which has no

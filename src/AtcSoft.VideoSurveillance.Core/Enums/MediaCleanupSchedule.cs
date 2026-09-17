@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Enums;
+namespace AtcSoft.VideoSurveillance.Enums;
 
 /// <summary>
 /// Specifies when automatic media cleanup should run.

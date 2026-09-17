@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Factories;
+namespace AtcSoft.VideoSurveillance.Factories;
 
 /// <summary>
 /// Factory for creating common dropdown/combobox items used across UIs.

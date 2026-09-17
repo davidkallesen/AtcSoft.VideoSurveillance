@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
 
 /// <summary>
 /// Handler business logic for the GetSettings operation.

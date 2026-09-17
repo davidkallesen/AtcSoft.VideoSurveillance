@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
 
 /// <summary>
 /// USB device picker shown when <c>IsUsbSource</c> is true. Bound to

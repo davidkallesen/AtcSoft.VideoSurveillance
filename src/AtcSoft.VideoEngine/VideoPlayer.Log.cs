@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 public sealed partial class VideoPlayer
 {

@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 /// <summary>
 /// Source-generated high-performance log methods for <see cref="MotionDetectionService"/>.

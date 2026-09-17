@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.FFmpeg;
+namespace AtcSoft.VideoEngine.FFmpeg;
 
 /// <summary>
 /// Exception thrown when an FFmpeg operation fails.

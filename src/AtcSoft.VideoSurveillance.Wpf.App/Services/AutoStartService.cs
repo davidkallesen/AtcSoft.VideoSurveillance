@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 
 /// <summary>
 /// Windows-registry implementation of <see cref="IAutoStartService"/>.
@@ -10,7 +10,7 @@ namespace Linksoft.VideoSurveillance.Wpf.App.Services;
 public sealed partial class AutoStartService : IAutoStartService
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "Linksoft.VideoSurveillance.Wpf.App";
+    private const string ValueName = "AtcSoft.VideoSurveillance.Wpf.App";
 
     private readonly ILogger<AutoStartService> logger;
 

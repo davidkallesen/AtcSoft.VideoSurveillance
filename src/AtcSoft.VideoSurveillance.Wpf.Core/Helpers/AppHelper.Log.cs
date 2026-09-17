@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Helpers;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 
 public static partial class AppHelper
 {

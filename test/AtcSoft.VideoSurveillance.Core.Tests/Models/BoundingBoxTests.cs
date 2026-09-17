@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 public class BoundingBoxTests
 {

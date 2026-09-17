@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 
 /// <summary>
 /// Handler business logic for the GetCameraById operation.

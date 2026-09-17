@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.SplashScreens;
+namespace AtcSoft.CameraWall.Wpf.SplashScreens;
 
 /// <summary>
 /// Message for controlling the splash screen via Messenger.

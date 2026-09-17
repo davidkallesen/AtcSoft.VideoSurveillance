@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 public class RemoteUsbCameraEnumeratorTests
 {

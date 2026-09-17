@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Server-side implementation of <see cref="IMotionDetectionService"/>.

@@ -1,4 +1,4 @@
-# 🗺️ Linksoft.VideoSurveillance.Wpf.App Roadmap
+# 🗺️ AtcSoft.VideoSurveillance.Wpf.App Roadmap
 
 ## 🎯 Vision
 
@@ -10,23 +10,23 @@ Key differentiator: native recording playback over HTTP using VideoEngine/MediaE
 
 ```
 +-------------------------------------------+     +-------------------------------------------+
-|  Linksoft.CameraWall.Wpf.App              |     |  Linksoft.VideoSurveillance.Wpf.App       |
+|  AtcSoft.CameraWall.Wpf.App              |     |  AtcSoft.VideoSurveillance.Wpf.App       |
 |  (Thin Shell: Ribbon, DI)                 |     |  (Thin Shell: Ribbon, Serilog, DI)        |
 +-------------------------------------------+     +-------------------------------------------+
-|  Linksoft.CameraWall.Wpf                  |     |  Linksoft.VideoSurveillance.Wpf            |
+|  AtcSoft.CameraWall.Wpf                  |     |  AtcSoft.VideoSurveillance.Wpf            |
 |  (CameraWallEngine, CameraWallManager,    |     |  (GatewayService, HubService,             |
 |   VideoEngineMediaPipeline, local storage)|     |   API Views, API ViewModels)               |
 +-------------------------------------------+     +-------------------------------------------+
                     \                                          /
                      +----------------------------------------+
-                     |  Linksoft.VideoSurveillance.Wpf.Core   |
+                     |  AtcSoft.VideoSurveillance.Wpf.Core   |
                      |  (Shared: Models, Dialogs, Controls,   |
                      |   Factories, Converters, Themes,       |
                      |   Service Interfaces, Events, Helpers) |
                      +----------------------------------------+
-                     |  Linksoft.VideoPlayer.Wpf               |
+                     |  AtcSoft.VideoPlayer.Wpf               |
                      +----------------------------------------+
-                     |  Linksoft.VideoSurveillance.Core        |
+                     |  AtcSoft.VideoSurveillance.Core        |
                      +----------------------------------------+
 
 Communication:
@@ -83,7 +83,7 @@ Communication:
 ### Phase 7: Shared WPF Library (Wpf.Core)
 
 #### 7.1 Project Setup ✅
-- [x] Create `Linksoft.VideoSurveillance.Wpf.Core` project (net10.0-windows, WPF library)
+- [x] Create `AtcSoft.VideoSurveillance.Wpf.Core` project (net10.0-windows, WPF library)
 - [x] Add project references to Core and VideoPlayer.Wpf
 - [x] Add shared Atc.* package references (Wpf, Controls, Forms, Network, Theming, XamlToolkit)
 - [x] Add to solution file
@@ -141,7 +141,7 @@ Communication:
 ### Phase 8: Unified Dialog Migration ✅
 
 #### 8.1 XAML Namespace Migration ✅
-- [x] Fix 273 stale `Linksoft.CameraWall.Wpf` references in 40 Wpf.Core XAML files
+- [x] Fix 273 stale `AtcSoft.CameraWall.Wpf` references in 40 Wpf.Core XAML files
 - [x] Fix Translations.Designer.cs ResourceManager name for Wpf.Core namespace
 
 #### 8.2 About & Updates Dialogs ✅
@@ -241,7 +241,7 @@ The following VS.Wpf dialogs/windows intentionally remain app-specific because t
 
 ### Approach: Shared WPF Library (Wpf.Core)
 
-Shared WPF components live in `Linksoft.VideoSurveillance.Wpf.Core`, referenced by both `CameraWall.Wpf` and `VideoSurveillance.Wpf`. This replaces the earlier copy+adapt approach with a proper shared library.
+Shared WPF components live in `AtcSoft.VideoSurveillance.Wpf.Core`, referenced by both `CameraWall.Wpf` and `VideoSurveillance.Wpf`. This replaces the earlier copy+adapt approach with a proper shared library.
 
 ### What Lives in Wpf.Core
 

@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services.Internal;
+namespace AtcSoft.CameraWall.Wpf.Services.Internal;
 
 /// <summary>
 /// Context for an active timelapse capture session.

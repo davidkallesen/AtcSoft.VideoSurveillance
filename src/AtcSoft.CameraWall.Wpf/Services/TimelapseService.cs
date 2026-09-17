@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 /// <summary>
 /// Service for managing timelapse capture sessions.

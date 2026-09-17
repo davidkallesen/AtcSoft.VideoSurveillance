@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Interop;
+namespace AtcSoft.VideoEngine.Windows.Interop;
 
 /// <summary>
 /// Reference-counted <c>MFStartup</c> wrapper. Media Foundation is

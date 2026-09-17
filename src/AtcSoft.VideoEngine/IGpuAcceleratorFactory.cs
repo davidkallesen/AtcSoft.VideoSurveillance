@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Factory for creating GPU accelerator instances.

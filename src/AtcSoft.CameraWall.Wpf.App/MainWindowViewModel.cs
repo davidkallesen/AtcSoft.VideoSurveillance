@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.App;
+namespace AtcSoft.CameraWall.Wpf.App;
 
 /// <summary>
 /// View model for the main window. Acts as a thin binding layer between the UI and the camera wall manager.

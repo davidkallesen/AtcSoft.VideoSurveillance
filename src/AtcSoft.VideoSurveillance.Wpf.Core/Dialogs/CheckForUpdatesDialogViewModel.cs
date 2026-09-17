@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
 /// <summary>
 /// View model for the Check for Updates dialog.

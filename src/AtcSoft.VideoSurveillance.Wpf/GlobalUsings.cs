@@ -26,29 +26,25 @@ global using Atc.Wpf.Forms.Dialogs;
 global using Atc.Wpf.Notifications;
 global using Atc.Wpf.Translation;
 global using Atc.XamlToolkit.Mvvm;
-
+global using AtcSoft.VideoEngine;
+global using AtcSoft.VideoSurveillance.Models.Settings;
+global using AtcSoft.VideoSurveillance.Wpf.Core;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Events;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Factories;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Models;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Resources;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
+global using AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
+global using AtcSoft.VideoSurveillance.Wpf.Dialogs;
+global using AtcSoft.VideoSurveillance.Wpf.Helpers;
+global using AtcSoft.VideoSurveillance.Wpf.Models;
+global using AtcSoft.VideoSurveillance.Wpf.Services;
+global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
+global using AtcSoft.VideoSurveillance.Wpf.Windows;
 global using ControlzEx.Theming;
-
-global using Linksoft.VideoEngine;
-global using Linksoft.VideoSurveillance.Models.Settings;
-global using Linksoft.VideoSurveillance.Wpf.Core;
-global using Linksoft.VideoSurveillance.Wpf.Core.Events;
-global using Linksoft.VideoSurveillance.Wpf.Core.Factories;
-global using Linksoft.VideoSurveillance.Wpf.Core.Helpers;
-global using Linksoft.VideoSurveillance.Wpf.Core.Models;
-global using Linksoft.VideoSurveillance.Wpf.Core.Resources;
-global using Linksoft.VideoSurveillance.Wpf.Core.Services;
-global using Linksoft.VideoSurveillance.Wpf.Core.UserControls;
-global using Linksoft.VideoSurveillance.Wpf.Dialogs;
-global using Linksoft.VideoSurveillance.Wpf.Helpers;
-global using Linksoft.VideoSurveillance.Wpf.Models;
-global using Linksoft.VideoSurveillance.Wpf.Services;
-global using Linksoft.VideoSurveillance.Wpf.ViewModels;
-global using Linksoft.VideoSurveillance.Wpf.Windows;
-
 global using Microsoft.AspNetCore.SignalR.Client;
 global using Microsoft.Extensions.Logging;
-
 global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Cameras.Models;

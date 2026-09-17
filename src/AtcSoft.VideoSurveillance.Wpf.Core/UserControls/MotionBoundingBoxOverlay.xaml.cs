@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 using Rectangle = System.Windows.Shapes.Rectangle;
 

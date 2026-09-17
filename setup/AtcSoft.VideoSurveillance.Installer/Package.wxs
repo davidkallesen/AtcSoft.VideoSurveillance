@@ -22,7 +22,7 @@
 
     <Icon Id="VideoSurveillanceIcon" SourceFile="$(HarvestDirectory)\cctv-camera.ico" />
     <Property Id="ARPPRODUCTICON" Value="VideoSurveillanceIcon" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/davidkallesen/Linksoft.VideoSurveillance" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/davidkallesen/AtcSoft.VideoSurveillance" />
 
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
     <ui:WixUI Id="WixUI_InstallDir" />

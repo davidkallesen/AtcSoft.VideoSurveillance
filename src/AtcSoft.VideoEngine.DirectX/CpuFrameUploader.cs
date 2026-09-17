@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Renders software-decoded AVFrames into a BGRA D3D11 texture so the

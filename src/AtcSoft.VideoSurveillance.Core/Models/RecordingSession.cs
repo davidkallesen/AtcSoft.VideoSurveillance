@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 /// <summary>
 /// Tracks an active recording session for a camera.

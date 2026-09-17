@@ -5,13 +5,13 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Description>Camera Wall application for monitoring multiple RTSP/HTTP camera streams in a dynamic grid layout.</Description>
-    <ApplicationIcon>..\Linksoft.VideoSurveillance.Wpf.Core\Resources\Images\cctv-camera.ico</ApplicationIcon>
+    <ApplicationIcon>..\AtcSoft.VideoSurveillance.Wpf.Core\Resources\Images\cctv-camera.ico</ApplicationIcon>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.CameraWall.Wpf\Linksoft.CameraWall.Wpf.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoEngine.Windows\Linksoft.VideoEngine.Windows.csproj" />
+    <ProjectReference Include="..\AtcSoft.CameraWall.Wpf\AtcSoft.CameraWall.Wpf.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoEngine.Windows\AtcSoft.VideoEngine.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +28,7 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="..\Linksoft.VideoSurveillance.Wpf.Core\Resources\Images\cctv-camera.ico">
+    <Content Include="..\AtcSoft.VideoSurveillance.Wpf.Core\Resources\Images\cctv-camera.ico">
       <Link>cctv-camera.ico</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

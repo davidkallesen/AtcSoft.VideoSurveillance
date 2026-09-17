@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
 /// Per-user-machine preferences for the WPF API client. Persisted to

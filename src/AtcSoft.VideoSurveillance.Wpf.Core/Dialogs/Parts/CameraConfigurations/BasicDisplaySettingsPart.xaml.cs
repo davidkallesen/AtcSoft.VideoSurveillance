@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
 
 /// <summary>
 /// Basic display settings (display name, description, overlay position).

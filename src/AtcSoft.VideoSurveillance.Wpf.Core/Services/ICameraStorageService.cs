@@ -1,5 +1,5 @@
 // ReSharper disable ArrangeTypeMemberModifiers
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// Service interface for persisting camera configurations and layouts.

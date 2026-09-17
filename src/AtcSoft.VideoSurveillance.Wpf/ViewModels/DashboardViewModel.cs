@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// View model for the dashboard view showing live server stats.

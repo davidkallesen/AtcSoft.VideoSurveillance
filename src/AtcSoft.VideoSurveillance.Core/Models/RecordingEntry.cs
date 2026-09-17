@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 /// <summary>
 /// Represents a recorded video file entry (Core POCO).

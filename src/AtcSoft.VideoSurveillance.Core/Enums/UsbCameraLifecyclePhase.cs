@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Enums;
+namespace AtcSoft.VideoSurveillance.Enums;
 
 /// <summary>
 /// Identifies the kind of lifecycle transition raised by

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Options for <see cref="HlsStreamReaperService"/>. The 10s repeat mirrors the

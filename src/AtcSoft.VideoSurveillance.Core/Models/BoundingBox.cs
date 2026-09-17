@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models;
+namespace AtcSoft.VideoSurveillance.Models;
 
 /// <summary>
 /// Represents a rectangular bounding box in analysis coordinates.

@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-namespace Linksoft.CameraWall.Wpf.Services.Internal;
+namespace AtcSoft.CameraWall.Wpf.Services.Internal;
 
 /// <summary>
 /// Internal context for tracking motion detection state per camera.

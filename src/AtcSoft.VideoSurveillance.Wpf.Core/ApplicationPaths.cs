@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core;
+namespace AtcSoft.VideoSurveillance.Wpf.Core;
 
 /// <summary>
 /// Provides default application paths for data storage.

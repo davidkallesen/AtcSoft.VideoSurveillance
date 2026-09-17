@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Views;
+namespace AtcSoft.VideoSurveillance.Wpf.Views;
 
 /// <summary>
 /// Interaction logic for LayoutListView.

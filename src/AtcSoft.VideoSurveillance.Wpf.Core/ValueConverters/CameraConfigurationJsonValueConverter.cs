@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.ValueConverters;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.ValueConverters;
 
 /// <summary>
 /// JSON converter for <see cref="CameraConfiguration"/> that supports migration from flat to nested structure.
@@ -285,10 +285,10 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
         return usb;
     }
 
-    private static Linksoft.VideoSurveillance.Models.UsbStreamFormat ReadUsbStreamFormat(
+    private static AtcSoft.VideoSurveillance.Models.UsbStreamFormat ReadUsbStreamFormat(
         JsonElement element)
     {
-        var fmt = new Linksoft.VideoSurveillance.Models.UsbStreamFormat();
+        var fmt = new AtcSoft.VideoSurveillance.Models.UsbStreamFormat();
 
         if (TryGetInt32Property(element, "width", "Width", out var width))
         {

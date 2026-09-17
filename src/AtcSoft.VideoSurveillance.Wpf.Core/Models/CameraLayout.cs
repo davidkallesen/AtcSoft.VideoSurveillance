@@ -1,6 +1,6 @@
-using CoreModels = Linksoft.VideoSurveillance.Models;
+using CoreModels = AtcSoft.VideoSurveillance.Models;
 
-namespace Linksoft.VideoSurveillance.Wpf.Core.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
 /// <summary>
 /// Wraps <see cref="CoreModels.CameraLayout"/> with change notification for WPF binding.

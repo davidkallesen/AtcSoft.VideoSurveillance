@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Windows;
+namespace AtcSoft.VideoSurveillance.Wpf.Windows;
 
 /// <summary>
 /// Fullscreen window for displaying a single camera stream.

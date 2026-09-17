@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.DirectX;
+namespace AtcSoft.VideoEngine.DirectX;
 
 /// <summary>
 /// Reads a BGRA GPU texture back to CPU memory and encodes it as PNG

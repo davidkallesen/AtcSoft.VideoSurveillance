@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// Service for automatically cleaning up old recordings and snapshots.

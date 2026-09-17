@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Recordings;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Recordings;
 
 public class ListRecordingsHandlerTests
 {

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// Wraps a generated Camera model for DataGrid binding with in-place SignalR updates.

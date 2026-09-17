@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.DependencyInjection;
+namespace AtcSoft.VideoEngine.Windows.DependencyInjection;
 
 /// <summary>
 /// Registers the Windows-specific USB-camera implementations into a

@@ -1,6 +1,6 @@
-using CoreSettings = Linksoft.VideoSurveillance.Models.Settings;
+using CoreSettings = AtcSoft.VideoSurveillance.Models.Settings;
 
-namespace Linksoft.VideoSurveillance.Wpf.Core.Models.Settings;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings;
 
 /// <summary>
 /// Wraps <see cref="CoreSettings.StreamSettings"/> with change notification for WPF binding.

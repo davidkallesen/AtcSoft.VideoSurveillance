@@ -9,7 +9,7 @@
       <Shortcut Id="ApplicationStartMenuShortcut"
                 Name="Linksoft Camera Wall"
                 Description="Camera Wall application for monitoring multiple camera streams"
-                Target="[INSTALLFOLDER]Linksoft.CameraWall.Wpf.App.exe"
+                Target="[INSTALLFOLDER]AtcSoft.CameraWall.Wpf.App.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="CameraWallIcon" />
       <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall" />
@@ -21,7 +21,7 @@
       <Shortcut Id="DesktopShortcutLink"
                 Name="Linksoft Camera Wall"
                 Description="Camera Wall application for monitoring multiple camera streams"
-                Target="[INSTALLFOLDER]Linksoft.CameraWall.Wpf.App.exe"
+                Target="[INSTALLFOLDER]AtcSoft.CameraWall.Wpf.App.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="CameraWallIcon" />
       <RegistryValue Root="HKCU" Key="Software\Linksoft\CameraWall" Name="desktopshortcut" Type="integer" Value="1" KeyPath="yes" />

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Hubs;
+namespace AtcSoft.VideoSurveillance.Api.Hubs;
 
 /// <summary>
 /// SignalR hub for real-time surveillance events.

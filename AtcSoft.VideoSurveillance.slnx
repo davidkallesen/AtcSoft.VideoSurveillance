@@ -10,40 +10,40 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Linksoft.VideoSurveillance.Aspire/Linksoft.VideoSurveillance.Aspire.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Aspire/AtcSoft.VideoSurveillance.Aspire.csproj" />
   </Folder>
   <Folder Name="/src/Application-Web/">
-    <Project Path="src/Linksoft.VideoSurveillance.Blazor.App/Linksoft.VideoSurveillance.Blazor.App.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Blazor.App/AtcSoft.VideoSurveillance.Blazor.App.csproj" />
   </Folder>
   <Folder Name="/src/Application-WPF/">
-    <Project Path="src/Linksoft.CameraWall.Wpf.App/Linksoft.CameraWall.Wpf.App.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Wpf.App/Linksoft.VideoSurveillance.Wpf.App.csproj" />
+    <Project Path="src/AtcSoft.CameraWall.Wpf.App/AtcSoft.CameraWall.Wpf.App.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Wpf.App/AtcSoft.VideoSurveillance.Wpf.App.csproj" />
   </Folder>
   <Folder Name="/src/Libraries/">
-    <Project Path="src/Linksoft.CameraWall.Wpf/Linksoft.CameraWall.Wpf.csproj" />
-    <Project Path="src/Linksoft.VideoEngine.DirectX/Linksoft.VideoEngine.DirectX.csproj" />
-    <Project Path="src/Linksoft.VideoEngine.Windows/Linksoft.VideoEngine.Windows.csproj" />
-    <Project Path="src/Linksoft.VideoEngine/Linksoft.VideoEngine.csproj" />
-    <Project Path="src/Linksoft.VideoPlayer.Wpf/Linksoft.VideoPlayer.Wpf.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Core/Linksoft.VideoSurveillance.Core.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Wpf.Core/Linksoft.VideoSurveillance.Wpf.Core.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Wpf/Linksoft.VideoSurveillance.Wpf.csproj" />
+    <Project Path="src/AtcSoft.CameraWall.Wpf/AtcSoft.CameraWall.Wpf.csproj" />
+    <Project Path="src/AtcSoft.VideoEngine.DirectX/AtcSoft.VideoEngine.DirectX.csproj" />
+    <Project Path="src/AtcSoft.VideoEngine.Windows/AtcSoft.VideoEngine.Windows.csproj" />
+    <Project Path="src/AtcSoft.VideoEngine/AtcSoft.VideoEngine.csproj" />
+    <Project Path="src/AtcSoft.VideoPlayer.Wpf/AtcSoft.VideoPlayer.Wpf.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Core/AtcSoft.VideoSurveillance.Core.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Wpf.Core/AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Wpf/AtcSoft.VideoSurveillance.Wpf.csproj" />
   </Folder>
   <Folder Name="/src/Services-API/">
-    <Project Path="src/Linksoft.VideoSurveillance.Api.Contracts/Linksoft.VideoSurveillance.Api.Contracts.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Api.Domain/Linksoft.VideoSurveillance.Api.Domain.csproj" />
-    <Project Path="src/Linksoft.VideoSurveillance.Api/Linksoft.VideoSurveillance.Api.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Api.Contracts/AtcSoft.VideoSurveillance.Api.Contracts.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Api.Domain/AtcSoft.VideoSurveillance.Api.Domain.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Api/AtcSoft.VideoSurveillance.Api.csproj" />
   </Folder>
   <!-- WiX installer excluded from VS solution due to SDK compatibility issues.
-       Build via command line: dotnet build setup/Linksoft.CameraWall.Installer/Linksoft.CameraWall.Installer.wixproj
+       Build via command line: dotnet build setup/AtcSoft.CameraWall.Installer/AtcSoft.CameraWall.Installer.wixproj
        GitHub Actions builds the installer automatically on release. -->
   <Folder Name="/test/">
-    <Project Path="test/Linksoft.VideoEngine.Tests/Linksoft.VideoEngine.Tests.csproj" />
-    <Project Path="test/Linksoft.VideoEngine.Windows.Tests/Linksoft.VideoEngine.Windows.Tests.csproj" />
-    <Project Path="test/Linksoft.VideoSurveillance.Api.Tests/Linksoft.VideoSurveillance.Api.Tests.csproj" />
-    <Project Path="test/Linksoft.VideoSurveillance.Core.Tests/Linksoft.VideoSurveillance.Core.Tests.csproj" />
-    <Project Path="test/Linksoft.CameraWall.Wpf.Tests/Linksoft.CameraWall.Wpf.Tests.csproj" />
-    <Project Path="test/Linksoft.VideoSurveillance.Wpf.Core.Tests/Linksoft.VideoSurveillance.Wpf.Core.Tests.csproj" />
-    <Project Path="test/Linksoft.VideoSurveillance.Wpf.Tests/Linksoft.VideoSurveillance.Wpf.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoEngine.Tests/AtcSoft.VideoEngine.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoEngine.Windows.Tests/AtcSoft.VideoEngine.Windows.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Api.Tests/AtcSoft.VideoSurveillance.Api.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Core.Tests/AtcSoft.VideoSurveillance.Core.Tests.csproj" />
+    <Project Path="test/AtcSoft.CameraWall.Wpf.Tests/AtcSoft.CameraWall.Wpf.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Core.Tests/AtcSoft.VideoSurveillance.Wpf.Core.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Tests/AtcSoft.VideoSurveillance.Wpf.Tests.csproj" />
   </Folder>
 </Solution>

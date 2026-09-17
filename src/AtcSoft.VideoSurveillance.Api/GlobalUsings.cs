@@ -5,15 +5,15 @@ global using System.Text.Json;
 global using System.Text.Json.Serialization;
 
 global using Atc.Hosting;
-global using Linksoft.VideoEngine;
-global using Linksoft.VideoSurveillance.Api.Hubs;
-global using Linksoft.VideoSurveillance.Api.Services;
-global using Linksoft.VideoSurveillance.Enums;
-global using Linksoft.VideoSurveillance.Events;
-global using Linksoft.VideoSurveillance.Helpers;
-global using Linksoft.VideoSurveillance.Models;
-global using Linksoft.VideoSurveillance.Models.Settings;
-global using Linksoft.VideoSurveillance.Services;
+global using AtcSoft.VideoEngine;
+global using AtcSoft.VideoSurveillance.Api.Hubs;
+global using AtcSoft.VideoSurveillance.Api.Services;
+global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Events;
+global using AtcSoft.VideoSurveillance.Helpers;
+global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Models.Settings;
+global using AtcSoft.VideoSurveillance.Services;
 
 global using Microsoft.AspNetCore.SignalR;
 global using Scalar.AspNetCore;

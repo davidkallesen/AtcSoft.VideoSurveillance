@@ -1,6 +1,6 @@
 // ReSharper disable CommentTypo
 // ReSharper disable IdentifierTypo
-namespace Linksoft.VideoEngine.Recording;
+namespace AtcSoft.VideoEngine.Recording;
 
 /// <summary>
 /// Records a video stream by remuxing (packet copy, no transcoding) to a container file.

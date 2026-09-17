@@ -1,5 +1,5 @@
 // ReSharper disable RedundantArgumentDefaultValue
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// Default implementation of <see cref="IDialogService"/>.
@@ -10,7 +10,7 @@ public class DialogService : IDialogService
     private readonly IApplicationSettingsService settingsService;
     private readonly IMotionDetectionService motionDetectionService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
-    private readonly Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
+    private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DialogService"/> class.
@@ -30,7 +30,7 @@ public class DialogService : IDialogService
         IApplicationSettingsService settingsService,
         IMotionDetectionService motionDetectionService,
         IVideoPlayerFactory videoPlayerFactory,
-        Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator)
+        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));

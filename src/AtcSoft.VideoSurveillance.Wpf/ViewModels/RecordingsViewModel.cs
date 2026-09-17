@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.ViewModels;
+namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// View model for the recordings browser view.
@@ -164,11 +164,11 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             return;
         }
 
-        var vm = new Linksoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
+        var vm = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
             SelectedRecording.PlaybackUrl.AbsoluteUri,
             SelectedRecording.FileName);
 
-        var window = new Linksoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
+        var window = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
         window.Show();
     }
 

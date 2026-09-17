@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Helpers;
+namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// One file/directory error encountered during a cleanup pass.

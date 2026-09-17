@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Capture;
+namespace AtcSoft.VideoEngine.Capture;
 
 /// <summary>
 /// CPU-based frame capture: converts a decoded frame to RGB24 and encodes as PNG.

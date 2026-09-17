@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Extensions;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="CameraProtocol"/>.

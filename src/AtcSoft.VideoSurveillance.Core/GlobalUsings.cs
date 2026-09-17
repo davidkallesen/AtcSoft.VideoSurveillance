@@ -4,10 +4,10 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.Text.Json;
 
-global using Linksoft.VideoSurveillance.Enums;
-global using Linksoft.VideoSurveillance.Events;
-global using Linksoft.VideoSurveillance.Extensions;
-global using Linksoft.VideoSurveillance.Helpers;
-global using Linksoft.VideoSurveillance.Models;
-global using Linksoft.VideoSurveillance.Models.Overrides;
-global using Linksoft.VideoSurveillance.Models.Settings;
+global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Events;
+global using AtcSoft.VideoSurveillance.Extensions;
+global using AtcSoft.VideoSurveillance.Helpers;
+global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Models.Overrides;
+global using AtcSoft.VideoSurveillance.Models.Settings;

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Extensions;
+namespace AtcSoft.VideoSurveillance.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="CameraProtocol"/>.

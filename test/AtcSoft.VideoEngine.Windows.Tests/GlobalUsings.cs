@@ -1,1 +1,1 @@
-global using Linksoft.VideoEngine.Windows.Interop;
+global using AtcSoft.VideoEngine.Windows.Interop;

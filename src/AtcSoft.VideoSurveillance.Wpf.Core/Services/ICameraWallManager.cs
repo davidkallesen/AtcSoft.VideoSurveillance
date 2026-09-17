@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// Manager for camera wall operations including layouts, cameras, and state management.

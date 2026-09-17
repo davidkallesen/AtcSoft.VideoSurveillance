@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Background service that proactively connects cameras and starts recording

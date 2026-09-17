@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Helpers;
+namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// Translates WinRT <c>MediaEncodingSubtypes</c> strings (uppercase
@@ -9,9 +9,9 @@ namespace Linksoft.VideoSurveillance.Helpers;
 /// </summary>
 /// <remarks>
 /// Mirrors the GUID-keyed table in
-/// <c>Linksoft.VideoEngine.Windows.MediaFoundation.PixelFormatGuidMapper</c>
+/// <c>AtcSoft.VideoEngine.Windows.MediaFoundation.PixelFormatGuidMapper</c>
 /// but takes the picker-friendly string form. Kept in
-/// <c>Linksoft.VideoSurveillance.Core</c> so both the Wpf.Core
+/// <c>AtcSoft.VideoSurveillance.Core</c> so both the Wpf.Core
 /// dialog code-path and the helper that builds FFmpeg locators can
 /// reach it without referencing the Windows-specific MF assembly.
 /// </remarks>

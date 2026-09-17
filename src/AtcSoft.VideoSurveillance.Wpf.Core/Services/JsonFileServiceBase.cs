@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// Abstract base class for services that persist a data model to a local JSON file.

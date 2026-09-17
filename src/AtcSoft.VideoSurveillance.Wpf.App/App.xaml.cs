@@ -1,5 +1,5 @@
 // ReSharper disable AsyncVoidEventHandlerMethod
-namespace Linksoft.VideoSurveillance.Wpf.App;
+namespace AtcSoft.VideoSurveillance.Wpf.App;
 
 [SuppressMessage(
     "Naming",
@@ -27,7 +27,7 @@ public partial class App
         ApplicationPaths.Configure("VideoSurveillance");
 
         // Drop framework Debug noise (Kestrel connection lifecycle, SignalR
-        // protocol negotiation, request matching) but keep Linksoft.* at Debug
+        // protocol negotiation, request matching) but keep AtcSoft.* at Debug
         // and keep Microsoft.* Information+ events (request finished, hosting
         // lifetime, etc) for ops visibility.
         var loggerConfig = new LoggerConfiguration()
@@ -343,9 +343,9 @@ public partial class App
                 // IUsbCameraLifecycleCoordinator transitions a device
                 // between Unplugged and Replugged.
                 services.AddSingleton<IUsbCameraGateway, GatewayUsbCameraGateway>();
-                services.AddSingleton<Linksoft.VideoSurveillance.Services.IUsbCameraEnumerator, RemoteUsbCameraEnumerator>();
+                services.AddSingleton<AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator, RemoteUsbCameraEnumerator>();
                 services.AddSingleton<IUsbLifecycleHubChannel, SurveillanceHubLifecycleChannel>();
-                services.AddSingleton<Linksoft.VideoSurveillance.Services.IUsbCameraWatcher, RemoteUsbCameraWatcher>();
+                services.AddSingleton<AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher, RemoteUsbCameraWatcher>();
 
                 // GitHub release service
                 services.AddSingleton<IGitHubReleaseService, GitHubReleaseService>();
@@ -377,7 +377,7 @@ public partial class App
                     sp.GetRequiredService<GatewayService>(),
                     sp.GetRequiredService<SurveillanceHubService>(),
                     sp.GetRequiredService<IVideoPlayerFactory>(),
-                    sp.GetRequiredService<Linksoft.VideoSurveillance.Services.IUsbCameraWatcher>(),
+                    sp.GetRequiredService<AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher>(),
                     apiBaseAddress));
                 services.AddSingleton(sp => new RecordingsViewModel(
                     sp.GetRequiredService<GatewayService>(),

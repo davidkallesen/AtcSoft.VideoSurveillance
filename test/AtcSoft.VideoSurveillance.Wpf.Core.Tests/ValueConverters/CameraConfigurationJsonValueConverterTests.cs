@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.ValueConverters;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.ValueConverters;
 
 public class CameraConfigurationJsonValueConverterTests
 {

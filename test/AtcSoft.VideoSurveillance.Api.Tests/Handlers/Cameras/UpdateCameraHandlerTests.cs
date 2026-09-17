@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Cameras;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Cameras;
 
 public class UpdateCameraHandlerTests
 {

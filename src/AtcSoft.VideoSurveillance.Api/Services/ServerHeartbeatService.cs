@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Periodic liveness beacon for long-running deployments. Each tick of the

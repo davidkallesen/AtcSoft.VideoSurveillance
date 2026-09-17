@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Interop;
+namespace AtcSoft.VideoEngine.Windows.Interop;
 
 /// <summary>
 /// One capture-format triple advertised by an MF video source.

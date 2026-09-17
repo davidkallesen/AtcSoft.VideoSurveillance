@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
 /// Service for managing timelapse capture sessions.

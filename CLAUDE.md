@@ -1,23 +1,23 @@
-# Linksoft.VideoSurveillance - Claude Code Guidelines
+# AtcSoft.VideoSurveillance - Claude Code Guidelines
 
 ## Project Overview
-A multi-assembly video surveillance platform with a WPF desktop app and a headless REST API + SignalR server, sharing a common Core library. Uses RTSP/HTTP protocols with Linksoft.VideoEngine (in-process FFmpeg) for video on both WPF and server.
+A multi-assembly video surveillance platform with a WPF desktop app and a headless REST API + SignalR server, sharing a common Core library. Uses RTSP/HTTP protocols with AtcSoft.VideoEngine (in-process FFmpeg) for video on both WPF and server.
 
 ## Solution Structure
-- `Linksoft.VideoSurveillance.Core` - Shared library: models, enums, events, service interfaces, helpers (net10.0, no WPF)
-- `Linksoft.VideoEngine` - Cross-platform video engine (net10.0): demux, decode, record, capture via in-process FFmpeg
-- `Linksoft.VideoEngine.DirectX` - D3D11VA GPU acceleration, Video Processor, swap chain (net10.0-windows)
-- `Linksoft.VideoEngine.Windows` - Windows-only USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), `IUsbCameraEnumerator` / `IUsbCameraWatcher` implementations (net10.0-windows)
-- `Linksoft.VideoPlayer.Wpf` - WPF VideoHost control with DComp surface + XAML overlay (net10.0-windows)
-- `Linksoft.CameraWall.Wpf` - Reusable WPF library (NuGet package) with UI, dialogs, VideoEngine integration
-- `Linksoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
-- `Linksoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceHubService, OpenAPI-generated client)
-- `Linksoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
-- `Linksoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator)
-- `Linksoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
-- `Linksoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
-- `Linksoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
-- `Linksoft.VideoSurveillance.Core.Tests` - xUnit v3 tests for Core library
+- `AtcSoft.VideoSurveillance.Core` - Shared library: models, enums, events, service interfaces, helpers (net10.0, no WPF)
+- `AtcSoft.VideoEngine` - Cross-platform video engine (net10.0): demux, decode, record, capture via in-process FFmpeg
+- `AtcSoft.VideoEngine.DirectX` - D3D11VA GPU acceleration, Video Processor, swap chain (net10.0-windows)
+- `AtcSoft.VideoEngine.Windows` - Windows-only USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), `IUsbCameraEnumerator` / `IUsbCameraWatcher` implementations (net10.0-windows)
+- `AtcSoft.VideoPlayer.Wpf` - WPF VideoHost control with DComp surface + XAML overlay (net10.0-windows)
+- `AtcSoft.CameraWall.Wpf` - Reusable WPF library (NuGet package) with UI, dialogs, VideoEngine integration
+- `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
+- `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceHubService, OpenAPI-generated client)
+- `AtcSoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
+- `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator)
+- `AtcSoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
+- `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
+- `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
+- `AtcSoft.VideoSurveillance.Core.Tests` - xUnit v3 tests for Core library
 
 ## Architecture
 The solution follows a layered architecture with Core at the base:
@@ -36,7 +36,7 @@ The REST API + SignalR server enables headless video surveillance:
 - **OpenAPI-first**: `src/VideoSurveillance.yaml` defines all endpoints; `Atc.Rest.Api.SourceGenerator` generates contracts
 - **Endpoints**: Cameras CRUD, Layouts CRUD, Recordings list, Settings get/update, Snapshot capture, Recording start/stop
 - **SignalR hub**: `/hubs/surveillance` broadcasts connection state, motion, and recording events
-- **Run with Aspire**: `dotnet run --project src/Linksoft.VideoSurveillance.Aspire` starts the API with the Aspire dashboard
+- **Run with Aspire**: `dotnet run --project src/AtcSoft.VideoSurveillance.Aspire` starts the API with the Aspire dashboard
 
 ## Hosted Background Services (Atc.Hosting)
 Long-running periodic work uses `Atc.Hosting` base classes instead of hand-rolled `System.Threading.Timer` loops. The base class supplies the loop, sequential (no-overlap) ticking, exception logging via `OnExceptionAsync`, and optional health tracking.
@@ -88,7 +88,7 @@ These start on `host.StartAsync()` and stop on `host.StopAsync()` — no explici
 - **Atc.SourceGenerators** - Source generators for DI registration (`[Registration]`), options binding (`[OptionsBinding]`)
 - **Atc.Wpf.Controls** - UI controls (`LabelTextBox`, `LabelComboBox`, `LabelPasswordBox`, `GridEx`)
 - **Atc.Wpf.NetworkControls** - `NetworkScannerView` for discovering cameras
-- **Linksoft.VideoEngine** - In-process FFmpeg video engine for RTSP/HTTP streams (replaces FlyleafLib)
+- **AtcSoft.VideoEngine** - In-process FFmpeg video engine for RTSP/HTTP streams (replaces FlyleafLib)
 - **Flyleaf.FFmpeg.Bindings** - FFmpeg P/Invoke bindings NuGet dependency
 - **Fluent.Ribbon** - Ribbon UI (App only)
 - **Serilog** - Structured logging with file sink (App only)
@@ -107,10 +107,10 @@ public interface ICameraWallManager : INotifyPropertyChanged
     int CameraCount { get; }
     int ConnectedCount { get; }
     string StatusText { get; }
-    Linksoft.CameraWall.Wpf.UserControls.CameraGrid? CameraGrid { get; }
+    AtcSoft.CameraWall.Wpf.UserControls.CameraGrid? CameraGrid { get; }
 
     // Initialization
-    void Initialize(Linksoft.CameraWall.Wpf.UserControls.CameraGrid cameraGridControl);
+    void Initialize(AtcSoft.CameraWall.Wpf.UserControls.CameraGrid cameraGridControl);
 
     // Camera operations
     void AddCamera();
@@ -363,7 +363,7 @@ public class UserService : IUserService { }
 public class LoggerService { }
 ```
 
-The generator creates `AddDependencyRegistrationsFrom{AssemblySuffix}()` extension methods. For `Linksoft.CameraWall.Wpf`, this generates `AddDependencyRegistrationsFromWpf()`.
+The generator creates `AddDependencyRegistrationsFrom{AssemblySuffix}()` extension methods. For `AtcSoft.CameraWall.Wpf`, this generates `AddDependencyRegistrationsFromWpf()`.
 
 Advanced options:
 ```csharp
@@ -537,5 +537,5 @@ Debug logging is configured via Serilog in `App.xaml.cs`:
 ## Build
 ```bash
 dotnet build
-dotnet run --project src/Linksoft.CameraWall.Wpf.App
+dotnet run --project src/AtcSoft.CameraWall.Wpf.App
 ```

@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Classified cause of a transition into <see cref="PlayerState.Error"/>.

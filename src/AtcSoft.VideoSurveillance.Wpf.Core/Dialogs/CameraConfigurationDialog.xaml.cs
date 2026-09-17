@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
 /// <summary>
 /// Dialog for configuring a camera (add or edit).

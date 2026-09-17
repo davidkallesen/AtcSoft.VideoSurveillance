@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// JSON file-based implementation of <see cref="IApplicationSettingsService"/> for the server edition.

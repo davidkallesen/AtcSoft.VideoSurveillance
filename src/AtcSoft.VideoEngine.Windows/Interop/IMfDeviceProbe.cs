@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Interop;
+namespace AtcSoft.VideoEngine.Windows.Interop;
 
 /// <summary>
 /// Internal seam for the Media Foundation enumeration call. The real

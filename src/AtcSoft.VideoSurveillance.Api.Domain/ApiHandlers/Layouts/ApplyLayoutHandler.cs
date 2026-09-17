@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers.Layouts;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Layouts;
 
 /// <summary>
 /// Handler business logic for the ApplyLayout operation.

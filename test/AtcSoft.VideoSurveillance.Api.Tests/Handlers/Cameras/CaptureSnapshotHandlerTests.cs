@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Handlers.Cameras;
+namespace AtcSoft.VideoSurveillance.Api.Handlers.Cameras;
 
 public class CaptureSnapshotHandlerTests
 {
@@ -44,9 +44,9 @@ public class CaptureSnapshotHandlerTests
             CancellationToken.None);
 
         pipeline.ConnectionStateChanged += Raise.EventWith(
-            new Linksoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs(
-                Linksoft.VideoSurveillance.Enums.ConnectionState.Connecting,
-                Linksoft.VideoSurveillance.Enums.ConnectionState.Connected));
+            new AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs(
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Connecting,
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Connected));
 
         var result = await executeTask;
 
@@ -78,9 +78,9 @@ public class CaptureSnapshotHandlerTests
             CancellationToken.None);
 
         pipeline.ConnectionStateChanged += Raise.EventWith(
-            new Linksoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs(
-                Linksoft.VideoSurveillance.Enums.ConnectionState.Connecting,
-                Linksoft.VideoSurveillance.Enums.ConnectionState.Error));
+            new AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs(
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Connecting,
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
 
         var result = await executeTask;
 

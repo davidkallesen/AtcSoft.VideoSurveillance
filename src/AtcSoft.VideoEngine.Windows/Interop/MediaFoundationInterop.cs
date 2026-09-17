@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Interop;
+namespace AtcSoft.VideoEngine.Windows.Interop;
 
 /// <summary>
 /// Native Media Foundation P/Invoke surface used by

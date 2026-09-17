@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 
 /// <summary>
 /// Builds and persists a client-side diagnostics report. Designed for

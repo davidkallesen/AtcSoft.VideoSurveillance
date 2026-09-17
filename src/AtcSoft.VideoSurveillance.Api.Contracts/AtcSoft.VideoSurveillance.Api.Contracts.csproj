@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Core\Linksoft.VideoSurveillance.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

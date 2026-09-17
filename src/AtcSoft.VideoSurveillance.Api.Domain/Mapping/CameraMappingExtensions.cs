@@ -1,13 +1,13 @@
-using CoreCameraConfiguration = Linksoft.VideoSurveillance.Models.CameraConfiguration;
-using CoreCameraProtocol = Linksoft.VideoSurveillance.Enums.CameraProtocol;
-using CoreCameraSource = Linksoft.VideoSurveillance.Enums.CameraSource;
-using CoreConnectionState = Linksoft.VideoSurveillance.Enums.ConnectionState;
-using CoreOverlayPosition = Linksoft.VideoSurveillance.Enums.OverlayPosition;
-using CoreRecordingState = Linksoft.VideoSurveillance.Enums.RecordingState;
-using CoreUsbConnectionSettings = Linksoft.VideoSurveillance.Models.Settings.UsbConnectionSettings;
-using CoreUsbStreamFormat = Linksoft.VideoSurveillance.Models.UsbStreamFormat;
+using CoreCameraConfiguration = AtcSoft.VideoSurveillance.Models.CameraConfiguration;
+using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
+using CoreCameraSource = AtcSoft.VideoSurveillance.Enums.CameraSource;
+using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
+using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
+using CoreRecordingState = AtcSoft.VideoSurveillance.Enums.RecordingState;
+using CoreUsbConnectionSettings = AtcSoft.VideoSurveillance.Models.Settings.UsbConnectionSettings;
+using CoreUsbStreamFormat = AtcSoft.VideoSurveillance.Models.UsbStreamFormat;
 
-namespace Linksoft.VideoSurveillance.Api.Domain.Mapping;
+namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 
 internal static class CameraMappingExtensions
 {

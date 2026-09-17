@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Models.Settings;
+namespace AtcSoft.VideoSurveillance.Models.Settings;
 
 /// <summary>
 /// Settings for the recording playback overlay display.

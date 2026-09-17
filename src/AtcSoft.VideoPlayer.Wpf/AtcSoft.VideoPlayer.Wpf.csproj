@@ -5,19 +5,19 @@
     <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
-    <Description>WPF video player control powered by Linksoft.VideoEngine. Drop-in VideoHost control for RTSP/HTTP surveillance streams.</Description>
+    <Description>WPF video player control powered by AtcSoft.VideoEngine. Drop-in VideoHost control for RTSP/HTTP surveillance streams.</Description>
     <PackageTags>wpf;video;player;control;surveillance;rtsp</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet Package Metadata">
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/davidkallesen/Linksoft.VideoEngine</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davidkallesen/Linksoft.VideoEngine.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoEngine.DirectX\Linksoft.VideoEngine.DirectX.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoEngine.DirectX\AtcSoft.VideoEngine.DirectX.csproj" />
   </ItemGroup>
 
 </Project>

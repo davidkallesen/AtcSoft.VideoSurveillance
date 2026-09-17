@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Linksoft.VideoSurveillance</RootNamespace>
+    <RootNamespace>AtcSoft.VideoSurveillance</RootNamespace>
     <NoWarn>$(NoWarn);CA1716</NoWarn>
     <IsPackable>true</IsPackable>
     <Description>Core domain library for video surveillance — models, enums, events, and service interfaces with zero UI dependencies.</Description>
@@ -11,8 +11,8 @@
 
   <PropertyGroup Label="NuGet Package Metadata">
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davidkallesen/Linksoft.VideoSurveillance.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 

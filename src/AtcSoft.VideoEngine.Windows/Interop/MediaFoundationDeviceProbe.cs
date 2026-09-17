@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Interop;
+namespace AtcSoft.VideoEngine.Windows.Interop;
 
 /// <summary>
 /// Real <see cref="IMfDeviceProbe"/> backed by Media Foundation's
@@ -324,7 +324,7 @@ internal sealed class MediaFoundationDeviceProbe : IMfDeviceProbe
             return null;
         }
 
-        var pixelFormat = Linksoft.VideoEngine.Windows.MediaFoundation.PixelFormatGuidMapper.Map(subtypeGuid);
+        var pixelFormat = AtcSoft.VideoEngine.Windows.MediaFoundation.PixelFormatGuidMapper.Map(subtypeGuid);
         if (pixelFormat is null)
         {
             return null;

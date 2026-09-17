@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Helpers;
+namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// Computes clock-aligned segmentation slots and detects whether a slot

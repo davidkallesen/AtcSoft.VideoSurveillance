@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations;
 
 /// <summary>
 /// Capture override settings for per-camera configuration (recording path, format, triggers).

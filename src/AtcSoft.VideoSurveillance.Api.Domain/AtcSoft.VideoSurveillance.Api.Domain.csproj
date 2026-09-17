@@ -17,12 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Linksoft.VideoSurveillance.Api.Tests" />
+    <InternalsVisibleTo Include="AtcSoft.VideoSurveillance.Api.Tests" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Api.Contracts\Linksoft.VideoSurveillance.Api.Contracts.csproj" />
-    <ProjectReference Include="..\Linksoft.VideoSurveillance.Core\Linksoft.VideoSurveillance.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Api.Contracts\AtcSoft.VideoSurveillance.Api.Contracts.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

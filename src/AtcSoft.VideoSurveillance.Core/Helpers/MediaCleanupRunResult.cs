@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Helpers;
+namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// Result of <see cref="MediaCleanupRunner.CleanDirectory"/>.

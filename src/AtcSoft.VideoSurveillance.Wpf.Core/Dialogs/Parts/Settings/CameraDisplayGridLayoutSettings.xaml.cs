@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.Settings;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.Settings;
 
 /// <summary>
 /// Grid layout settings (drag and drop, auto-save).

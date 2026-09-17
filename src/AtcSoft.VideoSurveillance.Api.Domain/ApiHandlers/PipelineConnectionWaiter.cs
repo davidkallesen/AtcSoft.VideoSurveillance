@@ -1,8 +1,8 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers;
 
 /// <summary>
 /// Waits for an <see cref="IMediaPipeline"/> to reach
-/// <see cref="Linksoft.VideoSurveillance.Enums.ConnectionState.Connected"/>.
+/// <see cref="AtcSoft.VideoSurveillance.Enums.ConnectionState.Connected"/>.
 /// Used by handlers (StartRecording, CaptureSnapshot) that need a definite
 /// connect outcome before acting on the pipeline — pipelineFactory.Create
 /// returns immediately while the actual RTSP open runs on a background thread,
@@ -25,13 +25,13 @@ internal static class PipelineConnectionWaiter
 
         void Handler(
             object? sender,
-            Linksoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs e)
+            AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs e)
         {
-            if (e.NewState == Linksoft.VideoSurveillance.Enums.ConnectionState.Connected)
+            if (e.NewState == AtcSoft.VideoSurveillance.Enums.ConnectionState.Connected)
             {
                 tcs.TrySetResult(true);
             }
-            else if (e.NewState == Linksoft.VideoSurveillance.Enums.ConnectionState.Error)
+            else if (e.NewState == AtcSoft.VideoSurveillance.Enums.ConnectionState.Error)
             {
                 tcs.TrySetResult(false);
             }

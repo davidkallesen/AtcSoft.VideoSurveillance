@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Blazor.App;
+namespace AtcSoft.VideoSurveillance.Blazor.App;
 
 [SuppressMessage(
     "Naming",

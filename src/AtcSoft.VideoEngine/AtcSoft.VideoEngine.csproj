@@ -10,8 +10,8 @@
 
   <PropertyGroup Label="NuGet Package Metadata">
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/davidkallesen/Linksoft.VideoEngine</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davidkallesen/Linksoft.VideoEngine.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/davidkallesen/AtcSoft.VideoSurveillance.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Linksoft.VideoEngine.Tests" />
+    <InternalsVisibleTo Include="AtcSoft.VideoEngine.Tests" />
   </ItemGroup>
 
 </Project>

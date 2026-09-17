@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Specifies the state of a video player.

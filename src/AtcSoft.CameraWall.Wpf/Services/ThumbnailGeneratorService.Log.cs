@@ -1,4 +1,4 @@
-namespace Linksoft.CameraWall.Wpf.Services;
+namespace AtcSoft.CameraWall.Wpf.Services;
 
 public partial class ThumbnailGeneratorService
 {

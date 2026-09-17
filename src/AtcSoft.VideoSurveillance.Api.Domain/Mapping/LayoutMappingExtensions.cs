@@ -1,7 +1,7 @@
-using CoreCameraLayout = Linksoft.VideoSurveillance.Models.CameraLayout;
-using CoreCameraLayoutItem = Linksoft.VideoSurveillance.Models.CameraLayoutItem;
+using CoreCameraLayout = AtcSoft.VideoSurveillance.Models.CameraLayout;
+using CoreCameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
 
-namespace Linksoft.VideoSurveillance.Api.Domain.Mapping;
+namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 
 internal static class LayoutMappingExtensions
 {

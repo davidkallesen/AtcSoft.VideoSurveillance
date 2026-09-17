@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Helpers;
+namespace AtcSoft.VideoEngine.Helpers;
 
 /// <summary>
 /// Pure classification of read-loop error bursts. Lives outside

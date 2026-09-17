@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Messages;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Messages;
 
 /// <summary>
 /// Message sent when a camera should be removed from the camera wall.

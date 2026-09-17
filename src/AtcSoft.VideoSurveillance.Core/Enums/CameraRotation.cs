@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Enums;
+namespace AtcSoft.VideoSurveillance.Enums;
 
 /// <summary>
 /// Specifies the clockwise rotation applied to a camera stream.

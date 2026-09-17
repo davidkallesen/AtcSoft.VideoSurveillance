@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Events;
+namespace AtcSoft.VideoSurveillance.Events;
 
 /// <summary>
 /// Carries a <see cref="UsbDeviceDescriptor"/> for the

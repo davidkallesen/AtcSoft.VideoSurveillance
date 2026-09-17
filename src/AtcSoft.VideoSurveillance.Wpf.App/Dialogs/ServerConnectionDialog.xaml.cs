@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.App.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.App.Dialogs;
 
 /// <summary>
 /// Dialog for selecting or entering a server to connect to.

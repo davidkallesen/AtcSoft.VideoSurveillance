@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.ValueConverters;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.ValueConverters;
 
 /// <summary>
 /// Multi-value converter that returns the first value if it's not null, otherwise the second value (default).

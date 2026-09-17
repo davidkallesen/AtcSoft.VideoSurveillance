@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
 /// Test seam over <see cref="SurveillanceHubService"/>'s USB-lifecycle

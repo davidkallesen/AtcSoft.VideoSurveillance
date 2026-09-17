@@ -1,6 +1,6 @@
-namespace Linksoft.VideoSurveillance.Wpf.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
-using CoreUsbDeviceDescriptor = Linksoft.VideoSurveillance.Models.UsbDeviceDescriptor;
+using CoreUsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;
 
 /// <summary>
 /// Thin abstraction over the <see cref="GatewayService"/> USB endpoint.

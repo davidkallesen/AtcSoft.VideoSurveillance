@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// Configuration for the video engine initialization.

@@ -1,13 +1,13 @@
 <atc:NiceWindow
-    x:Class="Linksoft.VideoSurveillance.Wpf.Core.Dialogs.CameraConfigurationDialog"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.CameraConfigurationDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:atcValueConverters="https://github.com/atc-net/atc-wpf/tree/main/schemas/value-converters"
-    xmlns:cameraConfigs="clr-namespace:Linksoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations"
+    xmlns:cameraConfigs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs.Parts.CameraConfigurations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dialogs="clr-namespace:Linksoft.VideoSurveillance.Wpf.Core.Dialogs"
+    xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding Path=DialogTitle}"
     Width="1200"
@@ -59,7 +59,7 @@
                 BorderThickness="0"
                 TabStripPlacement="Top">
 
-                <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=General}">
+                <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=General}">
                     <ScrollViewer
                         Padding="0,0,20,0"
                         HorizontalScrollBarVisibility="Disabled"
@@ -91,7 +91,7 @@
                             <!--  Network branch — 3-column basic settings  -->
                             <atc:GroupBoxExpander
                                 Margin="0,0,0,20"
-                                Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                              Key=CameraConfiguration}"
                                 Visibility="{Binding Path=IsNetworkSource, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                                 <atc:GridEx
@@ -107,7 +107,7 @@
                             <!--  USB branch — display name + device picker side by side  -->
                             <atc:GroupBoxExpander
                                 Margin="0,0,0,20"
-                                Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                              Key=CameraConfiguration}"
                                 Visibility="{Binding Path=IsUsbSource, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                                 <atc:GridEx
@@ -147,7 +147,7 @@
                                 capture, so the whole groupbox is
                                 hidden when Source = USB.
                             -->
-                            <atc:GroupBoxExpander Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=AdvancedSettings}" Visibility="{Binding Path=IsNetworkSource, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                            <atc:GroupBoxExpander Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=AdvancedSettings}" Visibility="{Binding Path=IsNetworkSource, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                                 <cameraConfigs:AdvancedStreamSettingsPart Margin="10,15,0,-5" />
                             </atc:GroupBoxExpander>
 
@@ -155,7 +155,7 @@
                     </ScrollViewer>
                 </TabItem>
 
-                <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Overrides}">
+                <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Overrides}">
                     <atc:GridEx Rows="Auto,*">
 
                         <!--  Info text  -->
@@ -164,7 +164,7 @@
                             Margin="15,15,15,10"
                             FontStyle="Italic"
                             Foreground="{DynamicResource AtcApps.Brushes.Text}"
-                            Text="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                        Key=OverrideSettingsInfo}"
                             TextWrapping="Wrap" />
 
@@ -175,14 +175,14 @@
                             TabStripPlacement="Left">
 
                             <!--  Display Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CameraDisplay}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CameraDisplay}">
                                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                                     <cameraConfigs:DisplayOverridesPart Margin="15" />
                                 </ScrollViewer>
                             </TabItem>
 
                             <!--  Connection Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Connection}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Connection}">
                                 <ScrollViewer
                                     Padding="0,0,20,0"
                                     HorizontalScrollBarVisibility="Disabled"
@@ -192,7 +192,7 @@
                             </TabItem>
 
                             <!--  Performance Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Performance}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Performance}">
                                 <ScrollViewer
                                     Padding="0,0,20,0"
                                     HorizontalScrollBarVisibility="Disabled"
@@ -202,7 +202,7 @@
                             </TabItem>
 
                             <!--  Capture Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Capture}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Capture}">
                                 <ScrollViewer
                                     Padding="0,0,20,0"
                                     HorizontalScrollBarVisibility="Disabled"
@@ -212,7 +212,7 @@
                             </TabItem>
 
                             <!--  Timelapse Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Timelapse}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Timelapse}">
                                 <ScrollViewer
                                     Padding="0,0,20,0"
                                     HorizontalScrollBarVisibility="Disabled"
@@ -222,7 +222,7 @@
                             </TabItem>
 
                             <!--  Motion Detection Overrides  -->
-                            <TabItem Header="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=MotionDetection}">
+                            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=MotionDetection}">
                                 <ScrollViewer
                                     Padding="0,0,20,0"
                                     HorizontalScrollBarVisibility="Disabled"
@@ -247,7 +247,7 @@
                     Grid.Column="0"
                     VerticalAlignment="Center"
                     HideAreas="All"
-                    LabelText="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                     Key=TestResult}"
                     Text="{Binding Path=TestResult}" />
 
@@ -260,20 +260,20 @@
                         MinWidth="80"
                         Padding="16,8"
                         Command="{Binding Path=TestConnectionCommand}"
-                        Content="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                       Key=Test}" />
                     <Button
                         MinWidth="80"
                         Padding="16,8"
                         Command="{Binding Path=SaveCommand}"
-                        Content="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                       Key=Save}"
                         IsDefault="True" />
                     <Button
                         MinWidth="80"
                         Padding="16,8"
                         Command="{Binding Path=CancelCommand}"
-                        Content="{atcTranslation:Resx ResxName=Linksoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                       Key=Cancel}"
                         IsCancel="True" />
                 </atc:UniformSpacingPanel>

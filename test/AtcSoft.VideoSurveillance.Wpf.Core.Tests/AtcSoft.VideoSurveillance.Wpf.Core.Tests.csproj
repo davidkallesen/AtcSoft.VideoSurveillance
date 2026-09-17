@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
-    <RootNamespace>Linksoft.VideoSurveillance.Wpf.Core</RootNamespace>
+    <RootNamespace>AtcSoft.VideoSurveillance.Wpf.Core</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Linksoft.VideoSurveillance.Wpf.Core\Linksoft.VideoSurveillance.Wpf.Core.csproj" />
+    <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Wpf.Core\AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
   </ItemGroup>
 
 </Project>

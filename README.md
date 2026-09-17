@@ -1,9 +1,9 @@
-# 📹 Linksoft.VideoSurveillance
+# 📹 AtcSoft.VideoSurveillance
 
 A professional video surveillance platform for live monitoring of multiple RTSP/HTTP camera streams. Includes a WPF desktop application with an intuitive ribbon interface, a headless REST API + SignalR server edition, and Aspire orchestration.
 
-[![Release](https://img.shields.io/github/v/release/davidkallesen/Linksoft.VideoSurveillance?include_prereleases)](https://github.com/davidkallesen/Linksoft.VideoSurveillance/releases)
-[![NuGet](https://img.shields.io/nuget/v/Linksoft.CameraWall.Wpf)](https://www.nuget.org/packages/Linksoft.CameraWall.Wpf)
+[![Release](https://img.shields.io/github/v/release/davidkallesen/AtcSoft.VideoSurveillance?include_prereleases)](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/releases)
+[![NuGet](https://img.shields.io/nuget/v/AtcSoft.CameraWall.Wpf)](https://www.nuget.org/packages/AtcSoft.CameraWall.Wpf)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## ✨ Features
@@ -98,7 +98,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Server | ASP.NET Core, SignalR |
 | API Definition | OpenAPI 3.2 (atc-rest-api-source-generator) |
-| Video Engine | Linksoft.VideoEngine (desktop + server, in-process FFmpeg) |
+| Video Engine | AtcSoft.VideoEngine (desktop + server, in-process FFmpeg) |
 | Orchestration | .NET Aspire |
 | MVVM | Atc.XamlToolkit |
 | Source Generators | Atc.SourceGenerators |
@@ -110,33 +110,33 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 ## 🏗️ Solution Structure
 
 ```
-Linksoft.VideoSurveillance/
+AtcSoft.VideoSurveillance/
 ├── src/
-│   ├── Linksoft.VideoSurveillance.Core/        # 📚 Shared library: models, enums, events, service interfaces
-│   ├── Linksoft.VideoEngine/                   # 🎬 Cross-platform video engine (FFmpeg in-process)
-│   ├── Linksoft.VideoEngine.DirectX/           # 🖥️ D3D11VA GPU acceleration for WPF
-│   ├── Linksoft.VideoPlayer.Wpf/               # 🎞️ WPF VideoHost control (DComp surface + overlay)
-│   ├── Linksoft.VideoSurveillance.Wpf.Core/    # 🧩 Shared WPF library (dialogs, controls, services)
-│   ├── Linksoft.CameraWall.Wpf/                # 📦 Reusable CameraWall WPF library (NuGet package)
-│   ├── Linksoft.CameraWall.Wpf.App/            # 🚀 Standalone WPF desktop app (Fluent.Ribbon)
-│   ├── Linksoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, SignalR)
-│   ├── Linksoft.VideoSurveillance.Wpf.App/     # 🚀 WPF API client app (Fluent.Ribbon)
+│   ├── AtcSoft.VideoSurveillance.Core/        # 📚 Shared library: models, enums, events, service interfaces
+│   ├── AtcSoft.VideoEngine/                   # 🎬 Cross-platform video engine (FFmpeg in-process)
+│   ├── AtcSoft.VideoEngine.DirectX/           # 🖥️ D3D11VA GPU acceleration for WPF
+│   ├── AtcSoft.VideoPlayer.Wpf/               # 🎞️ WPF VideoHost control (DComp surface + overlay)
+│   ├── AtcSoft.VideoSurveillance.Wpf.Core/    # 🧩 Shared WPF library (dialogs, controls, services)
+│   ├── AtcSoft.CameraWall.Wpf/                # 📦 Reusable CameraWall WPF library (NuGet package)
+│   ├── AtcSoft.CameraWall.Wpf.App/            # 🚀 Standalone WPF desktop app (Fluent.Ribbon)
+│   ├── AtcSoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, SignalR)
+│   ├── AtcSoft.VideoSurveillance.Wpf.App/     # 🚀 WPF API client app (Fluent.Ribbon)
 │   ├── VideoSurveillance.yaml                  # 📝 OpenAPI 3.2 spec (shared contract)
-│   ├── Linksoft.VideoSurveillance.Api.Contracts/ # 📋 Generated: endpoints, models, handler interfaces
-│   ├── Linksoft.VideoSurveillance.Api.Domain/  # ⚙️ Handler implementations calling Core services
-│   ├── Linksoft.VideoSurveillance.Api/         # 🌍 ASP.NET Core host with SignalR hub
-│   ├── Linksoft.VideoSurveillance.Blazor.App/  # 🌐 Blazor WebAssembly UI (MudBlazor)
-│   └── Linksoft.VideoSurveillance.Aspire/      # ☁️ Aspire AppHost (orchestration + dashboard)
+│   ├── AtcSoft.VideoSurveillance.Api.Contracts/ # 📋 Generated: endpoints, models, handler interfaces
+│   ├── AtcSoft.VideoSurveillance.Api.Domain/  # ⚙️ Handler implementations calling Core services
+│   ├── AtcSoft.VideoSurveillance.Api/         # 🌍 ASP.NET Core host with SignalR hub
+│   ├── AtcSoft.VideoSurveillance.Blazor.App/  # 🌐 Blazor WebAssembly UI (MudBlazor)
+│   └── AtcSoft.VideoSurveillance.Aspire/      # ☁️ Aspire AppHost (orchestration + dashboard)
 │
 ├── setup/
-│   ├── Linksoft.CameraWall.Installer/          # 📦 WiX MSI installer (CameraWall)
-│   └── Linksoft.VideoSurveillance.Installer/   # 📦 WiX MSI installer (VideoSurveillance)
+│   ├── AtcSoft.CameraWall.Installer/          # 📦 WiX MSI installer (CameraWall)
+│   └── AtcSoft.VideoSurveillance.Installer/   # 📦 WiX MSI installer (VideoSurveillance)
 │
 ├── test/
-│   ├── Linksoft.VideoSurveillance.Core.Tests/      # ✅ xUnit v3 tests for Core
-│   ├── Linksoft.VideoSurveillance.Wpf.Core.Tests/  # ✅ xUnit v3 tests for Wpf.Core
-│   ├── Linksoft.VideoSurveillance.Api.Tests/        # ✅ xUnit v3 tests for API
-│   └── Linksoft.VideoEngine.Tests/                  # ✅ xUnit v3 tests for VideoEngine
+│   ├── AtcSoft.VideoSurveillance.Core.Tests/      # ✅ xUnit v3 tests for Core
+│   ├── AtcSoft.VideoSurveillance.Wpf.Core.Tests/  # ✅ xUnit v3 tests for Wpf.Core
+│   ├── AtcSoft.VideoSurveillance.Api.Tests/        # ✅ xUnit v3 tests for API
+│   └── AtcSoft.VideoEngine.Tests/                  # ✅ xUnit v3 tests for VideoEngine
 │
 └── docs/
     ├── architecture.md          # 🏛️ Architecture diagrams and assembly details
@@ -153,29 +153,29 @@ Arrows point from a project to the projects it depends on (compile-time `Project
 ```mermaid
 flowchart TD
     subgraph Foundation["📚 Foundation (cross-platform, net10.0)"]
-        Core[Linksoft.VideoSurveillance.Core]
-        VE[Linksoft.VideoEngine]
+        Core[AtcSoft.VideoSurveillance.Core]
+        VE[AtcSoft.VideoEngine]
     end
 
     subgraph Server["☁️ Server (REST + SignalR)"]
-        Contracts[Linksoft.VideoSurveillance.Api.Contracts]
-        Domain[Linksoft.VideoSurveillance.Api.Domain]
-        Api[Linksoft.VideoSurveillance.Api]
-        Blazor[Linksoft.VideoSurveillance.Blazor.App]
+        Contracts[AtcSoft.VideoSurveillance.Api.Contracts]
+        Domain[AtcSoft.VideoSurveillance.Api.Domain]
+        Api[AtcSoft.VideoSurveillance.Api]
+        Blazor[AtcSoft.VideoSurveillance.Blazor.App]
     end
 
     subgraph Windows["🪟 Windows-only (net10.0-windows)"]
-        VEDx[Linksoft.VideoEngine.DirectX]
-        VPWpf[Linksoft.VideoPlayer.Wpf]
-        WpfCore[Linksoft.VideoSurveillance.Wpf.Core]
-        CamWall[Linksoft.CameraWall.Wpf]
-        VsWpf[Linksoft.VideoSurveillance.Wpf]
+        VEDx[AtcSoft.VideoEngine.DirectX]
+        VPWpf[AtcSoft.VideoPlayer.Wpf]
+        WpfCore[AtcSoft.VideoSurveillance.Wpf.Core]
+        CamWall[AtcSoft.CameraWall.Wpf]
+        VsWpf[AtcSoft.VideoSurveillance.Wpf]
     end
 
     subgraph Apps["🚀 Applications"]
-        CamApp[Linksoft.CameraWall.Wpf.App]
-        VsApp[Linksoft.VideoSurveillance.Wpf.App]
-        Aspire[Linksoft.VideoSurveillance.Aspire]
+        CamApp[AtcSoft.CameraWall.Wpf.App]
+        VsApp[AtcSoft.VideoSurveillance.Wpf.App]
+        Aspire[AtcSoft.VideoSurveillance.Aspire]
     end
 
     %% Server stack
@@ -209,7 +209,7 @@ flowchart TD
 
 Services are split between Core (shared) and WPF (UI-specific), all auto-registered via `[Registration]` attributes.
 
-### 📚 Core Services (Linksoft.VideoSurveillance.Core)
+### 📚 Core Services (AtcSoft.VideoSurveillance.Core)
 
 | Service | Description |
 |---------|-------------|
@@ -225,7 +225,7 @@ Services are split between Core (shared) and WPF (UI-specific), all auto-registe
 | `IMediaPipeline` | 🎬 Abstraction for video stream operations (record, capture frame) |
 | `IMediaPipelineFactory` | 🏭 Creates `IMediaPipeline` instances per camera |
 
-### 🖥️ WPF Services (Linksoft.CameraWall.Wpf)
+### 🖥️ WPF Services (AtcSoft.CameraWall.Wpf)
 
 | Service | Description |
 |---------|-------------|
@@ -255,19 +255,19 @@ Override categories: Connection, CameraDisplay, Performance, Recording, MotionDe
 
 ### 📥 Install
 
-Download the latest MSI installer from [GitHub Releases](https://github.com/davidkallesen/Linksoft.VideoSurveillance/releases).
+Download the latest MSI installer from [GitHub Releases](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/releases).
 
 ### 🔨 Build from Source
 
 ```bash
 dotnet build
-dotnet run --project src/Linksoft.CameraWall.Wpf.App
+dotnet run --project src/AtcSoft.CameraWall.Wpf.App
 ```
 
 ### ☁️ Run Server Edition with Aspire
 
 ```bash
-dotnet run --project src/Linksoft.VideoSurveillance.Aspire
+dotnet run --project src/AtcSoft.VideoSurveillance.Aspire
 ```
 
 This starts the Aspire dashboard and the REST API server. The dashboard provides monitoring, logs, and traces for all orchestrated services.
@@ -275,7 +275,7 @@ This starts the Aspire dashboard and the REST API server. The dashboard provides
 ### 🌍 Run Server Edition Standalone
 
 ```bash
-dotnet run --project src/Linksoft.VideoSurveillance.Api
+dotnet run --project src/AtcSoft.VideoSurveillance.Api
 ```
 
 ### 📁 User Data

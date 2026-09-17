@@ -1,6 +1,6 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
-using CameraConfiguration = Linksoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
 
 public sealed class CameraStorageServiceUsbTests : IDisposable
 {

@@ -1,7 +1,7 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Dialogs;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
-using CameraConfiguration = Linksoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
-using IWpfCoreSettingsService = Linksoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
+using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+using IWpfCoreSettingsService = AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
 
 public class CameraConfigurationDialogViewModelSourceTests
 {
@@ -54,7 +54,7 @@ public class CameraConfigurationDialogViewModelSourceTests
         {
             DeviceId = "abc",
             FriendlyName = "Cam",
-            Format = new Linksoft.VideoSurveillance.Models.UsbStreamFormat { Width = 1920, Height = 1080, FrameRate = 30 },
+            Format = new AtcSoft.VideoSurveillance.Models.UsbStreamFormat { Width = 1920, Height = 1080, FrameRate = 30 },
         };
 
         var vm = BuildVm(camera);
@@ -137,7 +137,7 @@ public class CameraConfigurationDialogViewModelSourceTests
         {
             DeviceId = @"\\?\usb#vid_046d&pid_085e",
             FriendlyName = "Logitech BRIO",
-            Format = new Linksoft.VideoSurveillance.Models.UsbStreamFormat
+            Format = new AtcSoft.VideoSurveillance.Models.UsbStreamFormat
             {
                 Width = 1920,
                 Height = 1080,

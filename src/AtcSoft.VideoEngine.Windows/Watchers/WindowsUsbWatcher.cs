@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine.Windows.Watchers;
+namespace AtcSoft.VideoEngine.Windows.Watchers;
 
 /// <summary>
 /// <see cref="IUsbCameraWatcher"/> backed by WMI's

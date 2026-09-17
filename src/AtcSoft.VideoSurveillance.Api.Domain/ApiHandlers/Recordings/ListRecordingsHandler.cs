@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
+namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 
 /// <summary>
 /// Handler business logic for the ListRecordings operation.
@@ -101,7 +101,7 @@ public sealed class ListRecordingsHandler(
     // association again. A shared helper would prevent this drift but we keep
     // it inline here to avoid introducing a Core dependency for one transformation.
     private static string GetCameraFolderName(
-        Linksoft.VideoSurveillance.Models.CameraConfiguration camera)
+        AtcSoft.VideoSurveillance.Models.CameraConfiguration camera)
         => string.IsNullOrWhiteSpace(camera.Display.DisplayName)
             ? camera.Id.ToString("N")[..8]
             : string.Join("_", camera.Display.DisplayName.Split(Path.GetInvalidFileNameChars()));

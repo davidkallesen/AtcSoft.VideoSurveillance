@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Events;
+namespace AtcSoft.VideoSurveillance.Events;
 
 /// <summary>
 /// Event arguments for media cleanup completion.

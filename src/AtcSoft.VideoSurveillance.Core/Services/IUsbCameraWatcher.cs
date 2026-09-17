@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// Raises <see cref="DeviceArrived"/> / <see cref="DeviceRemoved"/>

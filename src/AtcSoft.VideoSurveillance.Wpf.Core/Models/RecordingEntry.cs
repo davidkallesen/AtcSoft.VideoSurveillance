@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Models;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
 /// <summary>
 /// Represents a recorded video file entry.

@@ -1,13 +1,13 @@
 // ReSharper disable RedundantArgumentDefaultValue
-namespace Linksoft.VideoSurveillance.Wpf.Core.Services;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 
 /// <summary>
-/// Service for checking GitHub releases for the Linksoft.VideoSurveillance repository.
+/// Service for checking GitHub releases for the AtcSoft.VideoSurveillance repository.
 /// </summary>
 [Registration(Lifetime.Singleton)]
 public sealed class GitHubReleaseService : IGitHubReleaseService, IDisposable
 {
-    private const string GitHubApiUrl = "https://api.github.com/repos/davidkallesen/Linksoft.VideoSurveillance/releases/latest";
+    private const string GitHubApiUrl = "https://api.github.com/repos/davidkallesen/AtcSoft.VideoSurveillance/releases/latest";
     private const string UserAgent = "Linksoft-VideoSurveillance";
     private static readonly TimeSpan LockAcquisitionTimeout = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan HttpRequestTimeout = TimeSpan.FromSeconds(10);

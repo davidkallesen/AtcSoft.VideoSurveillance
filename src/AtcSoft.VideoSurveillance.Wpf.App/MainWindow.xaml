@@ -1,8 +1,8 @@
 <atcTheming:NiceWindow
-    x:Class="Linksoft.VideoSurveillance.Wpf.App.MainWindow"
+    x:Class="AtcSoft.VideoSurveillance.Wpf.App.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:app="clr-namespace:Linksoft.VideoSurveillance.Wpf.App"
+    xmlns:app="clr-namespace:AtcSoft.VideoSurveillance.Wpf.App"
     xmlns:atcTheming="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluent="urn:fluent-ribbon"

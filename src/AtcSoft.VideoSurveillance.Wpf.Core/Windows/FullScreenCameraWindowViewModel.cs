@@ -1,5 +1,5 @@
 // ReSharper disable GCSuppressFinalizeForTypeWithoutDestructor
-namespace Linksoft.VideoSurveillance.Wpf.Core.Windows;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 
 /// <summary>
 /// ViewModel for the fullscreen camera window.

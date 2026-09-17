@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.UserControls;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
 /// Control for displaying multiple camera tiles in a dynamic grid layout.
@@ -378,11 +378,11 @@ public partial class CameraGrid
     /// Sets the device-unplugged flag on the tile bound to the
     /// specified camera id. Called by the camera-wall manager (or the
     /// API-client equivalent) from the
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
     /// events — on
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceRemoved"/>
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceRemoved"/>
     /// with <paramref name="unplugged"/> = <c>true</c>, on
-    /// <see cref="Linksoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>
+    /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher.DeviceArrived"/>
     /// with <c>false</c>. The lookup is via the tracked-tile registry
     /// (not the visual tree) so unplug events received before the tile
     /// container materializes still hit the right instance once it

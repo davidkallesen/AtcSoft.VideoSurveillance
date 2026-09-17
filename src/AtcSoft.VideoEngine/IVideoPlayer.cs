@@ -1,4 +1,4 @@
-namespace Linksoft.VideoEngine;
+namespace AtcSoft.VideoEngine;
 
 /// <summary>
 /// High-level interface for a video player capable of opening streams,

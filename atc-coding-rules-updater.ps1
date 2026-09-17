@@ -8,6 +8,6 @@ atc-coding-rules-updater `
     run `
     -p $currentPath `
     --optionsPath $currentPath'\atc-coding-rules-updater.json' `
-    --buildFile MTS.Linksoft.Projects.sln `
+    --buildFile MTS.AtcSoft.Projects.sln `
     --useTemporarySuppressions `
     --verbose

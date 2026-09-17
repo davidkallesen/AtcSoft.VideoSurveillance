@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Services;
+namespace AtcSoft.VideoSurveillance.Services;
 
 /// <summary>
 /// No-op implementation. Registered as the DI default so the rest of

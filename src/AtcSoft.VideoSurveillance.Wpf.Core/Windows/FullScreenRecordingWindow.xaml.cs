@@ -1,4 +1,4 @@
-namespace Linksoft.VideoSurveillance.Wpf.Core.Windows;
+namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 
 /// <summary>
 /// Fullscreen window for playing back recorded video files.
