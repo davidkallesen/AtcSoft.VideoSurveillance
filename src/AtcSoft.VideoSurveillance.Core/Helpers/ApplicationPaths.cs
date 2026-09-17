@@ -7,7 +7,7 @@ public static class ApplicationPaths
 {
     private static readonly string BaseDataPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "Linksoft",
+        "AtcSoft",
         "VideoSurveillance");
 
     /// <summary>

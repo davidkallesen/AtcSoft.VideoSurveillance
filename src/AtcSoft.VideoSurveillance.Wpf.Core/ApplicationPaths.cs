@@ -8,7 +8,7 @@ public static class ApplicationPaths
 {
     private static string baseDataPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "Linksoft",
+        "AtcSoft",
         "CameraWall");
 
     /// <summary>
@@ -50,7 +50,7 @@ public static class ApplicationPaths
     {
         baseDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "Linksoft",
+            "AtcSoft",
             applicationName);
     }
 }

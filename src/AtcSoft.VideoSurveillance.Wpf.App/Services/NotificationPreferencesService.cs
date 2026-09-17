@@ -8,7 +8,7 @@ public sealed class NotificationPreferencesService : JsonFileServiceBase<Notific
 {
     private static readonly string PreferencesFilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Linksoft",
+        "AtcSoft",
         "VideoSurveillance",
         "notifications.json");
 

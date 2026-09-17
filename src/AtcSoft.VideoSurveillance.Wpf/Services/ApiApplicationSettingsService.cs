@@ -55,7 +55,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
 
         clientPrefsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Linksoft",
+            "AtcSoft",
             "VideoSurveillance.Client",
             "client-prefs.json");
     }
