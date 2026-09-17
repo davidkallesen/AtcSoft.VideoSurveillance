@@ -282,7 +282,7 @@ dotnet run --project src/AtcSoft.VideoSurveillance.Api
 
 Application data is stored in:
 ```
-%ProgramData%/Linksoft/CameraWall/
+%ProgramData%/AtcSoft/CameraWall/
 ├── cameras.json        # 📷 Camera configurations and layouts
 ├── settings.json       # ⚙️ Application settings
 ├── logs/               # 📝 Debug log files (when enabled)

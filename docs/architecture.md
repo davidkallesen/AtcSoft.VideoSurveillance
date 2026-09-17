@@ -291,7 +291,7 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph ProgramData["%ProgramData%/Linksoft/CameraWall/"]
+    subgraph ProgramData["%ProgramData%/AtcSoft/CameraWall/"]
         cameras["cameras.json<br/><i>Camera configs & layouts</i>"]
         settings["settings.json<br/><i>Application settings</i>"]
         logs["logs/<br/><i>Serilog log files</i>"]
@@ -300,7 +300,7 @@ graph LR
     end
 ```
 
-Both the WPF app and the API server use the same JSON-based storage format under `%ProgramData%\Linksoft\CameraWall\`. The `ApplicationPaths` helper in Core provides default paths.
+Both the WPF app and the API server use the same JSON-based storage format under `%ProgramData%\AtcSoft\CameraWall\`. The `ApplicationPaths` helper in Core provides default paths.
 
 ## 🔀 Per-Camera Override System
 

@@ -2,7 +2,7 @@
 
 ## 🎯 Vision
 
-A native WPF desktop client for the Linksoft VideoSurveillance REST API server. Unlike the standalone CameraWall app (which connects directly to cameras via RTSP/HTTP), this app is a **thin client** that communicates exclusively through the API server and SignalR hub.
+A native WPF desktop client for the AtcSoft VideoSurveillance REST API server. Unlike the standalone CameraWall app (which connects directly to cameras via RTSP/HTTP), this app is a **thin client** that communicates exclusively through the API server and SignalR hub.
 
 Key differentiator: native recording playback over HTTP using VideoEngine/MediaElement instead of browser-based HLS streaming.
 
@@ -174,7 +174,7 @@ The following VS.Wpf dialogs/windows intentionally remain app-specific because t
 - [x] Server connection dialog on startup (URL, optional auth token)
 - [x] Remember last connected server URL (persisted locally)
 - [x] Multiple server profiles (add, edit, delete, switch)
-- [x] Server profile storage in local JSON config (`%LocalAppData%\Linksoft\VideoSurveillance\servers.json`)
+- [x] Server profile storage in local JSON config (`%LocalAppData%\AtcSoft\VideoSurveillance\servers.json`)
 - [x] "Change Server" backstage button (restarts with `--choose-server` flag)
 - [x] Aspire detection (skip dialog, hide Change Server when Aspire-managed)
 - [ ] Auto-reconnect to API and SignalR on network recovery (deferred)
@@ -308,12 +308,12 @@ VideoSurveillance.Wpf.App is a thin client, but some data must be stored locally
 
 | Data | Storage | Location |
 |------|---------|----------|
-| Server profiles | Local JSON | `%LocalAppData%\Linksoft\VideoSurveillance\servers.json` |
-| Window state | Local JSON | `%LocalAppData%\Linksoft\VideoSurveillance\window-state.json` |
-| Notification preferences | Local JSON | `%LocalAppData%\Linksoft\VideoSurveillance\notifications.json` |
-| Keyboard shortcuts | Local JSON | `%LocalAppData%\Linksoft\VideoSurveillance\shortcuts.json` |
-| Debug logs | Local files | `%ProgramData%\Linksoft\VideoSurveillance\logs\` |
-| Cached snapshots | Local files | `%ProgramData%\Linksoft\VideoSurveillance\snapshots\` |
+| Server profiles | Local JSON | `%LocalAppData%\AtcSoft\VideoSurveillance\servers.json` |
+| Window state | Local JSON | `%LocalAppData%\AtcSoft\VideoSurveillance\window-state.json` |
+| Notification preferences | Local JSON | `%LocalAppData%\AtcSoft\VideoSurveillance\notifications.json` |
+| Keyboard shortcuts | Local JSON | `%LocalAppData%\AtcSoft\VideoSurveillance\shortcuts.json` |
+| Debug logs | Local files | `%ProgramData%\AtcSoft\VideoSurveillance\logs\` |
+| Cached snapshots | Local files | `%ProgramData%\AtcSoft\VideoSurveillance\snapshots\` |
 | Camera config | **Server** (API) | `GET/PUT /api/cameras` |
 | Layouts | **Server** (API) | `GET/PUT /api/layouts` |
 | Settings | **Server** (API) | `GET/PUT /api/settings` |

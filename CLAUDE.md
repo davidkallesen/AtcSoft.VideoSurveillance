@@ -518,11 +518,11 @@ Provides default application paths using `Environment.SpecialFolder.CommonApplic
 ```csharp
 public static class ApplicationPaths
 {
-    public static string DefaultLogsPath { get; }       // {ProgramData}\Linksoft\CameraWall\logs
-    public static string DefaultSnapshotsPath { get; }  // {ProgramData}\Linksoft\CameraWall\snapshots
-    public static string DefaultRecordingsPath { get; } // {ProgramData}\Linksoft\CameraWall\recordings
-    public static string DefaultSettingsPath { get; }   // {ProgramData}\Linksoft\CameraWall\settings.json
-    public static string DefaultCameraDataPath { get; } // {ProgramData}\Linksoft\CameraWall\cameras.json
+    public static string DefaultLogsPath { get; }       // {ProgramData}\AtcSoft\CameraWall\logs
+    public static string DefaultSnapshotsPath { get; }  // {ProgramData}\AtcSoft\CameraWall\snapshots
+    public static string DefaultRecordingsPath { get; } // {ProgramData}\AtcSoft\CameraWall\recordings
+    public static string DefaultSettingsPath { get; }   // {ProgramData}\AtcSoft\CameraWall\settings.json
+    public static string DefaultCameraDataPath { get; } // {ProgramData}\AtcSoft\CameraWall\cameras.json
 }
 ```
 
