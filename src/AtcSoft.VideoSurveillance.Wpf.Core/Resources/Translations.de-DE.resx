@@ -423,8 +423,8 @@
   <data name="About" xml:space="preserve">
     <value>Über</value>
   </data>
-  <data name="AboutLinksoftCameraWall" xml:space="preserve">
-    <value>Über Linksoft Camera Wall</value>
+  <data name="AboutAtcSoftCameraWall" xml:space="preserve">
+    <value>Über AtcSoft Camera Wall</value>
   </data>
   <data name="Version" xml:space="preserve">
     <value>Version</value>
@@ -646,7 +646,7 @@
     <value>Verbunden</value>
   </data>
   <data name="ApplicationTitle" xml:space="preserve">
-    <value>Linksoft Camera Wall</value>
+    <value>AtcSoft Camera Wall</value>
   </data>
   <data name="InitializePrefix" xml:space="preserve">
     <value>Initialisieren:</value>

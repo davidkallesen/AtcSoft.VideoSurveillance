@@ -2,7 +2,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
 /// Per-user-machine preferences for the WPF API client. Persisted to
-/// <c>%LocalAppData%\Linksoft\VideoSurveillance.Client\client-prefs.json</c>
+/// <c>%LocalAppData%\AtcSoft\VideoSurveillance.Client\client-prefs.json</c>
 /// — only the handful of fields that genuinely belong to *this* Windows
 /// user on *this* machine and would be wrong to share across every WPF
 /// client connected to a given API server. Everything else (cameras,

@@ -11,7 +11,7 @@
     xmlns:fluent="urn:fluent-ribbon"
     xmlns:fontIcons="clr-namespace:Atc.Wpf.FontIcons;assembly=Atc.Wpf.FontIcons"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title=".:: Linksoft Camera Wall ::."
+    Title=".:: AtcSoft Camera Wall ::."
     Width="1500"
     Height="1000"
     MinWidth="700"

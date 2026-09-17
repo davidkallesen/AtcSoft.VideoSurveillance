@@ -42,7 +42,7 @@ public static class ApplicationPaths
         => Path.Combine(baseDataPath, "cameras.json");
 
     /// <summary>
-    /// Configures the application folder name under Linksoft in ProgramData.
+    /// Configures the application folder name under AtcSoft in ProgramData.
     /// Must be called before any path properties are accessed.
     /// </summary>
     /// <param name="applicationName">The application folder name (e.g. "CameraWall" or "VideoSurveillance").</param>

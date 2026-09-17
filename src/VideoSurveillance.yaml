@@ -1,7 +1,7 @@
 openapi: "3.2.0"
 info:
   version: 1.0.0
-  title: Linksoft Video Surveillance API
+  title: AtcSoft Video Surveillance API
   description: REST API for headless video surveillance — camera management, recording, and live streaming.
   license:
     name: MIT

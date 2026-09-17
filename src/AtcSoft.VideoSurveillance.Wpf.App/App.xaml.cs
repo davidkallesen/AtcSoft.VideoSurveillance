@@ -141,12 +141,12 @@ public partial class App
         StartupEventArgs args)
     {
         // Configure application paths before anything uses them. Points at
-        // the same folder as the API server (Linksoft\VideoSurveillance\)
+        // the same folder as the API server (AtcSoft\VideoSurveillance\)
         // so the "default" path labels shown in the Settings dialog (e.g.
         // recordings / logs) match where the server actually keeps things.
         // The WPF client itself never writes to those directories — its
         // only on-disk file is the per-user prefs at %LocalAppData%
-        // \Linksoft\VideoSurveillance.Client\client-prefs.json, written by
+        // \AtcSoft\VideoSurveillance.Client\client-prefs.json, written by
         // ApiApplicationSettingsService.
         ApplicationPaths.Configure("VideoSurveillance");
 
@@ -168,7 +168,7 @@ public partial class App
         // 3. Show splash screen
         var splashScreen = new SplashScreenWindow
         {
-            Header = "Linksoft Video Surveillance",
+            Header = "AtcSoft Video Surveillance",
             VersionText = $"Version {ApplicationHelper.GetVersion()}",
         };
 
