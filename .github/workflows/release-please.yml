@@ -106,7 +106,11 @@ jobs:
 
       - name: Download FFmpeg
         run: |
-          $ffmpegUrl = "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.0.1-full_build-shared.7z"
+          # gyan.dev keeps only the latest build at this path and deletes older
+          # ones, so a pinned version eventually 404s — that is what broke the
+          # v1.1.0 installer jobs. Must stay on FFmpeg 8.x: Flyleaf.FFmpeg.Bindings
+          # loads avutil.60*, which is the 8.x ABI.
+          $ffmpegUrl = "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-full_build-shared.7z"
           Invoke-WebRequest -Uri $ffmpegUrl -OutFile ffmpeg.7z
           7z x ffmpeg.7z -offmpeg-temp
           $binDir = Get-ChildItem -Path ffmpeg-temp -Recurse -Directory -Filter "bin" | Select-Object -First 1
