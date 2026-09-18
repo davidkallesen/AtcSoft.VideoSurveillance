@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.0](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.1.1...v1.2.0) (2026-09-18)
+
+
+### New features
+
+* move data roots from Linksoft to AtcSoft ([80c6a38](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/80c6a388dd8d84876575dca763f99a7ecad035d8))
+* rebrand both installers to AtcSoft ([9220cbd](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/9220cbdb64a8d541c0d41928c44855f177a6f215))
+* rebrand the remaining user-visible Linksoft strings to AtcSoft ([86b94cc](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/86b94cc43a56af18359e5f3b6bf34957e3a66927))
+* rename product and namespaces from Linksoft to AtcSoft ([0668929](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/06689295fe602003e2bef383bb4f762e66e5a4f5))
+
+
+### Bug fixes
+
+* **ci:** fail the release when the NuGet push publishes nothing ([8b0051b](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/8b0051b674c0492392d8f7f90354bda530766206))
+
+
+### Documentation
+
+* rename Linksoft to AtcSoft throughout the documentation ([9e2c04e](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/9e2c04e234e627c4b9a5b7ec5ca6b3d93a90cdb2))
+
 ## [1.1.1](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.1.0...v1.1.1) (2026-09-17)
 
 
