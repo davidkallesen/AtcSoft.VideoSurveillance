@@ -99,8 +99,12 @@ jobs:
             ForEach-Object { $_.Name -replace "\.$([regex]::Escape($version))\.nupkg$", '' }
           if ($ids.Count -eq 0) { throw "No packages to verify" }
 
+          # 30 attempts x 30s = 15 minutes. The v1.2.2 release needed more than
+          # the original 5 minutes: three packages appeared between attempts 7
+          # and 9, and the last two arrived after the window had already closed,
+          # failing a release that had in fact published everything.
           $pending = [System.Collections.Generic.List[string]]::new([string[]]$ids)
-          for ($i = 1; $i -le 10 -and $pending.Count -gt 0; $i++) {
+          for ($i = 1; $i -le 30 -and $pending.Count -gt 0; $i++) {
             foreach ($id in @($pending)) {
               $url = "https://api.nuget.org/v3-flatcontainer/$($id.ToLowerInvariant())/index.json"
               try {
