@@ -37,6 +37,9 @@ jobs:
     runs-on: windows-latest
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      id-token: write   # required to mint the OIDC token NuGet exchanges for a key
 
     steps:
       - name: Checkout
@@ -51,12 +54,26 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore src/AtcSoft.CameraWall.Wpf/AtcSoft.CameraWall.Wpf.csproj
+        run: dotnet restore AtcSoft.VideoSurveillance.slnx
 
-      # No -p:Version here: the version comes from Directory.Build.props,
-      # which release-please stamped in the release commit.
+      # Packs every project marked <IsPackable>true</IsPackable>. They must ship
+      # together: each ProjectReference becomes a NuGet dependency pinned to the
+      # same version, so publishing only the top package leaves it uninstallable.
+      #
+      # No -p:Version here: the version comes from Directory.Build.props, which
+      # release-please stamped in the release commit. No -p:IsPackable=true
+      # either: on a solution that would force the apps and tests to pack too.
       - name: Pack NuGet
-        run: dotnet pack src/AtcSoft.CameraWall.Wpf/AtcSoft.CameraWall.Wpf.csproj --configuration ${{ env.CONFIGURATION }} --no-restore --output ./nuget -p:IsPackable=true
+        run: dotnet pack AtcSoft.VideoSurveillance.slnx --configuration ${{ env.CONFIGURATION }} --no-restore --output ./nuget
+
+      # Trusted Publishing: GitHub mints an OIDC token, NuGet.org validates it
+      # against the publishing policy for this repository and workflow, and
+      # returns a short-lived API key. No long-lived secret is stored here.
+      - name: NuGet login (OIDC to short-lived key)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: davidkallesen   # nuget.org username; not a secret
 
       - name: Push to NuGet.org
         run: |
@@ -64,7 +81,7 @@ jobs:
           if ($packages.Count -eq 0) { throw "No .nupkg files found in ./nuget" }
           foreach ($pkg in $packages) {
             Write-Host "Pushing $($pkg.Name)"
-            dotnet nuget push $pkg.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push $pkg.FullName --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
 
       # --skip-duplicate turns every 409 into a warning and exit 0, including
@@ -72,24 +89,37 @@ jobs:
       # this way with a green job and nothing on NuGet.org, because the old
       # LinkSoft.* id was blocked by another organisation's reserved prefix.
       # Assert the version really landed rather than trusting the push.
-      - name: Verify the package is actually on NuGet.org
+      #
+      # Every package is checked, not just one: a single missing dependency
+      # makes the whole set uninstallable just as surely as a missing top package.
+      - name: Verify the packages are actually on NuGet.org
         run: |
           $version = "${{ needs.release-please.outputs.version }}"
-          $url = "https://api.nuget.org/v3-flatcontainer/atcsoft.camerawall.wpf/index.json"
-          for ($i = 1; $i -le 10; $i++) {
-            try {
-              $versions = (Invoke-RestMethod -Uri $url).versions
-              if ($versions -contains $version) {
-                Write-Host "Confirmed $version on NuGet.org"
-                exit 0
+          $ids = Get-ChildItem ./nuget -Filter *.nupkg |
+            ForEach-Object { $_.Name -replace "\.$([regex]::Escape($version))\.nupkg$", '' }
+          if ($ids.Count -eq 0) { throw "No packages to verify" }
+
+          $pending = [System.Collections.Generic.List[string]]::new([string[]]$ids)
+          for ($i = 1; $i -le 10 -and $pending.Count -gt 0; $i++) {
+            foreach ($id in @($pending)) {
+              $url = "https://api.nuget.org/v3-flatcontainer/$($id.ToLowerInvariant())/index.json"
+              try {
+                if ((Invoke-RestMethod -Uri $url).versions -contains $version) {
+                  Write-Host "Confirmed $id $version"
+                  [void]$pending.Remove($id)
+                }
+              } catch {
+                # Not indexed yet (a brand-new package id returns 404 until it is).
               }
-              Write-Host "Attempt ${i}: $version not indexed yet"
-            } catch {
-              Write-Host "Attempt ${i}: package index not found yet"
             }
-            Start-Sleep -Seconds 30
+            if ($pending.Count -gt 0) {
+              Write-Host "Attempt ${i}: waiting on $($pending -join ', ')"
+              Start-Sleep -Seconds 30
+            }
           }
-          throw "Version $version never appeared on NuGet.org - the push reported success but published nothing"
+          if ($pending.Count -gt 0) {
+            throw "Never appeared on NuGet.org: $($pending -join ', ') - the push reported success but did not publish them"
+          }
 
   build-installers:
     name: Build MSI (${{ matrix.name }})

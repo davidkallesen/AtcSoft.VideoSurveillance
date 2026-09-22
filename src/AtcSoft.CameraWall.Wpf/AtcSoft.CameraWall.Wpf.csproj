@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>A reusable WPF library for camera wall functionality, supporting multiple RTSP/HTTP camera streams in a dynamic grid layout.</Description>
     <PackageTags>wpf;camera;surveillance;video;rtsp;camerawall</PackageTags>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Windows-only USB camera enumeration and hot-plug watching for AtcSoft.VideoEngine — Media Foundation enumerator + WMI hot-plug watcher.</Description>
     <PackageTags>video;engine;mediafoundation;dshow;usb;webcam;windows</PackageTags>
