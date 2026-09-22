@@ -9,7 +9,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoEngine.DirectX` - D3D11VA GPU acceleration, Video Processor, swap chain (net10.0-windows)
 - `AtcSoft.VideoEngine.Windows` - Windows-only USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), `IUsbCameraEnumerator` / `IUsbCameraWatcher` implementations (net10.0-windows)
 - `AtcSoft.VideoPlayer.Wpf` - WPF VideoHost control with DComp surface + XAML overlay (net10.0-windows)
-- `AtcSoft.CameraWall.Wpf` - Reusable WPF library (NuGet package) with UI, dialogs, VideoEngine integration
+- `AtcSoft.CameraWall.Wpf` - WPF library with the complete camera wall: UI, dialogs, VideoEngine integration (not published; consumed by the CameraWall app)
 - `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
 - `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceHubService, OpenAPI-generated client)
 - `AtcSoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
@@ -18,6 +18,23 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
 - `AtcSoft.VideoSurveillance.Core.Tests` - xUnit v3 tests for Core library
+
+## NuGet Packages
+Five projects are published to nuget.org so external WPF apps can embed live camera tiles:
+
+| Package | Role |
+|---|---|
+| `AtcSoft.VideoSurveillance.Wpf.Core` | **Entry point for consumers** — `CameraTile`, `CameraGrid`, `CameraOverlay` |
+| `AtcSoft.VideoSurveillance.Core` | `CameraConfiguration` and the other shared models |
+| `AtcSoft.VideoPlayer.Wpf` | `VideoHost` control |
+| `AtcSoft.VideoEngine.DirectX` | D3D11VA rendering |
+| `AtcSoft.VideoEngine` | FFmpeg engine, including `VideoPlayerFactory` |
+
+These are exactly the projects with `<IsPackable>true</IsPackable>`; every other project is `false`. They **must ship together at the same version**: packing turns each `ProjectReference` into a NuGet dependency pinned to that version, so publishing a package without its dependencies leaves it uninstallable. The release workflow packs the whole solution for that reason, then asserts every package actually appears on nuget.org, since `--skip-duplicate` can mask rejected pushes.
+
+Marking another project packable means it joins the lockstep, and its package id must be covered by the nuget.org Trusted Publishing policy's glob patterns.
+
+A consumer must call `CameraTile.InitializeServices(..., videoPlayerFactory: ...)` before the tile plays anything — without a factory it stays `Disconnected`. The packages do not include the FFmpeg 8.x native DLLs (`avutil-60.dll` etc.); the consuming app has to deploy those itself.
 
 ## Architecture
 The solution follows a layered architecture with Core at the base:
