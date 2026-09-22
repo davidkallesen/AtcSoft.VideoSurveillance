@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.2.1...v1.2.2) (2026-09-22)
+
+
+### Bug fixes
+
+* **ci:** stop producing empty symbol packages ([538bbdc](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/538bbdcf6cdd521c19f0eb42976479bfb0210547))
+
 ## [1.2.1](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.2.0...v1.2.1) (2026-09-22)
 
 
