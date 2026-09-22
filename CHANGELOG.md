@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.3](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.2.2...v1.2.3) (2026-09-22)
+
+
+### Bug fixes
+
+* **ci:** widen the NuGet publish verification window to 15 minutes ([0510c16](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/0510c162fadb192cf85c6540ebf5429c10c1c4ac))
+
+
+### Documentation
+
+* **nuget:** give every package its own README ([ee9a073](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/ee9a073afd2bb91161ae27ac1c8fd04a8db12f7e))
+
 ## [1.2.2](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.2.1...v1.2.2) (2026-09-22)
 
 
