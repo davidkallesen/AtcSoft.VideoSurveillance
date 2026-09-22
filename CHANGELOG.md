@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.1](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.2.0...v1.2.1) (2026-09-22)
+
+
+### Bug fixes
+
+* **ci:** publish installable NuGet packages via Trusted Publishing ([d89b57c](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/d89b57ccd6ed62d16aa5e74a016d7d158ee0ce32))
+
+
+### Documentation
+
+* describe the published NuGet package set ([76deaa5](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/commit/76deaa5c40306f5c46e619516ab4d31d64d129b2))
+
 ## [1.2.0](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/compare/v1.1.1...v1.2.0) (2026-09-18)
 
 
