@@ -3,7 +3,7 @@
 A professional video surveillance platform for live monitoring of multiple RTSP/HTTP camera streams. Includes a WPF desktop application with an intuitive ribbon interface, a headless REST API + SignalR server edition, and Aspire orchestration.
 
 [![Release](https://img.shields.io/github/v/release/davidkallesen/AtcSoft.VideoSurveillance?include_prereleases)](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/releases)
-[![NuGet](https://img.shields.io/nuget/v/AtcSoft.CameraWall.Wpf)](https://www.nuget.org/packages/AtcSoft.CameraWall.Wpf)
+[![NuGet](https://img.shields.io/nuget/v/AtcSoft.VideoSurveillance.Wpf.Core)](https://www.nuget.org/packages/AtcSoft.VideoSurveillance.Wpf.Core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## ✨ Features
@@ -117,7 +117,7 @@ AtcSoft.VideoSurveillance/
 │   ├── AtcSoft.VideoEngine.DirectX/           # 🖥️ D3D11VA GPU acceleration for WPF
 │   ├── AtcSoft.VideoPlayer.Wpf/               # 🎞️ WPF VideoHost control (DComp surface + overlay)
 │   ├── AtcSoft.VideoSurveillance.Wpf.Core/    # 🧩 Shared WPF library (dialogs, controls, services)
-│   ├── AtcSoft.CameraWall.Wpf/                # 📦 Reusable CameraWall WPF library (NuGet package)
+│   ├── AtcSoft.CameraWall.Wpf/                # 🧱 CameraWall WPF library (used by the CameraWall app)
 │   ├── AtcSoft.CameraWall.Wpf.App/            # 🚀 Standalone WPF desktop app (Fluent.Ribbon)
 │   ├── AtcSoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, SignalR)
 │   ├── AtcSoft.VideoSurveillance.Wpf.App/     # 🚀 WPF API client app (Fluent.Ribbon)
