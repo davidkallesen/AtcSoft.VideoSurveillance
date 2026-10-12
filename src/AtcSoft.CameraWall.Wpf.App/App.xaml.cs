@@ -93,7 +93,7 @@ public partial class CameraWallApp
         // Same rule as the settings service applies later: a log folder that
         // still holds the shared default belongs in this app's own folder.
         var settings = new ApplicationSettings { Advanced = ReadAdvancedSettings() };
-        ApplicationSettingsService.UseOwnDataFolder(settings);
+        _ = ApplicationSettingsService.UseOwnDataFolder(settings);
         return settings.Advanced;
     }
 

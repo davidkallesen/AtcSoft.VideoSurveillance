@@ -73,6 +73,19 @@ public sealed class ApplicationSettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Moved_Paths_Are_Written_Back_So_The_File_Says_Where_The_Data_Is()
+    {
+        var json = $$"""
+            { "recording": { "recordingPath": {{System.Text.Json.JsonSerializer.Serialize(SharedPaths.DefaultRecordingsPath)}} } }
+            """;
+        System.IO.File.WriteAllText(settingsPath, json);
+
+        _ = new ApplicationSettingsService(settingsPath);
+
+        System.IO.File.ReadAllText(settingsPath).Should().NotContain(@"AtcSoft\\VideoSurveillance");
+    }
+
+    [Fact]
     public void A_Path_The_User_Chose_Is_Kept()
     {
         const string json = """

@@ -175,24 +175,36 @@ public class ApplicationSettingsService : IApplicationSettingsService
     /// </para>
     /// </summary>
     /// <param name="settings">The settings to adjust in place.</param>
-    public static void UseOwnDataFolder(ApplicationSettings settings)
+    /// <returns><see langword="true"/> when a path was changed.</returns>
+    public static bool UseOwnDataFolder(ApplicationSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        settings.Recording.RecordingPath = OwnUnlessChosen(
+        var recordingPath = OwnUnlessChosen(
             settings.Recording.RecordingPath,
             SharedApplicationPaths.DefaultRecordingsPath,
             ApplicationPaths.DefaultRecordingsPath);
 
-        settings.CameraDisplay.SnapshotPath = OwnUnlessChosen(
+        var snapshotPath = OwnUnlessChosen(
             settings.CameraDisplay.SnapshotPath,
             SharedApplicationPaths.DefaultSnapshotsPath,
             ApplicationPaths.DefaultSnapshotsPath);
 
-        settings.Advanced.LogPath = OwnUnlessChosen(
+        var logPath = OwnUnlessChosen(
             settings.Advanced.LogPath,
             SharedApplicationPaths.DefaultLogsPath,
             ApplicationPaths.DefaultLogsPath);
+
+        var changed =
+            !string.Equals(recordingPath, settings.Recording.RecordingPath, StringComparison.Ordinal) ||
+            !string.Equals(snapshotPath, settings.CameraDisplay.SnapshotPath, StringComparison.Ordinal) ||
+            !string.Equals(logPath, settings.Advanced.LogPath, StringComparison.Ordinal);
+
+        settings.Recording.RecordingPath = recordingPath;
+        settings.CameraDisplay.SnapshotPath = snapshotPath;
+        settings.Advanced.LogPath = logPath;
+
+        return changed;
     }
 
     private static string OwnUnlessChosen(
@@ -208,7 +220,12 @@ public class ApplicationSettingsService : IApplicationSettingsService
     {
         appSettings = SafeJsonFile.TryRead<ApplicationSettings>(storagePath, JsonOptions)
                       ?? new ApplicationSettings();
-        UseOwnDataFolder(appSettings);
+
+        // Write a moved path back, so the file says where the data really is.
+        if (UseOwnDataFolder(appSettings))
+        {
+            Save();
+        }
     }
 
     /// <inheritdoc/>
@@ -221,7 +238,7 @@ public class ApplicationSettingsService : IApplicationSettingsService
     /// <inheritdoc/>
     public void Save()
     {
-        UseOwnDataFolder(appSettings);
+        _ = UseOwnDataFolder(appSettings);
 
         if (!SafeJsonFile.TryWrite(storagePath, appSettings, JsonOptions))
         {
@@ -240,7 +257,7 @@ public class ApplicationSettingsService : IApplicationSettingsService
         }
 
         var defaults = new ApplicationSettings();
-        UseOwnDataFolder(defaults);
+        _ = UseOwnDataFolder(defaults);
 
         if (SafeJsonFile.TryWrite(storagePath, defaults, JsonOptions))
         {
