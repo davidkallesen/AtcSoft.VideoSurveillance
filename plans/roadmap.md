@@ -44,6 +44,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | [WPF API client](roadmap-wpf-api-client.md) | Phase 10: multi-monitor, camera groups, event log viewer, timelapse browser |
 | [Suggestions](roadmap-suggestions.md) | Server security (authentication, HTTPS, rate limiting), server-side motion detection, integrations (MQTT, webhooks) |
 | [USB cameras](roadmap-usb-cameras.md) | ⏸️ Linux / macOS capture, UVC property pages |
+| [FFmpeg 9](roadmap-ffmpeg-9.md) | ⏸️ Move the engine to FFmpeg 9 and bindings 9.0.2; before that, the cheap step to FFmpeg 8.1.3 |
 
 ---
 
@@ -55,6 +56,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built | Hands-on checks in each layout |
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
 | 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–4, 6–8, 12 | Phase 5 hardware verification; phase 9 audio packets; ⏸️ phases 10–11 |
+| 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis | All phases; deferred on 2026-10-13 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5 | 2 known bugs, security gaps, feature gaps, quick wins |
 
