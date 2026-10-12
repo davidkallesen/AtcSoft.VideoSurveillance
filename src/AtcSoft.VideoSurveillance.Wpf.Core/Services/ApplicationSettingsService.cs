@@ -163,11 +163,52 @@ public class ApplicationSettingsService : IApplicationSettingsService
         return overrideValue ?? appDefault;
     }
 
+    /// <summary>
+    /// Points the recording, snapshot and log folders at this application's
+    /// own data folder wherever they still hold the shared model's default.
+    /// <para>
+    /// The settings model is shared with the server and defaults to the
+    /// server's folder. A standalone app that kept that default would record
+    /// into, and clean up, the server's folder when both run on one PC. A
+    /// path equal to the shared default was never chosen by anyone, so it is
+    /// safe to replace; any other path is the user's choice and is kept.
+    /// </para>
+    /// </summary>
+    /// <param name="settings">The settings to adjust in place.</param>
+    public static void UseOwnDataFolder(ApplicationSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        settings.Recording.RecordingPath = OwnUnlessChosen(
+            settings.Recording.RecordingPath,
+            SharedApplicationPaths.DefaultRecordingsPath,
+            ApplicationPaths.DefaultRecordingsPath);
+
+        settings.CameraDisplay.SnapshotPath = OwnUnlessChosen(
+            settings.CameraDisplay.SnapshotPath,
+            SharedApplicationPaths.DefaultSnapshotsPath,
+            ApplicationPaths.DefaultSnapshotsPath);
+
+        settings.Advanced.LogPath = OwnUnlessChosen(
+            settings.Advanced.LogPath,
+            SharedApplicationPaths.DefaultLogsPath,
+            ApplicationPaths.DefaultLogsPath);
+    }
+
+    private static string OwnUnlessChosen(
+        string? current,
+        string sharedDefault,
+        string ownDefault)
+        => string.IsNullOrWhiteSpace(current) || string.Equals(current, sharedDefault, StringComparison.OrdinalIgnoreCase)
+            ? ownDefault
+            : current;
+
     /// <inheritdoc/>
     public void Load()
     {
         appSettings = SafeJsonFile.TryRead<ApplicationSettings>(storagePath, JsonOptions)
                       ?? new ApplicationSettings();
+        UseOwnDataFolder(appSettings);
     }
 
     /// <inheritdoc/>
@@ -180,6 +221,8 @@ public class ApplicationSettingsService : IApplicationSettingsService
     /// <inheritdoc/>
     public void Save()
     {
+        UseOwnDataFolder(appSettings);
+
         if (!SafeJsonFile.TryWrite(storagePath, appSettings, JsonOptions))
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save application settings to {storagePath}");
@@ -196,7 +239,10 @@ public class ApplicationSettingsService : IApplicationSettingsService
             return;
         }
 
-        if (SafeJsonFile.TryWrite(storagePath, new ApplicationSettings(), JsonOptions))
+        var defaults = new ApplicationSettings();
+        UseOwnDataFolder(defaults);
+
+        if (SafeJsonFile.TryWrite(storagePath, defaults, JsonOptions))
         {
             System.Diagnostics.Debug.WriteLine($"Created default settings file: {storagePath}");
         }
