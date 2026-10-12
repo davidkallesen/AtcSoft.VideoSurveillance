@@ -2,6 +2,7 @@ using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConne
 using CoreCameraConfiguration = AtcSoft.VideoSurveillance.Models.CameraConfiguration;
 using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
+using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
 using CoreCameraSource = AtcSoft.VideoSurveillance.Enums.CameraSource;
 using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
 using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
@@ -27,6 +28,7 @@ internal static class CameraMappingExtensions
             Description: core.Display.Description ?? string.Empty,
             Source: core.Connection.Source.ToApiSource(),
             ConnectionType: CameraConnectionTypeHelper.GetEffective(core.Connection).ToApiConnectionType(),
+            Rotation: core.Display.Rotation.ToApiRotation(),
             IpAddress: core.Connection.IpAddress,
             Port: core.Connection.Port,
             Protocol: core.Connection.Protocol.ToApiProtocol(),
@@ -75,6 +77,7 @@ internal static class CameraMappingExtensions
             {
                 DisplayName = request.DisplayName,
                 Description = request.Description,
+                Rotation = request.Rotation?.ToCoreRotation() ?? CoreCameraRotation.None,
             },
         };
 
@@ -170,6 +173,11 @@ internal static class CameraMappingExtensions
             core.Display.OverlayPosition = ToCoreOverlayPosition(request.OverlayPosition.Value);
         }
 
+        if (request.Rotation is not null)
+        {
+            core.Display.Rotation = request.Rotation.Value.ToCoreRotation();
+        }
+
         core.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode;
 
         if (request.StreamMaxLatencyMs > 0)
@@ -237,6 +245,25 @@ internal static class CameraMappingExtensions
             CameraConnectionType.Wifi => CoreCameraConnectionType.Wifi,
             CameraConnectionType.Usb => CoreCameraConnectionType.Usb,
             _ => CoreCameraConnectionType.None,
+        };
+
+    public static CameraRotation ToApiRotation(this CoreCameraRotation rotation)
+        => rotation switch
+        {
+            CoreCameraRotation.Rotate90 => CameraRotation.Rotate90,
+            CoreCameraRotation.Rotate180 => CameraRotation.Rotate180,
+            CoreCameraRotation.Rotate270 => CameraRotation.Rotate270,
+            _ => CameraRotation.None,
+        };
+
+    public static CoreCameraRotation ToCoreRotation(
+        this CameraRotation rotation)
+        => rotation switch
+        {
+            CameraRotation.Rotate90 => CoreCameraRotation.Rotate90,
+            CameraRotation.Rotate180 => CoreCameraRotation.Rotate180,
+            CameraRotation.Rotate270 => CoreCameraRotation.Rotate270,
+            _ => CoreCameraRotation.None,
         };
 
     public static CameraConnectionState ToApiConnectionState(

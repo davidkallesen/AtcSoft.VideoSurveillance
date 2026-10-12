@@ -490,6 +490,10 @@ components:
           type: string
           enum: [none, lan, wifi, usb]
           description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
+        rotation:
+          type: string
+          enum: [none, rotate90, rotate180, rotate270]
+          description: Clockwise rotation applied to the picture. Recordings carry it as a rotation flag.
         ipAddress:
           type: string
         port:
@@ -612,6 +616,10 @@ components:
           type: string
           enum: [none, lan, wifi, usb]
           description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
+        rotation:
+          type: string
+          enum: [none, rotate90, rotate180, rotate270]
+          description: Clockwise rotation applied to the picture. Recordings carry it as a rotation flag.
         ipAddress:
           type: string
         port:
@@ -677,6 +685,10 @@ components:
           type: string
           enum: [none, lan, wifi, usb]
           description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
+        rotation:
+          type: string
+          enum: [none, rotate90, rotate180, rotate270]
+          description: Clockwise rotation applied to the picture. Recordings carry it as a rotation flag.
         ipAddress:
           type: string
         port:

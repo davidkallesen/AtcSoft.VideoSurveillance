@@ -64,6 +64,14 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                 break;
             }
 
+            // The pipeline was rotated when it was created. A rotation set
+            // through the API afterwards reaches it here, so snapshots follow
+            // at once and recordings from the next segment.
+            if (managedPipelines.TryGetValue(camera.Id, out var running))
+            {
+                running.SetRotation(camera.Display.Rotation);
+            }
+
             // Skip USB cameras whose physical device is currently
             // unplugged. Reconnecting is impossible until the watcher
             // reports the device back, so polling here would just

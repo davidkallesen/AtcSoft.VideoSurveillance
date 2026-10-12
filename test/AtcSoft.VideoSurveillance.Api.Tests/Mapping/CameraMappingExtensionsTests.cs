@@ -225,6 +225,7 @@ public class CameraMappingExtensionsTests
             Description: string.Empty,
             Source: ApiCameraSource.Usb,
             ConnectionType: null,
+            Rotation: null,
             IpAddress: string.Empty,
             Protocol: null,
             Path: string.Empty,
@@ -282,6 +283,7 @@ public class CameraMappingExtensionsTests
             Description: null!,
             Source: null,
             ConnectionType: null,
+            Rotation: null,
             IpAddress: null!,
             Port: 0,
             Protocol: null,
@@ -375,6 +377,75 @@ public class CameraMappingExtensionsTests
         request.ToCoreModel().Connection.ConnectionType.Should().Be(CoreCameraConnectionType.Usb);
     }
 
+    [Theory]
+    [InlineData(CoreCameraRotation.None, ApiCameraRotation.None)]
+    [InlineData(CoreCameraRotation.Rotate90, ApiCameraRotation.Rotate90)]
+    [InlineData(CoreCameraRotation.Rotate180, ApiCameraRotation.Rotate180)]
+    [InlineData(CoreCameraRotation.Rotate270, ApiCameraRotation.Rotate270)]
+    public void ToApiModel_Maps_Rotation(
+        CoreCameraRotation core,
+        ApiCameraRotation expected)
+    {
+        var camera = new CameraConfiguration();
+        camera.Display.Rotation = core;
+
+        camera.ToApiModel().Rotation.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(ApiCameraRotation.Rotate90, CoreCameraRotation.Rotate90)]
+    [InlineData(ApiCameraRotation.Rotate180, CoreCameraRotation.Rotate180)]
+    [InlineData(ApiCameraRotation.Rotate270, CoreCameraRotation.Rotate270)]
+    public void ToCoreModel_Maps_Rotation(
+        ApiCameraRotation api,
+        CoreCameraRotation expected)
+    {
+        var request = NetworkCreateRequest("Cam", ipAddress: "10.0.0.1") with { Rotation = api };
+
+        request.ToCoreModel().Display.Rotation.Should().Be(expected);
+    }
+
+    [Fact]
+    public void ToCoreModel_Without_Rotation_Is_Upright()
+    {
+        var request = NetworkCreateRequest("Cam", ipAddress: "10.0.0.1");
+
+        request.ToCoreModel().Display.Rotation.Should().Be(CoreCameraRotation.None);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Sets_Rotation_When_Provided()
+    {
+        var core = new CameraConfiguration();
+        core.Display.Rotation = CoreCameraRotation.Rotate90;
+
+        core.ApplyUpdate(NetworkUpdateRequest() with { Rotation = ApiCameraRotation.Rotate180 });
+
+        core.Display.Rotation.Should().Be(CoreCameraRotation.Rotate180);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Can_Set_Rotation_Back_To_Upright()
+    {
+        var core = new CameraConfiguration();
+        core.Display.Rotation = CoreCameraRotation.Rotate90;
+
+        core.ApplyUpdate(NetworkUpdateRequest() with { Rotation = ApiCameraRotation.None });
+
+        core.Display.Rotation.Should().Be(CoreCameraRotation.None);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Keeps_Rotation_When_Not_Provided()
+    {
+        var core = new CameraConfiguration();
+        core.Display.Rotation = CoreCameraRotation.Rotate270;
+
+        core.ApplyUpdate(NetworkUpdateRequest());
+
+        core.Display.Rotation.Should().Be(CoreCameraRotation.Rotate270);
+    }
+
     [Fact]
     public void ApplyUpdate_Sets_ConnectionType_When_Provided()
     {
@@ -411,6 +482,7 @@ public class CameraMappingExtensionsTests
             Description: description,
             Source: ApiCameraSource.Network,
             ConnectionType: null,
+            Rotation: null,
             IpAddress: ipAddress,
             Protocol: protocol,
             Path: path,
@@ -441,6 +513,7 @@ public class CameraMappingExtensionsTests
             Description: null!,
             Source: null,
             ConnectionType: null,
+            Rotation: null,
             IpAddress: null!,
             Port: 0,
             Protocol: null,
