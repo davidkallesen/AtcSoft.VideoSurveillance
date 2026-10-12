@@ -1338,4 +1338,19 @@
   <data name="RecordingLayoutMoving" xml:space="preserve">
     <value>Flytter optagelser...</value>
   </data>
+  <data name="RecordingsBrowserSettings" xml:space="preserve">
+    <value>Optagelsesbrowser</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlay" xml:space="preserve">
+    <value>Luk browseren, når en optagelse afspilles</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlayHint" xml:space="preserve">
+    <value>Fra: browseren bliver åben bag afspilleren, klar til den næste optagelse.&#xD;&#xA;Til: browseren lukker, når afspilningen starter.</value>
+  </data>
+  <data name="RememberRecordingsBrowserState" xml:space="preserve">
+    <value>Genåbn browseren med de seneste filtre og det seneste valg</value>
+  </data>
+  <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
+    <value>Til: browseren åbner med de kamera-, dag- og tidsfiltre og den optagelse, du sidst brugte.&#xD;&#xA;Fra: browseren åbner altid med alle optagelser.&#xD;&#xA;Huskes, indtil appen lukkes.</value>
+  </data>
 </root>

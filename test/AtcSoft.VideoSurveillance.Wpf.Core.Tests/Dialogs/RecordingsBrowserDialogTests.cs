@@ -67,6 +67,42 @@ public sealed class RecordingsBrowserDialogTests : IDisposable
         selectedAfterPlay.Should().Be("Garden_20261012_220000_000.mkv");
     }
 
+    [Fact]
+    public void The_Dialog_Closes_Before_Playing_When_The_User_Chose_That()
+    {
+        // Arrange
+        Touch("Garden", "Garden_20261012_220000_000.mkv");
+
+        var settingsService = Substitute.For<IWpfCoreSettingsService>();
+        settingsService.Recording.Returns(new RecordingSettings { RecordingPath = root, CloseRecordingsBrowserOnPlay = true });
+
+        string? played = null;
+        var closedBeforePlay = false;
+
+        // Act
+        var error = WpfTestThread.Run(() =>
+        {
+            var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
+            var closed = false;
+            var dialog = new RecordingsBrowserDialog(
+                viewModel,
+                recording =>
+                {
+                    closedBeforePlay = closed;
+                    played = recording.FileName;
+                });
+            dialog.Closed += (_, _) => closed = true;
+
+            viewModel.SelectedRecording = viewModel.FilteredRecordings.Single();
+            viewModel.PlayCommand.Execute(parameter: null);
+        });
+
+        // Assert
+        error.Should().BeNull();
+        played.Should().Be("Garden_20261012_220000_000.mkv");
+        closedBeforePlay.Should().BeTrue();
+    }
+
     private void Touch(params string[] segments)
     {
         var path = System.IO.Path.Combine([root, .. segments]);

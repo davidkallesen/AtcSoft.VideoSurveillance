@@ -33,6 +33,7 @@ public partial class RecordingsBrowserDialog : IDisposable
         viewModel.PlayRecordingRequested += OnPlayRecordingRequested;
         viewModel.ThumbnailPreviewRequested += OnThumbnailPreviewRequested;
         Closed += OnWindowClosed;
+        ContentRendered += OnContentRendered;
     }
 
     /// <inheritdoc />
@@ -59,6 +60,7 @@ public partial class RecordingsBrowserDialog : IDisposable
             viewModel.PlayRecordingRequested -= OnPlayRecordingRequested;
             viewModel.ThumbnailPreviewRequested -= OnThumbnailPreviewRequested;
             Closed -= OnWindowClosed;
+            ContentRendered -= OnContentRendered;
         }
 
         disposed = true;
@@ -79,11 +81,31 @@ public partial class RecordingsBrowserDialog : IDisposable
         // Close thumbnail panel if open
         CloseThumbnailFlyout();
 
+        if (viewModel.CloseOnPlay)
+        {
+            Close();
+            playRecording(recording);
+            return;
+        }
+
         // The browser stays open behind the player, so the filters, the
         // selection and the scroll position are still there afterwards.
         playRecording(recording);
 
         FocusSelectedRecording();
+    }
+
+    /// <summary>
+    /// A browser reopened with a remembered selection shows that row.
+    /// </summary>
+    private void OnContentRendered(
+        object? sender,
+        EventArgs e)
+    {
+        if (viewModel.SelectedRecording is not null)
+        {
+            FocusSelectedRecording();
+        }
     }
 
     /// <summary>
@@ -120,7 +142,8 @@ public partial class RecordingsBrowserDialog : IDisposable
         using var fullScreenViewModel = new FullScreenRecordingWindowViewModel(recording.FilePath, recording.FileName, overlaySettings);
         using var fullScreenWindow = new FullScreenRecordingWindow(fullScreenViewModel)
         {
-            Owner = this,
+            // A browser that closed itself cannot own the player
+            Owner = IsVisible ? this : Owner,
         };
         fullScreenWindow.ShowDialog();
     }

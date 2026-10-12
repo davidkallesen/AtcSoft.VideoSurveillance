@@ -38,6 +38,20 @@ public class RecordingSettings
     /// </summary>
     public bool SeparateThumbnailFolder { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the recordings browser closes
+    /// when a recording is played. Off by default: the browser stays open
+    /// behind the player.
+    /// </summary>
+    public bool CloseRecordingsBrowserOnPlay { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the recordings browser opens
+    /// with the filters and the selection it was last closed with. Kept
+    /// while the app runs. On by default.
+    /// </summary>
+    public bool RememberRecordingsBrowserState { get; set; } = true;
+
     public bool EnableTimelapse { get; set; }
 
     public string TimelapseInterval { get; set; } = "5m";

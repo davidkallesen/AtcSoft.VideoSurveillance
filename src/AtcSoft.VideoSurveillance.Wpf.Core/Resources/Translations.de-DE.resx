@@ -1338,4 +1338,19 @@
   <data name="RecordingLayoutMoving" xml:space="preserve">
     <value>Aufnahmen werden verschoben...</value>
   </data>
+  <data name="RecordingsBrowserSettings" xml:space="preserve">
+    <value>Aufnahmen-Browser</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlay" xml:space="preserve">
+    <value>Browser schließen, wenn eine Aufnahme abgespielt wird</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlayHint" xml:space="preserve">
+    <value>Aus: Der Browser bleibt hinter dem Player geöffnet, bereit für die nächste Aufnahme.&#xD;&#xA;Ein: Der Browser wird geschlossen, wenn die Wiedergabe startet.</value>
+  </data>
+  <data name="RememberRecordingsBrowserState" xml:space="preserve">
+    <value>Browser mit den letzten Filtern und der letzten Auswahl öffnen</value>
+  </data>
+  <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
+    <value>Ein: Der Browser öffnet mit den zuletzt verwendeten Kamera-, Tag- und Zeitfiltern und der zuletzt gewählten Aufnahme.&#xD;&#xA;Aus: Der Browser öffnet immer mit allen Aufnahmen.&#xD;&#xA;Wird gemerkt, bis die App geschlossen wird.</value>
+  </data>
 </root>

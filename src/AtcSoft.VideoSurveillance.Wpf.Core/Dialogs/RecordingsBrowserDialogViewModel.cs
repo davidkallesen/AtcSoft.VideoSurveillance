@@ -122,6 +122,54 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     public PlaybackOverlaySettings PlaybackOverlaySettings
         => settingsService.Recording.PlaybackOverlay;
 
+    /// <summary>
+    /// Gets a value indicating whether the browser closes when a recording is played.
+    /// </summary>
+    public bool CloseOnPlay
+        => settingsService.Recording.CloseRecordingsBrowserOnPlay;
+
+    /// <summary>
+    /// Gets the filters and the selection, to open the browser the same way again.
+    /// </summary>
+    /// <returns>The current state.</returns>
+    public RecordingsBrowserState CaptureState()
+        => new(
+            SelectedCameraFilter,
+            SelectedDayFilter,
+            SelectedTimeFilter,
+            SelectedRecording?.FilePath);
+
+    /// <summary>
+    /// Applies filters and a selection from an earlier browser. Whatever no
+    /// longer exists is skipped: a camera without recordings falls back to
+    /// all cameras, and a deleted recording leaves nothing selected.
+    /// </summary>
+    /// <param name="state">The state to apply.</param>
+    public void RestoreState(RecordingsBrowserState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (CameraFilters.Any(f => f.Key == state.CameraFilter))
+        {
+            SelectedCameraFilter = state.CameraFilter;
+        }
+
+        if (DayFilterItems.ContainsKey(state.DayFilter))
+        {
+            SelectedDayFilter = state.DayFilter;
+        }
+
+        if (TimeFilterItems.ContainsKey(state.TimeFilter))
+        {
+            SelectedTimeFilter = state.TimeFilter;
+        }
+
+        SelectedRecording = state.SelectedFilePath is null
+            ? null
+            : FilteredRecordings.FirstOrDefault(r =>
+                string.Equals(r.FilePath, state.SelectedFilePath, StringComparison.OrdinalIgnoreCase));
+    }
+
     [RelayCommand]
     private void Refresh()
     {

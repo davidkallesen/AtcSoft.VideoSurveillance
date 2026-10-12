@@ -349,6 +349,13 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     public bool IsDiskSpaceGuardControlEnabled
         => IsCleanupEnabled && IsDiskSpaceGuardEnabled;
 
+    // Recordings Browser Settings
+    [ObservableProperty]
+    private bool closeRecordingsBrowserOnPlay;
+
+    [ObservableProperty]
+    private bool rememberRecordingsBrowserState = true;
+
     // Playback Overlay Settings
     [ObservableProperty]
     private bool showPlaybackFilename = true;
@@ -515,6 +522,10 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         IsDiskSpaceGuardEnabled = true;
         SelectedMinFreeSpace = DropDownItemsFactory.DefaultMinFreeSpaceMb;
 
+        // Recordings Browser
+        CloseRecordingsBrowserOnPlay = false;
+        RememberRecordingsBrowserState = true;
+
         // Playback Overlay
         ShowPlaybackFilename = true;
         SelectedPlaybackFilenameColor = "White";
@@ -622,6 +633,10 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedSnapshotRetention = recording.Cleanup.SnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
         IsDiskSpaceGuardEnabled = recording.Cleanup.EnableDiskSpaceGuard;
         SelectedMinFreeSpace = recording.Cleanup.MinFreeSpaceMb.ToString(CultureInfo.InvariantCulture);
+
+        // Recordings Browser Settings
+        CloseRecordingsBrowserOnPlay = recording.CloseRecordingsBrowserOnPlay;
+        RememberRecordingsBrowserState = recording.RememberRecordingsBrowserState;
 
         // Playback Overlay Settings
         ShowPlaybackFilename = recording.PlaybackOverlay.ShowFilename;
@@ -761,6 +776,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
             EnableHourlySegmentation = EnableHourlySegmentation,
             UseDailySubfolders = UseDailySubfolders,
             SeparateThumbnailFolder = SeparateThumbnailFolder,
+            CloseRecordingsBrowserOnPlay = CloseRecordingsBrowserOnPlay,
+            RememberRecordingsBrowserState = RememberRecordingsBrowserState,
             MaxRecordingDurationMinutes = maxRecordingDuration > 0 ? maxRecordingDuration : DropDownItemsFactory.DefaultMaxRecordingDuration,
             ThumbnailTileCount = thumbnailTileCount == 1 || thumbnailTileCount == 4 ? thumbnailTileCount : DropDownItemsFactory.DefaultThumbnailTileCount,
             EnableTimelapse = EnableTimelapse,

@@ -13,6 +13,7 @@ public class DialogService : IDialogService
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
     private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
     private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
+    private RecordingsBrowserState? lastRecordingsBrowserState;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DialogService"/> class.
@@ -332,10 +333,18 @@ public class DialogService : IDialogService
     public void ShowRecordingsBrowserDialog()
     {
         var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
+        if (settingsService.Recording.RememberRecordingsBrowserState &&
+            lastRecordingsBrowserState is not null)
+        {
+            viewModel.RestoreState(lastRecordingsBrowserState);
+        }
+
         using var dialog = new RecordingsBrowserDialog(viewModel)
         {
             Owner = Application.Current.MainWindow,
         };
         dialog.ShowDialog();
+
+        lastRecordingsBrowserState = viewModel.CaptureState();
     }
 }

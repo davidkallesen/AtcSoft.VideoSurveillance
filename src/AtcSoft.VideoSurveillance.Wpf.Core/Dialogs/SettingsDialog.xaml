@@ -117,6 +117,7 @@
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:RecordingSegmentationSettings />
                         <settings:RecordingMediaCleanupSettings />
+                        <settings:RecordingsBrowserSettings />
                         <settings:RecordingPlaybackOverlaySettings />
                     </atc:UniformSpacingPanel>
                 </ScrollViewer>

@@ -1338,4 +1338,19 @@
   <data name="RecordingLayoutMoving" xml:space="preserve">
     <value>Moving recordings...</value>
   </data>
+  <data name="RecordingsBrowserSettings" xml:space="preserve">
+    <value>Recordings Browser</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlay" xml:space="preserve">
+    <value>Close the browser when a recording is played</value>
+  </data>
+  <data name="CloseRecordingsBrowserOnPlayHint" xml:space="preserve">
+    <value>Off: the browser stays open behind the player, ready for the next recording.&#xD;&#xA;On:  the browser closes when playback starts.</value>
+  </data>
+  <data name="RememberRecordingsBrowserState" xml:space="preserve">
+    <value>Reopen the browser with the last filters and selection</value>
+  </data>
+  <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
+    <value>On:  the browser opens with the camera, day and time filters and the recording you last used.&#xD;&#xA;Off: the browser always opens with all recordings.&#xD;&#xA;Remembered until the app is closed.</value>
+  </data>
 </root>

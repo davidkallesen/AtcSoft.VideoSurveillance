@@ -183,6 +183,8 @@ Recording paths, formats, segmentation, and timelapse configuration.
 | `ThumbnailTileCount` | int | `4` | Yes | Thumbnail grid: 1 (single 320x240) or 4 (2x2 640x480) |
 | `UseDailySubfolders` | bool | `true` | No | Put each day's recordings in their own `yyyy-MM-dd` folder — see [Recording Folder Layout](#recording-folder-layout) |
 | `SeparateThumbnailFolder` | bool | `true` | No | Keep thumbnails in a `thumbnails` folder below the recording path |
+| `CloseRecordingsBrowserOnPlay` | bool | `false` | No | CameraWall app only: close the recordings browser when a recording is played. Off keeps it open behind the player, ready for the next recording |
+| `RememberRecordingsBrowserState` | bool | `true` | No | CameraWall app only: reopen the recordings browser with the filters and the recording last used. Remembered until the app is closed |
 | `EnableTimelapse` | bool | `false` | Yes | Enable interval-based timelapse snapshots |
 | `TimelapseInterval` | string | `"5m"` | Yes | Timelapse capture interval |
 | `Cleanup` | object | *(see below)* | No | Media cleanup settings |
@@ -592,6 +594,8 @@ All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
     "thumbnailTileCount": 4,
     "useDailySubfolders": true,
     "separateThumbnailFolder": true,
+    "closeRecordingsBrowserOnPlay": false,
+    "rememberRecordingsBrowserState": true,
     "enableTimelapse": false,
     "timelapseInterval": "5m",
     "cleanup": {

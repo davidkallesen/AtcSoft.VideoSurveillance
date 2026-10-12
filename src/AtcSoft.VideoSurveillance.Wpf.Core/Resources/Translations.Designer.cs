@@ -2563,6 +2563,51 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Recordings Browser.
+        /// </summary>
+        public static string RecordingsBrowserSettings {
+            get {
+                return ResourceManager.GetString("RecordingsBrowserSettings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Close the browser when a recording is played.
+        /// </summary>
+        public static string CloseRecordingsBrowserOnPlay {
+            get {
+                return ResourceManager.GetString("CloseRecordingsBrowserOnPlay", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Off: the browser stays open behind the player, ready for the next recording..
+        /// </summary>
+        public static string CloseRecordingsBrowserOnPlayHint {
+            get {
+                return ResourceManager.GetString("CloseRecordingsBrowserOnPlayHint", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reopen the browser with the last filters and selection.
+        /// </summary>
+        public static string RememberRecordingsBrowserState {
+            get {
+                return ResourceManager.GetString("RememberRecordingsBrowserState", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to On:  the browser opens with the camera, day and time filters and the recording you last used..
+        /// </summary>
+        public static string RememberRecordingsBrowserStateHint {
+            get {
+                return ResourceManager.GetString("RememberRecordingsBrowserStateHint", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Moving recordings....
         /// </summary>
         public static string RecordingLayoutMoving {
