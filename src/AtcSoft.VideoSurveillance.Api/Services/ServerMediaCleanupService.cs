@@ -192,6 +192,23 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
             summary.BytesFreed += run.BytesFreed;
             ApplyErrors(run.Errors, summary);
 
+            // Thumbnails whose recording was deleted outside the app.
+            var orphans = MediaCleanupRunner.RemoveOrphanThumbnails(
+                recordingPath,
+                RecordingExtensions,
+                activePaths,
+                MediaCleanupRunner.EmptyDirectoryGracePeriod,
+                excludedDirectories: [settingsService.CameraDisplay.SnapshotPath]);
+
+            foreach (var t in orphans.DeletedThumbnails)
+            {
+                LogDeletedThumbnail(t);
+            }
+
+            summary.ThumbnailsDeleted += orphans.DeletedThumbnails.Count;
+            summary.BytesFreed += orphans.BytesFreed;
+            ApplyErrors(orphans.Errors, summary);
+
             var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
             ApplyEmptyDirectoriesResult(emptyDirs, summary);
         }

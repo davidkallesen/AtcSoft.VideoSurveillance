@@ -343,6 +343,139 @@ public static class MediaCleanupRunner
     }
 
     /// <summary>
+    /// Deletes recording thumbnails whose recording no longer exists, for
+    /// example because the video was deleted by hand. Looks in the camera
+    /// folders (thumbnail next to the video) and in the separate thumbnails
+    /// folder. Files directly in <paramref name="rootPath"/> are left alone.
+    /// Failures are returned in the result; never thrown.
+    /// </summary>
+    /// <param name="rootPath">The recording root.</param>
+    /// <param name="videoExtensions">The recording file extensions, with a leading dot.</param>
+    /// <param name="skipPaths">Case-insensitive set of full paths to leave untouched.</param>
+    /// <param name="minimumAge">
+    /// Leaves thumbnails younger than this alone, so a pass cannot race a
+    /// recording that has just started.
+    /// </param>
+    /// <param name="excludedDirectories">
+    /// Folders below the root that do not belong to the recorder, such as a
+    /// snapshot folder placed inside the recording folder.
+    /// </param>
+    public static MediaCleanupRunResult RemoveOrphanThumbnails(
+        string rootPath,
+        IReadOnlyCollection<string> videoExtensions,
+        IReadOnlySet<string> skipPaths,
+        TimeSpan? minimumAge = null,
+        IReadOnlyCollection<string>? excludedDirectories = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(rootPath);
+        ArgumentNullException.ThrowIfNull(videoExtensions);
+        ArgumentNullException.ThrowIfNull(skipPaths);
+
+        var deletedThumbnails = new List<string>();
+        var errors = new List<MediaCleanupRunError>();
+        long bytesFreed = 0;
+
+        if (!Directory.Exists(rootPath))
+        {
+            return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
+        }
+
+        var fullRoot = Path.GetFullPath(rootPath);
+        var thumbnailsRoot = Path.Combine(fullRoot, RecordingPathHelper.ThumbnailsFolderName);
+        var excluded = (excludedDirectories ?? [])
+            .Where(d => !string.IsNullOrEmpty(d))
+            .Select(d => Path.TrimEndingDirectorySeparator(Path.GetFullPath(d)) + Path.DirectorySeparatorChar)
+            .ToList();
+        var newestAllowedUtc = minimumAge is { } age
+            ? DateTime.UtcNow - age
+            : DateTime.MaxValue;
+
+        List<string> thumbnails;
+        try
+        {
+            thumbnails = Directory
+                .EnumerateFiles(fullRoot, "*.png", SearchOption.AllDirectories)
+                .ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            errors.Add(new MediaCleanupRunError(rootPath, ex));
+            return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
+        }
+
+        foreach (var thumbnail in thumbnails)
+        {
+            try
+            {
+                if (skipPaths.Contains(thumbnail) ||
+                    excluded.Exists(e => thumbnail.StartsWith(e, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                var videoFolder = GetVideoFolderOfThumbnail(thumbnail, fullRoot, thumbnailsRoot);
+                if (videoFolder is null)
+                {
+                    continue;
+                }
+
+                var stem = Path.GetFileNameWithoutExtension(thumbnail);
+                if (videoExtensions.Any(extension => File.Exists(Path.Combine(videoFolder, stem + extension))))
+                {
+                    continue;
+                }
+
+                var info = new FileInfo(thumbnail);
+                if (info.LastWriteTimeUtc > newestAllowedUtc)
+                {
+                    continue;
+                }
+
+                var size = info.Length;
+                info.Delete();
+                deletedThumbnails.Add(thumbnail);
+                bytesFreed += size;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                errors.Add(new MediaCleanupRunError(thumbnail, ex));
+            }
+        }
+
+        return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
+    }
+
+    /// <summary>
+    /// Gets the folder the recording of a thumbnail would be in, or
+    /// <see langword="null"/> when the file is not in a place the recorder
+    /// writes thumbnails to.
+    /// </summary>
+    private static string? GetVideoFolderOfThumbnail(
+        string thumbnailPath,
+        string fullRoot,
+        string thumbnailsRoot)
+    {
+        var folder = Path.GetDirectoryName(thumbnailPath);
+        if (folder is null || folder.Equals(fullRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (!RecordingPathHelper.IsInThumbnailsFolder(thumbnailPath, fullRoot))
+        {
+            // Flat layout: the thumbnail sits next to its recording.
+            return folder;
+        }
+
+        // Separate layout: the thumbnails folder mirrors the video tree,
+        // thumbnails\{camera}\... below the root.
+        var relativeFolder = Path.GetRelativePath(thumbnailsRoot, folder);
+        return relativeFolder == "."
+            ? null
+            : Path.Combine(fullRoot, relativeFolder);
+    }
+
+    /// <summary>
     /// Deletes the thumbnail of a deleted media file from every place a
     /// layout may have put it. Returns the bytes freed.
     /// </summary>

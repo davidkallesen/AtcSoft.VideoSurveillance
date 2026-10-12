@@ -265,8 +265,8 @@ Where the build differs from, or adds to, the plan above.
 - **Thumbnail generator contract.** `IThumbnailGeneratorService.StartCapture` got an optional `thumbnailFilePath`; without it the thumbnail still goes next to the video.
 - **Empty folders.** `ReclaimBySize` removes them itself, and a delete in the recordings browser does the same. Every empty-folder pass, including the scheduled age cleanup, now skips folders younger than a minute (`MediaCleanupRunner.EmptyDirectoryGracePeriod`), so it cannot delete a day folder a starting recording has just created.
 - **Recording time in the API-client app.** Server file names carry UTC. Now that the time is parsed from the name again, the API client passes the real start time to the recording player instead of letting it read UTC as local time.
-- **Not done: orphan thumbnails.** A thumbnail whose video was deleted by hand (outside the app) is not cleaned up. Videos deleted by the app always take their thumbnail along.
-- **Not done: URL-encoding** of the playback path in the API clients. Nested folders work as they are; a camera name with characters that need escaping is the same risk as before.
+- **Orphan thumbnails** *(added 2026-10-12)*. A thumbnail whose video was deleted by hand is removed on the next scheduled cleanup pass, in the camera folders and in the `thumbnails` folder. Files directly in the recording root, and a snapshot folder placed inside the recording folder, are left alone.
+- **Playback URLs** *(fixed 2026-10-12)*. The API clients now escape each folder and file name, so a camera name containing `#`, `?`, `&` or `+` no longer breaks playback.
 - **Per-camera recording paths.** A camera with its own `RecordingPath` gets its day folders and its `thumbnails` folder below that path. As before, such paths are not browsed or cleaned.
 
 ---

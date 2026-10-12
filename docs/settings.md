@@ -232,6 +232,8 @@ All paths are below `RecordingPath`. File names do not change.
   while the day folder is still the local day.
 - Day and camera folders that become empty through cleanup, disk-space reclaim
   or a delete in the recordings browser are removed.
+- A thumbnail whose recording you deleted by hand is removed on the next
+  scheduled cleanup pass.
 - A camera cannot use the folder name `thumbnails`; such a camera's folder is
   named `thumbnails_`.
 

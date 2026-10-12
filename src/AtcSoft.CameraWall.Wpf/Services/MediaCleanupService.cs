@@ -258,6 +258,16 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
 
             ApplyRecordingRunResult(run, result);
 
+            // Thumbnails whose recording was deleted outside the app.
+            var orphans = MediaCleanupRunner.RemoveOrphanThumbnails(
+                recordingPath,
+                RecordingExtensions,
+                activePaths,
+                MediaCleanupRunner.EmptyDirectoryGracePeriod,
+                excludedDirectories: [settingsService.CameraDisplay.SnapshotPath]);
+
+            ApplyRecordingRunResult(orphans, result);
+
             var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
             ApplyEmptyDirectoriesResult(emptyDirs, result);
         }
