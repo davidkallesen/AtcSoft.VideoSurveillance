@@ -234,6 +234,27 @@ public static partial class RecordingPathHelper
         return true;
     }
 
+    /// <summary>
+    /// Turns a recording path relative to the recording root into a URL path.
+    /// Each folder and file name is escaped on its own, so a name containing
+    /// <c>#</c>, <c>?</c>, <c>&amp;</c>, <c>+</c> or <c>%</c> cannot be read as
+    /// a fragment, a query or an escape sequence, and the separators stay.
+    /// </summary>
+    /// <param name="relativePath">The relative path, with either kind of slash.</param>
+    public static string EscapePathSegments(string? relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            return string.Empty;
+        }
+
+        var segments = relativePath.Split(
+            ['/', '\\'],
+            StringSplitOptions.RemoveEmptyEntries);
+
+        return string.Join('/', segments.Select(Uri.EscapeDataString));
+    }
+
     private static bool TryGetSeparateThumbnailPath(
         string videoPath,
         string? recordingRoot,

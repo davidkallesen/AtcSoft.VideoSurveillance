@@ -22,5 +22,20 @@ public sealed partial class GatewayService
     }
 
     public string GetRecordingFileUrl(string filePath)
-        => $"{ApiBaseUrl}/recordings-files/{filePath}";
+        => $"{ApiBaseUrl}/recordings-files/{EscapePathSegments(filePath)}";
+
+    /// <summary>
+    /// Escapes each folder and file name on its own, so a camera name with
+    /// '#', '?', '&amp;', '+' or '%' in it cannot change the meaning of the URL.
+    /// Mirrors <c>RecordingPathHelper.EscapePathSegments</c> in Core, which this app
+    /// does not reference.
+    /// </summary>
+    private static string EscapePathSegments(string? relativePath)
+        => string.IsNullOrEmpty(relativePath)
+            ? string.Empty
+            : string.Join(
+                '/',
+                relativePath
+                    .Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries)
+                    .Select(Uri.EscapeDataString));
 }

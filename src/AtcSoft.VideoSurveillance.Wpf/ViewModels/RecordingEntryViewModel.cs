@@ -36,7 +36,7 @@ public sealed class RecordingEntryViewModel
     public bool HasThumbnail => recording.HasThumbnail;
 
     public Uri PlaybackUrl
-        => new($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{recording.FilePath}");
+        => new($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(recording.FilePath)}");
 
     public string FormattedFileSize => FormatFileSize(FileSizeBytes);
 

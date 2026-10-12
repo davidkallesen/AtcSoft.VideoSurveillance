@@ -230,6 +230,28 @@ public sealed class RecordingPathHelperTests : IDisposable
         RecordingPathHelper.TryParseTimestamp(fileName, out _).Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("Front Door/2026-10-12/a.mkv", "Front%20Door/2026-10-12/a.mkv")]
+    [InlineData(@"Front Door\2026-10-12\a.mkv", "Front%20Door/2026-10-12/a.mkv")]
+    [InlineData("Cam #1/a.mkv", "Cam%20%231/a.mkv")]
+    [InlineData("50% Gate/a.mkv", "50%25%20Gate/a.mkv")]
+    [InlineData("Q?/a&b+c.mkv", "Q%3F/a%26b%2Bc.mkv")]
+    [InlineData("plain.mkv", "plain.mkv")]
+    public void EscapePathSegments_Escapes_Each_Segment_And_Keeps_The_Separators(
+        string relativePath,
+        string expected)
+    {
+        RecordingPathHelper.EscapePathSegments(relativePath).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void EscapePathSegments_Of_Nothing_Is_Empty(string? relativePath)
+    {
+        RecordingPathHelper.EscapePathSegments(relativePath).Should().BeEmpty();
+    }
+
     private static string Touch(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

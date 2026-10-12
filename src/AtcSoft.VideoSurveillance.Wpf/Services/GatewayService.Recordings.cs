@@ -22,5 +22,5 @@ public sealed partial class GatewayService
     }
 
     public string GetRecordingFileUrl(string filePath)
-        => $"{ApiBaseUrl}/recordings-files/{filePath}";
+        => $"{ApiBaseUrl}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(filePath)}";
 }
