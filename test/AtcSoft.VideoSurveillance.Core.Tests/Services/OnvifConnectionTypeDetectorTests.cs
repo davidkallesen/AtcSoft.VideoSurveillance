@@ -72,6 +72,44 @@ public class OnvifConnectionTypeDetectorTests
     }
 
     [Fact]
+    public async Task DetectAsync_Reaches_The_Last_Port_When_The_Others_Never_Answer()
+    {
+        // A Tapo camera answers ONVIF on 2020 only. Connections to the other
+        // ports hang until they time out, and three of those in a row used
+        // to exhaust the whole time budget before 2020 was tried.
+        using var harness = new Harness(
+            async (request, cancellationToken) =>
+            {
+                if (request.RequestUri!.Port != 2020)
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
+
+                return Respond(request, WifiInterfacesResponse);
+            },
+            [80, 8080, 8000, 2020],
+            requestTimeout: TimeSpan.FromMilliseconds(400),
+            totalTimeout: TimeSpan.FromMilliseconds(1000));
+
+        var result = await harness.Detector.DetectAsync("10.0.0.5", "admin", "secret", TestContext.Current.CancellationToken);
+
+        result.Should().Be(CameraConnectionType.Wifi);
+    }
+
+    [Fact]
+    public async Task DetectAsync_Sends_Credentials_Only_To_The_First_Port_That_Answers()
+    {
+        using var harness = new Harness(request => Respond(request, WifiInterfacesResponse), [80, 2020]);
+
+        await harness.Detector.DetectAsync("10.0.0.5", "admin", "secret", TestContext.Current.CancellationToken);
+
+        harness.Handler.Requests
+            .Where(r => r.Body.Contains("UsernameToken", StringComparison.Ordinal))
+            .Should().ContainSingle()
+            .Which.Uri.Port.Should().Be(80);
+    }
+
+    [Fact]
     public async Task DetectAsync_Unauthorized_Returns_None_Without_Trying_Other_Ports()
     {
         using var harness = new Harness(
@@ -83,7 +121,9 @@ public class OnvifConnectionTypeDetectorTests
         var result = await harness.Detector.DetectAsync("10.0.0.5", "admin", "wrong", TestContext.Current.CancellationToken);
 
         result.Should().Be(CameraConnectionType.None);
-        harness.Handler.Requests.Should().OnlyContain(r => r.Uri.Port == 80);
+        harness.Handler.Requests
+            .Where(r => r.Body.Contains("GetNetworkInterfaces", StringComparison.Ordinal))
+            .Should().OnlyContain(r => r.Uri.Port == 80);
     }
 
     [Fact]
@@ -172,6 +212,15 @@ public class OnvifConnectionTypeDetectorTests
         public Harness(
             Func<HttpRequestMessage, HttpResponseMessage> respond,
             IReadOnlyList<int> ports)
+            : this((request, _) => Task.FromResult(respond(request)), ports)
+        {
+        }
+
+        public Harness(
+            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> respond,
+            IReadOnlyList<int> ports,
+            TimeSpan? requestTimeout = null,
+            TimeSpan? totalTimeout = null)
         {
             Handler = new FakeHandler(respond);
             client = new HttpClient(Handler, disposeHandler: false);
@@ -180,8 +229,8 @@ public class OnvifConnectionTypeDetectorTests
                 new OnvifConnectionTypeDetectorOptions
                 {
                     Ports = ports,
-                    RequestTimeout = TimeSpan.FromSeconds(5),
-                    TotalTimeout = TimeSpan.FromSeconds(10),
+                    RequestTimeout = requestTimeout ?? TimeSpan.FromSeconds(5),
+                    TotalTimeout = totalTimeout ?? TimeSpan.FromSeconds(10),
                 });
         }
 
@@ -202,22 +251,41 @@ public class OnvifConnectionTypeDetectorTests
         string Body);
 
     private sealed class FakeHandler(
-        Func<HttpRequestMessage, HttpResponseMessage> respond)
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> respond)
         : HttpMessageHandler
     {
-        public List<CapturedRequest> Requests { get; } = [];
+        private readonly Lock requestsLock = new();
+        private readonly List<CapturedRequest> requests = [];
+
+        /// <summary>
+        /// Gets a snapshot of the requests seen so far. Ports are probed
+        /// concurrently, so the list is guarded.
+        /// </summary>
+        public IReadOnlyList<CapturedRequest> Requests
+        {
+            get
+            {
+                lock (requestsLock)
+                {
+                    return [.. requests];
+                }
+            }
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             var body = await request.Content!.ReadAsStringAsync(cancellationToken);
-            Requests.Add(new CapturedRequest(
-                request.RequestUri!,
-                request.Content.Headers.ContentType?.ToString() ?? string.Empty,
-                body));
+            lock (requestsLock)
+            {
+                requests.Add(new CapturedRequest(
+                    request.RequestUri!,
+                    request.Content.Headers.ContentType?.ToString() ?? string.Empty,
+                    body));
+            }
 
-            return respond(request);
+            return await respond(request, cancellationToken);
         }
     }
 }

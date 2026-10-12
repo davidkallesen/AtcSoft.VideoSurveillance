@@ -53,6 +53,7 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
     }
 
     /// <inheritdoc />
+    [SuppressMessage("AsyncUsage", "AsyncFixer04:Fire-and-forget async call inside a using block", Justification = "Every probe is awaited in the finally block before the token source is disposed.")]
     public async Task<CameraConnectionType> DetectAsync(
         string ipAddress,
         string? userName,
@@ -67,22 +68,40 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
         using var total = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         total.CancelAfter(options.TotalTimeout);
 
+        // Ask every candidate port at once whether it speaks ONVIF. A port
+        // that is closed or filtered takes the full request timeout to say
+        // nothing, so asking them one after the other let a few dead ports
+        // use up the whole time budget before the right one was tried.
+        var probes = new List<Task<OnvifPortAnswer?>>(options.Ports.Count);
         foreach (var port in options.Ports)
         {
-            if (total.IsCancellationRequested)
-            {
-                break;
-            }
-
-            var result = await TryPortAsync(ipAddress, port, userName, password, total.Token).ConfigureAwait(false);
-            if (result is not null)
-            {
-                // The port answered ONVIF; its verdict is final, even if "None".
-                return result.Value;
-            }
+            probes.Add(ProbePortAsync(ipAddress, port, total.Token));
         }
 
-        return CameraConnectionType.None;
+        try
+        {
+            // Take the first port in the configured order that answered, so
+            // the credentials are only ever offered to a single port.
+            foreach (var probe in probes)
+            {
+                var answer = await probe.ConfigureAwait(false);
+                if (answer is null)
+                {
+                    continue;
+                }
+
+                // The port answered ONVIF; its verdict is final, even if "None".
+                return await ReadConnectionTypeAsync(ipAddress, answer, userName, password, total.Token).ConfigureAwait(false);
+            }
+
+            return CameraConnectionType.None;
+        }
+        finally
+        {
+            // Stop the probes nobody is waiting for any more, and observe them.
+            await total.CancelAsync().ConfigureAwait(false);
+            await Task.WhenAll(probes).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -156,11 +175,13 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
         return Convert.ToBase64String(SHA1.HashData(buffer));
     }
 
-    private async Task<CameraConnectionType?> TryPortAsync(
+    /// <summary>
+    /// Asks one port for the camera's clock, which needs no credentials.
+    /// Returns <see langword="null"/> when nothing ONVIF answers there.
+    /// </summary>
+    private async Task<OnvifPortAnswer?> ProbePortAsync(
         string ipAddress,
         int port,
-        string? userName,
-        string? password,
         CancellationToken cancellationToken)
     {
         var uri = BuildDeviceServiceUri(ipAddress, port);
@@ -169,16 +190,25 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
             return null;
         }
 
-        // Align the token timestamp to the camera clock; fall back to our own.
         var dateTimeResponse = await PostAsync(uri, "GetSystemDateAndTime", userName: null, password: null, DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
         if (dateTimeResponse is null)
         {
             return null;
         }
 
+        // Align the token timestamp to the camera clock; fall back to our own.
         var cameraUtc = OnvifNetworkInterfaceParser.ParseSystemDateAndTime(dateTimeResponse) ?? DateTimeOffset.UtcNow;
+        return new OnvifPortAnswer(uri, port, cameraUtc);
+    }
 
-        var interfacesResponse = await PostAsync(uri, "GetNetworkInterfaces", userName, password, cameraUtc, cancellationToken).ConfigureAwait(false);
+    private async Task<CameraConnectionType> ReadConnectionTypeAsync(
+        string ipAddress,
+        OnvifPortAnswer answer,
+        string? userName,
+        string? password,
+        CancellationToken cancellationToken)
+    {
+        var interfacesResponse = await PostAsync(answer.Uri, "GetNetworkInterfaces", userName, password, answer.CameraUtc, cancellationToken).ConfigureAwait(false);
         if (interfacesResponse is null)
         {
             // ONVIF answered, but the interfaces call failed (e.g. credentials).
@@ -186,7 +216,7 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
         }
 
         var connectionType = OnvifNetworkInterfaceParser.Parse(interfacesResponse, ipAddress);
-        LogDetected(ipAddress, port, connectionType);
+        LogDetected(ipAddress, answer.Port, connectionType);
         return connectionType;
     }
 
@@ -219,9 +249,15 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
 
             return await response.Content.ReadAsStringAsync(attempt.Token).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        catch (OperationCanceledException)
         {
-            LogRequestFailed(ex, operation, uri);
+            // Nothing listening, or another port already answered: expected.
+            LogRequestTimedOut(operation, uri);
+            return null;
+        }
+        catch (HttpRequestException ex)
+        {
+            LogRequestFailed(operation, uri, ex.Message);
             return null;
         }
     }
@@ -238,4 +274,12 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
             ? uri
             : null;
     }
+
+    /// <summary>
+    /// A port that answered ONVIF, with the camera's clock.
+    /// </summary>
+    private sealed record OnvifPortAnswer(
+        Uri Uri,
+        int Port,
+        DateTimeOffset CameraUtc);
 }
