@@ -72,7 +72,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Command="{Binding Path=CloseCommand}"
-                Opacity="{Binding Path=IsOverlayVisible, Converter={StaticResource BoolToOpacityConverter}}"
+                Opacity="{Binding Path=IsOverlayVisible, Converter={x:Static atcValueConverters:BoolToOpacityValueConverter.Instance}}"
                 Style="{StaticResource FullScreenCloseButtonStyle}"
                 ToolTip="Close">
                 <Path
@@ -92,7 +92,7 @@
                 VerticalAlignment="Bottom"
                 Background="#B3000000"
                 CornerRadius="8"
-                Opacity="{Binding Path=IsOverlayVisible, Converter={StaticResource BoolToOpacityConverter}}">
+                Opacity="{Binding Path=IsOverlayVisible, Converter={x:Static atcValueConverters:BoolToOpacityValueConverter.Instance}}">
                 <StackPanel Orientation="Horizontal">
                     <!--  Play/Pause Button  -->
                     <Button
@@ -251,7 +251,7 @@
                 VerticalAlignment="Bottom"
                 FontSize="12"
                 Foreground="#66FFFFFF"
-                Opacity="{Binding Path=IsOverlayVisible, Converter={StaticResource BoolToOpacityConverter}}"
+                Opacity="{Binding Path=IsOverlayVisible, Converter={x:Static atcValueConverters:BoolToOpacityValueConverter.Instance}}"
                 Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                            Key=PressEscToExit}" />
         </Grid>
