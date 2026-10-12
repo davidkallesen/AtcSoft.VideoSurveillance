@@ -77,6 +77,113 @@ public class CameraConfigurationDialogViewModelSourceTests
     }
 
     [Fact]
+    public void Switching_To_Usb_Sets_ConnectionType_Usb()
+    {
+        var camera = BuildNetworkCamera();
+        camera.Connection.ConnectionType = CameraConnectionType.Wifi;
+
+        var vm = BuildVm(camera);
+        vm.IsUsbSource = true;
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.Usb);
+        vm.SelectedConnectionTypeKey.Should().Be(nameof(CameraConnectionType.Usb));
+    }
+
+    [Fact]
+    public void Switching_From_Usb_To_Network_Resets_ConnectionType_To_None()
+    {
+        var camera = BuildUsbCamera();
+        camera.Connection.ConnectionType = CameraConnectionType.Usb;
+
+        var vm = BuildVm(camera);
+        vm.IsNetworkSource = true;
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.None);
+    }
+
+    [Fact]
+    public void SelectedConnectionTypeKey_Sets_ConnectionType()
+    {
+        var vm = BuildVm(BuildNetworkCamera());
+
+        vm.SelectedConnectionTypeKey = nameof(CameraConnectionType.Lan);
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.Lan);
+    }
+
+    [Fact]
+    public void SelectedConnectionTypeKey_Ignores_Usb_For_Network_Camera()
+    {
+        var vm = BuildVm(BuildNetworkCamera());
+
+        vm.SelectedConnectionTypeKey = nameof(CameraConnectionType.Usb);
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.None);
+    }
+
+    [Fact]
+    public void Detection_Is_Unavailable_Without_Detector()
+    {
+        var vm = BuildVm(BuildNetworkCamera());
+
+        vm.IsConnectionTypeDetectionAvailable.Should().BeFalse();
+        vm.DetectConnectionTypeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Detect_Cannot_Execute_Without_IpAddress()
+    {
+        var vm = BuildVmWithDetector(BuildNetworkCamera(), CameraConnectionType.Wifi);
+
+        vm.IsConnectionTypeDetectionAvailable.Should().BeTrue();
+        vm.DetectConnectionTypeCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Detect_Explicit_Overwrites_Current_Value()
+    {
+        var camera = BuildNetworkCamera();
+        camera.Connection.IpAddress = "10.0.0.5";
+        camera.Connection.ConnectionType = CameraConnectionType.Lan;
+        var vm = BuildVmWithDetector(camera, CameraConnectionType.Wifi);
+
+        await vm.DetectConnectionTypeCommand.ExecuteAsync(null);
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.Wifi);
+        vm.ConnectionTypeDetectionStatus.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Detect_Failure_Keeps_Current_Value_And_Reports_It()
+    {
+        var camera = BuildNetworkCamera();
+        camera.Connection.IpAddress = "10.0.0.5";
+        camera.Connection.ConnectionType = CameraConnectionType.Lan;
+        var vm = BuildVmWithDetector(camera, CameraConnectionType.None);
+
+        await vm.DetectConnectionTypeCommand.ExecuteAsync(null);
+
+        vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.Lan);
+        vm.ConnectionTypeDetectionStatus.Should().Be(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.ConnectionTypeDetectFailed);
+    }
+
+    [Fact]
+    public async Task Detect_Passes_Camera_Credentials()
+    {
+        var camera = BuildNetworkCamera();
+        camera.Connection.IpAddress = "10.0.0.5";
+        camera.Authentication.UserName = "admin";
+        camera.Authentication.Password = "secret";
+        var detector = Substitute.For<ICameraConnectionTypeDetector>();
+        detector.DetectAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(CameraConnectionType.Lan);
+        var vm = BuildVmCore(camera, [], Substitute.For<IVideoPlayerFactory>(), isNew: true, detector);
+
+        await vm.DetectConnectionTypeCommand.ExecuteAsync(null);
+
+        await detector.Received(1).DetectAsync("10.0.0.5", "admin", "secret", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void CanEditSource_Is_True_For_New_Camera_And_False_For_Existing()
     {
         var camera = BuildNetworkCamera();
@@ -216,11 +323,21 @@ public class CameraConfigurationDialogViewModelSourceTests
         bool isNew = true)
         => BuildVmCore(camera, [], playerFactory, isNew);
 
+    private static CameraConfigurationDialogViewModel BuildVmWithDetector(
+        CameraConfiguration camera,
+        CameraConnectionType detected)
+    {
+        var detector = Substitute.For<ICameraConnectionTypeDetector>();
+        detector.DetectAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(detected);
+        return BuildVmCore(camera, [], Substitute.For<IVideoPlayerFactory>(), isNew: true, detector);
+    }
+
     private static CameraConfigurationDialogViewModel BuildVmCore(
         CameraConfiguration camera,
         IReadOnlyCollection<(string IpAddress, string? Path)> endpoints,
         IVideoPlayerFactory playerFactory,
-        bool isNew)
+        bool isNew,
+        ICameraConnectionTypeDetector? detector = null)
     {
         var settingsService = Substitute.For<IWpfCoreSettingsService>();
         settingsService.CameraDisplay.Returns(new CameraDisplayAppSettings());
@@ -235,7 +352,8 @@ public class CameraConfigurationDialogViewModelSourceTests
             endpoints,
             settingsService,
             playerFactory,
-            NullUsbCameraEnumerator.Instance);
+            NullUsbCameraEnumerator.Instance,
+            detector);
     }
 
     private static CameraConfiguration BuildNetworkCamera()

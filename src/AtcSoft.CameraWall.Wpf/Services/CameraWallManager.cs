@@ -18,6 +18,8 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
     private readonly IToastNotificationService toastNotificationService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly IUsbCameraWatcher usbCameraWatcher;
+    private readonly ICameraConnectionTypeDetector? connectionTypeDetector;
+    private readonly ConcurrentDictionary<Guid, byte> connectionTypeProbedCameras = new();
 
     private bool sessionSwitchSubscribed;
     private bool usbWatcherSubscribed;
@@ -76,7 +78,8 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         IGitHubReleaseService gitHubReleaseService,
         IToastNotificationService toastNotificationService,
         IVideoPlayerFactory videoPlayerFactory,
-        IUsbCameraWatcher usbCameraWatcher)
+        IUsbCameraWatcher usbCameraWatcher,
+        ICameraConnectionTypeDetector? connectionTypeDetector = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(storageService);
@@ -101,6 +104,7 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         this.toastNotificationService = toastNotificationService;
         this.videoPlayerFactory = videoPlayerFactory;
         this.usbCameraWatcher = usbCameraWatcher;
+        this.connectionTypeDetector = connectionTypeDetector;
 
         Layouts = new ObservableCollection<CameraLayout>(storageService.GetAllLayouts());
 
@@ -399,6 +403,8 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         CameraGrid.ShowOverlayConnectionStatus = display.ShowOverlayConnectionStatus;
         CameraGrid.ShowOverlayTime = display.ShowOverlayTime;
         CameraGrid.ShowOverlayQuickActions = display.ShowOverlayQuickActions;
+        CameraGrid.ShowOverlayConnectionTypeIcon = display.ShowOverlayConnectionTypeIcon;
+        CameraGrid.ConnectionTypeIconPlacement = display.ConnectionTypeIconPlacement;
         CameraGrid.OverlayOpacity = display.OverlayOpacity;
         CameraGrid.AllowDragAndDropReorder = display.AllowDragAndDropReorder;
         CameraGrid.AutoSave = display.AutoSaveLayoutChanges;
@@ -850,10 +856,63 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
             LogCameraConnectedRecordOnConnect(
                 e.Camera.Display.DisplayName,
                 recordOnConnect);
+
+            DetectConnectionTypeInBackground(e.Camera);
         }
 
         UpdateStatus(string.Format(CultureInfo.CurrentCulture, Translations.CameraStateChanged2, e.Camera.Display.DisplayName, e.NewState));
         UpdateConnectionCount(e);
+    }
+
+    /// <summary>
+    /// Implicit connection-type detection after the first successful connect
+    /// of a network camera whose type is still "not set". Probes once per camera
+    /// per session, never overwrites a value, and persists a detected value.
+    /// </summary>
+    private void DetectConnectionTypeInBackground(CameraConfiguration camera)
+    {
+        if (connectionTypeDetector is null ||
+            camera.Connection.Source != CameraSource.Network ||
+            camera.Connection.ConnectionType != CameraConnectionType.None ||
+            string.IsNullOrWhiteSpace(camera.Connection.IpAddress) ||
+            !connectionTypeProbedCameras.TryAdd(camera.Id, 0))
+        {
+            return;
+        }
+
+        var ipAddress = camera.Connection.IpAddress;
+        var userName = camera.Authentication.UserName;
+        var password = camera.Authentication.Password;
+        var dispatcher = CameraGrid?.Dispatcher ?? Application.Current?.Dispatcher;
+
+        _ = Task.Run(async () =>
+        {
+            var detected = await connectionTypeDetector
+                .DetectAsync(ipAddress, userName, password)
+                .ConfigureAwait(false);
+
+            if (detected == CameraConnectionType.None || dispatcher is null)
+            {
+                return;
+            }
+
+            await dispatcher.InvokeAsync(() => ApplyDetectedConnectionType(camera, detected));
+        });
+    }
+
+    private void ApplyDetectedConnectionType(
+        CameraConfiguration camera,
+        CameraConnectionType detected)
+    {
+        var updated = CameraConnectionTypeHelper.ApplyDetected(camera.Connection.ConnectionType, detected, isExplicit: false);
+        if (updated == camera.Connection.ConnectionType)
+        {
+            return;
+        }
+
+        camera.Connection.ConnectionType = updated;
+        storageService.AddOrUpdateCamera(camera);
+        LogConnectionTypeDetected(camera.Display.DisplayName, updated.ToString());
     }
 
     /// <inheritdoc />

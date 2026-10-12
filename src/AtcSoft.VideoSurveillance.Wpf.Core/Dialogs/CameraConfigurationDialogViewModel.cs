@@ -10,6 +10,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     private readonly IApplicationSettingsService settingsService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator;
+    private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnIsTestingChanged))]
     private bool isTesting;
@@ -45,7 +46,8 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         IReadOnlyCollection<(string IpAddress, string? Path)> existingEndpoints,
         IApplicationSettingsService settingsService,
         IVideoPlayerFactory videoPlayerFactory,
-        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator)
+        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator,
+        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null)
     {
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentNullException.ThrowIfNull(settingsService);
@@ -64,6 +66,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         // though the Windows MF enumerator was registered. Force every
         // caller to think about which enumerator they want.
         this.usbEnumerator = usbEnumerator;
+        this.connectionTypeDetector = connectionTypeDetector;
 
         UsbDevices = [];
 
@@ -177,10 +180,12 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         // user may still edit them; defaults already populate fresh
         // cameras.
         Camera.Connection.Usb = null;
+        Camera.Connection.ConnectionType = CameraConnectionType.None;
 
         ClearTestResult();
         OnPropertyChanged(nameof(IsNetworkSource));
         OnPropertyChanged(nameof(IsUsbSource));
+        OnPropertyChanged(nameof(SelectedConnectionTypeKey));
         CommandManager.InvalidateRequerySuggested();
     }
 
@@ -197,13 +202,106 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         Camera.Authentication.UserName = string.Empty;
         Camera.Authentication.Password = string.Empty;
         Camera.Connection.Usb ??= new UsbConnectionSettings();
+        Camera.Connection.ConnectionType = CameraConnectionType.Usb;
 
         ClearTestResult();
         IpAddressError = null;
         OnPropertyChanged(nameof(IsNetworkSource));
         OnPropertyChanged(nameof(IsUsbSource));
         OnPropertyChanged(nameof(SelectedProtocolKey));
+        OnPropertyChanged(nameof(SelectedConnectionTypeKey));
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    /// <summary>
+    /// Gets the connection types offered for a network camera (USB is implied
+    /// by the source and never picked by hand).
+    /// </summary>
+    public IDictionary<string, string> ConnectionTypeItems { get; } = DropDownItemsFactory.ConnectionTypeItems;
+
+    /// <summary>
+    /// Gets or sets the connection type as a dropdown key. For network cameras
+    /// only None / Lan / Wifi are accepted.
+    /// </summary>
+    public string SelectedConnectionTypeKey
+    {
+        get => Camera.Connection.ConnectionType.ToString();
+        set
+        {
+            if (Enum.TryParse<CameraConnectionType>(value, out var connectionType) &&
+                connectionType != CameraConnectionType.Usb &&
+                Camera.Connection.ConnectionType != connectionType)
+            {
+                Camera.Connection.ConnectionType = connectionType;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether a connection-type detector is available
+    /// (the Detect button is hidden otherwise).
+    /// </summary>
+    public bool IsConnectionTypeDetectionAvailable
+        => connectionTypeDetector is not null;
+
+    /// <summary>
+    /// Gets or sets the inline result of the last connection-type detection.
+    /// </summary>
+    [ObservableProperty]
+    private string connectionTypeDetectionStatus = string.Empty;
+
+    [ObservableProperty]
+    private bool isDetectingConnectionType;
+
+    /// <summary>
+    /// Explicit detection: the user asked, so the detected value may
+    /// overwrite the current one. The user can still change it afterwards.
+    /// </summary>
+    [RelayCommand("DetectConnectionType", CanExecute = nameof(CanDetectConnectionType))]
+    private Task DetectConnectionTypeAsync()
+        => DetectAndApplyConnectionTypeAsync(isExplicit: true);
+
+    private bool CanDetectConnectionType()
+        => connectionTypeDetector is not null &&
+           !IsDetectingConnectionType &&
+           Camera.Connection.Source == CameraSource.Network &&
+           !string.IsNullOrWhiteSpace(Camera.Connection.IpAddress);
+
+    private async Task DetectAndApplyConnectionTypeAsync(bool isExplicit)
+    {
+        if (!CanDetectConnectionType())
+        {
+            return;
+        }
+
+        IsDetectingConnectionType = true;
+        ConnectionTypeDetectionStatus = Translations.ConnectionTypeDetecting;
+
+        try
+        {
+            var detected = await connectionTypeDetector!
+                .DetectAsync(
+                    Camera.Connection.IpAddress,
+                    Camera.Authentication.UserName,
+                    Camera.Authentication.Password)
+                .ConfigureAwait(true);
+
+            SelectedConnectionTypeKey = CameraConnectionTypeHelper
+                .ApplyDetected(Camera.Connection.ConnectionType, detected, isExplicit)
+                .ToString();
+
+            ConnectionTypeDetectionStatus = detected == CameraConnectionType.None
+                ? (isExplicit ? Translations.ConnectionTypeDetectFailed : string.Empty)
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    Translations.ConnectionTypeDetectedFormat,
+                    ConnectionTypeIconHelper.GetDisplayName(detected));
+        }
+        finally
+        {
+            IsDetectingConnectionType = false;
+        }
     }
 
     public IDictionary<string, string> ProtocolItems { get; } = Enum<CameraProtocol>.ToDictionaryWithStringKey();
@@ -507,6 +605,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
             RaisePropertyChanged();
             RaisePropertyChanged(nameof(OverrideOverlayPositionKey));
+            RaisePropertyChanged(nameof(ConnectionTypeIconPlacementItems));
         }
     }
 
@@ -520,9 +619,89 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
                 EnsureOverrides();
                 Camera.Overrides!.CameraDisplay.OverlayPosition = position;
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(ConnectionTypeIconPlacementItems));
             }
         }
     }
+
+    public bool UseDefaultShowOverlayConnectionTypeIcon
+    {
+        get => Camera.Overrides?.CameraDisplay.ShowOverlayConnectionTypeIcon is null;
+        set
+        {
+            if (value)
+            {
+                if (Camera.Overrides is not null)
+                {
+                    Camera.Overrides.CameraDisplay.ShowOverlayConnectionTypeIcon = null;
+                }
+            }
+            else
+            {
+                EnsureOverrides();
+                Camera.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon = settingsService.CameraDisplay.ShowOverlayConnectionTypeIcon;
+            }
+
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(OverrideShowOverlayConnectionTypeIcon));
+        }
+    }
+
+    public bool OverrideShowOverlayConnectionTypeIcon
+    {
+        get => Camera.Overrides?.CameraDisplay.ShowOverlayConnectionTypeIcon ?? settingsService.CameraDisplay.ShowOverlayConnectionTypeIcon;
+        set
+        {
+            EnsureOverrides();
+            Camera.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool UseDefaultConnectionTypeIconPlacement
+    {
+        get => Camera.Overrides?.CameraDisplay.ConnectionTypeIconPlacement is null;
+        set
+        {
+            if (value)
+            {
+                if (Camera.Overrides is not null)
+                {
+                    Camera.Overrides.CameraDisplay.ConnectionTypeIconPlacement = null;
+                }
+            }
+            else
+            {
+                EnsureOverrides();
+                Camera.Overrides!.CameraDisplay.ConnectionTypeIconPlacement = settingsService.CameraDisplay.ConnectionTypeIconPlacement;
+            }
+
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(OverrideConnectionTypeIconPlacementKey));
+        }
+    }
+
+    public string OverrideConnectionTypeIconPlacementKey
+    {
+        get => (Camera.Overrides?.CameraDisplay.ConnectionTypeIconPlacement ?? settingsService.CameraDisplay.ConnectionTypeIconPlacement).ToString();
+        set
+        {
+            if (Enum.TryParse<ConnectionTypeIconPlacement>(value, out var placement))
+            {
+                EnsureOverrides();
+                Camera.Overrides!.CameraDisplay.ConnectionTypeIconPlacement = placement;
+                RaisePropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the icon placements, labelled with the concrete corner they resolve
+    /// to for this camera's effective overlay position.
+    /// </summary>
+    public IDictionary<string, string> ConnectionTypeIconPlacementItems
+        => DropDownItemsFactory.GetConnectionTypeIconPlacementItems(
+            Camera.Overrides?.CameraDisplay.OverlayPosition ?? Camera.Display.OverlayPosition);
 
     public bool UseDefaultConnectionTimeout
     {
@@ -1498,6 +1677,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     {
         IsTesting = true;
         ClearTestResult();
+        var success = false;
 
         try
         {
@@ -1506,7 +1686,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             // reads the locator's InputFormat / RawDeviceSpec to pick
             // the right FFmpeg open path.
             var locator = AtcSoft.VideoSurveillance.Helpers.CameraUriHelper.BuildSourceLocator(Camera.Core);
-            await TestStreamWithPlayerAsync(locator).ConfigureAwait(false);
+            success = await TestStreamWithPlayerAsync(locator).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -1516,9 +1696,19 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         {
             IsTesting = false;
         }
+
+        // Implicit detection: the stream opened with these credentials, so an
+        // ONVIF probe is likely to authenticate too. Only fills a value that
+        // is still "not set". Runs after the test so it doesn't hold IsTesting.
+        if (success &&
+            Camera.Connection.ConnectionType == CameraConnectionType.None &&
+            !string.IsNullOrEmpty(Camera.Authentication.UserName))
+        {
+            await DetectAndApplyConnectionTypeAsync(isExplicit: false).ConfigureAwait(true);
+        }
     }
 
-    private async Task TestStreamWithPlayerAsync(
+    private async Task<bool> TestStreamWithPlayerAsync(
         AtcSoft.VideoSurveillance.Helpers.SourceLocator locator)
     {
         using var player = videoPlayerFactory.Create();
@@ -1545,7 +1735,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
                 PixelFormat = locator.PixelFormat,
             };
             player.Open(locator.Uri, options);
-            await WaitForConnectionResultAsync(tcs, cts.Token).ConfigureAwait(false);
+            return await WaitForConnectionResultAsync(tcs, cts.Token).ConfigureAwait(false);
         }
         finally
         {
@@ -1569,7 +1759,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         }
     }
 
-    private async Task WaitForConnectionResultAsync(
+    private async Task<bool> WaitForConnectionResultAsync(
         TaskCompletionSource<bool> tcs,
         CancellationToken cancellationToken)
     {
@@ -1579,10 +1769,12 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
                 .WaitAsync(cancellationToken)
                 .ConfigureAwait(false);
             SetTestResult(success ? Translations.ConnectionSuccessful : Translations.StreamOpenFailed);
+            return success;
         }
         catch (OperationCanceledException)
         {
             SetTestResult(Translations.ConnectionTimedOut);
+            return false;
         }
     }
 

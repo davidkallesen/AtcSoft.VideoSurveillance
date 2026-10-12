@@ -116,6 +116,7 @@ public partial class ConnectionSettings : ObservableObject
 
             Core.Source = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(EffectiveConnectionType));
         }
     }
 
@@ -137,6 +138,32 @@ public partial class ConnectionSettings : ObservableObject
     }
 
     /// <summary>
+    /// Gets or sets the physical link to the camera, for display. Read the
+    /// displayed value through <c>CameraConnectionTypeHelper.GetEffective</c>.
+    /// </summary>
+    public CameraConnectionType ConnectionType
+    {
+        get => Core.ConnectionType;
+        set
+        {
+            if (Core.ConnectionType == value)
+            {
+                return;
+            }
+
+            Core.ConnectionType = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EffectiveConnectionType));
+        }
+    }
+
+    /// <summary>
+    /// Gets the connection type to display (USB cameras are always USB).
+    /// </summary>
+    public CameraConnectionType EffectiveConnectionType
+        => CameraConnectionTypeHelper.GetEffective(Core);
+
+    /// <summary>
     /// Creates a deep copy of this instance.
     /// </summary>
     public ConnectionSettings Clone()
@@ -155,6 +182,7 @@ public partial class ConnectionSettings : ObservableObject
         Port = source.Port;
         Path = source.Path;
         Usb = source.Usb is null ? null : source.Usb.Clone();
+        ConnectionType = source.ConnectionType;
     }
 
     /// <summary>

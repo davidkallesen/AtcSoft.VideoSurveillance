@@ -11,6 +11,7 @@ public class DialogService : IDialogService
     private readonly IMotionDetectionService motionDetectionService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
+    private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DialogService"/> class.
@@ -26,16 +27,23 @@ public class DialogService : IDialogService
     /// VM defaulted to the Null enumerator and the device dropdown
     /// stayed empty no matter how many cameras were attached.
     /// </param>
+    /// <param name="connectionTypeDetector">
+    /// Optional connection-type detector (ONVIF). When not registered, the
+    /// camera dialog hides its Detect button; the connection type can still
+    /// be set by hand.
+    /// </param>
     public DialogService(
         IApplicationSettingsService settingsService,
         IMotionDetectionService motionDetectionService,
         IVideoPlayerFactory videoPlayerFactory,
-        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator)
+        AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator,
+        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));
         this.videoPlayerFactory = videoPlayerFactory ?? throw new ArgumentNullException(nameof(videoPlayerFactory));
         this.usbCameraEnumerator = usbCameraEnumerator ?? throw new ArgumentNullException(nameof(usbCameraEnumerator));
+        this.connectionTypeDetector = connectionTypeDetector;
     }
 
     /// <inheritdoc />
@@ -58,7 +66,8 @@ public class DialogService : IDialogService
             existingEndpoints,
             settingsService,
             videoPlayerFactory,
-            usbCameraEnumerator);
+            usbCameraEnumerator,
+            connectionTypeDetector);
 
         var dialog = new CameraConfigurationDialog(viewModel)
         {
@@ -253,7 +262,9 @@ public class DialogService : IDialogService
                 boundingBoxSmoothing,
                 motionDetectionService,
                 borrowedPlayer,
-                videoPlayerFactory);
+                videoPlayerFactory,
+                overrides?.CameraDisplay.ShowOverlayConnectionTypeIcon ?? display.ShowOverlayConnectionTypeIcon,
+                overrides?.CameraDisplay.ConnectionTypeIconPlacement ?? display.ConnectionTypeIconPlacement);
             using var window = new FullScreenCameraWindow(viewModel);
             window.Owner = Application.Current.MainWindow;
 

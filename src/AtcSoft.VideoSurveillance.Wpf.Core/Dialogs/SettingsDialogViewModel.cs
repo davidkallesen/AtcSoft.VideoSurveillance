@@ -66,11 +66,27 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     public IDictionary<string, string> OverlayOpacityItems
         => DropDownItemsFactory.OverlayOpacityItems;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(ConnectionTypeIconPlacementItems)])]
     private string selectedOverlayPosition = DropDownItemsFactory.DefaultOverlayPosition;
 
     public IDictionary<string, string> OverlayPositionItems
         => DropDownItemsFactory.OverlayPositionItems;
+
+    [ObservableProperty]
+    private bool showCameraOverlayConnectionTypeIcon;
+
+    [ObservableProperty]
+    private string selectedConnectionTypeIconPlacement = DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
+
+    /// <summary>
+    /// Gets the icon placements, labelled with the concrete corner they resolve
+    /// to for the currently selected default overlay position.
+    /// </summary>
+    public IDictionary<string, string> ConnectionTypeIconPlacementItems
+        => DropDownItemsFactory.GetConnectionTypeIconPlacementItems(
+            Enum.TryParse<OverlayPosition>(SelectedOverlayPosition, out var position)
+                ? position
+                : OverlayPosition.TopLeft);
 
     [ObservableProperty]
     private bool allowDragAndDropReorder = true;
@@ -352,6 +368,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         ShowCameraOverlayTime = false;
         ShowCameraOverlayConnectionStatus = true;
         ShowCameraOverlayQuickActions = true;
+        ShowCameraOverlayConnectionTypeIcon = false;
+        SelectedConnectionTypeIconPlacement = DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
         SelectedOverlayOpacity = "0.7";
         SelectedOverlayPosition = "TopLeft";
         AllowDragAndDropReorder = true;
@@ -450,6 +468,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         ShowCameraOverlayTime = cameraDisplay.ShowOverlayTime;
         ShowCameraOverlayConnectionStatus = cameraDisplay.ShowOverlayConnectionStatus;
         ShowCameraOverlayQuickActions = cameraDisplay.ShowOverlayQuickActions;
+        ShowCameraOverlayConnectionTypeIcon = cameraDisplay.ShowOverlayConnectionTypeIcon;
+        SelectedConnectionTypeIconPlacement = cameraDisplay.ConnectionTypeIconPlacement.ToString();
         SelectedOverlayOpacity = cameraDisplay.OverlayOpacity.ToString("F1", CultureInfo.InvariantCulture);
         SelectedOverlayPosition = cameraDisplay.OverlayPosition.ToString();
         AllowDragAndDropReorder = cameraDisplay.AllowDragAndDropReorder;
@@ -554,6 +574,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     {
         _ = double.TryParse(SelectedOverlayOpacity, NumberStyles.Float, CultureInfo.InvariantCulture, out var opacity);
         _ = Enum.TryParse<OverlayPosition>(SelectedOverlayPosition, out var overlayPosition);
+        _ = Enum.TryParse<ConnectionTypeIconPlacement>(SelectedConnectionTypeIconPlacement, out var iconPlacement);
 
         var settings = new CameraDisplayAppSettings
         {
@@ -562,6 +583,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
             ShowOverlayTime = ShowCameraOverlayTime,
             ShowOverlayConnectionStatus = ShowCameraOverlayConnectionStatus,
             ShowOverlayQuickActions = ShowCameraOverlayQuickActions,
+            ShowOverlayConnectionTypeIcon = ShowCameraOverlayConnectionTypeIcon,
+            ConnectionTypeIconPlacement = iconPlacement,
             OverlayOpacity = opacity,
             OverlayPosition = overlayPosition,
             AllowDragAndDropReorder = AllowDragAndDropReorder,

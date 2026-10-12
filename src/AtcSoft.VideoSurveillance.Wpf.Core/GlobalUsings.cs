@@ -64,6 +64,7 @@ global using Microsoft.Win32;
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using AuthenticationSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.AuthenticationSettings;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;
+global using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConnectionTypeHelper;
 global using CameraDisplaySettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.CameraDisplaySettings;
 global using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
 global using CameraOverrides = AtcSoft.VideoSurveillance.Models.CameraOverrides;

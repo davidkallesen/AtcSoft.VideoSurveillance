@@ -76,9 +76,18 @@ public partial class CameraConfiguration : ObservableObject
             connection = value;
             Core.Connection = value.Core;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(EffectiveConnectionType));
             SubscribeToNestedChanges(connection);
         }
     }
+
+    /// <summary>
+    /// Gets the connection type to display (USB cameras are always USB).
+    /// Changes to the connection type alone are raised under this name, not
+    /// under <see cref="Connection"/>, so they don't restart the stream.
+    /// </summary>
+    public CameraConnectionType EffectiveConnectionType
+        => Connection.EffectiveConnectionType;
 
     /// <summary>
     /// Gets or sets the authentication settings.
@@ -248,7 +257,20 @@ public partial class CameraConfiguration : ObservableObject
     {
         // Forward the change notification for the parent property
         // WPF bindings to nested paths (e.g., Camera.Connection.IpAddress) work automatically
-        // because WPF subscribes to each object's PropertyChanged in the path
+        // because WPF subscribes to each object's PropertyChanged in the path.
+        // The connection type is display-only, so it is forwarded under its own
+        // name instead of Connection (which makes the tile recreate its player).
+        if (sender is ConnectionSettings &&
+            e.PropertyName is nameof(ConnectionSettings.ConnectionType) or nameof(ConnectionSettings.EffectiveConnectionType))
+        {
+            if (e.PropertyName == nameof(ConnectionSettings.EffectiveConnectionType))
+            {
+                OnPropertyChanged(nameof(EffectiveConnectionType));
+            }
+
+            return;
+        }
+
         var parentPropertyName = sender switch
         {
             ConnectionSettings => nameof(Connection),

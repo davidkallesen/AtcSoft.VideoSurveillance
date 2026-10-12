@@ -92,6 +92,20 @@ public partial class CameraTile : IDisposable
     [DependencyProperty(DefaultValue = false, PropertyChangedCallback = nameof(OnOverlaySettingsChanged))]
     private bool showOverlayTime;
 
+    [DependencyProperty(DefaultValue = false, PropertyChangedCallback = nameof(OnConnectionTypeIconSettingsChanged))]
+    private bool showOverlayConnectionTypeIcon;
+
+    [DependencyProperty(DefaultValue = ConnectionTypeIconPlacement.SameRow, PropertyChangedCallback = nameof(OnConnectionTypeIconSettingsChanged))]
+    private ConnectionTypeIconPlacement connectionTypeIconPlacement;
+
+    // Connection-type icon corner — one of the two corners adjacent to the
+    // info box, computed in UpdateOverlayPosition.
+    [DependencyProperty(DefaultValue = HorizontalAlignment.Right)]
+    private HorizontalAlignment connectionTypeIconHorizontalAlignment;
+
+    [DependencyProperty(DefaultValue = VerticalAlignment.Top)]
+    private VerticalAlignment connectionTypeIconVerticalAlignment;
+
     [DependencyProperty(DefaultValue = 0.6, PropertyChangedCallback = nameof(OnOverlaySettingsChanged))]
     private double overlayOpacity;
 
@@ -212,6 +226,7 @@ public partial class CameraTile : IDisposable
     private bool isDragging;
     private Point dragStartPoint;
     private ConnectionState previousState = ConnectionState.Disconnected;
+    private OverlayPosition currentOverlayPosition = OverlayPosition.TopLeft;
     private CameraOverlay? cachedOverlay;
     private MotionBoundingBoxOverlay? cachedMotionOverlay;
     private DispatcherTimer? reconnectTimer;
@@ -1057,6 +1072,7 @@ public partial class CameraTile : IDisposable
         if (d is CameraTile tile && e.NewValue is ConnectionState newState)
         {
             tile.UpdateOverlayConnectionState(newState);
+            tile.UpdateConnectionTypeIcon();
             tile.UpdateQuickActionVisibility();
             CommandManager.InvalidateRequerySuggested();
         }
@@ -1117,6 +1133,17 @@ public partial class CameraTile : IDisposable
         if (d is CameraTile tile)
         {
             tile.ApplyOverlaySettings();
+        }
+    }
+
+    private static void OnConnectionTypeIconSettingsChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CameraTile tile)
+        {
+            tile.UpdateOverlayPosition(tile.currentOverlayPosition);
+            tile.UpdateConnectionTypeIcon();
         }
     }
 
@@ -1224,6 +1251,10 @@ public partial class CameraTile : IDisposable
                         UpdateOverlayPosition(GetEffectiveOverlayPosition(Camera));
                     }
 
+                    break;
+                case nameof(CameraConfiguration.EffectiveConnectionType):
+                    // Display-only: no player recreation.
+                    UpdateConnectionTypeIcon();
                     break;
                 case nameof(CameraConfiguration.Connection):
                 case nameof(CameraConfiguration.Authentication):
@@ -1414,7 +1445,7 @@ public partial class CameraTile : IDisposable
             CameraName = cameraConfig.Display.DisplayName;
             CameraDescription = cameraConfig.Display.Description ?? string.Empty;
             UpdateOverlayPosition(GetEffectiveOverlayPosition(cameraConfig));
-            UpdateOverlayIsUsbSource();
+            UpdateConnectionTypeIcon();
             ApplyRotation();
             InitializeOverrideTracking(cameraConfig);
             return;
@@ -1461,7 +1492,7 @@ public partial class CameraTile : IDisposable
         CameraDescription = cameraConfig.Display.Description ?? string.Empty;
 
         UpdateOverlayPosition(GetEffectiveOverlayPosition(cameraConfig));
-        UpdateOverlayIsUsbSource();
+        UpdateConnectionTypeIcon();
 
         // Defer player creation if the factory hasn't been injected yet.
         // InitializeServices will call InitializePlayer when the factory arrives.
@@ -1657,6 +1688,28 @@ public partial class CameraTile : IDisposable
         overlay.ShowConnectionStatus = ShowOverlayConnectionStatus;
         overlay.ShowTime = ShowOverlayTime;
         overlay.OverlayOpacity = OverlayOpacity;
+        UpdateConnectionTypeIcon();
+    }
+
+    /// <summary>
+    /// Shows the connection-type icon (effective type, tinted by connection
+    /// state) when enabled, and hands the legacy "USB" pill over to it: the
+    /// pill only shows while the icon is off.
+    /// </summary>
+    private void UpdateConnectionTypeIcon()
+    {
+        var effectiveType = Camera?.EffectiveConnectionType ?? CameraConnectionType.None;
+
+        if (ConnectionTypeIconControl is not null)
+        {
+            ConnectionTypeIconControl.ConnectionType = ShowOverlayConnectionTypeIcon
+                ? effectiveType
+                : CameraConnectionType.None;
+            ConnectionTypeIconControl.ConnectionState = ConnectionState;
+            ConnectionTypeIconControl.Opacity = OverlayOpacity;
+        }
+
+        UpdateOverlayIsUsbSource();
     }
 
     private void SubscribeToMouseEvents()
@@ -2131,7 +2184,7 @@ public partial class CameraTile : IDisposable
         CameraName = Camera.Display.DisplayName;
         CameraDescription = Camera.Display.Description ?? string.Empty;
         UpdateOverlayPosition(GetEffectiveOverlayPosition(Camera));
-        UpdateOverlayIsUsbSource();
+        UpdateConnectionTypeIcon();
         ApplyRotation();
     }
 
@@ -2179,6 +2232,24 @@ public partial class CameraTile : IDisposable
 
     private void UpdateOverlayPosition(OverlayPosition position)
     {
+        currentOverlayPosition = position;
+
+        // Connection-type icon: one of the two corners adjacent to the info box,
+        // so it never collides with the info box or the quick actions.
+        var iconCorner = CameraConnectionTypeHelper.ResolveIconCorner(position, ConnectionTypeIconPlacement);
+        ConnectionTypeIconHorizontalAlignment = iconCorner is OverlayPosition.TopLeft or OverlayPosition.BottomLeft
+            ? HorizontalAlignment.Left
+            : HorizontalAlignment.Right;
+        ConnectionTypeIconVerticalAlignment = iconCorner is OverlayPosition.TopLeft or OverlayPosition.TopRight
+            ? VerticalAlignment.Top
+            : VerticalAlignment.Bottom;
+
+        if (ConnectionTypeIconControl is not null)
+        {
+            ConnectionTypeIconControl.HorizontalAlignment = ConnectionTypeIconHorizontalAlignment;
+            ConnectionTypeIconControl.VerticalAlignment = ConnectionTypeIconVerticalAlignment;
+        }
+
         OverlayHorizontalAlignment = position switch
         {
             OverlayPosition.TopLeft or OverlayPosition.BottomLeft => HorizontalAlignment.Left,
@@ -2214,7 +2285,10 @@ public partial class CameraTile : IDisposable
         var overlay = GetCameraOverlay();
         if (overlay is not null)
         {
-            overlay.IsUsbSource = Camera?.Connection.Source == CameraSource.Usb;
+            // Legacy "USB" pill — superseded by the connection-type icon while
+            // that is enabled. Scheduled for removal (connection-icon roadmap, Phase 8).
+            overlay.IsUsbSource = Camera?.Connection.Source == CameraSource.Usb &&
+                                  !ShowOverlayConnectionTypeIcon;
         }
     }
 

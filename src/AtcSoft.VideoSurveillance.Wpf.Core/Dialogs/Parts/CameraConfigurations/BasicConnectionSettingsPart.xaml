@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
+    xmlns:atcValueConverters="https://github.com/atc-net/atc-wpf/tree/main/schemas/value-converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -40,5 +41,28 @@
             Value="{Binding Path=Camera.Connection.Port, Mode=TwoWay}" />
 
         <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Path}" Text="{Binding Path=Camera.Connection.Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <!--  Connection type (LAN / Wi-Fi) for the connection-type icon. Editable even for existing cameras: it is display-only.  -->
+        <atc:LabelComboBox
+            Items="{Binding Path=ConnectionTypeItems}"
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                            Key=ConnectionType}"
+            SelectedKey="{Binding Path=SelectedConnectionTypeKey, Mode=TwoWay}" />
+
+        <!--  ONVIF detection (hidden when no detector is registered). The result can still be changed by hand above.  -->
+        <StackPanel
+            Margin="0,4,0,0"
+            Orientation="Horizontal"
+            Visibility="{Binding Path=IsConnectionTypeDetectionAvailable, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+            <Button
+                Padding="10,2"
+                Command="{Binding Path=DetectConnectionTypeCommand}"
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                              Key=DetectConnectionType}" />
+            <TextBlock
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Text="{Binding Path=ConnectionTypeDetectionStatus}" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

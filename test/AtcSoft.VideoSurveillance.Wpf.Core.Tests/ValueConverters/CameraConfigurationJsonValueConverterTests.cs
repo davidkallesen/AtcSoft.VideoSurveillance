@@ -1,5 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.ValueConverters;
 
+using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+
 public class CameraConfigurationJsonValueConverterTests
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -223,5 +225,79 @@ public class CameraConfigurationJsonValueConverterTests
         deserialized!.Display.DisplayName.Should().Be("RoundTrip Test");
         deserialized.Overrides!.Recording.EnableRecordingOnConnect.Should().BeTrue();
         deserialized.Overrides.Recording.RecordingFormat.Should().Be("mkv");
+    }
+
+    [Fact]
+    public void RoundTrip_ConnectionType_And_Icon_Overrides_PreservesValues()
+    {
+        // Arrange
+        var original = new CameraConfiguration();
+        original.Connection.IpAddress = "192.168.1.100";
+        original.Connection.ConnectionType = CameraConnectionType.Wifi;
+        original.Display.DisplayName = "Wi-Fi camera";
+        original.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon = true;
+        original.Overrides.CameraDisplay.ConnectionTypeIconPlacement = ConnectionTypeIconPlacement.SameColumn;
+
+        // Act
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+        var deserialized = JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions);
+
+        // Assert
+        deserialized.Should().NotBeNull();
+        deserialized!.Connection.ConnectionType.Should().Be(CameraConnectionType.Wifi);
+        deserialized.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon.Should().BeTrue();
+        deserialized.Overrides.CameraDisplay.ConnectionTypeIconPlacement.Should().Be(ConnectionTypeIconPlacement.SameColumn);
+    }
+
+    [Fact]
+    public void Serialize_ConnectionType_None_Is_Omitted()
+    {
+        // Network cameras without a connection type keep the pre-existing on-disk shape.
+        var original = new CameraConfiguration();
+        original.Connection.IpAddress = "192.168.1.100";
+
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+
+        json.Should().NotContain("connectionType");
+    }
+
+    [Fact]
+    public void Deserialize_Without_ConnectionType_Defaults_To_None()
+    {
+        const string json = """
+        {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "connection": { "ipAddress": "10.0.0.2", "protocol": "Rtsp", "port": 554 },
+            "authentication": {},
+            "display": { "displayName": "Old camera" },
+            "stream": {}
+        }
+        """;
+
+        var camera = JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions);
+
+        camera!.Connection.ConnectionType.Should().Be(CameraConnectionType.None);
+        camera.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon.Should().BeNull();
+    }
+
+    [Fact]
+    public void Deserialize_Legacy_Flat_Overrides_Reads_ConnectionTypeIcon()
+    {
+        const string json = """
+        {
+            "id": "00000000-0000-0000-0000-000000000003",
+            "connection": { "ipAddress": "10.0.0.3", "protocol": "Rtsp", "port": 554, "connectionType": "Lan" },
+            "authentication": {},
+            "display": { "displayName": "Flat" },
+            "stream": {},
+            "overrides": { "showOverlayConnectionTypeIcon": true, "connectionTypeIconPlacement": "SameColumn" }
+        }
+        """;
+
+        var camera = JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions);
+
+        camera!.Connection.ConnectionType.Should().Be(CameraConnectionType.Lan);
+        camera.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon.Should().BeTrue();
+        camera.Overrides.CameraDisplay.ConnectionTypeIconPlacement.Should().Be(ConnectionTypeIconPlacement.SameColumn);
     }
 }

@@ -88,6 +88,12 @@
                 <!--  Motion Bounding Box Overlay  -->
                 <local:MotionBoundingBoxOverlay x:Name="MotionOverlay" IsHitTestVisible="False" />
 
+                <!--  Connection-type icon (LAN / Wi-Fi / USB). Sits in one of the two corners adjacent to the info box (never the info box or quick-actions corner), set in UpdateOverlayPosition. Type, link-health tint and opacity are set from UpdateConnectionTypeIcon.  -->
+                <local:ConnectionTypeIcon
+                    x:Name="ConnectionTypeIconControl"
+                    Margin="8"
+                    IsHitTestVisible="False" />
+
                 <!--  Quick-action zone (positioned in the diagonal opposite corner of the overlay info box, computed in UpdateOverlayPosition). The outer Grid is a fixed-size, hit-test-visible hover hot-zone — the buttons inside collapse when hidden, so without this fixed shell the mouse would have nothing to hover when no quick action is currently visible. Visibility of the buttons is gated by ShowOverlayQuickActions, zoom state, hover, and connection state — toggled imperatively from CameraTile.xaml.cs.  -->
                 <Grid
                     x:Name="QuickActionsContainer"

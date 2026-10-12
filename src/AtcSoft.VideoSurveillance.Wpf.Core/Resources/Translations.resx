@@ -1284,4 +1284,43 @@
   <data name="UsbCameraReconnectedToast1" xml:space="preserve">
     <value>USB camera '{0}' reconnected</value>
   </data>
+  <data name="ConnectionType" xml:space="preserve">
+    <value>Connection type</value>
+  </data>
+  <data name="ConnectionTypeNone" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="ConnectionTypeLan" xml:space="preserve">
+    <value>Wired (LAN)</value>
+  </data>
+  <data name="ConnectionTypeWifi" xml:space="preserve">
+    <value>Wi-Fi</value>
+  </data>
+  <data name="ConnectionTypeUsb" xml:space="preserve">
+    <value>USB</value>
+  </data>
+  <data name="ShowCameraOverlayConnectionTypeIcon" xml:space="preserve">
+    <value>Show connection-type icon</value>
+  </data>
+  <data name="ConnectionTypeIconPosition" xml:space="preserve">
+    <value>Connection-type icon position</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameRowFormat" xml:space="preserve">
+    <value>{0} (same row as info box)</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameColumnFormat" xml:space="preserve">
+    <value>{0} (same column as info box)</value>
+  </data>
+  <data name="DetectConnectionType" xml:space="preserve">
+    <value>Detect</value>
+  </data>
+  <data name="ConnectionTypeDetecting" xml:space="preserve">
+    <value>Detecting…</value>
+  </data>
+  <data name="ConnectionTypeDetectFailed" xml:space="preserve">
+    <value>Could not detect the connection type</value>
+  </data>
+  <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
+    <value>Detected: {0}</value>
+  </data>
 </root>

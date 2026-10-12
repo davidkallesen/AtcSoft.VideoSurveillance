@@ -41,6 +41,12 @@ public partial class CameraGrid
     private bool showOverlayQuickActions;
 
     [DependencyProperty(DefaultValue = false)]
+    private bool showOverlayConnectionTypeIcon;
+
+    [DependencyProperty(DefaultValue = ConnectionTypeIconPlacement.SameRow)]
+    private ConnectionTypeIconPlacement connectionTypeIconPlacement;
+
+    [DependencyProperty(DefaultValue = false)]
     private bool showOverlayTime;
 
     [DependencyProperty(DefaultValue = 0.6)]

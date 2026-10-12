@@ -70,6 +70,12 @@ public partial class CameraWallApp
                 // Toast notification service (used by library and app)
                 services.AddSingleton<IToastNotificationService, ToastNotificationService>();
 
+                // Connection-type detection (ONVIF) for the camera dialog's Detect
+                // button and the implicit first-connect probe.
+                services.AddSingleton<AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector>(
+                    sp => new AtcSoft.VideoSurveillance.Services.OnvifConnectionTypeDetector(
+                        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AtcSoft.VideoSurveillance.Services.OnvifConnectionTypeDetector>>()));
+
                 // App
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();

@@ -1284,4 +1284,43 @@
   <data name="UsbCameraReconnectedToast1" xml:space="preserve">
     <value>USB-Kamera '{0}' wieder verbunden</value>
   </data>
+  <data name="ConnectionType" xml:space="preserve">
+    <value>Verbindungstyp</value>
+  </data>
+  <data name="ConnectionTypeNone" xml:space="preserve">
+    <value>Nicht festgelegt</value>
+  </data>
+  <data name="ConnectionTypeLan" xml:space="preserve">
+    <value>Kabelgebunden (LAN)</value>
+  </data>
+  <data name="ConnectionTypeWifi" xml:space="preserve">
+    <value>WLAN</value>
+  </data>
+  <data name="ConnectionTypeUsb" xml:space="preserve">
+    <value>USB</value>
+  </data>
+  <data name="ShowCameraOverlayConnectionTypeIcon" xml:space="preserve">
+    <value>Symbol für Verbindungstyp anzeigen</value>
+  </data>
+  <data name="ConnectionTypeIconPosition" xml:space="preserve">
+    <value>Position des Verbindungssymbols</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameRowFormat" xml:space="preserve">
+    <value>{0} (gleiche Zeile wie Infobox)</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameColumnFormat" xml:space="preserve">
+    <value>{0} (gleiche Spalte wie Infobox)</value>
+  </data>
+  <data name="DetectConnectionType" xml:space="preserve">
+    <value>Erkennen</value>
+  </data>
+  <data name="ConnectionTypeDetecting" xml:space="preserve">
+    <value>Wird erkannt…</value>
+  </data>
+  <data name="ConnectionTypeDetectFailed" xml:space="preserve">
+    <value>Verbindungstyp konnte nicht erkannt werden</value>
+  </data>
+  <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
+    <value>Erkannt: {0}</value>
+  </data>
 </root>

@@ -59,6 +59,21 @@
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedOverlayPosition, Mode=TwoWay}" />
 
+            <atc:LabelToggleSwitch
+                IsOn="{Binding Path=ShowCameraOverlayConnectionTypeIcon, Mode=TwoWay}"
+                LabelPosition="Right"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                Key=ShowCameraOverlayConnectionTypeIcon}" />
+
+            <!--  Only the two corners adjacent to the info box are offered; labels follow the default overlay position above  -->
+            <atc:LabelComboBox
+                IsEnabled="{Binding Path=ShowCameraOverlayConnectionTypeIcon}"
+                Items="{Binding Path=ConnectionTypeIconPlacementItems}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                Key=ConnectionTypeIconPosition}"
+                Orientation="Vertical"
+                SelectedKey="{Binding Path=SelectedConnectionTypeIconPlacement, Mode=TwoWay}" />
+
         </StackPanel>
     </GroupBox>
 </UserControl>

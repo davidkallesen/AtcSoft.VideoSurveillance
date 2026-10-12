@@ -37,8 +37,10 @@ global using Microsoft.Extensions.Logging;
 
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;
+global using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConnectionTypeHelper;
 global using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
 global using ConnectionState = Atc.Network.ConnectionState;
+global using ICameraConnectionTypeDetector = AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector;
 global using IGitHubReleaseService = AtcSoft.VideoSurveillance.Services.IGitHubReleaseService;
 global using IMediaCleanupService = AtcSoft.VideoSurveillance.Services.IMediaCleanupService;
 global using IMediaPipeline = AtcSoft.VideoSurveillance.Services.IMediaPipeline;

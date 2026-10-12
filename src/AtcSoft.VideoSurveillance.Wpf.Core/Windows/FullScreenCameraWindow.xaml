@@ -114,6 +114,16 @@
                         StrokeThickness="1.5" />
                 </Canvas>
 
+                <!--  Connection-type icon: a corner adjacent to the info box, avoiding the close button (set in ApplyOverlayPosition)  -->
+                <userControls:ConnectionTypeIcon
+                    x:Name="ConnectionTypeIconControl"
+                    Margin="20"
+                    ConnectionState="{Binding Path=HostDataContext.ConnectionState}"
+                    ConnectionType="{Binding Path=HostDataContext.DisplayedConnectionType}"
+                    IconSize="18"
+                    IsHitTestVisible="False"
+                    Opacity="{Binding Path=HostDataContext.IsOverlayVisible, Converter={x:Static atcValueConverters:BoolToOpacityValueConverter.Instance}}" />
+
                 <!--  Close Button (Top-Right)  -->
                 <Button
                     Width="40"

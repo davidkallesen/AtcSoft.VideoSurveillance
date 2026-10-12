@@ -28,4 +28,7 @@ public sealed partial class CameraWallManager
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Session switch detected ({Reason}) — recreating connected players to rebuild GPU after desktop session change")]
     private partial void LogSessionSwitchReconnect(string reason);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Detected connection type {ConnectionType} for camera '{DisplayName}'")]
+    private partial void LogConnectionTypeDetected(string displayName, string connectionType);
 }

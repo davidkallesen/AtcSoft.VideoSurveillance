@@ -242,6 +242,12 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             settings.Source = sourceEnum;
         }
 
+        if (TryGetStringProperty(element, "connectionType", "ConnectionType", out var connectionType) &&
+            Enum.TryParse<CameraConnectionType>(connectionType, ignoreCase: true, out var connectionTypeEnum))
+        {
+            settings.ConnectionType = connectionTypeEnum;
+        }
+
         if ((element.TryGetProperty("usb", out var usbElement) ||
              element.TryGetProperty("Usb", out usbElement)) &&
             usbElement.ValueKind == JsonValueKind.Object)
@@ -510,6 +516,17 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             target.ShowOverlayQuickActions = showQuickActions;
         }
 
+        if (TryGetNullableBoolProperty(element, "showOverlayConnectionTypeIcon", "ShowOverlayConnectionTypeIcon", out var showConnectionTypeIcon))
+        {
+            target.ShowOverlayConnectionTypeIcon = showConnectionTypeIcon;
+        }
+
+        if (TryGetStringProperty(element, "connectionTypeIconPlacement", "ConnectionTypeIconPlacement", out var iconPlacement) &&
+            Enum.TryParse<ConnectionTypeIconPlacement>(iconPlacement, ignoreCase: true, out var iconPlacementEnum))
+        {
+            target.ConnectionTypeIconPlacement = iconPlacementEnum;
+        }
+
         if (TryGetNullableDoubleProperty(element, "overlayOpacity", "OverlayOpacity", out var opacity))
         {
             target.OverlayOpacity = opacity;
@@ -736,6 +753,17 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             overrides.CameraDisplay.ShowOverlayQuickActions = showQuickActions;
         }
 
+        if (TryGetNullableBoolProperty(element, "showOverlayConnectionTypeIcon", "ShowOverlayConnectionTypeIcon", out var showConnectionTypeIcon))
+        {
+            overrides.CameraDisplay.ShowOverlayConnectionTypeIcon = showConnectionTypeIcon;
+        }
+
+        if (TryGetStringProperty(element, "connectionTypeIconPlacement", "ConnectionTypeIconPlacement", out var iconPlacement) &&
+            Enum.TryParse<ConnectionTypeIconPlacement>(iconPlacement, ignoreCase: true, out var iconPlacementEnum))
+        {
+            overrides.CameraDisplay.ConnectionTypeIconPlacement = iconPlacementEnum;
+        }
+
         if (TryGetNullableDoubleProperty(element, "overlayOpacity", "OverlayOpacity", out var opacity))
         {
             overrides.CameraDisplay.OverlayOpacity = opacity;
@@ -879,6 +907,11 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
         if (settings.Source != CameraSource.Network)
         {
             writer.WriteString("source", settings.Source.ToString());
+        }
+
+        if (settings.ConnectionType != CameraConnectionType.None)
+        {
+            writer.WriteString("connectionType", settings.ConnectionType.ToString());
         }
 
         if (settings.Usb is not null)
@@ -1087,6 +1120,16 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
         if (display.ShowOverlayQuickActions.HasValue)
         {
             writer.WriteBoolean("showOverlayQuickActions", display.ShowOverlayQuickActions.Value);
+        }
+
+        if (display.ShowOverlayConnectionTypeIcon.HasValue)
+        {
+            writer.WriteBoolean("showOverlayConnectionTypeIcon", display.ShowOverlayConnectionTypeIcon.Value);
+        }
+
+        if (display.ConnectionTypeIconPlacement.HasValue)
+        {
+            writer.WriteString("connectionTypeIconPlacement", display.ConnectionTypeIconPlacement.Value.ToString());
         }
 
         if (display.OverlayOpacity.HasValue)

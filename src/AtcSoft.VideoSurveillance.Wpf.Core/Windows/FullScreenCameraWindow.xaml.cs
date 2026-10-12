@@ -97,6 +97,24 @@ public partial class FullScreenCameraWindow : IDisposable
             OverlayPosition.BottomLeft or OverlayPosition.BottomRight => VerticalAlignment.Bottom,
             _ => VerticalAlignment.Top,
         };
+
+        // Connection-type icon: adjacent to the info box, but the close button
+        // owns the top-right corner here, so fall back to the other adjacent corner.
+        var iconCorner = CameraConnectionTypeHelper.ResolveIconCorner(position, viewModel.ConnectionTypeIconPlacement);
+        if (iconCorner == OverlayPosition.TopRight)
+        {
+            var otherPlacement = viewModel.ConnectionTypeIconPlacement == ConnectionTypeIconPlacement.SameRow
+                ? ConnectionTypeIconPlacement.SameColumn
+                : ConnectionTypeIconPlacement.SameRow;
+            iconCorner = CameraConnectionTypeHelper.ResolveIconCorner(position, otherPlacement);
+        }
+
+        ConnectionTypeIconControl.HorizontalAlignment = iconCorner is OverlayPosition.TopLeft or OverlayPosition.BottomLeft
+            ? HorizontalAlignment.Left
+            : HorizontalAlignment.Right;
+        ConnectionTypeIconControl.VerticalAlignment = iconCorner is OverlayPosition.TopLeft or OverlayPosition.TopRight
+            ? VerticalAlignment.Top
+            : VerticalAlignment.Bottom;
     }
 
     private void OnViewModelPropertyChanged(

@@ -70,6 +70,18 @@
                                 <Binding Path="ShowOverlayQuickActions" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                             </MultiBinding>
                         </local:CameraTile.ShowOverlayQuickActions>
+                        <local:CameraTile.ShowOverlayConnectionTypeIcon>
+                            <MultiBinding Converter="{x:Static valueConverters:OverrideOrDefaultMultiValueConverter.Instance}">
+                                <Binding Path="Overrides.CameraDisplay.ShowOverlayConnectionTypeIcon" />
+                                <Binding Path="ShowOverlayConnectionTypeIcon" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                            </MultiBinding>
+                        </local:CameraTile.ShowOverlayConnectionTypeIcon>
+                        <local:CameraTile.ConnectionTypeIconPlacement>
+                            <MultiBinding Converter="{x:Static valueConverters:OverrideOrDefaultMultiValueConverter.Instance}">
+                                <Binding Path="Overrides.CameraDisplay.ConnectionTypeIconPlacement" />
+                                <Binding Path="ConnectionTypeIconPlacement" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                            </MultiBinding>
+                        </local:CameraTile.ConnectionTypeIconPlacement>
                         <local:CameraTile.OverlayOpacity>
                             <MultiBinding Converter="{x:Static valueConverters:OverrideOrDefaultMultiValueConverter.Instance}">
                                 <Binding Path="Overrides.CameraDisplay.OverlayOpacity" />

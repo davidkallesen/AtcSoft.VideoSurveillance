@@ -1284,4 +1284,43 @@
   <data name="UsbCameraReconnectedToast1" xml:space="preserve">
     <value>USB-kamera '{0}' er tilsluttet igen</value>
   </data>
+  <data name="ConnectionType" xml:space="preserve">
+    <value>Forbindelsestype</value>
+  </data>
+  <data name="ConnectionTypeNone" xml:space="preserve">
+    <value>Ikke angivet</value>
+  </data>
+  <data name="ConnectionTypeLan" xml:space="preserve">
+    <value>Kablet (LAN)</value>
+  </data>
+  <data name="ConnectionTypeWifi" xml:space="preserve">
+    <value>Wi-Fi</value>
+  </data>
+  <data name="ConnectionTypeUsb" xml:space="preserve">
+    <value>USB</value>
+  </data>
+  <data name="ShowCameraOverlayConnectionTypeIcon" xml:space="preserve">
+    <value>Vis ikon for forbindelsestype</value>
+  </data>
+  <data name="ConnectionTypeIconPosition" xml:space="preserve">
+    <value>Placering af forbindelsesikon</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameRowFormat" xml:space="preserve">
+    <value>{0} (samme række som infoboks)</value>
+  </data>
+  <data name="ConnectionTypeIconPositionSameColumnFormat" xml:space="preserve">
+    <value>{0} (samme kolonne som infoboks)</value>
+  </data>
+  <data name="DetectConnectionType" xml:space="preserve">
+    <value>Registrer</value>
+  </data>
+  <data name="ConnectionTypeDetecting" xml:space="preserve">
+    <value>Registrerer…</value>
+  </data>
+  <data name="ConnectionTypeDetectFailed" xml:space="preserve">
+    <value>Forbindelsestypen kunne ikke registreres</value>
+  </data>
+  <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
+    <value>Registreret: {0}</value>
+  </data>
 </root>

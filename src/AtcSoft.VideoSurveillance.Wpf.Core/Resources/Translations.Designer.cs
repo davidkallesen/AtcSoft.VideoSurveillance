@@ -3560,5 +3560,122 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
                 return ResourceManager.GetString("YouAreUpToDate", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection type.
+        /// </summary>
+        public static string ConnectionType {
+            get {
+                return ResourceManager.GetString("ConnectionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not set.
+        /// </summary>
+        public static string ConnectionTypeNone {
+            get {
+                return ResourceManager.GetString("ConnectionTypeNone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wired (LAN).
+        /// </summary>
+        public static string ConnectionTypeLan {
+            get {
+                return ResourceManager.GetString("ConnectionTypeLan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wi-Fi.
+        /// </summary>
+        public static string ConnectionTypeWifi {
+            get {
+                return ResourceManager.GetString("ConnectionTypeWifi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB.
+        /// </summary>
+        public static string ConnectionTypeUsb {
+            get {
+                return ResourceManager.GetString("ConnectionTypeUsb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show connection-type icon.
+        /// </summary>
+        public static string ShowCameraOverlayConnectionTypeIcon {
+            get {
+                return ResourceManager.GetString("ShowCameraOverlayConnectionTypeIcon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection-type icon position.
+        /// </summary>
+        public static string ConnectionTypeIconPosition {
+            get {
+                return ResourceManager.GetString("ConnectionTypeIconPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (same row as info box).
+        /// </summary>
+        public static string ConnectionTypeIconPositionSameRowFormat {
+            get {
+                return ResourceManager.GetString("ConnectionTypeIconPositionSameRowFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (same column as info box).
+        /// </summary>
+        public static string ConnectionTypeIconPositionSameColumnFormat {
+            get {
+                return ResourceManager.GetString("ConnectionTypeIconPositionSameColumnFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detect.
+        /// </summary>
+        public static string DetectConnectionType {
+            get {
+                return ResourceManager.GetString("DetectConnectionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detecting….
+        /// </summary>
+        public static string ConnectionTypeDetecting {
+            get {
+                return ResourceManager.GetString("ConnectionTypeDetecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not detect the connection type.
+        /// </summary>
+        public static string ConnectionTypeDetectFailed {
+            get {
+                return ResourceManager.GetString("ConnectionTypeDetectFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detected: {0}.
+        /// </summary>
+        public static string ConnectionTypeDetectedFormat {
+            get {
+                return ResourceManager.GetString("ConnectionTypeDetectedFormat", resourceCulture);
+            }
+        }
     }
 }

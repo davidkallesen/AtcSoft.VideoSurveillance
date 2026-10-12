@@ -125,6 +125,35 @@
                     SelectedKey="{Binding Path=OverrideOverlayPositionKey, Mode=TwoWay}" />
             </StackPanel>
 
+            <StackPanel Orientation="Horizontal">
+                <atc:ToggleSwitch
+                    IsOn="{Binding Path=UseDefaultShowOverlayConnectionTypeIcon, Mode=TwoWay}"
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                     Key=OverrideToggleLocal}"
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=OverrideToggleMaster}" />
+                <atc:LabelToggleSwitch
+                    IsEnabled="{Binding Path=UseDefaultShowOverlayConnectionTypeIcon, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    IsOn="{Binding Path=OverrideShowOverlayConnectionTypeIcon, Mode=TwoWay}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=ShowCameraOverlayConnectionTypeIcon}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <atc:ToggleSwitch
+                    IsOn="{Binding Path=UseDefaultConnectionTypeIconPlacement, Mode=TwoWay}"
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                     Key=OverrideToggleLocal}"
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=OverrideToggleMaster}" />
+                <atc:LabelComboBox
+                    IsEnabled="{Binding Path=UseDefaultConnectionTypeIconPlacement, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    Items="{Binding Path=ConnectionTypeIconPlacementItems}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=ConnectionTypeIconPosition}"
+                    SelectedKey="{Binding Path=OverrideConnectionTypeIconPlacementKey, Mode=TwoWay}" />
+            </StackPanel>
+
         </atc:UniformSpacingPanel>
 
     </GroupBox>

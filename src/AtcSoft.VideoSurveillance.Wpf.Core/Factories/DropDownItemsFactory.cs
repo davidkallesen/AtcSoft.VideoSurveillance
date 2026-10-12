@@ -53,6 +53,42 @@ public static class DropDownItemsFactory
         };
 
     /// <summary>
+    /// Gets the connection types a user can pick for a network camera. USB is
+    /// not offered: it is implied by the camera source.
+    /// </summary>
+    public static IDictionary<string, string> ConnectionTypeItems
+        => new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [nameof(CameraConnectionType.None)] = Translations.ConnectionTypeNone,
+            [nameof(CameraConnectionType.Lan)] = Translations.ConnectionTypeLan,
+            [nameof(CameraConnectionType.Wifi)] = Translations.ConnectionTypeWifi,
+        };
+
+    /// <summary>
+    /// Gets the connection-type icon placements, labelled with the concrete
+    /// corner each resolves to for the given info-box position.
+    /// </summary>
+    public static IDictionary<string, string> GetConnectionTypeIconPlacementItems(
+        OverlayPosition infoBoxPosition)
+    {
+        var cornerNames = OverlayPositionItems;
+        var sameRow = CameraConnectionTypeHelper.ResolveIconCorner(infoBoxPosition, ConnectionTypeIconPlacement.SameRow);
+        var sameColumn = CameraConnectionTypeHelper.ResolveIconCorner(infoBoxPosition, ConnectionTypeIconPlacement.SameColumn);
+
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [nameof(ConnectionTypeIconPlacement.SameRow)] = string.Format(
+                CultureInfo.CurrentCulture,
+                Translations.ConnectionTypeIconPositionSameRowFormat,
+                cornerNames[sameRow.ToString()]),
+            [nameof(ConnectionTypeIconPlacement.SameColumn)] = string.Format(
+                CultureInfo.CurrentCulture,
+                Translations.ConnectionTypeIconPositionSameColumnFormat,
+                cornerNames[sameColumn.ToString()]),
+        };
+    }
+
+    /// <summary>
     /// Gets the camera rotation options. Keys match
     /// <see cref="CameraRotation"/> member names so they round-trip via
     /// <c>Enum.Parse</c> in <c>LabelComboBox.SelectedKey</c> bindings.
@@ -297,6 +333,16 @@ public static class DropDownItemsFactory
     /// Gets the default overlay position.
     /// </summary>
     public const string DefaultOverlayPosition = "TopLeft";
+
+    /// <summary>
+    /// Gets the default connection type.
+    /// </summary>
+    public const string DefaultConnectionType = nameof(CameraConnectionType.None);
+
+    /// <summary>
+    /// Gets the default connection-type icon placement.
+    /// </summary>
+    public const string DefaultConnectionTypeIconPlacement = nameof(ConnectionTypeIconPlacement.SameRow);
 
     /// <summary>
     /// Gets the default overlay opacity.

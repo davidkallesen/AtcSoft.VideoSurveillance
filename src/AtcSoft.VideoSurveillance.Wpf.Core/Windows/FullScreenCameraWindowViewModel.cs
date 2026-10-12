@@ -46,6 +46,21 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
     [ObservableProperty]
     private OverlayPosition overlayPosition = OverlayPosition.TopLeft;
 
+    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType)])]
+    private bool showConnectionTypeIcon;
+
+    [ObservableProperty]
+    private ConnectionTypeIconPlacement connectionTypeIconPlacement = ConnectionTypeIconPlacement.SameRow;
+
+    /// <summary>
+    /// Gets the connection type shown by the icon: the camera's effective
+    /// type while the icon is enabled, otherwise <see cref="CameraConnectionType.None"/>.
+    /// </summary>
+    public CameraConnectionType DisplayedConnectionType
+        => ShowConnectionTypeIcon
+            ? camera.EffectiveConnectionType
+            : CameraConnectionType.None;
+
     // Bounding box settings
     [ObservableProperty]
     private bool showBoundingBoxInFullScreen;
@@ -82,7 +97,9 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
         double boundingBoxSmoothing = 0.3,
         IMotionDetectionService? motionDetectionService = null,
         IVideoPlayer? existingPlayer = null,
-        IVideoPlayerFactory? videoPlayerFactory = null)
+        IVideoPlayerFactory? videoPlayerFactory = null,
+        bool showConnectionTypeIcon = false,
+        ConnectionTypeIconPlacement connectionTypeIconPlacement = ConnectionTypeIconPlacement.SameRow)
     {
         ArgumentNullException.ThrowIfNull(camera);
 
@@ -99,6 +116,8 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
         ShowOverlayConnectionStatus = showOverlayConnectionStatus;
         OverlayOpacity = overlayOpacity;
         OverlayPosition = overlayPosition;
+        ShowConnectionTypeIcon = showConnectionTypeIcon;
+        ConnectionTypeIconPlacement = connectionTypeIconPlacement;
 
         // Apply bounding box settings
         ShowBoundingBoxInFullScreen = showBoundingBoxInFullScreen;
