@@ -38,6 +38,18 @@
                 SelectedKey="{Binding Path=SelectedThumbnailTileCount, Mode=TwoWay}" />
 
             <atc:LabelToggleSwitch
+                IsOn="{Binding Path=UseDailySubfolders, Mode=TwoWay}"
+                LabelPosition="Right"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                Key=UseDailySubfolders}" />
+
+            <atc:LabelToggleSwitch
+                IsOn="{Binding Path=SeparateThumbnailFolder, Mode=TwoWay}"
+                LabelPosition="Right"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                Key=SeparateThumbnailFolder}" />
+
+            <atc:LabelToggleSwitch
                 IsOn="{Binding Path=EnableRecordingOnMotion, Mode=TwoWay}"
                 LabelPosition="Right"
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,

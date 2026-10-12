@@ -1323,4 +1323,10 @@
   <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
     <value>Erkannt: {0}</value>
   </data>
+  <data name="UseDailySubfolders" xml:space="preserve">
+    <value>Einen Ordner pro Tag verwenden</value>
+  </data>
+  <data name="SeparateThumbnailFolder" xml:space="preserve">
+    <value>Vorschaubilder in einem separaten Ordner speichern</value>
+  </data>
 </root>

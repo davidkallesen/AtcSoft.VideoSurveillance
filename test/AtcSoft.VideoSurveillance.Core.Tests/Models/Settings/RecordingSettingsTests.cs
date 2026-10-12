@@ -18,6 +18,8 @@ public class RecordingSettingsTests
         settings.EnableHourlySegmentation.Should().BeTrue();
         settings.MaxRecordingDurationMinutes.Should().Be(60);
         settings.ThumbnailTileCount.Should().Be(4);
+        settings.UseDailySubfolders.Should().BeFalse();
+        settings.SeparateThumbnailFolder.Should().BeFalse();
         settings.EnableTimelapse.Should().BeFalse();
         settings.TimelapseInterval.Should().Be("5m");
     }

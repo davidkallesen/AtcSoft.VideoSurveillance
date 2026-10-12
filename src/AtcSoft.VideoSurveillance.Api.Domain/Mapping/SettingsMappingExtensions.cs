@@ -70,6 +70,8 @@ internal static class SettingsMappingExtensions
             EnableHourlySegmentation: recording.EnableHourlySegmentation,
             MaxRecordingDurationMinutes: recording.MaxRecordingDurationMinutes,
             ThumbnailTileCount: recording.ThumbnailTileCount,
+            UseDailySubfolders: recording.UseDailySubfolders,
+            SeparateThumbnailFolder: recording.SeparateThumbnailFolder,
             EnableTimelapse: recording.EnableTimelapse,
             TimelapseInterval: recording.TimelapseInterval,
             CleanupSchedule: ParseCleanupSchedule(recording.Cleanup.Schedule),
@@ -260,6 +262,8 @@ internal static class SettingsMappingExtensions
         recording.EnableRecordingOnMotion = api.EnableRecordingOnMotion;
         recording.EnableRecordingOnConnect = api.EnableRecordingOnConnect;
         recording.EnableHourlySegmentation = api.EnableHourlySegmentation;
+        recording.UseDailySubfolders = api.UseDailySubfolders;
+        recording.SeparateThumbnailFolder = api.SeparateThumbnailFolder;
 
         if (api.MaxRecordingDurationMinutes > 0)
         {

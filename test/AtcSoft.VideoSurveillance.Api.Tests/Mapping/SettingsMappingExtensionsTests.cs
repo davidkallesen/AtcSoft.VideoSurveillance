@@ -197,6 +197,42 @@ public class SettingsMappingExtensionsTests
         target.ConnectionTypeIconPlacement.Should().Be(ConnectionTypeIconPlacement.SameColumn);
     }
 
+    [Fact]
+    public void RecordingLayout_Settings_RoundTrip()
+    {
+        // Arrange
+        var recording = new RecordingSettings
+        {
+            UseDailySubfolders = true,
+            SeparateThumbnailFolder = true,
+        };
+
+        // Act
+        var api = SettingsMappingExtensions.ToApiModel(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            recording,
+            new AdvancedSettings());
+        var target = new RecordingSettings();
+        api.ApplyToCore(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            target,
+            new AdvancedSettings());
+
+        // Assert
+        api.UseDailySubfolders.Should().BeTrue();
+        api.SeparateThumbnailFolder.Should().BeTrue();
+        target.UseDailySubfolders.Should().BeTrue();
+        target.SeparateThumbnailFolder.Should().BeTrue();
+    }
+
     private static AppSettings CreateFullAppSettings(
         AppSettingsThemeBase? themeBase = AppSettingsThemeBase.Dark,
         string language = "1033",
@@ -257,6 +293,8 @@ public class SettingsMappingExtensionsTests
             EnableHourlySegmentation: false,
             MaxRecordingDurationMinutes: 60,
             ThumbnailTileCount: 4,
+            UseDailySubfolders: false,
+            SeparateThumbnailFolder: false,
             EnableTimelapse: false,
             TimelapseInterval: "5m",
             CleanupSchedule: AppSettingsCleanupSchedule.Disabled,

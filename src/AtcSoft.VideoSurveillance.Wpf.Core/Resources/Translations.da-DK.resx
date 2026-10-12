@@ -1323,4 +1323,10 @@
   <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
     <value>Registreret: {0}</value>
   </data>
+  <data name="UseDailySubfolders" xml:space="preserve">
+    <value>Brug en mappe pr. dag</value>
+  </data>
+  <data name="SeparateThumbnailFolder" xml:space="preserve">
+    <value>Gem miniaturer i en separat mappe</value>
+  </data>
 </root>

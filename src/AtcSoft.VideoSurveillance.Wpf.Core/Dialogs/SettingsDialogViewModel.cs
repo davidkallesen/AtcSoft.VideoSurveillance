@@ -218,6 +218,13 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     [ObservableProperty]
     private bool enableRecordingOnConnect;
 
+    // Recording Storage Layout Settings
+    [ObservableProperty]
+    private bool useDailySubfolders;
+
+    [ObservableProperty]
+    private bool separateThumbnailFolder;
+
     // Recording Segmentation Settings
     [ObservableProperty]
     private bool enableHourlySegmentation = true;
@@ -412,6 +419,10 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
 
+        // Recording Storage Layout
+        UseDailySubfolders = false;
+        SeparateThumbnailFolder = false;
+
         // Recording Segmentation
         EnableHourlySegmentation = true;
         SelectedMaxRecordingDuration = DropDownItemsFactory.DefaultMaxRecordingDuration.ToString(CultureInfo.InvariantCulture);
@@ -515,6 +526,10 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedRecordingFormat = recording.RecordingFormat;
         EnableRecordingOnMotion = recording.EnableRecordingOnMotion;
         EnableRecordingOnConnect = recording.EnableRecordingOnConnect;
+
+        // Recording Storage Layout Settings
+        UseDailySubfolders = recording.UseDailySubfolders;
+        SeparateThumbnailFolder = recording.SeparateThumbnailFolder;
 
         // Recording Segmentation Settings
         EnableHourlySegmentation = recording.EnableHourlySegmentation;
@@ -668,6 +683,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
             EnableRecordingOnMotion = EnableRecordingOnMotion,
             EnableRecordingOnConnect = EnableRecordingOnConnect,
             EnableHourlySegmentation = EnableHourlySegmentation,
+            UseDailySubfolders = UseDailySubfolders,
+            SeparateThumbnailFolder = SeparateThumbnailFolder,
             MaxRecordingDurationMinutes = maxRecordingDuration > 0 ? maxRecordingDuration : DropDownItemsFactory.DefaultMaxRecordingDuration,
             ThumbnailTileCount = thumbnailTileCount == 1 || thumbnailTileCount == 4 ? thumbnailTileCount : DropDownItemsFactory.DefaultThumbnailTileCount,
             EnableTimelapse = EnableTimelapse,

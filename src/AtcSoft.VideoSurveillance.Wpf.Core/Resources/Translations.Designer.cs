@@ -2878,6 +2878,15 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Keep thumbnails in a separate folder.
+        /// </summary>
+        public static string SeparateThumbnailFolder {
+            get {
+                return ResourceManager.GetString("SeparateThumbnailFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Set as Startup.
         /// </summary>
         public static string SetAsStartup {
@@ -3453,6 +3462,15 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Use a folder per day.
+        /// </summary>
+        public static string UseDailySubfolders {
+            get {
+                return ResourceManager.GetString("UseDailySubfolders", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Use default.
         /// </summary>

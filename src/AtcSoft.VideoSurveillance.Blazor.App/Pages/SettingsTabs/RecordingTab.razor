@@ -10,6 +10,8 @@
 <MudCheckBox @bind-Value="State.EnableHourlySegmentation" Label="Enable hourly segmentation" Class="mt-2" />
 <MudNumericField @bind-Value="State.MaxRecordingDurationMinutes" Label="Max Duration (minutes)" Min="1" Max="1440" Class="mt-2" />
 <MudNumericField @bind-Value="State.ThumbnailTileCount" Label="Thumbnail Tile Count" Min="1" Max="16" Class="mt-2" />
+<MudCheckBox @bind-Value="State.UseDailySubfolders" Label="Use a folder per day" Class="mt-2" />
+<MudCheckBox @bind-Value="State.SeparateThumbnailFolder" Label="Keep thumbnails in a separate folder" Class="mt-2" />
 
 <MudDivider Class="my-4" />
 

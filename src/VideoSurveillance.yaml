@@ -977,6 +977,12 @@ components:
         thumbnailTileCount:
           type: integer
           format: int32
+        useDailySubfolders:
+          type: boolean
+          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder.
+        separateThumbnailFolder:
+          type: boolean
+          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos.
         enableTimelapse:
           type: boolean
         timelapseInterval:

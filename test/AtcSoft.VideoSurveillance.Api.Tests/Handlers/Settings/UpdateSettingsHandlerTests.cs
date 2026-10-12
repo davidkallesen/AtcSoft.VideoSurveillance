@@ -131,6 +131,8 @@ public class UpdateSettingsHandlerTests
             EnableHourlySegmentation: false,
             MaxRecordingDurationMinutes: 60,
             ThumbnailTileCount: 4,
+            UseDailySubfolders: false,
+            SeparateThumbnailFolder: false,
             EnableTimelapse: false,
             TimelapseInterval: "5m",
             CleanupSchedule: AppSettingsCleanupSchedule.Disabled,
