@@ -29,7 +29,7 @@ Affects **`AtcSoft.VideoEngine`** (recorder, frame capture, media probe), **`Atc
 
 ## 🔍 Root-Cause Analysis
 
-Traced through the code; **not yet reproduced at runtime** (the development machine has no cameras configured). The items marked 🧪 below were confirmed by experiment.
+Traced through the code and checked by experiment where marked 🧪. The development machine has no cameras, so the experiments used a marked test stream played through the real engine, not a camera.
 
 ### How rotation works today
 
@@ -130,15 +130,15 @@ Test-first: each phase starts with failing tests, then the fix.
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Motion boxes follow rotation | ⬜ |
-| 2 | Recordings carry a display matrix | ⬜ |
-| 3 | In-app playback honours the rotation | ⬜ |
-| 4 | Rotation survives re-creation and swap | ⬜ |
-| 5 | Software-decode path and CPU captures rotate | ⬜ |
-| 6 | Thumbnails keep their aspect ratio | ⬜ |
-| 7 | Docs | ⬜ |
+| 1 | Motion boxes follow rotation | 🟨 Built and unit-tested; awaiting a check on a real camera |
+| 2 | Recordings carry a display matrix | ✅ |
+| 3 | In-app playback honours the rotation | 🟨 Built; awaiting a check with a real recording |
+| 4 | Rotation survives re-creation and swap | 🟨 Built; awaiting a check in the app |
+| 5 | Software-decode path and CPU captures rotate | ✅ |
+| 6 | Thumbnails keep their aspect ratio | 🟨 Built; awaiting a visual check |
+| 7 | Docs | ✅ |
 
-### Phase 1 — Motion boxes follow rotation ⬜
+### Phase 1 — Motion boxes follow rotation 🟨
 
 - Core helper for the displayed size of a rotated video, and the pure box-to-screen mapper.
 - `MotionBoundingBoxOverlay` uses the mapper.
@@ -147,7 +147,7 @@ Test-first: each phase starts with failing tests, then the fix.
 
 **Tests:** mapper for all four rotations × landscape/portrait containers × letterbox/pillarbox; a 16:9 source at 90° maps into a 9:16 area; zero sizes fall back to the full container.
 
-### Phase 2 — Recordings carry a display matrix ⬜
+### Phase 2 — Recordings carry a display matrix ✅
 
 - `Remuxer.Open`: write display-matrix side data; remove the `rotate` tag.
 - `MediaProbe`: read the rotation back (also needed by Phase 3).
@@ -155,17 +155,17 @@ Test-first: each phase starts with failing tests, then the fix.
 
 **Tests (in-process, need the FFmpeg DLLs):** write a short file through `Remuxer` for each rotation in **both MP4 and MKV**, read it back with `MediaProbe`, and assert the angle. This pins the clockwise / counter-clockwise sign. Rotation 0 writes no side data.
 
-### Phase 3 — In-app playback honours the rotation ⬜
+### Phase 3 — In-app playback honours the rotation 🟨
 
 - `FullScreenRecordingWindow` / view model: probe the file, apply the transform, guard against double rotation.
 - Check the Blazor and API-client playback paths: browsers honour the MP4 matrix natively; note what MKV does.
 
-### Phase 4 — Rotation survives re-creation and swap ⬜
+### Phase 4 — Rotation survives re-creation and swap 🟨
 
 - `ApplyRotation` after `RecreatePlayer`, in `InitializeServices`, and for both tiles after `SwapPlayerWith`.
 - Reproduce the swap case first; fix only if it is real.
 
-### Phase 5 — Software-decode path and CPU captures rotate ⬜
+### Phase 5 — Software-decode path and CPU captures rotate ✅
 
 - `FrameCapture` rotates the CPU fallback frame.
 - `CpuFrameUploader` (or the renderer) rotates software frames for live view.
@@ -173,29 +173,48 @@ Test-first: each phase starts with failing tests, then the fix.
 
 **Tests:** `FrameCapture` on a synthetic frame with a marked corner, for each rotation.
 
-### Phase 6 — Thumbnails keep their aspect ratio ⬜
+### Phase 6 — Thumbnails keep their aspect ratio 🟨
 
 - `ThumbnailGeneratorService` fits each frame into its cell (letterboxed) instead of stretching.
 
-### Phase 7 — Docs ⬜
+### Phase 7 — Docs ✅
 
 - `docs/settings.md` (rotation row), `docs/motion-detection.md`, `CameraRotation` doc comment, release notes ("recordings made before this version are not rotated").
 
 ---
 
-## ❓ Decisions Needed
+## ✅ Decisions
 
-| # | Question | Recommendation |
-|---|----------|----------------|
-| 1 | **Flag the rotation (display matrix) or burn it into the pixels?** Burning in needs a decode → rotate → re-encode recording path that does not exist today, and costs a CPU/GPU encode per recording camera, around the clock. | **Flag it** (Phases 2–3). Zero extra CPU, lossless, works in VLC / Windows / browsers and in the app. Revisit burn-in only if a required player ignores the flag. |
-| 2 | **Is Phase 5 (MJPEG / USB / hardware-acceleration-off cameras) in this release?** | Yes for the CPU capture fix (small, and it makes boxes consistent). The live software-frame rotation can follow if no affected camera is in use. |
-| 3 | **Fix up existing recordings?** They hold no rotation info, but the camera's current rotation could be stamped onto its old files by a one-off remux tool. | **No** — out of scope. Offer as a later tool if it matters. |
+Resolved with the product owner on 2026-10-12.
 
-### To confirm with the reporter
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Flag the rotation (display matrix) or burn it into the pixels? | **Flag it.** No extra CPU, lossless. Burn-in would need a transcoding path the engine does not have. |
+| 2 | Is the software-decode path (MJPEG / USB / hardware acceleration off) in this release? | **Yes**, both the CPU capture and the live picture. |
+| 3 | Fix up existing recordings? | **No.** They hold no rotation information. |
 
-- Which rotation shows the box problem — 90 / 270 only, or 180 as well? (180 points to a different cause than the one found.)
-- Is the affected camera hardware-decoded (H.264 / H.265 with GPU acceleration on) or MJPEG / USB?
-- Recording format in use: `mkv` or `mp4`? Played back in the app or in an external player?
+---
+
+## 📝 Implementation Notes
+
+Where the build differs from, or adds to, the plan above.
+
+- **Sign of the display matrix.** `av_display_rotation_get` reports counter-clockwise degrees and is the negation of what `av_display_rotation_set` is given, so a clockwise camera angle is passed to the setter as-is. 🧪 Confirmed two ways: in-process tests write MP4 and MKV through `Remuxer` at each angle and read it back, and FFmpeg's own decoder turned a corner marker clockwise for the same flag.
+- **`MediaElement` ignores the flag.** 🧪 Rendering flagged MP4 and MKV files in a WPF `MediaElement` and sampling a corner marker showed no rotation at any angle, and `NaturalVideoWidth/Height` stay unrotated. So the recording player always applies the rotation itself (a `LayoutTransform` from `MediaProbe.GetRotation`), and no double-rotation guard is needed.
+- **End-to-end snapshot check.** 🧪 A marked stream was played through `VideoPlayer` on all three paths — hardware-decoded with GPU, software-decoded with GPU, and no GPU — at 0 / 90 / 180 / 270. All twelve snapshots came back with the marker in the expected corner and the expected dimensions.
+- **Shared rotation code.** `PixelRotator` (VideoEngine) rotates packed pixel buffers and is used by both `FrameCapture` (RGB24) and `CpuFrameUploader` (BGRA). `MotionBoxMapper` (Core) owns the box-to-screen mapping.
+- **Also fixed:** the full-screen camera window did not rotate a player it created itself. Boxes found before a rotation change are cleared rather than drawn in the old orientation.
+- **API-client app unchanged.** It has no rotation concept (rotation is not in the API contract), so its full-screen overlay still uses the stream size. Adding rotation to the API is a separate piece of work.
+- **Thumbnails.** Only portrait frames are letterboxed; landscape frames fill the cell as before, so existing thumbnails look the same.
+
+### The 180° report is not explained
+
+The reporter sees misplaced boxes at 180° too. The cause found (wrong aspect ratio) only bites at 90° / 270°, and the end-to-end check shows hardware-path snapshots are correctly rotated at 180°. Two fixed defects could have produced it, but neither is proven to be what the reporter saw:
+
+- A **tile swap** left the two streams with each other's rotation, so the picture and the analysis could disagree with the setting.
+- Whenever the GPU snapshot failed, the **CPU fallback returned an unrotated frame**. Frame differencing between a rotated and an unrotated frame produces boxes in the wrong place.
+
+If boxes are still off at 180° after this change, capture: the camera's codec and whether hardware acceleration is on, whether tiles were swapped, and a snapshot taken at the same moment.
 
 ---
 

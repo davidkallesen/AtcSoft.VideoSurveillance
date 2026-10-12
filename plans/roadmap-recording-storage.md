@@ -53,9 +53,10 @@ recordings\
 
 ```
 recordings\
-└── Front Door\
-    ├── Front Door_20261012_101500_000.mkv
-    └── thumbnails\
+├── Front Door\
+│   └── Front Door_20261012_101500_000.mkv
+└── thumbnails\
+    └── Front Door\
         └── Front Door_20261012_101500_000.png
 ```
 
@@ -63,13 +64,16 @@ recordings\
 
 ```
 recordings\
-└── Front Door\
-    ├── 2026-10-12\
-    │   └── Front Door_20261012_101500_000.mkv     ← 96 files per day at 15 min
-    └── thumbnails\
+├── Front Door\
+│   └── 2026-10-12\
+│       └── Front Door_20261012_101500_000.mkv     ← 96 files per day at 15 min
+└── thumbnails\
+    └── Front Door\
         └── 2026-10-12\
             └── Front Door_20261012_101500_000.png
 ```
+
+The thumbnail tree mirrors the video tree, so a thumbnail is always at the same relative path below `thumbnails\`.
 
 File names do not change, so a file is still self-describing when copied elsewhere.
 
@@ -82,7 +86,7 @@ New members on `RecordingSettings` (app-level, both off by default so nothing ch
 | Property | Type | Default | Effect |
 |---|---|---|---|
 | `UseDailySubfolders` | bool | `false` | Videos (and thumbnails) go into a `yyyy-MM-dd` folder |
-| `SeparateThumbnailFolder` | bool | `false` | Thumbnails go into a `thumbnails` folder under the camera folder |
+| `SeparateThumbnailFolder` | bool | `false` | Thumbnails go into a `thumbnails` folder below the recording root |
 
 Not per-camera overridable (Decision 4): the layout is a property of the archive, and the browser and cleanup read the whole tree.
 
@@ -112,7 +116,7 @@ The generator's contract takes only the video path. The browser's delete, cleanu
 ### Cleanup
 
 - `MediaCleanupRunner` is already recursive and already removes empty folders — but **only after age-based cleanup**. The four disk-space reclaim call sites never remove empty folders, so empty day folders would pile up when retention is driven by the disk-space guard. Deleting from the browser leaves them too.
-- Thumbnails outside the recording root would never be cleaned, and under the snapshot path they would be deleted by snapshot retention. This is why the thumbnail folder stays **inside the camera folder** (Decision 2).
+- Thumbnails outside the recording root would never be cleaned, and under the snapshot path they would be deleted by snapshot retention. This is why the thumbnail folder stays **below the recording root** (Decision 2).
 
 ### Existing bugs in the same code (fix here)
 
@@ -182,22 +186,22 @@ Test-first: each phase starts with failing tests in `AtcSoft.VideoSurveillance.C
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Core path helper (no behaviour change) | ⬜ |
-| 2 | Readers become layout-agnostic | ⬜ |
-| 3 | Layout options in Core + both recording services | ⬜ |
-| 4 | Cleanup and empty folders | ⬜ |
-| 5 | Settings UI (standalone app) | ⬜ |
-| 6 | API contract, API-client app and Blazor | ⬜ |
-| 7 | Docs | ⬜ |
+| 1 | Core path helper (no behaviour change) | ✅ |
+| 2 | Readers become layout-agnostic | 🟨 Built and unit-tested (API lister); the browser awaits a check in the app |
+| 3 | Layout options in Core + both recording services | 🟨 Built; awaiting a real recording in each layout |
+| 4 | Cleanup and empty folders | ✅ |
+| 5 | Settings UI (standalone app) | 🟨 Built; awaiting a visual check |
+| 6 | API contract, API-client app and Blazor | 🟨 Built and unit-tested (mapping); UI awaits a visual check |
+| 7 | Docs | ✅ |
 
-### Phase 1 — Core path helper (no behaviour change) ⬜
+### Phase 1 — Core path helper (no behaviour change) ✅
 
 - `RecordingPathHelper` + `RecordingLayoutOptions`.
 - Replace the duplicated sanitisers, file-name builders and thumbnail derivations. With both options off, every path is byte-for-byte what it is today.
 
 **Tests:** sanitising (invalid chars, empty name fallback); path for each of the four layouts; thumbnail path for each layout; timestamp parsing for `_HHmmss`, `_HHmmss_fff` and `_fff_2` names; camera folder from a nested path.
 
-### Phase 2 — Readers become layout-agnostic ⬜
+### Phase 2 — Readers become layout-agnostic 🟨
 
 - `RecordingsBrowserDialogViewModel`: recursive enumeration, camera from the first segment, timestamp via the helper, thumbnail via `FindThumbnailPath`, delete removes the thumbnail wherever it is.
 - Both `RecordingEntry` models: thumbnail path resolved through the helper.
@@ -206,13 +210,13 @@ Test-first: each phase starts with failing tests in `AtcSoft.VideoSurveillance.C
 
 **Tests:** a temp tree mixing flat, day-folder and separate-thumbnail files lists every recording with the right camera, time and thumbnail.
 
-### Phase 3 — Layout options in Core + both recording services ⬜
+### Phase 3 — Layout options in Core + both recording services 🟨
 
 - `RecordingSettings.UseDailySubfolders` / `SeparateThumbnailFolder`.
 - `RecordingService` and `ServerRecordingService` pass the layout to the helper.
 - `ThumbnailGeneratorService` writes to `BuildThumbnailPath`.
 
-### Phase 4 — Cleanup and empty folders ⬜
+### Phase 4 — Cleanup and empty folders ✅
 
 - `MediaCleanupRunner`: companion thumbnail via the helper; orphan thumbnails (video gone) are removed.
 - Remove empty folders after reclaim and after a browser delete.
@@ -220,31 +224,48 @@ Test-first: each phase starts with failing tests in `AtcSoft.VideoSurveillance.C
 
 **Tests:** age cleanup and reclaim on each layout delete the video **and** its thumbnail and leave no empty day folder.
 
-### Phase 5 — Settings UI (standalone app) ⬜
+### Phase 5 — Settings UI (standalone app) 🟨
 
 - Two toggles in `Dialogs/Parts/Settings/CaptureRecordingSettings.xaml`, `SettingsDialogViewModel` (property, defaults, load, save), translations (en / da / de).
 
-### Phase 6 — API contract, API-client app and Blazor ⬜
+### Phase 6 — API contract, API-client app and Blazor 🟨
 
 - `VideoSurveillance.yaml` settings schema, `SettingsMappingExtensions`, `ApiApplicationSettingsService`, the API-client `SettingsDialogViewModel`, Blazor `SettingsState` + `RecordingTab.razor`. Follows the same end-to-end path as the connection-type icon setting.
 - Clients build playback URLs from the relative path the server returns, so nested folders work; **URL-encode** the path segments (today they are concatenated raw).
 
-### Phase 7 — Docs ⬜
+### Phase 7 — Docs ✅
 
 - `docs/settings.md` (settings table, paths table, JSON example), `docs/architecture.md`, `docs/disk-space-guard.md`, `README.md`, `CLAUDE.md` settings snippet.
 
 ---
 
-## ❓ Decisions Needed
+## ✅ Decisions
 
-| # | Question | Recommendation |
-|---|----------|----------------|
-| 1 | **Day-folder shape:** `2026-10-12\` (flat list of days) or `2026\10\12\` (nested)? | **`2026-10-12`**. Sorts correctly, one click to a day. A year is 365 folders per camera, which Explorer handles easily. |
-| 2 | **Where do thumbnails go?** Inside the camera folder (`Front Door\thumbnails\…`) or a separate root (`thumbnails\Front Door\…`, or a freely chosen path)? | **Inside the camera folder.** Everything for a camera stays together, the existing web file mount and cleanup keep working, and moving or deleting a camera's archive stays one folder. |
-| 3 | **Which clock names the day folder on the server?** The standalone app uses local time, the server UTC. | **Local time for the folder** in both — people browse by their own calendar day. Leave the server's file-name timestamp as it is to avoid changing existing names. |
-| 4 | **Per-camera override for the layout?** | **No.** App-level only. |
-| 5 | **Move existing recordings into the new layout?** | **No.** Old and new layouts are read side by side; the old files age out through retention. A one-off "reorganise" action can be added later if wanted. |
-| 6 | **Defaults:** off (nothing changes on upgrade) or on for new installs? | **Off.** Opt-in, as requested. |
+Resolved with the product owner on 2026-10-12.
+
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Day-folder shape? | **`2026-10-12`** — one flat list of days per camera. |
+| 2 | Where do thumbnails go? | **A separate root below the recording path: `recordings\thumbnails\{camera}\…`**, mirroring the video tree. Staying below the recording path keeps the web file mount and cleanup working. |
+| 3 | Which clock names the day folder on the server? | **Local time**, in both the standalone app and the server. The server's file names keep their UTC timestamp. |
+| 4 | Per-camera override for the layout? | **No.** App-level only. |
+| 5 | Move existing recordings into the new layout? | **No.** Old and new layouts are read side by side. |
+| 6 | Defaults? | **Off.** Opt-in. |
+
+---
+
+## 📝 Implementation Notes
+
+Where the build differs from, or adds to, the plan above.
+
+- **The helper as built** is `RecordingPathHelper` with `RecordingLayoutOptions`. Its reader-side methods are `GetCameraFolderFromPath`, `GetThumbnailCandidates`, `FindThumbnailPath`, `IsInThumbnailsFolder` and `TryParseTimestamp`.
+- **`thumbnails` is a reserved folder name** directly below the recording root. A camera called "thumbnails" gets the folder `thumbnails_`.
+- **Empty camera name.** The standalone app used to produce an empty folder name for a camera without a display name; it now falls back to a short camera id, as the server already did.
+- **Thumbnail generator contract.** `IThumbnailGeneratorService.StartCapture` got an optional `thumbnailFilePath`; without it the thumbnail still goes next to the video.
+- **Empty folders.** `ReclaimBySize` removes them itself, skipping folders younger than a minute so it cannot delete a day folder a starting recording has just created. A delete in the recordings browser does the same.
+- **Not done: orphan thumbnails.** A thumbnail whose video was deleted by hand (outside the app) is not cleaned up. Videos deleted by the app always take their thumbnail along.
+- **Not done: URL-encoding** of the playback path in the API clients. Nested folders work as they are; a camera name with characters that need escaping is the same risk as before.
+- **Per-camera recording paths.** A camera with its own `RecordingPath` gets its day folders and its `thumbnails` folder below that path. As before, such paths are not browsed or cleaned.
 
 ---
 

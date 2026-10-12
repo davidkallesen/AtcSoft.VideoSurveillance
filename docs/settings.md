@@ -181,6 +181,8 @@ Recording paths, formats, segmentation, and timelapse configuration.
 | `EnableHourlySegmentation` | bool | `true` | No | Split recordings into clock-aligned segments |
 | `MaxRecordingDurationMinutes` | int | `60` | No | Maximum segment length in minutes |
 | `ThumbnailTileCount` | int | `4` | Yes | Thumbnail grid: 1 (single 320x240) or 4 (2x2 640x480) |
+| `UseDailySubfolders` | bool | `false` | No | Put each day's recordings in their own `yyyy-MM-dd` folder — see [Recording Folder Layout](#recording-folder-layout) |
+| `SeparateThumbnailFolder` | bool | `false` | No | Keep thumbnails in a `thumbnails` folder below the recording path |
 | `EnableTimelapse` | bool | `false` | Yes | Enable interval-based timelapse snapshots |
 | `TimelapseInterval` | string | `"5m"` | Yes | Timelapse capture interval |
 | `Cleanup` | object | *(see below)* | No | Media cleanup settings |
@@ -203,6 +205,35 @@ Recording paths, formats, segmentation, and timelapse configuration.
 ### Timelapse Interval Options
 
 `10s`, `30s`, `1m`, `5m` (default), `10m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`
+
+### Recording Folder Layout
+
+By default every camera has one folder holding all its videos and thumbnails.
+With continuous recording that folder grows by two files per segment — about
+19,000 files after 100 days of 15-minute segments — which Windows Explorer
+handles badly. Two independent options keep the folders small:
+
+| `UseDailySubfolders` | `SeparateThumbnailFolder` | Video | Thumbnail |
+|---|---|---|---|
+| off | off | `{camera}\{file}.mkv` | `{camera}\{file}.png` |
+| on | off | `{camera}\2026-10-12\{file}.mkv` | `{camera}\2026-10-12\{file}.png` |
+| off | on | `{camera}\{file}.mkv` | `thumbnails\{camera}\{file}.png` |
+| on | on | `{camera}\2026-10-12\{file}.mkv` | `thumbnails\{camera}\2026-10-12\{file}.png` |
+
+All paths are below `RecordingPath`. File names do not change.
+
+- The options only decide where **new** files are written. The recordings
+  browser, the API and cleanup find recordings and thumbnails in every layout,
+  so nothing has to be moved when an option is switched on or off, and old and
+  new recordings are listed side by side.
+- The day folder follows the **local** calendar day on which the file was
+  started. With segmentation on, midnight is always a segment boundary, so each
+  file lands in its own day. On the server, file names carry a UTC timestamp
+  while the day folder is still the local day.
+- Day and camera folders that become empty through cleanup, disk-space reclaim
+  or a delete in the recordings browser are removed.
+- A camera cannot use the folder name `thumbnails`; such a camera's folder is
+  named `thumbnails_`.
 
 ### Recording Segmentation
 
@@ -337,10 +368,23 @@ The capture-format triple negotiated with the device. Maps to FFmpeg dshow / v4l
 #### Rotation Options
 
 Per-camera setting only — there is no app-level default and no override entry.
-Applied at the GPU video processor stage, so the live display, snapshots, and
-recordings are all rotated. For recordings the rotation is written as an MP4
-`rotate` metadata tag (the encoded H.264/HEVC bitstream is unchanged), which
-VLC, Media Player, browsers, and ffplay all honour at playback.
+
+The rotation applies to everything the operator sees:
+
+- **Live picture** — hardware-decoded streams are rotated on the GPU;
+  software-decoded streams (MJPEG, USB cameras, hardware acceleration off) are
+  rotated before upload.
+- **Motion bounding boxes** — motion is analysed on the rotated picture, and
+  the boxes are drawn inside the rotated picture area.
+- **Snapshots, thumbnails and timelapse frames** — always the rotated picture.
+- **Recordings** — the recorder copies the camera's stream untouched, so the
+  pixels stay in the camera's own orientation. The file carries a rotation flag
+  (a display matrix, for both MP4 and MKV) that VLC, Windows players, browsers
+  and ffplay apply at playback. The built-in recording player applies it too.
+
+Recordings made before version 1.3 carry no rotation flag and play back
+unrotated. Changing the rotation during a recording takes effect from the next
+segment.
 
 - `None` → 0° (default)
 - `Rotate90` → 90° clockwise
@@ -446,7 +490,7 @@ All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
 | `settings.json` | Application settings |
 | `logs/` | Debug log files |
 | `snapshots/` | Camera snapshots and timelapse frames |
-| `recordings/` | Video recordings with thumbnails |
+| `recordings/` | Video recordings with thumbnails, one folder per camera (optionally one per day, and thumbnails in `recordings/thumbnails/`) |
 
 ---
 
@@ -518,6 +562,8 @@ All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
     "enableHourlySegmentation": true,
     "maxRecordingDurationMinutes": 60,
     "thumbnailTileCount": 4,
+    "useDailySubfolders": false,
+    "separateThumbnailFolder": false,
     "enableTimelapse": false,
     "timelapseInterval": "5m",
     "cleanup": {

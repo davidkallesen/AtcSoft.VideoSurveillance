@@ -296,7 +296,7 @@ graph LR
         settings["settings.json<br/><i>Application settings</i>"]
         logs["logs/<br/><i>Serilog log files</i>"]
         snapshots["snapshots/<br/><i>Camera snapshots & timelapse</i>"]
-        recordings["recordings/<br/><i>Video recordings + thumbnails</i>"]
+        recordings["recordings/<br/><i>Video recordings + thumbnails<br/>(optional day folders, thumbnails/)</i>"]
     end
 ```
 

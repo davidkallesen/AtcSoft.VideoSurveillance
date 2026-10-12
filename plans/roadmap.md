@@ -25,8 +25,8 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 
 | Area | What | Blocked on |
 |---|---|---|
-| [Video rotation](roadmap-video-rotation.md) | 🐛 Motion boxes and recordings ignore the camera's rotation | Plan review: 3 decisions |
-| [Recording storage layout](roadmap-recording-storage.md) | Day folders and a separate thumbnail folder | Plan review: 6 decisions |
+| [Video rotation](roadmap-video-rotation.md) | 🐛 Motion boxes and recordings ignore the camera's rotation — built and tested | Hands-on verification with a real camera |
+| [Recording storage layout](roadmap-recording-storage.md) | Day folders and a separate thumbnail folder — built and tested | Hands-on verification in the app |
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Built and unit-tested; needs a visual check and a try against real ONVIF cameras | Hands-on verification |
 
 ### Next
@@ -51,8 +51,8 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 
 | Area | Roadmap | Status | Done | Open |
 |---|---|:--:|---|---|
-| 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | ⬜ | Root-cause analysis | All 7 phases |
-| 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | ⬜ | Impact analysis | All 7 phases |
+| 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | 🟨 | Phases 2, 5, 7; phases 1, 3, 4, 6 built | Hands-on checks; the 180° box report is not explained |
+| 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built | Hands-on checks in each layout |
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
 | 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–4, 6–8, 12 | Phase 5 hardware verification; phase 9 audio packets; ⏸️ phases 10–11 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
@@ -77,7 +77,8 @@ Things that are built but cannot be closed without hands, eyes or hardware.
 | ONVIF detection against a wired, a Wi-Fi and a Tapo camera | Real cameras | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
 | USB recording-on-connect / motion, dshow open, remux of MJPEG | A USB camera | [USB cameras](roadmap-usb-cameras.md) |
 | USB audio capture | A USB camera with a microphone | [USB cameras](roadmap-usb-cameras.md) |
-| Rotation bug: which angles, which decode path, which recording format | Answers from the reporter | [Video rotation](roadmap-video-rotation.md#to-confirm-with-the-reporter) |
+| Boxes at 0 / 90 / 180 / 270, rotated recordings in the app and in VLC, rotation after a setting change and a tile swap | A real camera | [Video rotation](roadmap-video-rotation.md#-to-verify-by-hand) |
+| Record, browse, play and delete in each of the four folder layouts; midnight rollover | The app and some recording time | [Recording storage layout](roadmap-recording-storage.md#-to-verify-by-hand) |
 
 ---
 
@@ -87,12 +88,9 @@ Open defects, wherever they are tracked.
 
 | Bug | Tracked in |
 |---|---|
-| Motion boxes are misplaced on cameras rotated 90° / 270° | [Video rotation](roadmap-video-rotation.md) |
-| Recordings from rotated cameras play back unrotated | [Video rotation](roadmap-video-rotation.md) |
-| Rotation is lost after a performance-setting change | [Video rotation](roadmap-video-rotation.md) |
-| MJPEG / USB / software-decoded cameras do not rotate at all | [Video rotation](roadmap-video-rotation.md) |
-| Recording timestamps are not parsed from file names (falls back to file creation time) | [Recording storage layout](roadmap-recording-storage.md) |
-| Recording list fails if two cameras share a sanitised folder name (server) | [Recording storage layout](roadmap-recording-storage.md) |
+| Motion boxes reported misplaced at 180° — two possible causes fixed, not confirmed | [Video rotation](roadmap-video-rotation.md#the-180-report-is-not-explained) |
+| The API has no rotation: the API-client app and Blazor never rotate | [Video rotation](roadmap-video-rotation.md) |
+| The server never generates recording thumbnails | [Recording storage layout](roadmap-recording-storage.md) |
 | IPv6 literal addresses produce invalid camera URIs | [Suggestions](roadmap-suggestions.md) |
 | Server-side motion detection is a no-op stub | [Suggestions](roadmap-suggestions.md) |
 

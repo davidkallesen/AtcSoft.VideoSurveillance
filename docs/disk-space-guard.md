@@ -29,7 +29,7 @@ graph TD
 
 Files are deleted **oldest first** (ascending `LastWriteTime`, global across all camera folders under the recording root). Active recording files are never deleted — they are identified by their current file path and skipped even if they are the oldest files on disk.
 
-Companion `.png` thumbnail files are deleted alongside their parent recording file.
+Companion `.png` thumbnail files are deleted alongside their parent recording file, whether they sit next to it or in the separate `thumbnails` folder. Day and camera folders left empty by a reclaim are removed.
 
 This design preserves the most recent footage: when disk is tight, the oldest archive is sacrificed first.
 

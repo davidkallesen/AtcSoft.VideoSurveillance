@@ -12,7 +12,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 - **Dynamic Grid Layout** - Auto-calculates optimal grid based on camera count (optimized for 4:3 aspect ratio)
 - **Camera Tile Overlay** - Configurable overlay showing title, description, timestamp, and connection status
 - **Overlay Configuration** - Choose corner position (TopLeft, TopRight, BottomLeft, BottomRight) and opacity (0-100%)
-- **Stream Rotation** - Per-camera 0°/90°/180°/270° rotation applied at the GPU video processor stage; live display, snapshots, and recordings are all rotated. Recordings carry an MP4 `rotate` metadata tag so any standard player honours it.
+- **Stream Rotation** - Per-camera 0°/90°/180°/270° rotation for the live picture, motion boxes, snapshots and thumbnails. Recordings carry a rotation flag (display matrix) that standard players and the built-in player apply at playback.
 - **Full Screen Mode** - Double-click or use context menu to view any camera in full screen (Escape to exit)
 - **Connection State Indicators** - Visual indicators for Connected, Connecting, and Error states
 
@@ -43,6 +43,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 - **Recording Format** - Configurable format (MP4, MKV, AVI) with per-camera override
 - **Recording Indicator** - Visual indicator when recording is active
 - **Thumbnail Generation** - Auto-generates thumbnails from recording frames (single image or 2x2 grid)
+- **Recording Folder Layout** - Optional folder per day and a separate thumbnail folder, to keep long-running archives easy to browse
 - **Recordings Browser** - Browse, filter, and playback recorded videos with playback overlay
 
 ### 🏃 Motion Detection

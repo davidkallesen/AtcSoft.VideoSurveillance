@@ -473,9 +473,17 @@ public class RecordingSettings
     public string RecordingFormat { get; set; } = "mp4";
     public bool EnableRecordingOnMotion { get; set; }
     public bool EnableRecordingOnConnect { get; set; }
+    public bool UseDailySubfolders { get; set; }        // recordings\{camera}\yyyy-MM-dd\...
+    public bool SeparateThumbnailFolder { get; set; }   // recordings\thumbnails\{camera}\...
     public MotionDetectionSettings MotionDetection { get; set; } = new();
 }
 ```
+
+### Recording paths
+`RecordingPathHelper` (Core) is the only place that knows where recordings and thumbnails live. Never build a recording path, sanitise a camera folder name, or derive a thumbnail with `Path.ChangeExtension(video, ".png")` by hand. Writers call `BuildRecordingPath` / `BuildThumbnailPath` with `RecordingLayoutOptions.From(settings)`. Readers ignore the layout settings: they take the camera from `GetCameraFolderFromPath`, the time from `TryParseTimestamp`, and the thumbnail from `FindThumbnailPath` / `GetThumbnailCandidates`, so archives written under any layout keep working. See `plans/roadmap-recording-storage.md`.
+
+### Rotation
+`CameraDisplaySettings.Rotation` (clockwise) must reach every consumer of the picture: `VideoPlayer.CaptureFrameAsync` always returns the rotated picture (GPU snapshot or CPU fallback), software frames are rotated in `CpuFrameUploader`, and recordings are flagged with a display matrix (`DisplayMatrix`, read back by `MediaProbe.GetRotation`) because the recorder copies packets. Anything that maps coordinates onto the video must use the displayed size (`MotionBoxMapper.GetDisplaySize`), not `StreamInfo.Width/Height`. Call `ApplyRotation` whenever a `CameraTile` gets a new player. See `plans/roadmap-video-rotation.md`.
 
 ### AdvancedSettings
 ```csharp
