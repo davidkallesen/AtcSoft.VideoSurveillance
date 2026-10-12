@@ -48,6 +48,9 @@ Camera overlay and grid layout defaults. Per-camera overrides available for over
 | `ShowOverlayDescription` | bool | `true` | Yes | Display camera description in overlay |
 | `ShowOverlayTime` | bool | `false` | Yes | Display current time in overlay |
 | `ShowOverlayConnectionStatus` | bool | `true` | Yes | Display connection status indicator in overlay |
+| `ShowOverlayQuickActions` | bool | `true` | Yes | Show the quick-action buttons (full screen, zoom reset) in the corner diagonal to the info box |
+| `ShowOverlayConnectionTypeIcon` | bool | `false` | Yes | Show the connection-type icon (LAN / Wi-Fi / USB), tinted by link health. Cameras whose type is `None` show nothing |
+| `ConnectionTypeIconPlacement` | enum | `SameRow` | Yes | Which corner next to the info box holds the icon — see [Connection-Type Icon Placement](#connection-type-icon-placement) |
 | `OverlayOpacity` | double | `0.7` | Yes | Overlay transparency (0.0 = transparent, 1.0 = opaque) |
 | `OverlayPosition` | enum | `TopLeft` | No* | Default overlay position |
 | `AllowDragAndDropReorder` | bool | `true` | No | Allow drag-and-drop camera reordering in grid |
@@ -55,6 +58,19 @@ Camera overlay and grid layout defaults. Per-camera overrides available for over
 | `SnapshotPath` | string | `{ProgramData}\...\snapshots` | No | Default directory for camera snapshots |
 
 *Overlay position is set per-camera in the camera's Display settings, not via the override system.
+
+### Connection-Type Icon Placement
+
+A tile's info box uses one corner and the quick actions use the diagonally opposite one. The icon uses one of the two remaining corners, chosen *relative to the info box*, so it never overlaps either one, whatever overlay position a camera has:
+
+| Info box at | `SameRow` → icon at | `SameColumn` → icon at |
+|---|---|---|
+| TopLeft | TopRight | BottomLeft |
+| TopRight | TopLeft | BottomRight |
+| BottomLeft | BottomRight | TopLeft |
+| BottomRight | BottomLeft | TopRight |
+
+The settings dialogs label each option with the concrete corner it resolves to. In the full-screen window the close button owns the top-right corner, so the icon uses the other adjacent corner when needed. The API-client app shows the glyph inline in the tile badge instead, next to the connection status.
 
 ### Overlay Position Options
 
@@ -252,6 +268,7 @@ In addition to the override system, each camera has its own direct configuration
 | `Port` | int | `554` | Network camera only — streaming port (1-65535) |
 | `Path` | string | `null` | Network camera only — optional stream path (e.g., `/stream`) |
 | `Usb` | object | `null` | USB camera only — see [USB Connection Settings](#usb-connection-settings-per-camera) |
+| `ConnectionType` | enum | `None` | Physical link, shown by the connection-type icon — see [Connection Type Options](#connection-type-options). Display-only: changing it never restarts the stream |
 
 Network and USB shapes are mutually exclusive. The unused branch's fields are ignored at runtime. The `AtcSoft.VideoSurveillance.Wpf.Core` dialog (`CameraConfigurationDialog`) presents `Source` as a radio at the top; the IP/Port/Auth fields and the USB device picker swap into view based on the selection.
 
@@ -261,6 +278,22 @@ Network and USB shapes are mutually exclusive. The unused branch's fields are ig
 |--------|-------------|
 | `Network` | IP / RTSP / HTTP camera. Uses `IpAddress`, `Port`, `Protocol`, `Path`, and optional authentication. |
 | `Usb` | Local DirectShow / UVC webcam attached to the host. Uses the `Usb` sub-object. Windows-only at present (Linux V4L2 / macOS AVFoundation are Phase ≥10). |
+
+#### Connection Type Options
+
+| ConnectionType | Description |
+|----------------|-------------|
+| `None` | Not set / unknown (default; cameras saved before this setting existed load as `None`). No icon is shown |
+| `Lan` | Wired Ethernet / PoE |
+| `Wifi` | Wireless (IEEE 802.11) |
+| `Usb` | Local USB camera. Always the effective value when `Source = Usb`, whatever is stored |
+
+The value is set by hand in the camera dialog, or detected over ONVIF (`GetNetworkInterfaces`):
+
+- **Automatically**, after a network camera's first successful connect (and after a successful *Test Connection* in the camera dialog). Automatic detection only fills in a value that is still `None`; it never overwrites one.
+- **On request**, with the **Detect** button in the camera dialog. This may overwrite the current value. In the API-client apps, Detect is available when editing an existing camera and runs on the server with the stored credentials (`POST /cameras/{id}/detect-connection-type`, which returns the result without saving it).
+
+Detection returns `None` when the camera has no ONVIF service, rejects the credentials, or reports an unknown interface type. The user can always change the value by hand afterwards.
 
 ### USB Connection Settings (per camera)
 
@@ -343,6 +376,9 @@ CameraOverrides
 │   ├── ShowOverlayDescription?
 │   ├── ShowOverlayTime?
 │   ├── ShowOverlayConnectionStatus?
+│   ├── ShowOverlayQuickActions?
+│   ├── ShowOverlayConnectionTypeIcon?
+│   ├── ConnectionTypeIconPlacement?
 │   └── OverlayOpacity?
 ├── Performance (PerformanceOverrides)
 │   ├── VideoQuality?

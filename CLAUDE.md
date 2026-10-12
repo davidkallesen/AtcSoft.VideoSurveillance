@@ -330,6 +330,9 @@ public enum CameraSource
 
 `ConnectionSettings.Source` defaults to `Network` so existing JSON-stored cameras keep working without migration. USB cameras populate `Connection.Usb` with `DeviceId` (the stable Media Foundation symbolic link), `FriendlyName`, optional `Format` (`UsbStreamFormat` — width × height × FPS × pixel-format), and `PreferAudio`. Use `CameraUriHelper.BuildSourceLocator(camera)` instead of `camera.BuildUri()` whenever the code path needs to handle both source kinds — `BuildUri()` throws on USB cameras to fail fast.
 
+### Camera Connection Type
+`ConnectionSettings.ConnectionType` (`CameraConnectionType`: `None` default, `Lan`, `Wifi`, `Usb`) is display-only: it drives the optional connection-type icon and never restarts a stream. Always read the displayed value through `CameraConnectionTypeHelper.GetEffective(connection)` — a USB source is always `Usb`, and a network camera never shows a stored `Usb`. Apply detected values with `CameraConnectionTypeHelper.ApplyDetected(current, detected, isExplicit)`: implicit detection only fills `None`, explicit (the user clicked Detect) may overwrite. Detection is ONVIF-based (`ICameraConnectionTypeDetector` / `OnvifConnectionTypeDetector`), never throws, and returns `None` when unknown. The icon's corner is stored *relative* to the info box (`ConnectionTypeIconPlacement`) and resolved with `CameraConnectionTypeHelper.ResolveIconCorner`, so it can never overlap the info box or the quick actions. See `docs/roadmap-cameras-connection-icons.md`.
+
 ## ViewModels
 - Inherit from `ViewModelDialogBase` for dialog ViewModels
 - Use `CloseRequested` event with `DialogClosedEventArgs` for dialog closing
@@ -451,6 +454,9 @@ public class CameraDisplayAppSettings
     public bool ShowOverlayDescription { get; set; } = true;
     public bool ShowOverlayTime { get; set; } = false;
     public bool ShowOverlayConnectionStatus { get; set; } = true;
+    public bool ShowOverlayQuickActions { get; set; } = true;
+    public bool ShowOverlayConnectionTypeIcon { get; set; }                    // opt-in LAN / Wi-Fi / USB icon
+    public ConnectionTypeIconPlacement ConnectionTypeIconPlacement { get; set; } = ConnectionTypeIconPlacement.SameRow;  // relative to the info box
     public double OverlayOpacity { get; set; } = 0.7;
     public OverlayPosition OverlayPosition { get; set; } = OverlayPosition.TopLeft;
     public bool AllowDragAndDropReorder { get; set; } = true;
