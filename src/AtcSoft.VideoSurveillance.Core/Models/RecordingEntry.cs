@@ -52,9 +52,18 @@ public class RecordingEntry
         => RecordingTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
 
     /// <summary>
-    /// Gets the thumbnail file path (same as video path but with .png extension).
+    /// Gets the recording root the file was found under. It is needed to
+    /// find a thumbnail that is kept in the separate thumbnails folder.
     /// </summary>
-    public string ThumbnailPath => Path.ChangeExtension(FilePath, ".png");
+    public string? RecordingRoot { get; init; }
+
+    /// <summary>
+    /// Gets the thumbnail file path: wherever the thumbnail actually is, or,
+    /// when there is none, next to the video with a .png extension.
+    /// </summary>
+    public string ThumbnailPath
+        => RecordingPathHelper.FindThumbnailPath(FilePath, RecordingRoot)
+           ?? Path.ChangeExtension(FilePath, ".png");
 
     /// <summary>
     /// Gets a value indicating whether a thumbnail file exists for this recording.

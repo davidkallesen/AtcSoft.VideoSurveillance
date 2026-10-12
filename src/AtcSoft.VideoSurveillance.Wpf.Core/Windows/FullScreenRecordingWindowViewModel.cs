@@ -186,39 +186,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     }
 
     private static DateTime? ParseRecordingStartTime(string fileName)
-    {
-        // Filename format: {CameraName}_{yyyyMMdd_HHmmss}.ext
-        // Example: FrontDoor_20240126_143215.mp4
-        var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-
-        // Find the timestamp pattern at the end: _yyyyMMdd_HHmmss
-        var lastUnderscore = nameWithoutExtension.LastIndexOf('_');
-        if (lastUnderscore < 9)
-        {
-            return null;
-        }
-
-        // Get the timestamp part (should be like "20240126_143215")
-        var secondLastUnderscore = nameWithoutExtension.LastIndexOf('_', lastUnderscore - 1);
-        if (secondLastUnderscore < 0)
-        {
-            return null;
-        }
-
-        var timestampPart = nameWithoutExtension[(secondLastUnderscore + 1)..];
-
-        if (DateTime.TryParseExact(
-            timestampPart,
-            "yyyyMMdd_HHmmss",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out var result))
-        {
-            return result;
-        }
-
-        return null;
-    }
+        => RecordingPathHelper.TryParseTimestamp(fileName, out var startTime)
+            ? startTime
+            : null;
 
     private static SolidColorBrush ParseColor(
         string colorName,

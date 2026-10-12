@@ -42,17 +42,18 @@ public sealed class ListRecordingsHandler(
                 sessions.Select(s => s.CurrentFilePath),
                 StringComparer.OrdinalIgnoreCase);
 
-            // Files are stored under {RecordingPath}/{safeName}/, where
-            // safeName is derived from camera.Display.DisplayName (mirrors
-            // ServerRecordingService.GenerateRecordingFilename). Build a
-            // lookup so we can resolve cameraId by the file's parent folder
-            // — the previous "file.Contains(camera.Id.ToString())" approach
-            // never matched because filenames don't contain the GUID, so
-            // every historical recording was reported with cameraId=Guid.Empty.
-            var camerasBySafeName = cameras.ToDictionary(
-                GetCameraFolderName,
-                c => c,
-                StringComparer.OrdinalIgnoreCase);
+            // Files are stored under {RecordingPath}/{camera folder}/, directly
+            // or in a folder per day, so the camera is the first folder below
+            // the root, whatever the layout. Two cameras can share a folder
+            // name (same display name); the first one wins rather than the
+            // whole listing failing.
+            var camerasByFolderName = new Dictionary<string, AtcSoft.VideoSurveillance.Models.CameraConfiguration>(StringComparer.OrdinalIgnoreCase);
+            foreach (var camera in cameras)
+            {
+                camerasByFolderName.TryAdd(
+                    RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id),
+                    camera);
+            }
 
             var files = Directory.EnumerateFiles(recordingPath, "*.*", SearchOption.AllDirectories)
                 .Where(f => VideoExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
@@ -63,10 +64,10 @@ public sealed class ListRecordingsHandler(
                 var fileInfo = new FileInfo(file);
                 var relativePath = Path.GetRelativePath(recordingPath, file).Replace('\\', '/');
 
-                var folderName = Path.GetFileName(Path.GetDirectoryName(file)) ?? string.Empty;
+                var folderName = RecordingPathHelper.GetCameraFolderFromPath(file, recordingPath) ?? string.Empty;
                 var cameraId = Guid.Empty;
                 var cameraName = string.Empty;
-                if (camerasBySafeName.TryGetValue(folderName, out var matched))
+                if (camerasByFolderName.TryGetValue(folderName, out var matched))
                 {
                     cameraId = matched.Id;
                     cameraName = matched.Display.DisplayName;
@@ -85,7 +86,7 @@ public sealed class ListRecordingsHandler(
                     StartedAt: new DateTimeOffset(fileInfo.CreationTimeUtc, TimeSpan.Zero),
                     Duration: string.Empty,
                     FileSizeBytes: fileInfo.Length,
-                    HasThumbnail: false));
+                    HasThumbnail: RecordingPathHelper.FindThumbnailPath(file, recordingPath) is not null));
             }
         }
 
@@ -95,14 +96,4 @@ public sealed class ListRecordingsHandler(
 
         return Task.FromResult(ListRecordingsResult.Ok(sorted));
     }
-
-    // Must match the safeName logic in ServerRecordingService.GenerateRecordingFilename.
-    // If the two ever diverge, historical recordings will lose their camera
-    // association again. A shared helper would prevent this drift but we keep
-    // it inline here to avoid introducing a Core dependency for one transformation.
-    private static string GetCameraFolderName(
-        AtcSoft.VideoSurveillance.Models.CameraConfiguration camera)
-        => string.IsNullOrWhiteSpace(camera.Display.DisplayName)
-            ? camera.Id.ToString("N")[..8]
-            : string.Join("_", camera.Display.DisplayName.Split(Path.GetInvalidFileNameChars()));
 }

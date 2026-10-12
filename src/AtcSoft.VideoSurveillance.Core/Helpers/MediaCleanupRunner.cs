@@ -8,6 +8,8 @@ namespace AtcSoft.VideoSurveillance.Helpers;
 /// </summary>
 public static class MediaCleanupRunner
 {
+    private static readonly TimeSpan EmptyDirectoryGracePeriod = TimeSpan.FromMinutes(1);
+
     /// <summary>
     /// Deletes files in <paramref name="rootPath"/> (recursive) whose
     /// extension is in <paramref name="extensions"/> and whose last-write
@@ -24,8 +26,9 @@ public static class MediaCleanupRunner
     /// and their thumbnail companions).
     /// </param>
     /// <param name="deleteCompanionThumbnail">
-    /// When <c>true</c>, deleting a media file also deletes the matching
-    /// <c>.png</c> thumbnail next to it.
+    /// When <c>true</c>, deleting a media file also deletes its <c>.png</c>
+    /// thumbnail, whether it sits next to the file or in the separate
+    /// thumbnails folder below <paramref name="rootPath"/>.
     /// </param>
     public static MediaCleanupRunResult CleanDirectory(
         string rootPath,
@@ -92,15 +95,7 @@ public static class MediaCleanupRunner
 
                 if (deleteCompanionThumbnail)
                 {
-                    var thumbnailPath = Path.ChangeExtension(file, ".png");
-                    if (File.Exists(thumbnailPath))
-                    {
-                        var thumbInfo = new FileInfo(thumbnailPath);
-                        var thumbSize = thumbInfo.Length;
-                        thumbInfo.Delete();
-                        deletedThumbnails.Add(thumbnailPath);
-                        bytesFreed += thumbSize;
-                    }
+                    bytesFreed += DeleteCompanionThumbnails(file, rootPath, deletedThumbnails);
                 }
             }
             catch (IOException ex)
@@ -136,8 +131,9 @@ public static class MediaCleanupRunner
     /// and their thumbnail companions).
     /// </param>
     /// <param name="deleteCompanionThumbnail">
-    /// When <c>true</c>, deleting a media file also deletes the matching
-    /// <c>.png</c> thumbnail next to it.
+    /// When <c>true</c>, deleting a media file also deletes its <c>.png</c>
+    /// thumbnail, whether it sits next to the file or in the separate
+    /// thumbnails folder below <paramref name="rootPath"/>.
     /// </param>
     /// <returns>
     /// A <see cref="MediaCleanupRunResult"/> describing the deleted files and
@@ -231,15 +227,7 @@ public static class MediaCleanupRunner
 
                 if (deleteCompanionThumbnail)
                 {
-                    var thumbnailPath = Path.ChangeExtension(file.FullName, ".png");
-                    if (File.Exists(thumbnailPath))
-                    {
-                        var thumbInfo = new FileInfo(thumbnailPath);
-                        var thumbSize = thumbInfo.Length;
-                        thumbInfo.Delete();
-                        deletedThumbnails.Add(thumbnailPath);
-                        bytesFreed += thumbSize;
-                    }
+                    bytesFreed += DeleteCompanionThumbnails(file.FullName, rootPath, deletedThumbnails);
                 }
             }
             catch (IOException ex)
@@ -250,6 +238,14 @@ public static class MediaCleanupRunner
             {
                 errors.Add(new MediaCleanupRunError(file.FullName, ex));
             }
+        }
+
+        // Deleting the last recording of a day (or of a camera) leaves an
+        // empty folder behind. Reclaim can run while a recording is starting,
+        // so folders created a moment ago are left alone.
+        if (deleted.Count > 0)
+        {
+            errors.AddRange(RemoveEmptyDirectoriesBelow(rootPath, EmptyDirectoryGracePeriod).Errors);
         }
 
         return new MediaCleanupRunResult(deleted, deletedThumbnails, bytesFreed, errors)
@@ -263,10 +259,21 @@ public static class MediaCleanupRunner
     /// deepest-first. The root itself is left in place. Failures are
     /// returned in the result; never thrown.
     /// </summary>
+    /// <param name="rootPath">The folder whose empty sub-folders are removed. The folder itself is kept.</param>
+    /// <param name="minimumAge">
+    /// Leaves folders younger than this alone. A recording creates its folder
+    /// a moment before its file, so a pass that can run at any time must not
+    /// remove a folder that is about to be written to.
+    /// </param>
     public static MediaCleanupDirectoryResult RemoveEmptyDirectoriesBelow(
-        string rootPath)
+        string rootPath,
+        TimeSpan? minimumAge = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(rootPath);
+
+        var newestAllowedUtc = minimumAge is { } age
+            ? DateTime.UtcNow - age
+            : DateTime.MaxValue;
 
         var removed = new List<string>();
         var errors = new List<MediaCleanupRunError>();
@@ -309,6 +316,11 @@ public static class MediaCleanupRunner
                     continue;
                 }
 
+                if (Directory.GetCreationTimeUtc(dir) > newestAllowedUtc)
+                {
+                    continue;
+                }
+
                 Directory.Delete(dir);
                 removed.Add(dir);
             }
@@ -323,5 +335,33 @@ public static class MediaCleanupRunner
         }
 
         return new MediaCleanupDirectoryResult(removed, errors);
+    }
+
+    /// <summary>
+    /// Deletes the thumbnail of a deleted media file from every place a
+    /// layout may have put it. Returns the bytes freed.
+    /// </summary>
+    private static long DeleteCompanionThumbnails(
+        string mediaFilePath,
+        string rootPath,
+        List<string> deletedThumbnails)
+    {
+        long bytesFreed = 0;
+
+        foreach (var thumbnailPath in RecordingPathHelper.GetThumbnailCandidates(mediaFilePath, rootPath))
+        {
+            if (!File.Exists(thumbnailPath))
+            {
+                continue;
+            }
+
+            var thumbInfo = new FileInfo(thumbnailPath);
+            var thumbSize = thumbInfo.Length;
+            thumbInfo.Delete();
+            deletedThumbnails.Add(thumbnailPath);
+            bytesFreed += thumbSize;
+        }
+
+        return bytesFreed;
     }
 }

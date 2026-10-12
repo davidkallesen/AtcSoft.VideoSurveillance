@@ -198,7 +198,7 @@ public partial class TimelapseService : ITimelapseService, IDisposable
     private string GenerateFilePath(CameraConfiguration camera)
     {
         var basePath = GetSnapshotBasePath();
-        var safeDisplayName = SanitizeFilename(camera.Display.DisplayName);
+        var safeDisplayName = RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id);
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
 
         // Create timelapse subfolder structure: {SnapshotPath}/timelapse/{CameraName}/
@@ -216,18 +216,5 @@ public partial class TimelapseService : ITimelapseService, IDisposable
         return !string.IsNullOrEmpty(appPath)
             ? appPath
             : ApplicationPaths.DefaultSnapshotsPath;
-    }
-
-    private static string SanitizeFilename(string filename)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder(filename.Length);
-
-        foreach (var c in filename)
-        {
-            sanitized.Append(invalidChars.Contains(c) ? '_' : c);
-        }
-
-        return sanitized.ToString();
     }
 }

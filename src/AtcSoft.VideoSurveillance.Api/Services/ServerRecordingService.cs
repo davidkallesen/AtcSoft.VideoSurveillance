@@ -249,7 +249,10 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
                 if (!string.IsNullOrEmpty(session.CurrentFilePath))
                 {
                     skipPaths.Add(Path.GetFullPath(session.CurrentFilePath));
-                    skipPaths.Add(Path.GetFullPath(Path.ChangeExtension(session.CurrentFilePath, ".png")));
+                    foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingPath))
+                    {
+                        skipPaths.Add(Path.GetFullPath(thumbnail));
+                    }
                 }
             }
 
@@ -283,17 +286,13 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     {
         ArgumentNullException.ThrowIfNull(camera);
 
-        var safeName = string.IsNullOrWhiteSpace(camera.Display.DisplayName)
-            ? camera.Id.ToString("N")[..8]
-            : string.Join("_", camera.Display.DisplayName.Split(Path.GetInvalidFileNameChars()));
-
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff", System.Globalization.CultureInfo.InvariantCulture);
-        var ext = string.IsNullOrEmpty(format) ? "mp4" : format.TrimStart('.');
-
-        return UniqueFilename.EnsureUnique(Path.Combine(
+        // File names keep their UTC timestamp; a day folder follows the local day.
+        return UniqueFilename.EnsureUnique(RecordingPathHelper.BuildRecordingPath(
             GetEffectiveRecordingPath(camera),
-            safeName,
-            $"{safeName}_{timestamp}.{ext}"));
+            RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id),
+            DateTime.UtcNow,
+            format,
+            RecordingLayoutOptions.From(settingsService.Recording)));
     }
 
     /// <inheritdoc/>

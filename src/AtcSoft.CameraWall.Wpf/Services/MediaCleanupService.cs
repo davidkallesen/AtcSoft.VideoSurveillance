@@ -375,6 +375,7 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
     private HashSet<string> GetActiveRecordingPaths()
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var recordingRoot = settingsService.Recording.RecordingPath;
         try
         {
             foreach (var session in recordingService.GetActiveSessions())
@@ -384,8 +385,10 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
                     set.Add(Path.GetFullPath(session.CurrentFilePath));
 
                     // Also protect the live thumbnail companion file
-                    var thumbnail = Path.ChangeExtension(session.CurrentFilePath, ".png");
-                    set.Add(Path.GetFullPath(thumbnail));
+                    foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingRoot))
+                    {
+                        set.Add(Path.GetFullPath(thumbnail));
+                    }
                 }
             }
         }

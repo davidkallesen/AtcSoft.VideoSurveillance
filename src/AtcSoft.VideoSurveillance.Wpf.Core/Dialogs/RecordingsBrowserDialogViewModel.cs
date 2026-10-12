@@ -163,18 +163,22 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             // Delete the video file
             File.Delete(SelectedRecording.FilePath);
 
-            // Also delete the thumbnail if it exists
-            if (SelectedRecording.HasThumbnail)
+            // Also delete the thumbnail, wherever its layout put it
+            var basePath = GetRecordingsBasePath();
+            foreach (var thumbnailPath in RecordingPathHelper.GetThumbnailCandidates(SelectedRecording.FilePath, basePath))
             {
                 try
                 {
-                    File.Delete(SelectedRecording.ThumbnailPath);
+                    File.Delete(thumbnailPath);
                 }
                 catch
                 {
                     // Ignore thumbnail deletion errors
                 }
             }
+
+            // The last recording of a day leaves an empty day folder behind
+            _ = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(basePath, TimeSpan.FromMinutes(1));
 
             Recordings.Remove(SelectedRecording);
             SelectedRecording = null;
@@ -249,23 +253,31 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
 
             var entries = new List<RecordingEntry>();
 
-            // Each subfolder is a camera name
+            // Each folder below the root is a camera. Its recordings may sit
+            // directly in it or in a folder per day, so search the whole
+            // camera folder. The thumbnails folder holds no recordings.
             foreach (var cameraFolder in Directory.GetDirectories(basePath))
             {
                 var cameraName = Path.GetFileName(cameraFolder);
+                if (cameraName.Equals(RecordingPathHelper.ThumbnailsFolderName, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
-                foreach (var file in Directory.GetFiles(cameraFolder, "*.*")
+                foreach (var file in Directory.EnumerateFiles(cameraFolder, "*.*", SearchOption.AllDirectories)
                     .Where(IsVideoFile))
                 {
                     var info = new FileInfo(file);
-                    var timestamp = ParseRecordingTimestamp(info.Name);
                     var duration = GetVideoDuration(file);
 
                     entries.Add(new RecordingEntry
                     {
                         FilePath = file,
                         CameraName = cameraName,
-                        RecordingTime = timestamp ?? info.CreationTime,
+                        RecordingRoot = basePath,
+                        RecordingTime = RecordingPathHelper.TryParseTimestamp(info.Name, out var timestamp)
+                            ? timestamp
+                            : info.CreationTime,
                         FileSizeBytes = info.Length,
                         Duration = duration,
                     });
@@ -340,28 +352,6 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     {
         var ext = Path.GetExtension(path).ToUpperInvariant();
         return ext is ".MP4" or ".MKV" or ".AVI";
-    }
-
-    private static DateTime? ParseRecordingTimestamp(string filename)
-    {
-        // Pattern: {CameraName}_{yyyyMMdd_HHmmss}.ext
-        var match = System.Text.RegularExpressions.Regex.Match(
-            filename,
-            @"_(?<timestamp>\d{8}_\d{6})\.\w+$",
-            System.Text.RegularExpressions.RegexOptions.ExplicitCapture,
-            TimeSpan.FromSeconds(1));
-
-        if (match.Success && DateTime.TryParseExact(
-            match.Groups["timestamp"].Value,
-            "yyyyMMdd_HHmmss",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out var dt))
-        {
-            return dt;
-        }
-
-        return null;
     }
 
     private static TimeSpan GetVideoDuration(string filePath)

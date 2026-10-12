@@ -49,9 +49,7 @@ public sealed class CaptureSnapshotHandler(
         var snapshotPath = settingsService.CameraDisplay.SnapshotPath;
         Directory.CreateDirectory(snapshotPath);
 
-        var safeName = string.IsNullOrWhiteSpace(camera.Display.DisplayName)
-            ? camera.Id.ToString("N")[..8]
-            : string.Join("_", camera.Display.DisplayName.Split(Path.GetInvalidFileNameChars()));
+        var safeName = RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id);
         var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         var fileName = $"{safeName}_{timestamp}.png";
         var filePath = Path.Combine(snapshotPath, fileName);

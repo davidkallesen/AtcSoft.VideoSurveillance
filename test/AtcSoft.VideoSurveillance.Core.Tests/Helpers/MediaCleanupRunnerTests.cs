@@ -122,6 +122,47 @@ public sealed class MediaCleanupRunnerTests : IDisposable
     }
 
     [Fact]
+    public void CleanDirectory_DeleteCompanionThumbnail_RemovesPngFromTheSeparateThumbnailsFolder()
+    {
+        // Arrange — old .mkv in a day folder, thumbnail mirrored below "thumbnails"
+        var mkv = WriteFile(Path.Combine("Cam", "2026-01-01", "Cam_old.mkv"), "video", DateTime.Now.AddDays(-31));
+        var png = WriteFile(Path.Combine("thumbnails", "Cam", "2026-01-01", "Cam_old.png"), "thumb", DateTime.Now.AddDays(-31));
+
+        // Act
+        var result = MediaCleanupRunner.CleanDirectory(
+            tempDir,
+            RecordingExtensions,
+            DateTime.Now.AddDays(-30),
+            EmptySkipSet,
+            deleteCompanionThumbnail: true);
+
+        // Assert
+        File.Exists(mkv).Should().BeFalse();
+        File.Exists(png).Should().BeFalse();
+        result.DeletedThumbnails.Should().Contain(png);
+    }
+
+    [Fact]
+    public void CleanDirectory_KeepsTheThumbnailOfAKeptRecording()
+    {
+        // Arrange — recent video whose thumbnail is old
+        var mkv = WriteFile(Path.Combine("Cam", "Cam_new.mkv"), "video", DateTime.Now);
+        var png = WriteFile(Path.Combine("thumbnails", "Cam", "Cam_new.png"), "thumb", DateTime.Now.AddDays(-31));
+
+        // Act
+        MediaCleanupRunner.CleanDirectory(
+            tempDir,
+            RecordingExtensions,
+            DateTime.Now.AddDays(-30),
+            EmptySkipSet,
+            deleteCompanionThumbnail: true);
+
+        // Assert
+        File.Exists(mkv).Should().BeTrue();
+        File.Exists(png).Should().BeTrue();
+    }
+
+    [Fact]
     public void CleanDirectory_NonMatchingExtension_IsKept()
     {
         // Arrange — old .txt file shouldn't be touched
@@ -227,6 +268,38 @@ public sealed class MediaCleanupRunnerTests : IDisposable
         // Assert
         result.RemovedDirectories.Should().Contain(leaf);
         result.RemovedDirectories.Should().Contain(parent);
+    }
+
+    [Fact]
+    public void RemoveEmptyDirectoriesBelow_WithMinimumAge_KeepsAFolderThatWasJustCreated()
+    {
+        // Arrange — a recording creates its day folder a moment before its file
+        var fresh = Path.Combine(tempDir, "Cam", "2026-01-01");
+        Directory.CreateDirectory(fresh);
+
+        // Act
+        var result = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(tempDir, TimeSpan.FromMinutes(1));
+
+        // Assert
+        result.RemovedDirectories.Should().BeEmpty();
+        Directory.Exists(fresh).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RemoveEmptyDirectoriesBelow_WithMinimumAge_RemovesAnOldEmptyFolder()
+    {
+        // Arrange
+        var old = Path.Combine(tempDir, "Cam", "2026-01-01");
+        Directory.CreateDirectory(old);
+        Directory.SetCreationTimeUtc(old, DateTime.UtcNow.AddHours(-1));
+        Directory.SetCreationTimeUtc(Path.Combine(tempDir, "Cam"), DateTime.UtcNow.AddHours(-1));
+
+        // Act
+        var result = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(tempDir, TimeSpan.FromMinutes(1));
+
+        // Assert
+        result.RemovedDirectories.Should().Contain(old);
+        Directory.Exists(old).Should().BeFalse();
     }
 
     [Fact]

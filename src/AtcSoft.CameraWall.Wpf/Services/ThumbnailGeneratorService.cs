@@ -31,7 +31,8 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
         string cameraName,
         IMediaPipeline pipeline,
         string videoFilePath,
-        int tileCount = 4)
+        int tileCount = 4,
+        string? thumbnailFilePath = null)
     {
         ArgumentNullException.ThrowIfNull(pipeline);
         ArgumentNullException.ThrowIfNull(cameraName);
@@ -45,7 +46,9 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
         // Stop any existing capture for this camera
         StopCapture(cameraId);
 
-        var thumbnailPath = Path.ChangeExtension(videoFilePath, ".png");
+        var thumbnailPath = string.IsNullOrEmpty(thumbnailFilePath)
+            ? Path.ChangeExtension(videoFilePath, ".png")
+            : thumbnailFilePath;
         var context = new ThumbnailCaptureContext(cameraName, pipeline, thumbnailPath, tileCount);
 
         if (!captures.TryAdd(cameraId, context))

@@ -116,7 +116,13 @@ public partial class RecordingService : IRecordingService, IDisposable
 
             // Start thumbnail capture with configured tile count
             var tileCount = GetEffectiveThumbnailTileCount(camera);
-            thumbnailService.StartCapture(camera.Id, camera.Display.DisplayName, pipeline, filePath, tileCount);
+            thumbnailService.StartCapture(
+                camera.Id,
+                camera.Display.DisplayName,
+                pipeline,
+                filePath,
+                tileCount,
+                GetThumbnailPath(camera, filePath));
 
             return true;
         }
@@ -253,7 +259,13 @@ public partial class RecordingService : IRecordingService, IDisposable
 
             // Start thumbnail capture with configured tile count
             var tileCount = GetEffectiveThumbnailTileCount(camera);
-            thumbnailService.StartCapture(camera.Id, camera.Display.DisplayName, pipeline, filePath, tileCount);
+            thumbnailService.StartCapture(
+                camera.Id,
+                camera.Display.DisplayName,
+                pipeline,
+                filePath,
+                tileCount,
+                GetThumbnailPath(camera, filePath));
 
             return true;
         }
@@ -290,18 +302,25 @@ public partial class RecordingService : IRecordingService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(camera);
 
-        var basePath = GetEffectiveRecordingPath(camera);
-        var safeDisplayName = SanitizeFilename(camera.Display.DisplayName);
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
-
-        // Create camera subfolder
-        var cameraFolder = Path.Combine(basePath, safeDisplayName);
-
-        // Generate filename with the specified format extension
-        var filename = $"{safeDisplayName}_{timestamp}.{format}";
-
-        return UniqueFilename.EnsureUnique(Path.Combine(cameraFolder, filename));
+        return UniqueFilename.EnsureUnique(RecordingPathHelper.BuildRecordingPath(
+            GetEffectiveRecordingPath(camera),
+            RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id),
+            DateTime.Now,
+            format,
+            RecordingLayoutOptions.From(settingsService.Recording)));
     }
+
+    /// <summary>
+    /// Gets where the thumbnail of a recording is written under the
+    /// configured layout.
+    /// </summary>
+    private string GetThumbnailPath(
+        CameraConfiguration camera,
+        string videoFilePath)
+        => RecordingPathHelper.BuildThumbnailPath(
+            videoFilePath,
+            GetEffectiveRecordingPath(camera),
+            RecordingLayoutOptions.From(settingsService.Recording));
 
     /// <inheritdoc/>
     public void StopAllRecordings()
@@ -405,7 +424,13 @@ public partial class RecordingService : IRecordingService, IDisposable
 
             // 9. Start thumbnail capture for new segment with configured tile count
             var tileCount = GetEffectiveThumbnailTileCount(camera);
-            thumbnailService.StartCapture(cameraId, camera.Display.DisplayName, pipeline, newFilePath, tileCount);
+            thumbnailService.StartCapture(
+                cameraId,
+                camera.Display.DisplayName,
+                pipeline,
+                newFilePath,
+                tileCount,
+                GetThumbnailPath(camera, newFilePath));
 
             return true;
         }
@@ -508,7 +533,10 @@ public partial class RecordingService : IRecordingService, IDisposable
                 if (!string.IsNullOrEmpty(session.CurrentFilePath))
                 {
                     skipPaths.Add(Path.GetFullPath(session.CurrentFilePath));
-                    skipPaths.Add(Path.GetFullPath(Path.ChangeExtension(session.CurrentFilePath, ".png")));
+                    foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingPath))
+                    {
+                        skipPaths.Add(Path.GetFullPath(thumbnail));
+                    }
                 }
             }
 
@@ -719,18 +747,5 @@ public partial class RecordingService : IRecordingService, IDisposable
                 recordingCooldowns.TryRemove(entry.Key, out _);
             }
         }
-    }
-
-    private static string SanitizeFilename(string filename)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder(filename.Length);
-
-        foreach (var c in filename)
-        {
-            sanitized.Append(invalidChars.Contains(c) ? '_' : c);
-        }
-
-        return sanitized.ToString();
     }
 }

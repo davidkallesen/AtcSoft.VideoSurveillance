@@ -4,6 +4,7 @@ global using System.Threading;
 global using System.Threading.Tasks;
 
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Services;
 
 global using VideoSurveillance.Generated.Cameras.Handlers;

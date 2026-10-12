@@ -7,7 +7,6 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.IO;
 global using System.Linq;
-global using System.Text;
 global using System.Threading;
 global using System.Threading.Tasks;
 global using System.Windows;
@@ -55,6 +54,8 @@ global using MediaCleanupRunError = AtcSoft.VideoSurveillance.Helpers.MediaClean
 global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunner;
 global using MediaCleanupRunResult = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunResult;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
+global using RecordingLayoutOptions = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutOptions;
+global using RecordingPathHelper = AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper;
 global using RecordingSegmentedEventArgs = AtcSoft.VideoSurveillance.Events.RecordingSegmentedEventArgs;
 global using RecordingSession = AtcSoft.VideoSurveillance.Models.RecordingSession;
 global using RecordingSlotCalculator = AtcSoft.VideoSurveillance.Helpers.RecordingSlotCalculator;
