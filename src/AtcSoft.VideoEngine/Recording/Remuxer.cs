@@ -109,7 +109,26 @@ internal sealed unsafe class Remuxer : IDisposable
         }
 
         AVDictionary* opts = null;
-        ret = avformat_write_header(outputCtx, ref opts);
+        try
+        {
+            if (IsMp4Family(outputPath))
+            {
+                // A plain MP4 keeps its index (the moov box) for the end of
+                // the file, so a recording cut short by a crash or a power
+                // cut has no index and cannot be opened at all. Writing the
+                // header up front and the video in self-contained fragments,
+                // one per keyframe, keeps everything up to the last fragment
+                // playable. Matroska is already written this way.
+                av_dict_set(ref opts, "movflags", "frag_keyframe+empty_moov+default_base_moof", DictWriteFlags.None);
+            }
+
+            ret = avformat_write_header(outputCtx, ref opts);
+        }
+        finally
+        {
+            av_dict_free(ref opts);
+        }
+
         if (ret < 0)
         {
             throw new FFmpegException(ret, "Failed to write output header");
@@ -120,6 +139,9 @@ internal sealed unsafe class Remuxer : IDisposable
         lastDts = AV_NOPTS_VALUE;
         receivedKeyframe = false;
     }
+
+    private static bool IsMp4Family(string outputPath)
+        => Path.GetExtension(outputPath).ToUpperInvariant() is ".MP4" or ".MOV" or ".M4V";
 
     public void WritePacket(
         AVPacket* srcPacket,
