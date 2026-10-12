@@ -51,4 +51,48 @@ public static class MediaProbe
             }
         }
     }
+
+    /// <summary>
+    /// Gets the clockwise rotation a media file asks players to apply to its
+    /// video, as flagged by the recorder for a rotated camera.
+    /// </summary>
+    /// <param name="filePath">The path to the media file.</param>
+    /// <returns>0, 90, 180 or 270; 0 when the file has no rotation flag or cannot be read.</returns>
+    public static unsafe int GetRotation(string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
+        AVFormatContext* fmtCtx = null;
+        AVDictionary* dict = null;
+        try
+        {
+            int ret = avformat_open_input(ref fmtCtx, filePath, null, ref dict);
+            if (ret < 0)
+            {
+                return 0;
+            }
+
+            for (var i = 0; i < fmtCtx->nb_streams; i++)
+            {
+                var codecpar = fmtCtx->streams[i]->codecpar;
+                if (codecpar->codec_type == AVMediaType.Video)
+                {
+                    return Recording.DisplayMatrix.ReadClockwiseDegrees(codecpar);
+                }
+            }
+
+            return 0;
+        }
+        catch
+        {
+            return 0;
+        }
+        finally
+        {
+            if (fmtCtx is not null)
+            {
+                avformat_close_input(ref fmtCtx);
+            }
+        }
+    }
 }

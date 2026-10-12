@@ -98,14 +98,9 @@ internal sealed unsafe class Remuxer : IDisposable
         outStream->codecpar->codec_tag = 0;
         outputTimeBase = outStream->time_base;
 
-        // For rotated streams, write a "rotate" tag on the stream metadata.
-        // FFmpeg's MP4/MOV muxer translates this into a tkhd display matrix
-        // that VLC, Media Player, browsers, and ffplay all honour at playback.
-        if (rotationDegrees != 0)
-        {
-            var rotationStr = rotationDegrees.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            av_dict_set(ref outStream->metadata, "rotate", rotationStr, DictWriteFlags.None);
-        }
+        // Flag the rotation so players turn the picture at playback. The
+        // packets are copied untouched, so the pixels stay unrotated.
+        DisplayMatrix.Write(outStream->codecpar, rotationDegrees);
 
         ret = avio_open(ref outputCtx->pb, outputPath, IOFlags.Write);
         if (ret < 0)
