@@ -66,6 +66,14 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private SolidColorBrush timestampColor = Brushes.White;
 
     /// <summary>
+    /// The clockwise angle the picture is turned by, read from the
+    /// recording's rotation flag. MediaElement ignores that flag, so the
+    /// window applies it.
+    /// </summary>
+    [ObservableProperty]
+    private double videoRotationAngle;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="FullScreenRecordingWindowViewModel"/> class.
     /// </summary>
     /// <param name="filePath">The path to the recording file.</param>
@@ -111,6 +119,8 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         mediaElement = element;
         mediaElement.MediaOpened += OnMediaOpened;
         mediaElement.MediaEnded += OnMediaEnded;
+
+        LoadVideoRotation();
 
         // Open and play the recording
         mediaElement.Source = new Uri(filePath);
@@ -269,6 +279,31 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         {
             mediaElement.SpeedRatio = PlaybackSpeed;
         }
+    }
+
+    private void LoadVideoRotation()
+    {
+        // Probing opens the file (or URL), so keep it off the UI thread.
+        var path = filePath;
+        var dispatcher = Dispatcher.CurrentDispatcher;
+        _ = Task.Run(() =>
+        {
+            int degrees;
+            try
+            {
+                degrees = MediaProbe.GetRotation(path);
+            }
+            catch (Exception)
+            {
+                // No rotation flag is the same as an unreadable one: play upright.
+                return;
+            }
+
+            if (degrees != 0)
+            {
+                _ = dispatcher.BeginInvoke(() => VideoRotationAngle = degrees);
+            }
+        });
     }
 
     private void OnMediaOpened(

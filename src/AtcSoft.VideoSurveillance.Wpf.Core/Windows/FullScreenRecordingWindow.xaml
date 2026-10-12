@@ -29,7 +29,11 @@
             x:Name="VideoPlayer"
             LoadedBehavior="Manual"
             Stretch="Uniform"
-            UnloadedBehavior="Stop" />
+            UnloadedBehavior="Stop">
+            <MediaElement.LayoutTransform>
+                <RotateTransform Angle="{Binding Path=VideoRotationAngle}" />
+            </MediaElement.LayoutTransform>
+        </MediaElement>
 
         <!--  Overlay content (directly in visual tree - no airspace issue for MediaElement)  -->
         <Grid Background="Transparent">
