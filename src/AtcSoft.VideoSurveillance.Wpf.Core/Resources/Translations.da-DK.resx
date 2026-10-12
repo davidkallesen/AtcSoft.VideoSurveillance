@@ -1333,7 +1333,7 @@
     <value>Til: {0}&#xD;&#xA;Fra: {1}</value>
   </data>
   <data name="RecordingLayoutExampleSummary" xml:space="preserve">
-    <value>Video:      {0}&#xD;&#xA;Miniature:  {1}&#xD;&#xA;Eksisterende optagelser flyttes, når du gemmer.</value>
+    <value>Video:&#xD;&#xA;  {0}&#xD;&#xA;Miniature:&#xD;&#xA;  {1}&#xD;&#xA;Eksisterende optagelser flyttes, når du gemmer.</value>
   </data>
   <data name="RecordingLayoutMoving" xml:space="preserve">
     <value>Flytter optagelser...</value>

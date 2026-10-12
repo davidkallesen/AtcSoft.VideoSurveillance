@@ -7,7 +7,8 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 /// </summary>
 public static class RecordingLayoutExamples
 {
-    private const string ExampleCameraName = "Camera 1";
+    // Short, so the longest example line fits the settings dialog.
+    private const string ExampleCameraName = "Cam1";
 
     /// <summary>
     /// Gets where a recording goes, relative to the recording folder.
@@ -77,7 +78,14 @@ public static class RecordingLayoutExamples
         string? format)
         => RecordingPathHelper.BuildExample(
             ExampleCameraName,
-            DateTime.Now,
+            ExampleTime(),
             format,
             new AtcSoft.VideoSurveillance.Helpers.RecordingLayoutOptions(useDailySubfolders, separateThumbnailFolder));
+
+    /// <summary>
+    /// Today at a round time: a real date in the day folder, and a file name
+    /// that does not change every time the text is refreshed.
+    /// </summary>
+    private static DateTime ExampleTime()
+        => DateTime.Today.AddHours(10).AddMinutes(15);
 }

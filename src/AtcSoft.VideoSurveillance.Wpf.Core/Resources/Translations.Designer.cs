@@ -2554,7 +2554,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Video:      {0}.
+        ///   Looks up a localized string similar to Video:.
         /// </summary>
         public static string RecordingLayoutExampleSummary {
             get {

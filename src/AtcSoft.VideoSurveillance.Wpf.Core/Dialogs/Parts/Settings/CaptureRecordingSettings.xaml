@@ -58,7 +58,10 @@
                 IsDense="True"
                 Severity="Info"
                 Variant="Outlined">
+                <!--  MaxWidth makes a long path wrap instead of widening the whole tab  -->
                 <TextBlock
+                    MaxWidth="450"
+                    HorizontalAlignment="Left"
                     FontFamily="Consolas"
                     Text="{Binding Path=RecordingLayoutExampleSummary}"
                     TextWrapping="Wrap" />

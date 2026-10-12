@@ -1333,7 +1333,7 @@
     <value>On:  {0}&#xD;&#xA;Off: {1}</value>
   </data>
   <data name="RecordingLayoutExampleSummary" xml:space="preserve">
-    <value>Video:      {0}&#xD;&#xA;Thumbnail:  {1}&#xD;&#xA;Existing recordings are moved when you save.</value>
+    <value>Video:&#xD;&#xA;  {0}&#xD;&#xA;Thumbnail:&#xD;&#xA;  {1}&#xD;&#xA;Existing recordings are moved when you save.</value>
   </data>
   <data name="RecordingLayoutMoving" xml:space="preserve">
     <value>Moving recordings...</value>

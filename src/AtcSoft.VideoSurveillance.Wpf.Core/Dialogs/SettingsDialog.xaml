@@ -28,7 +28,11 @@
     </atc:NiceWindow.Resources>
 
     <!--  Busy while recordings are moved to a changed folder layout  -->
-    <atc:BusyOverlay BusyContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingLayoutMoving}" IsBusy="{Binding Path=IsApplyingRecordingLayout}">
+    <atc:BusyOverlay IsBusy="{Binding Path=IsApplyingRecordingLayout}">
+        <!--  A TextBlock, not a string: the control replaces string content with its own "Please wait..."  -->
+        <atc:BusyOverlay.BusyContent>
+            <TextBlock Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingLayoutMoving}" />
+        </atc:BusyOverlay.BusyContent>
     <atc:GridEx Margin="16" Rows="*,Auto">
 
         <!--  Tabbed Settings  -->
