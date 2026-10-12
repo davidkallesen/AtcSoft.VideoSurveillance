@@ -6,19 +6,27 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 public partial class RecordingsBrowserDialog : IDisposable
 {
     private readonly RecordingsBrowserDialogViewModel viewModel;
+    private readonly Action<RecordingEntry> playRecording;
     private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecordingsBrowserDialog"/> class.
     /// </summary>
     /// <param name="viewModel">The view model.</param>
-    public RecordingsBrowserDialog(RecordingsBrowserDialogViewModel viewModel)
+    /// <param name="playRecording">
+    /// Plays a recording and returns when playback has ended.
+    /// Defaults to the full-screen player.
+    /// </param>
+    public RecordingsBrowserDialog(
+        RecordingsBrowserDialogViewModel viewModel,
+        Action<RecordingEntry>? playRecording = null)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
         InitializeComponent();
 
         this.viewModel = viewModel;
+        this.playRecording = playRecording ?? ShowFullScreenPlayer;
         DataContext = viewModel;
 
         viewModel.CloseRequested += OnCloseRequested;
@@ -71,14 +79,49 @@ public partial class RecordingsBrowserDialog : IDisposable
         // Close thumbnail panel if open
         CloseThumbnailFlyout();
 
-        // Close this dialog first
-        DialogResult = true;
-        Close();
+        // The browser stays open behind the player, so the filters, the
+        // selection and the scroll position are still there afterwards.
+        playRecording(recording);
 
+        FocusSelectedRecording();
+    }
+
+    /// <summary>
+    /// Puts the keyboard back on the selected row, so the arrow keys carry
+    /// on from the recording that was just played.
+    /// </summary>
+    private void FocusSelectedRecording()
+    {
+        Activate();
+
+        if (RecordingsGrid.SelectedItem is not { } selected)
+        {
+            RecordingsGrid.Focus();
+            return;
+        }
+
+        RecordingsGrid.ScrollIntoView(selected);
+        RecordingsGrid.UpdateLayout();
+
+        if (RecordingsGrid.ItemContainerGenerator.ContainerFromItem(selected) is DataGridRow row)
+        {
+            row.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+        }
+        else
+        {
+            RecordingsGrid.Focus();
+        }
+    }
+
+    private void ShowFullScreenPlayer(RecordingEntry recording)
+    {
         // Open fullscreen recording window with playback overlay settings
         var overlaySettings = viewModel.PlaybackOverlaySettings;
         using var fullScreenViewModel = new FullScreenRecordingWindowViewModel(recording.FilePath, recording.FileName, overlaySettings);
-        using var fullScreenWindow = new FullScreenRecordingWindow(fullScreenViewModel);
+        using var fullScreenWindow = new FullScreenRecordingWindow(fullScreenViewModel)
+        {
+            Owner = this,
+        };
         fullScreenWindow.ShowDialog();
     }
 

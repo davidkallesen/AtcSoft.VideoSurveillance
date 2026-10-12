@@ -75,6 +75,7 @@
 
             <!--  Recordings DataGrid  -->
             <DataGrid
+                x:Name="RecordingsGrid"
                 Grid.Row="1"
                 AutoGenerateColumns="False"
                 CanUserAddRows="False"

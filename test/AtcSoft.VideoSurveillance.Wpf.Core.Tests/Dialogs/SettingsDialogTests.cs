@@ -27,33 +27,12 @@ public sealed class SettingsDialogTests : IDisposable
         // instead of when a user opens Settings.
         var settingsService = new ApplicationSettingsService(System.IO.Path.Combine(directory, "settings.json"));
 
-        var error = RunOnStaThread(() =>
+        var error = WpfTestThread.Run(() =>
         {
             var dialog = new SettingsDialog(new SettingsDialogViewModel(settingsService));
             dialog.Close();
         });
 
         error.Should().BeNull();
-    }
-
-    private static Exception? RunOnStaThread(Action action)
-    {
-        Exception? error = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                error = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        return error;
     }
 }
