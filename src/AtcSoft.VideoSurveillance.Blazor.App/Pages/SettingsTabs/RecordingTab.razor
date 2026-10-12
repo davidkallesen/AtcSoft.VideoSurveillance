@@ -24,6 +24,8 @@
 <MudNumericField @bind-Value="State.RecordingRetentionDays" Label="Recording Retention (days)" Min="1" Max="365" Class="mt-2" />
 <MudCheckBox @bind-Value="State.CleanupIncludeSnapshots" Label="Include snapshots in cleanup" Class="mt-2" />
 <MudNumericField @bind-Value="State.SnapshotRetentionDays" Label="Snapshot Retention (days)" Min="1" Max="365" Class="mt-2" />
+<MudCheckBox @bind-Value="State.EnableDiskSpaceGuard" Label="Delete the oldest recordings when disk space runs low" Class="mt-2" />
+<MudNumericField @bind-Value="State.MinFreeSpaceMb" Label="Minimum Free Space (MB)" Min="512" Max="1048576" Disabled="@(!State.EnableDiskSpaceGuard)" Class="mt-2" />
 
 <MudDivider Class="my-4" />
 

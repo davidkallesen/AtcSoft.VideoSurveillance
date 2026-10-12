@@ -78,6 +78,8 @@ internal static class SettingsMappingExtensions
             RecordingRetentionDays: recording.Cleanup.RecordingRetentionDays,
             CleanupIncludeSnapshots: recording.Cleanup.IncludeSnapshots,
             SnapshotRetentionDays: recording.Cleanup.SnapshotRetentionDays,
+            EnableDiskSpaceGuard: recording.Cleanup.EnableDiskSpaceGuard,
+            MinFreeSpaceMb: recording.Cleanup.MinFreeSpaceMb,
             PlaybackShowFilename: recording.PlaybackOverlay.ShowFilename,
             PlaybackFilenameColor: recording.PlaybackOverlay.FilenameColor,
             PlaybackShowTimestamp: recording.PlaybackOverlay.ShowTimestamp,
@@ -297,6 +299,18 @@ internal static class SettingsMappingExtensions
         if (api.SnapshotRetentionDays > 0)
         {
             recording.Cleanup.SnapshotRetentionDays = api.SnapshotRetentionDays;
+        }
+
+        // The guard is on by default, so a client that predates the property
+        // (and sends nothing) must not switch it off.
+        if (api.EnableDiskSpaceGuard is not null)
+        {
+            recording.Cleanup.EnableDiskSpaceGuard = api.EnableDiskSpaceGuard.Value;
+        }
+
+        if (api.MinFreeSpaceMb > 0)
+        {
+            recording.Cleanup.MinFreeSpaceMb = api.MinFreeSpaceMb;
         }
 
         recording.PlaybackOverlay.ShowFilename = api.PlaybackShowFilename;

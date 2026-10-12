@@ -120,6 +120,10 @@ public sealed class SettingsState
 
     public int SnapshotRetentionDays { get; set; } = 30;
 
+    public bool EnableDiskSpaceGuard { get; set; } = true;
+
+    public int MinFreeSpaceMb { get; set; } = 2048;
+
     public bool PlaybackShowFilename { get; set; } = true;
 
     public string PlaybackFilenameColor { get; set; } = "#FFFFFF";
@@ -200,6 +204,8 @@ public sealed class SettingsState
         RecordingRetentionDays = settings.RecordingRetentionDays;
         CleanupIncludeSnapshots = settings.CleanupIncludeSnapshots;
         SnapshotRetentionDays = settings.SnapshotRetentionDays;
+        EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard ?? true;
+        MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb : 2048;
         PlaybackShowFilename = settings.PlaybackShowFilename;
         PlaybackFilenameColor = settings.PlaybackFilenameColor ?? "#FFFFFF";
         PlaybackShowTimestamp = settings.PlaybackShowTimestamp;
@@ -270,6 +276,8 @@ public sealed class SettingsState
             RecordingRetentionDays: RecordingRetentionDays,
             CleanupIncludeSnapshots: CleanupIncludeSnapshots,
             SnapshotRetentionDays: SnapshotRetentionDays,
+            EnableDiskSpaceGuard: EnableDiskSpaceGuard,
+            MinFreeSpaceMb: MinFreeSpaceMb,
             PlaybackShowFilename: PlaybackShowFilename,
             PlaybackFilenameColor: PlaybackFilenameColor,
             PlaybackShowTimestamp: PlaybackShowTimestamp,

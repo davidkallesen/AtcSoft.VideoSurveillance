@@ -998,6 +998,14 @@ components:
         snapshotRetentionDays:
           type: integer
           format: int32
+        enableDiskSpaceGuard:
+          type: boolean
+          nullable: true
+          description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb. Omit to leave the current value unchanged.
+        minFreeSpaceMb:
+          type: integer
+          format: int32
+          description: Free disk space, in megabytes, the disk space guard keeps available. 0 or omitted leaves the current value unchanged.
         playbackShowFilename:
           type: boolean
         playbackFilenameColor:

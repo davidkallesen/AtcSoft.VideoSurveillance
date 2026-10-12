@@ -233,6 +233,84 @@ public class SettingsMappingExtensionsTests
         target.SeparateThumbnailFolder.Should().BeTrue();
     }
 
+    [Fact]
+    public void DiskSpaceGuard_Settings_RoundTrip()
+    {
+        // Arrange — both values differ from their defaults (on, 2048 MB)
+        var recording = new RecordingSettings();
+        recording.Cleanup.EnableDiskSpaceGuard = false;
+        recording.Cleanup.MinFreeSpaceMb = 5000;
+
+        // Act
+        var api = SettingsMappingExtensions.ToApiModel(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            recording,
+            new AdvancedSettings());
+        var target = new RecordingSettings();
+        api.ApplyToCore(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            target,
+            new AdvancedSettings());
+
+        // Assert
+        api.EnableDiskSpaceGuard.Should().BeFalse();
+        api.MinFreeSpaceMb.Should().Be(5000);
+        target.Cleanup.EnableDiskSpaceGuard.Should().BeFalse();
+        target.Cleanup.MinFreeSpaceMb.Should().Be(5000);
+    }
+
+    [Fact]
+    public void ApplyToCore_Keeps_The_Disk_Space_Guard_Off_When_The_Request_Does_Not_Mention_It()
+    {
+        // Arrange — an older client does not know the property and sends nothing
+        var api = CreateFullAppSettings();
+        var recording = new RecordingSettings();
+        recording.Cleanup.EnableDiskSpaceGuard = false;
+
+        // Act
+        api.ApplyToCore(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            recording,
+            new AdvancedSettings());
+
+        // Assert
+        recording.Cleanup.EnableDiskSpaceGuard.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplyToCore_Keeps_The_Free_Space_Threshold_When_The_Request_Has_None()
+    {
+        // Arrange — a client that does not send the value sends 0
+        var api = CreateFullAppSettings();
+        var recording = new RecordingSettings();
+        recording.Cleanup.MinFreeSpaceMb = 4096;
+
+        // Act
+        api.ApplyToCore(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            recording,
+            new AdvancedSettings());
+
+        // Assert
+        recording.Cleanup.MinFreeSpaceMb.Should().Be(4096);
+    }
+
     private static AppSettings CreateFullAppSettings(
         AppSettingsThemeBase? themeBase = AppSettingsThemeBase.Dark,
         string language = "1033",
@@ -301,6 +379,8 @@ public class SettingsMappingExtensionsTests
             RecordingRetentionDays: 30,
             CleanupIncludeSnapshots: false,
             SnapshotRetentionDays: 30,
+            EnableDiskSpaceGuard: null,
+            MinFreeSpaceMb: 0,
             PlaybackShowFilename: true,
             PlaybackFilenameColor: "#FFFFFF",
             PlaybackShowTimestamp: true,

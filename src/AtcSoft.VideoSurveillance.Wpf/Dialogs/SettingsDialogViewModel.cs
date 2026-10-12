@@ -274,7 +274,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
     #region Storage Tab
 
     // Media Cleanup
-    [ObservableProperty(DependentPropertyNames = [nameof(IsCleanupEnabled), nameof(IsSnapshotRetentionEnabled)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(IsCleanupEnabled), nameof(IsSnapshotRetentionEnabled), nameof(IsDiskSpaceGuardControlEnabled)])]
     private string selectedCleanupSchedule = DropDownItemsFactory.DefaultMediaCleanupSchedule;
 
     public IDictionary<string, string> CleanupScheduleItems
@@ -306,6 +306,22 @@ public partial class SettingsDialogViewModel : ViewModelBase
     /// </summary>
     public bool IsSnapshotRetentionEnabled
         => IsCleanupEnabled && IncludeSnapshotsInCleanup;
+
+    [ObservableProperty(DependentPropertyNames = [nameof(IsDiskSpaceGuardControlEnabled)])]
+    private bool isDiskSpaceGuardEnabled = true;
+
+    [ObservableProperty]
+    private string selectedMinFreeSpace = DropDownItemsFactory.DefaultMinFreeSpaceMb;
+
+    public IDictionary<string, string> MinFreeSpaceItems
+        => DropDownItemsFactory.MinFreeSpaceItems;
+
+    /// <summary>
+    /// Gets a value indicating whether the minimum free space dropdown
+    /// should be enabled (cleanup is on AND disk guard is on).
+    /// </summary>
+    public bool IsDiskSpaceGuardControlEnabled
+        => IsCleanupEnabled && IsDiskSpaceGuardEnabled;
 
     // Playback Overlay
     [ObservableProperty]
@@ -425,6 +441,10 @@ public partial class SettingsDialogViewModel : ViewModelBase
             SelectedRecordingRetention = settings.RecordingRetentionDays.ToString(CultureInfo.InvariantCulture);
             IncludeSnapshotsInCleanup = settings.CleanupIncludeSnapshots;
             SelectedSnapshotRetention = settings.SnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
+            IsDiskSpaceGuardEnabled = settings.EnableDiskSpaceGuard ?? true;
+            SelectedMinFreeSpace = settings.MinFreeSpaceMb > 0
+                ? settings.MinFreeSpaceMb.ToString(CultureInfo.InvariantCulture)
+                : DropDownItemsFactory.DefaultMinFreeSpaceMb;
             ShowPlaybackFilename = settings.PlaybackShowFilename;
             SelectedPlaybackFilenameColor = settings.PlaybackFilenameColor ?? "White";
             ShowPlaybackTimestamp = settings.PlaybackShowTimestamp;
@@ -550,6 +570,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
         SelectedRecordingRetention = DropDownItemsFactory.DefaultRecordingRetentionDays.ToString(CultureInfo.InvariantCulture);
         IncludeSnapshotsInCleanup = false;
         SelectedSnapshotRetention = DropDownItemsFactory.DefaultSnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
+        IsDiskSpaceGuardEnabled = true;
+        SelectedMinFreeSpace = DropDownItemsFactory.DefaultMinFreeSpaceMb;
         ShowPlaybackFilename = true;
         SelectedPlaybackFilenameColor = "White";
         ShowPlaybackTimestamp = true;
@@ -626,6 +648,11 @@ public partial class SettingsDialogViewModel : ViewModelBase
         _ = int.TryParse(SelectedThumbnailTileCount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var thumbnailTileCount);
         _ = int.TryParse(SelectedRecordingRetention, NumberStyles.Integer, CultureInfo.InvariantCulture, out var recordingRetention);
         _ = int.TryParse(SelectedSnapshotRetention, NumberStyles.Integer, CultureInfo.InvariantCulture, out var snapshotRetention);
+        if (!int.TryParse(SelectedMinFreeSpace, NumberStyles.Integer, CultureInfo.InvariantCulture, out var minFreeSpace) || minFreeSpace <= 0)
+        {
+            minFreeSpace = int.Parse(DropDownItemsFactory.DefaultMinFreeSpaceMb, CultureInfo.InvariantCulture);
+        }
+
         _ = int.TryParse(SelectedBoundingBoxThickness, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxThickness);
         _ = int.TryParse(SelectedBoundingBoxMinArea, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxMinArea);
 
@@ -691,6 +718,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             RecordingRetentionDays: recordingRetention > 0 ? recordingRetention : DropDownItemsFactory.DefaultRecordingRetentionDays,
             CleanupIncludeSnapshots: IncludeSnapshotsInCleanup,
             SnapshotRetentionDays: snapshotRetention > 0 ? snapshotRetention : DropDownItemsFactory.DefaultSnapshotRetentionDays,
+            EnableDiskSpaceGuard: IsDiskSpaceGuardEnabled,
+            MinFreeSpaceMb: minFreeSpace,
             PlaybackShowFilename: ShowPlaybackFilename,
             PlaybackFilenameColor: SelectedPlaybackFilenameColor,
             PlaybackShowTimestamp: ShowPlaybackTimestamp,

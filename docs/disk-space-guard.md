@@ -76,21 +76,24 @@ Hourly segmentation (`Recording → Segmentation`) is strongly recommended with 
 
 ### Configure via the Settings Endpoint
 
+The settings resource is flat. `GET /settings` returns the current values; send the whole object back with the cleanup properties changed:
+
 ```http
 PUT /settings
 Content-Type: application/json
 
 {
-  "recording": {
-    "cleanup": {
-      "schedule": "onStartupAndPeriodically",
-      "recordingRetentionDays": 30,
-      "enableDiskSpaceGuard": true,
-      "minFreeSpaceMb": 2048
-    }
-  }
+  "...": "all other settings as returned by GET /settings",
+  "cleanupSchedule": "onStartupAndPeriodically",
+  "recordingRetentionDays": 30,
+  "enableDiskSpaceGuard": true,
+  "minFreeSpaceMb": 2048
 }
 ```
+
+Leaving out `enableDiskSpaceGuard`, or sending `minFreeSpaceMb` as `0`, keeps the server's current value, so a client that does not know these properties cannot switch the guard off by accident.
+
+The same two settings are available in the Blazor settings page (Recording tab) and in the settings dialog of the WPF API client.
 
 ### Monitor Disk Space via `/health/recordings`
 

@@ -139,6 +139,8 @@ public class UpdateSettingsHandlerTests
             RecordingRetentionDays: 30,
             CleanupIncludeSnapshots: false,
             SnapshotRetentionDays: 30,
+            EnableDiskSpaceGuard: null,
+            MinFreeSpaceMb: 0,
             PlaybackShowFilename: true,
             PlaybackFilenameColor: "#FFFFFF",
             PlaybackShowTimestamp: true,

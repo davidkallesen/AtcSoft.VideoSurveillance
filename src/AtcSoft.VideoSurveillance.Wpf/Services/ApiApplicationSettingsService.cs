@@ -44,6 +44,9 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     private readonly ILogger<ApiApplicationSettingsService> logger;
     private readonly string clientPrefsPath;
 
+    // A server that predates the disk-space-guard properties sends nothing for them.
+    private static readonly MediaCleanupSettings DefaultCleanup = new();
+
     private ApplicationSettings cache = new();
 
     public ApiApplicationSettingsService(
@@ -306,7 +309,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     /// is unreachable, falls back to constructed defaults so the app can
     /// still start.
     /// </summary>
-    private static ApplicationSettings BuildCacheFrom(
+    internal static ApplicationSettings BuildCacheFrom(
         ClientPreferences clientPrefs,
         AppSettings? api)
     {
@@ -405,6 +408,8 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
                 RecordingRetentionDays = api.RecordingRetentionDays,
                 IncludeSnapshots = api.CleanupIncludeSnapshots,
                 SnapshotRetentionDays = api.SnapshotRetentionDays,
+                EnableDiskSpaceGuard = api.EnableDiskSpaceGuard ?? DefaultCleanup.EnableDiskSpaceGuard,
+                MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb : DefaultCleanup.MinFreeSpaceMb,
             },
             PlaybackOverlay = new PlaybackOverlaySettings
             {
@@ -431,7 +436,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     /// the local <see cref="ClientPreferences"/> file is authoritative for
     /// those.
     /// </summary>
-    private static AppSettings BuildApiSettings(ApplicationSettings settings)
+    internal static AppSettings BuildApiSettings(ApplicationSettings settings)
     {
         _ = Enum.TryParse<AppSettingsThemeBase>(settings.General.ThemeBase, out var themeBase);
         _ = Enum.TryParse<AppSettingsOverlayPosition>(settings.CameraDisplay.OverlayPosition.ToString(), out var overlayPosition);
@@ -501,6 +506,8 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             RecordingRetentionDays: settings.Recording.Cleanup.RecordingRetentionDays,
             CleanupIncludeSnapshots: settings.Recording.Cleanup.IncludeSnapshots,
             SnapshotRetentionDays: settings.Recording.Cleanup.SnapshotRetentionDays,
+            EnableDiskSpaceGuard: settings.Recording.Cleanup.EnableDiskSpaceGuard,
+            MinFreeSpaceMb: settings.Recording.Cleanup.MinFreeSpaceMb,
             PlaybackShowFilename: settings.Recording.PlaybackOverlay.ShowFilename,
             PlaybackFilenameColor: settings.Recording.PlaybackOverlay.FilenameColor,
             PlaybackShowTimestamp: settings.Recording.PlaybackOverlay.ShowTimestamp,
