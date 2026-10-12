@@ -3,7 +3,8 @@ namespace AtcSoft.VideoEngine.Recording;
 /// <summary>
 /// A recording must survive the recorder dying mid-file (a crash or a power
 /// cut): what was written so far has to stay readable.
-/// Needs the FFmpeg shared libraries; skipped where they are not installed.
+/// Needs the FFmpeg shared libraries; skipped where they are not installed,
+/// failed where they are installed but do not load.
 /// </summary>
 public sealed unsafe class RemuxerCrashSafetyTests : IDisposable
 {
@@ -32,7 +33,7 @@ public sealed unsafe class RemuxerCrashSafetyTests : IDisposable
     public void A_Recording_That_Was_Never_Closed_Is_Still_Readable(
         string format)
     {
-        Assert.SkipUnless(TryInitializeEngine(), "FFmpeg shared libraries are not installed.");
+        TestEngine.Require();
 
         var path = Path.Combine(directory, $"unfinished.{format}");
         var snapshot = Path.Combine(directory, $"as-found-after-a-crash.{format}");
@@ -82,19 +83,6 @@ public sealed unsafe class RemuxerCrashSafetyTests : IDisposable
         // ...and the file can be opened. The rotation flag lives in the file
         // header, so reading it back shows the header is there and intact.
         MediaProbe.GetRotation(snapshot).Should().Be(90);
-    }
-
-    private static bool TryInitializeEngine()
-    {
-        try
-        {
-            VideoEngineBootstrap.Initialize();
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
     }
 
     private static void WaitUntilWritten(

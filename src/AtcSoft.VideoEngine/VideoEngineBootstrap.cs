@@ -54,7 +54,7 @@ public static class VideoEngineBootstrap
                 return;
             }
 
-            var ffmpegPath = config.FFmpegPath ?? DiscoverFFmpegPath();
+            var ffmpegPath = config.FFmpegPath ?? FindFFmpegPath();
             FFmpegVersion = FFmpegLoader.Initialize(ffmpegPath, config.FFmpegLogLevel);
 
             currentConfig = config;
@@ -70,11 +70,13 @@ public static class VideoEngineBootstrap
     }
 
     /// <summary>
-    /// Discovers the FFmpeg path by checking common locations.
+    /// Finds the folder the FFmpeg shared libraries are installed in by
+    /// checking the common locations. Finding the folder does not mean the
+    /// libraries load: they also have to be the version the bindings expect.
     /// </summary>
-    private static string? DiscoverFFmpegPath()
-    {
-        string[] possiblePaths =
+    /// <returns>The folder, or <c>null</c> when none of the locations holds the libraries.</returns>
+    public static string? FindFFmpegPath()
+        => FindFFmpegPath(
         [
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"),
             Path.Combine(
@@ -87,9 +89,14 @@ public static class VideoEngineBootstrap
                 "bin"),
             @"C:\ffmpeg\bin",
             @"C:\Program Files\ffmpeg\bin",
-        ];
+        ]);
 
-        foreach (var path in possiblePaths)
+    /// <summary>
+    /// Returns the first of the folders that holds the FFmpeg shared libraries.
+    /// </summary>
+    internal static string? FindFFmpegPath(IEnumerable<string> candidates)
+    {
+        foreach (var path in candidates)
         {
             if (Directory.Exists(path) && ContainsFFmpegBinaries(path))
             {

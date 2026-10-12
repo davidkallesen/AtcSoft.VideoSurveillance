@@ -2,7 +2,8 @@ namespace AtcSoft.VideoEngine.Recording;
 
 /// <summary>
 /// Writes real files through the recorder and reads the rotation flag back.
-/// Needs the FFmpeg shared libraries; skipped where they are not installed.
+/// Needs the FFmpeg shared libraries; skipped where they are not installed,
+/// failed where they are installed but do not load.
 /// </summary>
 public sealed unsafe class RemuxerRotationTests : IDisposable
 {
@@ -38,7 +39,7 @@ public sealed unsafe class RemuxerRotationTests : IDisposable
         string format,
         int rotationDegrees)
     {
-        Assert.SkipUnless(TryInitializeEngine(), "FFmpeg shared libraries are not installed.");
+        TestEngine.Require();
 
         var path = Path.Combine(directory, $"rotation-{rotationDegrees}.{format}");
 
@@ -50,25 +51,12 @@ public sealed unsafe class RemuxerRotationTests : IDisposable
     [Fact]
     public void GetRotation_Returns_Zero_For_A_File_That_Is_Not_Media()
     {
-        Assert.SkipUnless(TryInitializeEngine(), "FFmpeg shared libraries are not installed.");
+        TestEngine.Require();
 
         var path = Path.Combine(directory, "not-media.mp4");
         File.WriteAllText(path, "not a video");
 
         MediaProbe.GetRotation(path).Should().Be(0);
-    }
-
-    private static bool TryInitializeEngine()
-    {
-        try
-        {
-            VideoEngineBootstrap.Initialize();
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
     }
 
     private static void WriteRecording(
