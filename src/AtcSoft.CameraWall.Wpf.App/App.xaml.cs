@@ -240,6 +240,12 @@ public partial class CameraWallApp
         var settingsService = host.Services.GetRequiredService<IApplicationSettingsService>();
         ApplyStartupSettings(settingsService.General);
 
+        // Bring the recording folder in line with the layout settings, in the
+        // background. This catches recordings that could not be moved when
+        // the settings were saved (a file in use) and a layout that changed
+        // while the app was not running. It does nothing when all is in place.
+        _ = host.Services.GetService<IRecordingLayoutSynchronizer>()?.SynchronizeAsync();
+
         // Initialize camera engine (50%)
         AppHelper.RenderLoadingInitializeMessage(logger, Translations.InitializeCameraEngine, 50);
         CameraWallEngine.Initialize();
