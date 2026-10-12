@@ -1,5 +1,7 @@
 # 🎥 USB Camera Support Roadmap
 
+← Back to the [roadmap home](roadmap.md)
+
 End-to-end plan for adding USB / DirectShow / UVC webcam support to **`AtcSoft.CameraWall.Wpf.App`** (standalone), **`AtcSoft.VideoSurveillance.Api`** (server) and **`AtcSoft.VideoSurveillance.Wpf.App`** (API client). Test-first across every layer; UI redesign of the camera dialog so RTSP and USB feel like first-class siblings.
 
 ---
@@ -591,7 +593,7 @@ Documentation lands alongside the code, not after.
 - ✅ Added both docs (`docs/usb-cameras.md`, `plans/roadmap-usb-cameras.md`) to the `AtcSoft.VideoSurveillance.slnx` `/docs/` folder.
 - ✅ Updated `docs/settings.md` — added the `Source` discriminator to the Per-Camera Connection Settings table, a new "USB Connection Settings (per camera)" subsection covering `DeviceId` / `FriendlyName` / `Format` / `PreferAudio` / `AudioDeviceName`, and a "USB Stream Format" sub-table (Width / Height / FrameRate / PixelFormat) with the dshow `PixelFormat` suppression rationale called out in-line.
 - ✅ Verified Swagger / OpenAPI consumer doc against `src/VideoSurveillance.yaml`. `/devices/usb` (operationId `listUsbDevices`) is present with a 200 → `UsbDeviceDescriptor[]` response and a 503 fallback for non-Windows hosts. The three `Camera*` schemas (read / create / update) consistently expose `source`, `usbDeviceId`, `usbFriendlyName`, `usbWidth`, `usbHeight`, `usbFrameRate`, `usbPixelFormat`, `usbCaptureAudio`. **Finding:** `AudioDeviceName` (added to the Core model in Phase 9.1) is *not* yet on the API surface — see the new bullet under Phase 9 for the contract delta.
-- ⏸️ Update `plans/roadmap.md` cross-link — the master roadmap is structured around the `VS.Wpf.App` rollout, not strictly per-feature; the file here stands on its own. Defer until master roadmap is restructured.
+- ✅ Cross-linked from the master roadmap — `plans/roadmap.md` is now the home page listing every area.
 
 ---
 

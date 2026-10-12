@@ -1,5 +1,7 @@
 # 🔌 Camera Connection-Type Icon Roadmap
 
+← Back to the [roadmap home](roadmap.md)
+
 Plan for adding a **connection-type** attribute to every camera (`None`, `Lan`, `Wifi`, `Usb`), auto-detecting it where possible, letting the user set it, and showing it as an **optional icon in a corner of the camera tile**. The icon must never overlap the overlay info box or the quick-action buttons.
 
 Affects **`AtcSoft.VideoSurveillance.Core`**, **`AtcSoft.VideoSurveillance.Wpf.Core`** (the `CameraTile` shipped in the NuGet packages, also used by `AtcSoft.CameraWall.Wpf.App`), **`AtcSoft.VideoSurveillance.Api`** (via the OpenAPI spec), **`AtcSoft.VideoSurveillance.Wpf.App`** (API client) and **`AtcSoft.VideoSurveillance.Blazor.App`** (forms and settings only).

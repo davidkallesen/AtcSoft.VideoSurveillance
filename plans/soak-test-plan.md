@@ -1,5 +1,7 @@
 # Soak test plan — WPF Camera Wall (24/7 stability)
 
+← Back to the [roadmap home](roadmap.md)
+
 Plan for the long-running soak that validates branch `fix/rdp-stability-24x7`.
 The 77-minute run on 2026-04-29 was clean across one RDP cycle, but a single
 event isn't enough to declare 24/7 stability — this document defines what to

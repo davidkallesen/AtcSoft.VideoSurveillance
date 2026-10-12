@@ -1,4 +1,6 @@
-# 🗺️ Roadmap Suggestions
+# 💡 Roadmap Suggestions (Backlog)
+
+← Back to the [roadmap home](roadmap.md)
 
 This document is a candid product assessment of **AtcSoft.VideoSurveillance**, produced from a full internal code audit (60+ findings, spot-verified against the actual source) cross-referenced with 2024-2025 market research on the leading NVR/VMS products (Blue Iris, Frigate, Milestone XProtect, Genetec, Scrypted, Agent DVR). It is *not* an implementation plan — it is an honest "where we stand and where to invest" memo for the dev team. The existing [`roadmap.md`](roadmap.md) tracks the (now-complete) build-out of the WPF API client; this document covers what comes *after* feature-parity: making this best-in-class.
 
@@ -35,7 +37,7 @@ Because `RecordingSession.CurrentFilePath` is get-only, `RecordingService.Segmen
 `ReclaimDiskSpaceIfNeeded` tries to free space but if `EnableDiskSpaceGuard` is false or reclaim returns `StillShort`, recording **starts anyway**, producing a zero-byte/corrupt file. There is no hard refusal-to-start.
 **Fix:** When reclaim fails to reach `MinFreeSpaceMb`, abort the start, raise an error event, and surface it on the tile/API rather than starting a doomed recording.
 
-### 🟠 MaxRecordingDurationMinutes is declared but never enforced
+### ✅ MaxRecordingDurationMinutes is declared but never enforced *(Fixed — both segmentation services now read it as the segment length)*
 `RecordingSettings.MaxRecordingDurationMinutes` (default 60) is persisted but never read by either recording service. Segmentation is driven independently by `EnableHourlySegmentation`'s hard-coded 60-minute boundary. Changing this setting does nothing.
 **Fix:** Either wire `MaxRecordingDurationMinutes` into the segmentation boundary or remove the setting to stop misleading operators.
 

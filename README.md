@@ -146,9 +146,8 @@ AtcSoft.VideoSurveillance/
 │   └── usb-cameras.md           # 🎥 USB camera support
 │
 └── plans/                       # 🗺️ Roadmaps and plans (not system documentation)
-    ├── roadmap.md               # 🗺️ Overall project roadmap
-    ├── roadmap_VSWpfApp.md      # 🗺️ VideoSurveillance WPF App roadmap
-    └── roadmap-*.md             # 🗺️ Per-feature roadmaps
+    ├── roadmap.md               # 🗺️ Roadmap home: every area, its status and what is next
+    └── roadmap-*.md             # 🗺️ One roadmap per area
 ```
 
 ### 🔗 Dependency Graph

@@ -1,4 +1,6 @@
-# 🗺️ AtcSoft.VideoSurveillance.Wpf.App Roadmap
+# 🖥️ WPF API Client Roadmap (AtcSoft.VideoSurveillance.Wpf.App)
+
+← Back to the [roadmap home](roadmap.md) · Original design for phases 1–6: [archive](archive/roadmap-wpf-api-client-initial-design.md)
 
 ## 🎯 Vision
 

@@ -11,8 +11,10 @@
     <File Path="plans/roadmap.md" />
     <File Path="plans/roadmap-cameras-connection-icons.md" />
     <File Path="plans/roadmap-suggestions.md" />
+    <File Path="plans/roadmap-recording-storage.md" />
     <File Path="plans/roadmap-usb-cameras.md" />
-    <File Path="plans/roadmap_VSWpfApp.md" />
+    <File Path="plans/roadmap-video-rotation.md" />
+    <File Path="plans/roadmap-wpf-api-client.md" />
     <File Path="plans/soak-test-plan.md" />
   </Folder>
   <Folder Name="/src/">

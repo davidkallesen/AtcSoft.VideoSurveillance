@@ -1,4 +1,6 @@
-# 🗺️ AtcSoft.VideoSurveillance Roadmap
+# 🗄️ WPF API Client — Initial Design (Archived)
+
+> **Archived.** This was the original plan for `AtcSoft.VideoSurveillance.Wpf.App`, phases 1–6, all complete. Kept for the design rationale. Current status lives in [`roadmap-wpf-api-client.md`](../roadmap-wpf-api-client.md); the roadmap home is [`roadmap.md`](../roadmap.md).
 
 ## 🖥️ AtcSoft.VideoSurveillance.WpfApp
 
@@ -92,7 +94,7 @@ AtcSoft.VideoSurveillance.WpfApp
 └── Serilog                                   (logging)
 ```
 
-Phases 1-6 of the VideoSurveillance.Wpf.App implementation are **complete**. All remaining and future phases (7+) are tracked in [`roadmap_VSWpfApp.md`](roadmap_VSWpfApp.md).
+Phases 1-6 of the VideoSurveillance.Wpf.App implementation are **complete**. All remaining and future phases (7+) are tracked in [`roadmap-wpf-api-client.md`](../roadmap-wpf-api-client.md).
 
 ## 🏗️ Phase 1: Foundation
 
