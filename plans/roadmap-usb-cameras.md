@@ -588,10 +588,10 @@ Documentation lands alongside the code, not after.
   - Inline note explaining the optional Windows-only USB layer + Phase 10 deferral for V4L2.
 - ✅ Updated `CLAUDE.md` (project root) — extended the "Solution Structure" list with `AtcSoft.VideoEngine.Windows`, added the architecture note, and described `CameraSource` + `BuildSourceLocator` in a new "Camera Source vs. Protocol" section under Enums.
 - ✅ Created `docs/usb-cameras.md` — operator-facing architecture, configuration model, identity / hot-plug behaviour, DI wiring, API surface, privacy gotchas, scope deferrals, and a troubleshooting matrix. Covers enumeration, device-id stability, DirectShow caveats (single-tenant, format constraints), and the troubleshooting matrix (privacy permissions, `KSCATEGORY_VIDEO_CAMERA` not present, format mismatch). Known-incompatible-devices list grows as we hit them.
-- ✅ Added both docs (`docs/usb-cameras.md`, `docs/roadmap-usb-cameras.md`) to the `AtcSoft.VideoSurveillance.slnx` `/docs/` folder.
+- ✅ Added both docs (`docs/usb-cameras.md`, `plans/roadmap-usb-cameras.md`) to the `AtcSoft.VideoSurveillance.slnx` `/docs/` folder.
 - ✅ Updated `docs/settings.md` — added the `Source` discriminator to the Per-Camera Connection Settings table, a new "USB Connection Settings (per camera)" subsection covering `DeviceId` / `FriendlyName` / `Format` / `PreferAudio` / `AudioDeviceName`, and a "USB Stream Format" sub-table (Width / Height / FrameRate / PixelFormat) with the dshow `PixelFormat` suppression rationale called out in-line.
 - ✅ Verified Swagger / OpenAPI consumer doc against `src/VideoSurveillance.yaml`. `/devices/usb` (operationId `listUsbDevices`) is present with a 200 → `UsbDeviceDescriptor[]` response and a 503 fallback for non-Windows hosts. The three `Camera*` schemas (read / create / update) consistently expose `source`, `usbDeviceId`, `usbFriendlyName`, `usbWidth`, `usbHeight`, `usbFrameRate`, `usbPixelFormat`, `usbCaptureAudio`. **Finding:** `AudioDeviceName` (added to the Core model in Phase 9.1) is *not* yet on the API surface — see the new bullet under Phase 9 for the contract delta.
-- ⏸️ Update `docs/roadmap.md` cross-link — the master roadmap is structured around the `VS.Wpf.App` rollout, not strictly per-feature; the file here stands on its own. Defer until master roadmap is restructured.
+- ⏸️ Update `plans/roadmap.md` cross-link — the master roadmap is structured around the `VS.Wpf.App` rollout, not strictly per-feature; the file here stands on its own. Defer until master roadmap is restructured.
 
 ---
 

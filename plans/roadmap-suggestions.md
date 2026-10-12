@@ -28,7 +28,7 @@ Because `RecordingSession.CurrentFilePath` is get-only, `RecordingService.Segmen
 **Fix:** Route the server through the same effective-value helpers as WPF.
 
 ### ✅ Disk-space guard only fires at segment boundaries, never mid-recording *(Fixed — batch 5: EnforceDiskSpaceGuard() on IRecordingService; segmentation timer starts when either EnableHourlySegmentation or EnableDiskSpaceGuard is true; WPF overlap guard added)*
-`ReclaimDiskSpaceIfNeeded` runs in `StartRecording` and `SegmentRecording` only. On a long manual recording (segmentation disabled, or `MaxRecordingDurationMinutes = 0`) the disk can fill completely while FFmpeg keeps writing, producing a corrupt/truncated file with no warning event and no fallback stop. See [`disk-space-guard.md`](disk-space-guard.md) for the current design.
+`ReclaimDiskSpaceIfNeeded` runs in `StartRecording` and `SegmentRecording` only. On a long manual recording (segmentation disabled, or `MaxRecordingDurationMinutes = 0`) the disk can fill completely while FFmpeg keeps writing, producing a corrupt/truncated file with no warning event and no fallback stop. See [`disk-space-guard.md`](../docs/disk-space-guard.md) for the current design.
 **Fix:** Poll free space on a timer during active recordings; raise a warning event and gracefully stop (closing the muxer cleanly) when below `MinFreeSpaceMb` and reclaim cannot recover.
 
 ### ✅ No hard pre-recording disk gate *(Fixed — batch 4: ReclaimDiskSpaceIfNeeded returns bool; StartRecording/TriggerMotionRecording abort on false)*
@@ -44,7 +44,7 @@ Because `RecordingSession.CurrentFilePath` is get-only, `RecordingService.Segmen
 **Fix:** Detect `IPAddress.TryParse` → `AddressFamily.InterNetworkV6` and wrap the host in `[...]`.
 
 ### ✅ AnalysisFrameRate default (30) is silently halved to 15 *(Fixed — batch 2: default lowered to 15 to match MaxTargetFps cap)*
-`MotionDetectionSettings.AnalysisFrameRate` defaults to 30, but `MotionDetectionService` clamps to `MaxTargetFps = 15` with no log line or UI warning. Operators tuning for "30 fps analysis" silently get 15. Documented in [`motion-detection.md`](motion-detection.md) but invisible at runtime.
+`MotionDetectionSettings.AnalysisFrameRate` defaults to 30, but `MotionDetectionService` clamps to `MaxTargetFps = 15` with no log line or UI warning. Operators tuning for "30 fps analysis" silently get 15. Documented in [`motion-detection.md`](../docs/motion-detection.md) but invisible at runtime.
 **Fix:** Lower the default to a value inside the clamp range, or log/surface the clamp.
 
 ### ✅ Motion-frame analysis swallows all exceptions *(Fixed — batch 2: throttled warning logging with ConsecutiveFails counter)*

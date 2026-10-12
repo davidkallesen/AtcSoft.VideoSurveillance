@@ -2,12 +2,18 @@
   <Folder Name="/docs/">
     <File Path="docs/architecture.md" />
     <File Path="docs/motion-detection.md" />
-    <File Path="docs/roadmap.md" />
-    <File Path="docs/roadmap-usb-cameras.md" />
-    <File Path="docs/roadmap_VSWpfApp.md" />
     <File Path="docs/settings.md" />
+    <File Path="docs/disk-space-guard.md" />
     <File Path="docs/usb-cameras.md" />
     <File Path="README.md" />
+  </Folder>
+  <Folder Name="/plans/">
+    <File Path="plans/roadmap.md" />
+    <File Path="plans/roadmap-cameras-connection-icons.md" />
+    <File Path="plans/roadmap-suggestions.md" />
+    <File Path="plans/roadmap-usb-cameras.md" />
+    <File Path="plans/roadmap_VSWpfApp.md" />
+    <File Path="plans/soak-test-plan.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/AtcSoft.VideoSurveillance.Aspire/AtcSoft.VideoSurveillance.Aspire.csproj" />

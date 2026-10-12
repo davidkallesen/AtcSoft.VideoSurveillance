@@ -1,6 +1,6 @@
 # 🎥 USB Camera Support
 
-Architectural overview, configuration model, and operator-facing behaviour for the USB / DirectShow / UVC webcam path. Companion to [`docs/roadmap-usb-cameras.md`](roadmap-usb-cameras.md), which tracks status of the rollout.
+Architectural overview, configuration model, and operator-facing behaviour for the USB / DirectShow / UVC webcam path. Companion to [`plans/roadmap-usb-cameras.md`](../plans/roadmap-usb-cameras.md), which tracks status of the rollout.
 
 ---
 
@@ -27,7 +27,7 @@ public enum CameraSource
 
 The two configuration shapes are mutually exclusive — fields belonging to the unused branch are ignored. JSON storage migration is additive: cameras saved before USB landed have no `Source` field and deserialize with `Source = Network` (the default), so no migration step is needed.
 
-USB cameras always report `ConnectionType = Usb`, so the optional connection-type icon shows a USB glyph on their tiles (see [Connection Type Options](settings.md#connection-type-options)). The older "USB" text badge only shows while that icon is turned off, and it is scheduled for removal ([roadmap](roadmap-cameras-connection-icons.md), Phase 8).
+USB cameras always report `ConnectionType = Usb`, so the optional connection-type icon shows a USB glyph on their tiles (see [Connection Type Options](settings.md#connection-type-options)). The older "USB" text badge only shows while that icon is turned off, and it is scheduled for removal ([roadmap](../plans/roadmap-cameras-connection-icons.md), Phase 8).
 
 ### 🔌 `UsbConnectionSettings`
 

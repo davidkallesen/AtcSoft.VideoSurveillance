@@ -138,12 +138,17 @@ AtcSoft.VideoSurveillance/
 │   ├── AtcSoft.VideoSurveillance.Api.Tests/        # ✅ xUnit v3 tests for API
 │   └── AtcSoft.VideoEngine.Tests/                  # ✅ xUnit v3 tests for VideoEngine
 │
-└── docs/
-    ├── architecture.md          # 🏛️ Architecture diagrams and assembly details
+├── docs/                        # 📚 System documentation
+│   ├── architecture.md          # 🏛️ Architecture diagrams and assembly details
+│   ├── disk-space-guard.md      # 💾 Disk space guard
+│   ├── motion-detection.md      # 🏃 Motion detection setup guide
+│   ├── settings.md              # ⚙️ Complete settings reference
+│   └── usb-cameras.md           # 🎥 USB camera support
+│
+└── plans/                       # 🗺️ Roadmaps and plans (not system documentation)
     ├── roadmap.md               # 🗺️ Overall project roadmap
     ├── roadmap_VSWpfApp.md      # 🗺️ VideoSurveillance WPF App roadmap
-    ├── motion-detection.md      # 🏃 Motion detection setup guide
-    └── settings.md              # ⚙️ Complete settings reference
+    └── roadmap-*.md             # 🗺️ Per-feature roadmaps
 ```
 
 ### 🔗 Dependency Graph
