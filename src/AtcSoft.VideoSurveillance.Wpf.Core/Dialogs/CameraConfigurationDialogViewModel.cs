@@ -1802,8 +1802,25 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     private bool CanSave()
         => !string.IsNullOrWhiteSpace(Camera.Display.DisplayName) &&
            HasMinimumSourceIdentity() &&
+           HasValidValues() &&
            IsCameraEndpointUnique() &&
            HasChanges();
+
+    /// <summary>
+    /// Checks the validation attributes on the models, so a value the form
+    /// flags as invalid (a port out of range, a name that is too long) cannot
+    /// be saved. The address and port rules only apply to network cameras.
+    /// </summary>
+    private bool HasValidValues()
+        => IsValid(Camera.Display) &&
+           (Camera.Connection.Source == CameraSource.Usb || IsValid(Camera.Connection));
+
+    private static bool IsValid(object model)
+        => Validator.TryValidateObject(
+            model,
+            new ValidationContext(model),
+            validationResults: null,
+            validateAllProperties: true);
 
     private bool HasChanges()
     {

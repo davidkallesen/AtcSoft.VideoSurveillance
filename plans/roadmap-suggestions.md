@@ -41,7 +41,7 @@ Because `RecordingSession.CurrentFilePath` is get-only, `RecordingService.Segmen
 `RecordingSettings.MaxRecordingDurationMinutes` (default 60) is persisted but never read by either recording service. Segmentation is driven independently by `EnableHourlySegmentation`'s hard-coded 60-minute boundary. Changing this setting does nothing.
 **Fix:** Either wire `MaxRecordingDurationMinutes` into the segmentation boundary or remove the setting to stop misleading operators.
 
-### 🟡 IPv6 literal addresses produce invalid URIs in BuildUri
+### ✅ IPv6 literal addresses produce invalid URIs in BuildUri *(Fixed — `BuildUri` brackets IPv6 literals via `BracketIfIPv6`)*
 **Verified:** `CameraConfiguration.BuildUri()` builds `$"{scheme}://{userInfo}{Connection.IpAddress}:{Connection.Port}{normalizedPath}"` with no IPv6 bracketing. `fe80::1` becomes `rtsp://fe80::1:554/stream`, which `System.Uri` and FFmpeg both reject — IPv6 literals must be bracketed (`rtsp://[fe80::1]:554/stream`).
 **Fix:** Detect `IPAddress.TryParse` → `AddressFamily.InterNetworkV6` and wrap the host in `[...]`.
 
@@ -194,7 +194,7 @@ Specific, actionable improvements referencing actual screens.
 - **No `AutomationProperties.Name` anywhere** — icon-only action buttons (Edit/Delete/Record/Snapshot) and status `Ellipse`/`Path` indicators (connection/motion/recording dots) announce as generic "Button"/nothing to screen readers, and rely on colour as the sole channel. Add `AutomationProperties.Name` to every icon button and a hidden/automation text alternative to every status indicator. WCAG compliance is becoming a professional-software expectation.
 
 **Validation (`CameraConfigurationDialogViewModel`)**
-- `CanSave()` checks only `DisplayName` non-emptiness + source identity; it never calls `Validator.ValidateObject`, so the `[Range(1,65535)]` port and `[Required]` annotations are decorative — port 0 or 99999 saves fine. Run DataAnnotations validation before persist. (Connection-test-before-save can stay optional but consider a soft warning.)
+- ✅ *(Fixed 2026-10-12)* `CanSave()` checks only `DisplayName` non-emptiness + source identity; it never calls `Validator.ValidateObject`, so the `[Range(1,65535)]` port and `[Required]` annotations are decorative — port 0 or 99999 saves fine. Run DataAnnotations validation before persist. (Connection-test-before-save can stay optional but consider a soft warning.)
 
 ---
 
@@ -204,7 +204,7 @@ What limits scale today, and the architectural moves that help.
 
 - **Motion detection is CPU/GDI+ bound.** `ConvertToGrayscale` uses `System.Drawing.Bitmap` + unsafe pointers and `CalculateFrameDifferenceWithBoundingBoxes` is a nested per-pixel C# loop at 800×600 default. Across many cameras this is *the* bottleneck. **Fix:** move differencing to the GPU via the existing `AtcSoft.VideoEngine.DirectX` (DirectCompute) path, or at minimum SIMD-vectorise the grayscale/diff loops. This is also the prerequisite for affordable AI inference.
 - **FFmpeg open/read timeouts are compile-time constants.** **Verified:** `Demuxer.cs` hard-codes `OpenTimeoutSeconds = 15` / `ReadTimeoutSeconds = 10`; the user-facing `ConnectionAppSettings.ConnectionTimeoutSeconds` only sizes a `CameraTile` poll loop and never reaches `avformat_open_input`. High-latency cameras can't be tuned. **Fix:** thread the setting into the demuxer interrupt callback. Same for hard-coded `probesize=50000000` / `analyzeduration=10000000` — expose via `StreamOptions`.
-- **WPF reconnect ignores the backoff helper.** **Verified:** `CameraTile.TryAutoReconnect` uses a flat `TimeSpan.FromSeconds(GetEffectiveReconnectDelaySeconds())` and never calls `ReconnectBackoff.ComputeDelay` — which *exists*, is documented (base 30s, cap 15min), and is used correctly server-side. A flapping camera hammers the network at a constant rate (~2,880 attempts/day per the helper's own remarks). **Fix:** wire `CameraTile` through `ReconnectBackoff.ComputeDelay(consecutiveFailures)`. This is a near-trivial change with real network-load impact.
+- ✅ *(Fixed — `TryAutoReconnect` uses `ReconnectBackoff.ComputeDelay`)* **WPF reconnect ignores the backoff helper.** **Verified:** `CameraTile.TryAutoReconnect` uses a flat `TimeSpan.FromSeconds(GetEffectiveReconnectDelaySeconds())` and never calls `ReconnectBackoff.ComputeDelay` — which *exists*, is documented (base 30s, cap 15min), and is used correctly server-side. A flapping camera hammers the network at a constant rate (~2,880 attempts/day per the helper's own remarks). **Fix:** wire `CameraTile` through `ReconnectBackoff.ComputeDelay(consecutiveFailures)`. This is a near-trivial change with real network-load impact.
 - **SignalR fan-out at many cameras.** Per-frame motion/bounding-box broadcasts to all clients will not scale linearly. Plan for a backplane (Redis) if multi-client/multi-camera, and throttle bounding-box broadcast rate.
 - **Observability is thin.** `MaxConsecutiveReadErrors = 30` is a hidden `VideoPlayer` constant with no exposure; there are no packet-loss/jitter/latency metrics on `VideoStreamInfo`. A degraded-but-not-dead stream is invisible until the threshold trips. **Fix:** expose a running read-error count and basic stream-health metrics so `CameraTile`/health endpoints can distinguish "degraded" from "lost."
 - **No failover/redundancy.** Mid-market gap vs. Milestone/Genetec hot-standby. Even cold-standby recording-server promotion materially changes enterprise evaluations — lower priority than the above.
@@ -215,10 +215,10 @@ What limits scale today, and the architectural moves that help.
 
 Ordered by impact-to-effort.
 
-1. **Wire `CameraTile.TryAutoReconnect` to `ReconnectBackoff.ComputeDelay`** — the helper already exists and is used server-side; this is a few lines and stops flapping cameras from hammering the network.
+1. ✅ **Wire `CameraTile.TryAutoReconnect` to `ReconnectBackoff.ComputeDelay`** — the helper already exists and is used server-side; this is a few lines and stops flapping cameras from hammering the network.
 2. **Fix the `ServerRecordingService` `TryAdd`/`TryUpdate` race** — remove the `ContainsKey` pre-check, switch the segment swap to `TryUpdate`. Prevents leaked pipelines and orphaned files.
-3. **Bracket IPv6 literals in `CameraConfiguration.BuildUri`** — small correctness fix; IPv6 cameras currently can't connect at all.
-4. **Run DataAnnotations validation in `CameraConfigurationDialogViewModel.CanSave`** — call `Validator.ValidateObject`; stops invalid ports/empty fields persisting.
+3. ✅ **Bracket IPv6 literals in `CameraConfiguration.BuildUri`** — small correctness fix; IPv6 cameras currently can't connect at all.
+4. ✅ **Run DataAnnotations validation in `CameraConfigurationDialogViewModel.CanSave`** — call `Validator.ValidateObject`; stops invalid ports/empty fields persisting.
 5. **Outbound webhook dispatcher on existing events** — POST on motion/connect/recording; opens IFTTT/Zapier/Slack/HA. Thin layer over `SurveillanceHub`.
 6. **`AutomationProperties.Name` on icon buttons + status dots** in `CameraListView.xaml`/`LayoutListView.xaml`/`CameraTileBadge.xaml` — mechanical, closes the accessibility gap.
 7. **Keyboard shortcuts in CameraWall.Wpf.App `MainWindow.xaml`** — copy the binding set already in VideoSurveillance.Wpf.App.

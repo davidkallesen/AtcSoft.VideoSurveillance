@@ -35,7 +35,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
 | [USB cameras](roadmap-usb-cameras.md) | Hardware verification of recording-on-connect / motion for USB; audio capture at packet level |
-| [Suggestions](roadmap-suggestions.md) | Quick wins: reconnect backoff in the WPF tile, IPv6 literals in `BuildUri`, validation in the camera dialog |
+| [Suggestions](roadmap-suggestions.md) | Quick wins: keyboard shortcuts, camera search/filter and layout quick-select in the CameraWall app; outbound webhooks |
 
 ### Later
 
@@ -91,7 +91,6 @@ Open defects, wherever they are tracked.
 | Motion boxes reported misplaced at 180° — two possible causes fixed, not confirmed | [Video rotation](roadmap-video-rotation.md#the-180-report-is-not-explained) |
 | The API has no rotation: the API-client app and Blazor never rotate | [Video rotation](roadmap-video-rotation.md) |
 | The server never generates recording thumbnails | [Recording storage layout](roadmap-recording-storage.md) |
-| IPv6 literal addresses produce invalid camera URIs | [Suggestions](roadmap-suggestions.md) |
 | Server-side motion detection is a no-op stub | [Suggestions](roadmap-suggestions.md) |
 
 ---

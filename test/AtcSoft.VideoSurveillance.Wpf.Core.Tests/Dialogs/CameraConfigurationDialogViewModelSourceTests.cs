@@ -231,6 +231,54 @@ public class CameraConfigurationDialogViewModelSourceTests
         vm.SaveCommand.CanExecute(null).Should().BeTrue();
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(65536)]
+    public void Save_Is_Blocked_For_A_Network_Camera_With_A_Port_Out_Of_Range(
+        int port)
+    {
+        var camera = BuildNetworkCamera();
+        camera.Display.DisplayName = "Cam";
+        camera.Connection.IpAddress = "10.0.0.1";
+
+        var vm = BuildVm(camera);
+        vm.SaveCommand.CanExecute(null).Should().BeTrue();
+
+        vm.Camera.Connection.Port = port;
+        vm.SaveCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Save_Is_Blocked_For_A_Display_Name_That_Is_Too_Long()
+    {
+        var camera = BuildNetworkCamera();
+        camera.Display.DisplayName = "Cam";
+        camera.Connection.IpAddress = "10.0.0.1";
+
+        var vm = BuildVm(camera);
+        vm.SaveCommand.CanExecute(null).Should().BeTrue();
+
+        vm.Camera.Display.DisplayName = new string('x', 257);
+        vm.SaveCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Save_Is_Allowed_For_A_Usb_Camera_Without_Address_And_Port()
+    {
+        // Switching a camera to USB clears its address and sets port 0;
+        // the network rules must not apply to it.
+        var camera = BuildUsbCamera();
+        camera.Display.DisplayName = "Cam";
+        camera.Connection.Usb = new UsbConnectionSettings { DeviceId = "abc" };
+        camera.Connection.IpAddress = string.Empty;
+        camera.Connection.Port = 0;
+
+        var vm = BuildVm(camera);
+
+        vm.SaveCommand.CanExecute(null).Should().BeTrue();
+    }
+
     [Fact]
     public async Task TestConnection_UsbCamera_Opens_Pipeline_With_Dshow_Locator()
     {
