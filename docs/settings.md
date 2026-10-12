@@ -384,6 +384,18 @@ The rotation applies to everything the operator sees:
   (a display matrix, for both MP4 and MKV) that VLC, Windows players, browsers
   and ffplay apply at playback. The built-in recording player applies it too.
 
+Which players apply the flag depends on the recording format:
+
+| Player | MP4 | MKV |
+|---|---|---|
+| Built-in recording player | Rotated | Rotated |
+| VLC 3 | Rotated | **Not rotated** (VLC 3 ignores the flag in Matroska) |
+
+If recordings from a rotated camera have to look right in VLC, set that
+camera's recording format to `mp4` (a per-camera override). MP4 recordings are
+written in fragments, so, like MKV, a recording cut short by a crash or a power
+cut stays playable up to its last few seconds.
+
 Recordings made before version 1.3 carry no rotation flag and play back
 unrotated. Changing the rotation during a recording takes effect from the next
 segment.

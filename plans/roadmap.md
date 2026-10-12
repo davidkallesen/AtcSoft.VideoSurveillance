@@ -77,7 +77,7 @@ Things that are built but cannot be closed without hands, eyes or hardware.
 | ONVIF detection against a wired, a Wi-Fi and a Tapo camera | Real cameras | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
 | USB recording-on-connect / motion, dshow open, remux of MJPEG | A USB camera | [USB cameras](roadmap-usb-cameras.md) |
 | USB audio capture | A USB camera with a microphone | [USB cameras](roadmap-usb-cameras.md) |
-| Boxes at 0 / 90 / 180 / 270, rotated recordings in the app and in VLC, rotation after a setting change and a tile swap | A real camera | [Video rotation](roadmap-video-rotation.md#-to-verify-by-hand) |
+| Boxes at 0 / 90 / 180 / 270, rotation after a setting change and a tile swap (rotated playback is confirmed in the app; VLC needs MP4) | A real camera | [Video rotation](roadmap-video-rotation.md#-to-verify-by-hand) |
 | Record, browse, play and delete in each of the four folder layouts; midnight rollover | The app and some recording time | [Recording storage layout](roadmap-recording-storage.md#-to-verify-by-hand) |
 
 ---
