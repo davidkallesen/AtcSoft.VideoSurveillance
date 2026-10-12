@@ -85,8 +85,8 @@ New members on `RecordingSettings` (app-level, both off by default so nothing ch
 
 | Property | Type | Default | Effect |
 |---|---|---|---|
-| `UseDailySubfolders` | bool | `false` | Videos (and thumbnails) go into a `yyyy-MM-dd` folder |
-| `SeparateThumbnailFolder` | bool | `false` | Thumbnails go into a `thumbnails` folder below the recording root |
+| `UseDailySubfolders` | bool | `true` | Videos (and thumbnails) go into a `yyyy-MM-dd` folder |
+| `SeparateThumbnailFolder` | bool | `true` | Thumbnails go into a `thumbnails` folder below the recording root |
 
 Not per-camera overridable (Decision 4): the layout is a property of the archive, and the browser and cleanup read the whole tree.
 
@@ -250,8 +250,8 @@ Resolved with the product owner on 2026-10-12.
 | 2 | Where do thumbnails go? | **A separate root below the recording path: `recordings\thumbnails\{camera}\…`**, mirroring the video tree. Staying below the recording path keeps the web file mount and cleanup working. |
 | 3 | Which clock names the day folder on the server? | **Local time**, in both the standalone app and the server. The server's file names keep their UTC timestamp. |
 | 4 | Per-camera override for the layout? | **No.** App-level only. |
-| 5 | Move existing recordings into the new layout? | **No.** Old and new layouts are read side by side. |
-| 6 | Defaults? | **Off.** Opt-in. |
+| 5 | Move existing recordings into the new layout? | ~~No.~~ **Yes** (revised 2026-10-13): the folder always follows the settings. Changing an option moves the existing files; running recordings are restarted so they can move too. |
+| 6 | Defaults? | ~~Off.~~ **On** (revised 2026-10-13), for both options. |
 
 ---
 
@@ -259,6 +259,9 @@ Resolved with the product owner on 2026-10-12.
 
 Where the build differs from, or adds to, the plan above.
 
+- **Files follow the settings** *(added 2026-10-13)*. `RecordingLayoutReorganizer` moves recordings and thumbnails to the current layout, in either direction and from a mix; it never overwrites, leaves non-recordings alone and removes the folders it empties. `Synchronize` first restarts running recordings that are not in place (`SegmentRecording`), since a file being written cannot be moved. It runs when the settings are saved (standalone: with a busy overlay; server: inside `PUT /settings`) and once at startup. The readers stay layout-agnostic, so the recordings browser shows the same list throughout — pinned by a test that compares the list before and after a move.
+- **In the API the two options are optional**: a request that leaves them out keeps the server's layout, so an older client cannot trigger a move by accident.
+- **Settings dialog help.** Each switch has a hover help (Atc `InformationText`) with its path when on and off, and an info box (Atc `Alert`) shows the paths for the current choice.
 - **The helper as built** is `RecordingPathHelper` with `RecordingLayoutOptions`. Its reader-side methods are `GetCameraFolderFromPath`, `GetThumbnailCandidates`, `FindThumbnailPath`, `IsInThumbnailsFolder` and `TryParseTimestamp`.
 - **`thumbnails` is a reserved folder name** directly below the recording root. A camera called "thumbnails" gets the folder `thumbnails_`.
 - **Empty camera name.** The standalone app used to produce an empty folder name for a camera without a display name; it now falls back to a short camera id, as the server already did.

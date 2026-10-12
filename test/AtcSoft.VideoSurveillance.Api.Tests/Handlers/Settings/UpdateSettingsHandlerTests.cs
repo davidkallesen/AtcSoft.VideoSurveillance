@@ -21,7 +21,7 @@ public class UpdateSettingsHandlerTests
         settingsService.MotionDetection.Returns(motionDetection);
         settingsService.Recording.Returns(recording);
         settingsService.Advanced.Returns(advanced);
-        var handler = new UpdateSettingsHandler(settingsService);
+        var handler = new UpdateSettingsHandler(settingsService, Substitute.For<IRecordingService>());
 
         var apiSettings = CreateFullAppSettings(
             themeBase: AppSettingsThemeBase.Light,
@@ -56,7 +56,7 @@ public class UpdateSettingsHandlerTests
         settingsService.MotionDetection.Returns(new MotionDetectionSettings());
         settingsService.Recording.Returns(new RecordingSettings());
         settingsService.Advanced.Returns(new AdvancedSettings());
-        var handler = new UpdateSettingsHandler(settingsService);
+        var handler = new UpdateSettingsHandler(settingsService, Substitute.For<IRecordingService>());
 
         var apiSettings = CreateFullAppSettings();
 
@@ -73,6 +73,116 @@ public class UpdateSettingsHandlerTests
         settingsService.Received(1).SaveMotionDetection(Arg.Any<MotionDetectionSettings>());
         settingsService.Received(1).SaveRecording(Arg.Any<RecordingSettings>());
         settingsService.Received(1).SaveAdvanced(Arg.Any<AdvancedSettings>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_A_Changed_Folder_Layout_Moves_The_Recordings()
+    {
+        // Arrange — a flat archive, and a request that switches day folders on
+        var root = Path.Combine(Path.GetTempPath(), "atcsoft-settings-handler-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Touch(Path.Combine(root, "Cam", "Cam_20261012_101500_000.mkv"));
+            var (handler, _) = CreateHandler(root, useDailySubfolders: false, separateThumbnailFolder: false);
+
+            // Act
+            await handler.ExecuteAsync(
+                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root, UseDailySubfolders = true }),
+                CancellationToken.None);
+
+            // Assert — the server names files in UTC; the day folder is the local day
+            var day = new DateTime(2026, 10, 12, 10, 15, 0, DateTimeKind.Utc).ToLocalTime().ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            File.Exists(Path.Combine(root, "Cam", day, "Cam_20261012_101500_000.mkv")).Should().BeTrue();
+            File.Exists(Path.Combine(root, "Cam", "Cam_20261012_101500_000.mkv")).Should().BeFalse();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_A_Changed_Folder_Layout_Restarts_A_Running_Recording()
+    {
+        // Arrange
+        var root = Path.Combine(Path.GetTempPath(), "atcsoft-settings-handler-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var live = Touch(Path.Combine(root, "Cam", "Cam_20261012_101500_000.mkv"));
+            var (handler, recordingService) = CreateHandler(root, useDailySubfolders: false, separateThumbnailFolder: false);
+            var session = new RecordingSession(Guid.NewGuid(), "Cam", live, isManualRecording: true);
+            recordingService.GetActiveSessions().Returns([session]);
+
+            // Act
+            await handler.ExecuteAsync(
+                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root, UseDailySubfolders = true }),
+                CancellationToken.None);
+
+            // Assert
+            recordingService.Received(1).SegmentRecording(session.CameraId);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_An_Unchanged_Folder_Layout_Moves_Nothing()
+    {
+        // Arrange — the request does not mention the layout
+        var root = Path.Combine(Path.GetTempPath(), "atcsoft-settings-handler-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var flat = Touch(Path.Combine(root, "Cam", "Cam_20261012_101500_000.mkv"));
+            var (handler, recordingService) = CreateHandler(root, useDailySubfolders: true, separateThumbnailFolder: true);
+
+            // Act
+            await handler.ExecuteAsync(
+                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root }),
+                CancellationToken.None);
+
+            // Assert
+            File.Exists(flat).Should().BeTrue();
+            recordingService.DidNotReceive().SegmentRecording(Arg.Any<Guid>());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static (UpdateSettingsHandler Handler, IRecordingService RecordingService) CreateHandler(
+        string recordingPath,
+        bool useDailySubfolders,
+        bool separateThumbnailFolder)
+    {
+        var settingsService = Substitute.For<IApplicationSettingsService>();
+        settingsService.General.Returns(new GeneralSettings());
+        settingsService.CameraDisplay.Returns(new CameraDisplayAppSettings());
+        settingsService.Connection.Returns(new ConnectionAppSettings());
+        settingsService.Performance.Returns(new PerformanceSettings());
+        settingsService.MotionDetection.Returns(new MotionDetectionSettings());
+        settingsService.Advanced.Returns(new AdvancedSettings());
+        settingsService.Recording.Returns(new RecordingSettings
+        {
+            RecordingPath = recordingPath,
+            UseDailySubfolders = useDailySubfolders,
+            SeparateThumbnailFolder = separateThumbnailFolder,
+        });
+
+        var recordingService = Substitute.For<IRecordingService>();
+        recordingService.GetActiveSessions().Returns([]);
+        recordingService.SegmentRecording(Arg.Any<Guid>()).Returns(true);
+
+        return (new UpdateSettingsHandler(settingsService, recordingService), recordingService);
+    }
+
+    private static string Touch(string path)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "x");
+        return path;
     }
 
     private static AppSettings CreateFullAppSettings(

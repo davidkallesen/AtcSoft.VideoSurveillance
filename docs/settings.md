@@ -181,8 +181,8 @@ Recording paths, formats, segmentation, and timelapse configuration.
 | `EnableHourlySegmentation` | bool | `true` | No | Split recordings into clock-aligned segments |
 | `MaxRecordingDurationMinutes` | int | `60` | No | Maximum segment length in minutes |
 | `ThumbnailTileCount` | int | `4` | Yes | Thumbnail grid: 1 (single 320x240) or 4 (2x2 640x480) |
-| `UseDailySubfolders` | bool | `false` | No | Put each day's recordings in their own `yyyy-MM-dd` folder — see [Recording Folder Layout](#recording-folder-layout) |
-| `SeparateThumbnailFolder` | bool | `false` | No | Keep thumbnails in a `thumbnails` folder below the recording path |
+| `UseDailySubfolders` | bool | `true` | No | Put each day's recordings in their own `yyyy-MM-dd` folder — see [Recording Folder Layout](#recording-folder-layout) |
+| `SeparateThumbnailFolder` | bool | `true` | No | Keep thumbnails in a `thumbnails` folder below the recording path |
 | `EnableTimelapse` | bool | `false` | Yes | Enable interval-based timelapse snapshots |
 | `TimelapseInterval` | string | `"5m"` | Yes | Timelapse capture interval |
 | `Cleanup` | object | *(see below)* | No | Media cleanup settings |
@@ -208,10 +208,10 @@ Recording paths, formats, segmentation, and timelapse configuration.
 
 ### Recording Folder Layout
 
-By default every camera has one folder holding all its videos and thumbnails.
-With continuous recording that folder grows by two files per segment — about
-19,000 files after 100 days of 15-minute segments — which Windows Explorer
-handles badly. Two independent options keep the folders small:
+With continuous recording, one folder per camera holding every video and
+thumbnail grows by two files per segment — about 19,000 files after 100 days of
+15-minute segments — which Windows Explorer handles badly. Two independent
+options, both on by default, keep the folders small:
 
 | `UseDailySubfolders` | `SeparateThumbnailFolder` | Video | Thumbnail |
 |---|---|---|---|
@@ -222,10 +222,18 @@ handles badly. Two independent options keep the folders small:
 
 All paths are below `RecordingPath`. File names do not change.
 
-- The options only decide where **new** files are written. The recordings
-  browser, the API and cleanup find recordings and thumbnails in every layout,
-  so nothing has to be moved when an option is switched on or off, and old and
-  new recordings are listed side by side.
+- **The folder always follows the settings.** When an option is changed, the
+  existing recordings and thumbnails are moved to the new layout: in the
+  standalone app while the settings dialog saves (it shows a busy indicator),
+  on the server while the settings update is handled. A running recording
+  cannot be moved, so it is restarted first — it closes its file and carries on
+  in a new one at the new place. Both also check once at startup.
+- The recordings browser, the API and cleanup read every layout, so the list of
+  recordings looks the same before, during and after a move.
+- In the settings dialog each switch has a hover help showing its path when on
+  and when off, and an example of the current choice is shown below them.
+- A file that cannot be moved (in use, or its new name is taken) stays where it
+  is, remains listed, and is retried at the next start. Nothing is overwritten.
 - The day folder follows the **local** calendar day on which the file was
   started. With segmentation on, midnight is always a segment boundary, so each
   file lands in its own day. On the server, file names carry a UTC timestamp
@@ -582,8 +590,8 @@ All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
     "enableHourlySegmentation": true,
     "maxRecordingDurationMinutes": 60,
     "thumbnailTileCount": 4,
-    "useDailySubfolders": false,
-    "separateThumbnailFolder": false,
+    "useDailySubfolders": true,
+    "separateThumbnailFolder": true,
     "enableTimelapse": false,
     "timelapseInterval": "5m",
     "cleanup": {

@@ -287,6 +287,42 @@ try
     // Map SignalR hub for real-time surveillance events
     app.MapHub<SurveillanceHub>("/hubs/surveillance");
 
+    // Bring the recording folder in line with the layout settings, in the
+    // background: this catches a layout changed while the server was down and
+    // files that were in use when the settings were saved. It does nothing
+    // when everything is in place. The server names its files in UTC.
+    _ = Task.Run(() =>
+    {
+        try
+        {
+            var settings = app.Services.GetRequiredService<IApplicationSettingsService>().Recording;
+            var recordings = app.Services.GetRequiredService<IRecordingService>();
+            if (!string.IsNullOrEmpty(settings.RecordingPath))
+            {
+                var result = RecordingLayoutReorganizer.Synchronize(
+                    settings.RecordingPath,
+                    RecordingLayoutOptions.From(settings),
+                    [".mp4", ".mkv", ".avi"],
+                    recordings.GetActiveSessions(),
+                    recordings.SegmentRecording,
+                    fileNamesAreUtc: true);
+
+                if (result.MovedRecordings > 0 || result.MovedThumbnails > 0 || result.Errors.Count > 0)
+                {
+                    Log.Information(
+                        "Recording folder brought in line with the layout settings - recordings moved: {Recordings}, thumbnails moved: {Thumbnails}, errors: {Errors}",
+                        result.MovedRecordings,
+                        result.MovedThumbnails,
+                        result.Errors.Count);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not bring the recording folder in line with the layout settings");
+        }
+    });
+
     Log.Information("Video Surveillance API starting");
 
     await app

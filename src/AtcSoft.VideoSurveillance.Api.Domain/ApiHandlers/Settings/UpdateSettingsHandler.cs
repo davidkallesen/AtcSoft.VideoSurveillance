@@ -4,13 +4,18 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
 /// Handler business logic for the UpdateSettings operation.
 /// </summary>
 public sealed class UpdateSettingsHandler(
-    IApplicationSettingsService settingsService) : IUpdateSettingsHandler
+    IApplicationSettingsService settingsService,
+    IRecordingService recordingService) : IUpdateSettingsHandler
 {
-    public Task<UpdateSettingsResult> ExecuteAsync(
+    private static readonly string[] RecordingFileExtensions = [".mp4", ".mkv", ".avi"];
+
+    public async Task<UpdateSettingsResult> ExecuteAsync(
         UpdateSettingsParameters parameters,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(parameters);
+
+        var layoutBefore = RecordingLayoutOptions.From(settingsService.Recording);
 
         var general = settingsService.General;
         var cameraDisplay = settingsService.CameraDisplay;
@@ -37,6 +42,14 @@ public sealed class UpdateSettingsHandler(
         settingsService.SaveRecording(recording);
         settingsService.SaveAdvanced(advanced);
 
+        // A changed folder layout moves the existing recordings, so the
+        // folder matches the settings when this call returns.
+        var layoutAfter = RecordingLayoutOptions.From(settingsService.Recording);
+        if (layoutAfter != layoutBefore)
+        {
+            await SynchronizeRecordingLayoutAsync(layoutAfter, cancellationToken).ConfigureAwait(false);
+        }
+
         var updated = SettingsMappingExtensions.ToApiModel(
             settingsService.General,
             settingsService.CameraDisplay,
@@ -46,6 +59,31 @@ public sealed class UpdateSettingsHandler(
             settingsService.Recording,
             settingsService.Advanced);
 
-        return Task.FromResult(UpdateSettingsResult.Ok(updated));
+        return UpdateSettingsResult.Ok(updated);
+    }
+
+    private Task SynchronizeRecordingLayoutAsync(
+        RecordingLayoutOptions layout,
+        CancellationToken cancellationToken)
+    {
+        var recordingPath = settingsService.Recording.RecordingPath;
+        if (string.IsNullOrEmpty(recordingPath))
+        {
+            return Task.CompletedTask;
+        }
+
+        var activeSessions = recordingService.GetActiveSessions();
+
+        // File-system work: keep it off the request thread. The server
+        // names its files in UTC.
+        return Task.Run(
+            () => RecordingLayoutReorganizer.Synchronize(
+                recordingPath,
+                layout,
+                RecordingFileExtensions,
+                activeSessions,
+                recordingService.SegmentRecording,
+                fileNamesAreUtc: true),
+            cancellationToken);
     }
 }
