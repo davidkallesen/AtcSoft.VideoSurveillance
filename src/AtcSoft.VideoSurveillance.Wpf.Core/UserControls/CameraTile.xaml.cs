@@ -204,6 +204,7 @@ public partial class CameraTile : IDisposable
     private ILogger logger = NullLogger.Instance;
     private DispatcherTimer? recordingDurationTimer;
     private IMediaPipeline? mediaPipeline;
+    private CameraRotation appliedRotation;
     private IVideoPlayerFactory? videoPlayerFactory;
 
     // Zoom state
@@ -502,6 +503,7 @@ public partial class CameraTile : IDisposable
         if (this.mediaPipeline is null && Player is not null && MediaPipelineFactory is not null)
         {
             this.mediaPipeline = MediaPipelineFactory.Invoke(Player);
+            ApplyRotation();
         }
 
         // Subscribe to new services
@@ -678,6 +680,12 @@ public partial class CameraTile : IDisposable
         other.UpdateOverlayRecordingOnMotion();
         ApplyBoundingBoxSettings();
         other.ApplyBoundingBoxSettings();
+
+        // The camera change during the swap applied each tile's new rotation
+        // to the player it was about to hand over. Apply it to the player it
+        // received instead.
+        ApplyRotation();
+        other.ApplyRotation();
     }
 
     /// <summary>
@@ -1411,6 +1419,9 @@ public partial class CameraTile : IDisposable
         // Swap to new player (without intermediate null state)
         Player = newPlayer;
         mediaPipeline = MediaPipelineFactory?.Invoke(newPlayer);
+
+        // A new player starts unrotated.
+        ApplyRotation();
 
         // Now cleanup old player and pipeline
         oldPipeline?.Dispose();
@@ -2166,6 +2177,13 @@ public partial class CameraTile : IDisposable
     {
         var rotation = Camera?.Display.Rotation ?? CameraRotation.None;
         mediaPipeline?.SetRotation(rotation);
+
+        // Boxes found before the turn are in the old orientation.
+        if (rotation != appliedRotation)
+        {
+            appliedRotation = rotation;
+            GetMotionBoundingBoxOverlay()?.HideBoundingBoxes();
+        }
     }
 
     /// <summary>
@@ -2778,11 +2796,17 @@ public partial class CameraTile : IDisposable
         motionOverlay.AnalysisHeight = analysisHeight;
 
         // Set the video stream dimensions for letterbox-aware coordinate mapping
+        // Boxes are found in the rotated picture, so letterbox with the
+        // displayed size, not the stream's own (unrotated) size.
         var streamInfo = Player?.StreamInfo;
         if (streamInfo is { Width: > 0, Height: > 0 })
         {
-            motionOverlay.VideoWidth = streamInfo.Width;
-            motionOverlay.VideoHeight = streamInfo.Height;
+            var (displayWidth, displayHeight) = MotionBoxMapper.GetDisplaySize(
+                streamInfo.Width,
+                streamInfo.Height,
+                Camera?.Display.Rotation ?? CameraRotation.None);
+            motionOverlay.VideoWidth = displayWidth;
+            motionOverlay.VideoHeight = displayHeight;
         }
 
         // Get the video container size for coordinate mapping

@@ -140,11 +140,17 @@ public partial class FullScreenCameraWindow : IDisposable
         motionOverlay.AnalysisHeight = viewModel.AnalysisHeight;
 
         // Set the video stream dimensions for letterbox-aware coordinate mapping
+        // Boxes are found in the rotated picture, so letterbox with the
+        // displayed size, not the stream's own (unrotated) size.
         var streamInfo = viewModel.Player?.StreamInfo;
         if (streamInfo is not null && streamInfo.Width > 0 && streamInfo.Height > 0)
         {
-            motionOverlay.VideoWidth = streamInfo.Width;
-            motionOverlay.VideoHeight = streamInfo.Height;
+            var (displayWidth, displayHeight) = MotionBoxMapper.GetDisplaySize(
+                streamInfo.Width,
+                streamInfo.Height,
+                viewModel.Rotation);
+            motionOverlay.VideoWidth = displayWidth;
+            motionOverlay.VideoHeight = displayHeight;
         }
 
         // Get the video container size for coordinate mapping

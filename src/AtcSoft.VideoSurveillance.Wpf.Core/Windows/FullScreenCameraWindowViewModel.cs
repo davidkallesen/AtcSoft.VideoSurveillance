@@ -189,6 +189,11 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
         CloseRequested?.Invoke(this, new DialogClosedEventArgs(dialogResult: true));
     }
 
+    /// <summary>
+    /// Gets the clockwise rotation the camera is displayed with.
+    /// </summary>
+    public CameraRotation Rotation => camera.Display.Rotation;
+
     private void InitializePlayer()
     {
         if (videoPlayerFactory is null)
@@ -198,6 +203,10 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
 
         Player = videoPlayerFactory.Create();
         Player.StateChanged += OnPlayerStateChanged;
+
+        // A player created here starts unrotated; a borrowed one already
+        // carries the tile's rotation.
+        Player.SetRotation((VideoRotation)(int)camera.Display.Rotation);
 
         // Defer stream opening to avoid blocking UI during window creation
         var locator = camera.BuildSourceLocator();

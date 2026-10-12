@@ -47,14 +47,14 @@ public partial class MotionBoundingBoxOverlay
     private int analysisHeight;
 
     /// <summary>
-    /// The actual video stream width, used to compute letterbox offset.
+    /// The displayed video width (after rotation), used to compute letterbox offset.
     /// When set to 0, falls back to stretching across the full container (legacy behavior).
     /// </summary>
     [DependencyProperty(DefaultValue = 0)]
     private int videoWidth;
 
     /// <summary>
-    /// The actual video stream height, used to compute letterbox offset.
+    /// The displayed video height (after rotation), used to compute letterbox offset.
     /// When set to 0, falls back to stretching across the full container (legacy behavior).
     /// </summary>
     [DependencyProperty(DefaultValue = 0)]
@@ -108,13 +108,14 @@ public partial class MotionBoundingBoxOverlay
         // Ensure we have enough rectangles in the pool
         EnsureRectangles(boxCount);
 
-        // Calculate the actual video rendering area within the container,
-        // accounting for letterboxing (black bars) when aspect ratios differ.
-        var (renderWidth, renderHeight, offsetX, offsetY) = CalculateVideoRenderArea(containerSize);
-
-        // Calculate scale factors using the video rendering area, not the full container
-        var scaleX = renderWidth / AnalysisWidth;
-        var scaleY = renderHeight / AnalysisHeight;
+        // The video is fitted uniformly inside the container, so boxes map into
+        // the video area and never onto the black bars. VideoWidth/VideoHeight
+        // are the displayed (rotated) size.
+        var videoArea = MotionBoxMapper.CalculateVideoArea(
+            containerSize.Width,
+            containerSize.Height,
+            VideoWidth,
+            VideoHeight);
 
         // Ensure we have enough smoothed box states
         while (smoothedBoxes.Count < boxCount)
@@ -129,11 +130,15 @@ public partial class MotionBoundingBoxOverlay
             var rect = rectanglePool[i];
             var smoothed = smoothedBoxes[i];
 
-            // Map from analysis coordinates to the video content area (with letterbox offset)
-            var targetLeft = (box.X * scaleX) + offsetX;
-            var targetTop = (box.Y * scaleY) + offsetY;
-            var targetWidth = box.Width * scaleX;
-            var targetHeight = box.Height * scaleY;
+            var target = MotionBoxMapper.MapToVideoArea(
+                new BoundingBox { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height },
+                AnalysisWidth,
+                AnalysisHeight,
+                videoArea);
+            var targetLeft = target.X;
+            var targetTop = target.Y;
+            var targetWidth = target.Width;
+            var targetHeight = target.Height;
 
             // Apply smoothing to reduce jitter
             if (!smoothed.HasInitialPosition || SmoothingFactor <= 0)
@@ -269,52 +274,6 @@ public partial class MotionBoundingBoxOverlay
         AnalysisHeight = currentAnalysisHeight;
         VideoWidth = currentVideoWidth;
         VideoHeight = currentVideoHeight;
-    }
-
-    /// <summary>
-    /// Calculates the actual video rendering area within the container,
-    /// accounting for letterboxing when the video and container aspect ratios differ.
-    /// </summary>
-    private (double RenderWidth, double RenderHeight, double OffsetX, double OffsetY) CalculateVideoRenderArea(
-        Size containerSize)
-    {
-        if (VideoWidth <= 0 || VideoHeight <= 0)
-        {
-            // No video dimensions known - fall back to full container (legacy behavior)
-            return (containerSize.Width, containerSize.Height, 0, 0);
-        }
-
-        var videoAspect = (double)VideoWidth / VideoHeight;
-        var containerAspect = containerSize.Width / containerSize.Height;
-
-        double renderWidth, renderHeight, offsetX, offsetY;
-
-        if (videoAspect > containerAspect)
-        {
-            // Video is wider than container - black bars top/bottom
-            renderWidth = containerSize.Width;
-            renderHeight = containerSize.Width / videoAspect;
-            offsetX = 0;
-            offsetY = (containerSize.Height - renderHeight) / 2;
-        }
-        else if (videoAspect < containerAspect)
-        {
-            // Video is taller than container - black bars left/right
-            renderHeight = containerSize.Height;
-            renderWidth = containerSize.Height * videoAspect;
-            offsetX = (containerSize.Width - renderWidth) / 2;
-            offsetY = 0;
-        }
-        else
-        {
-            // Same aspect ratio - no letterboxing
-            renderWidth = containerSize.Width;
-            renderHeight = containerSize.Height;
-            offsetX = 0;
-            offsetY = 0;
-        }
-
-        return (renderWidth, renderHeight, offsetX, offsetY);
     }
 
     private void EnsureRectangles(int count)

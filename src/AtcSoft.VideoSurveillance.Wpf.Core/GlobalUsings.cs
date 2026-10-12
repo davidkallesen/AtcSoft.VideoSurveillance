@@ -73,6 +73,7 @@ global using ConnectionState = Atc.Network.ConnectionState;
 global using IGitHubReleaseService = AtcSoft.VideoSurveillance.Services.IGitHubReleaseService;
 global using IMediaPipeline = AtcSoft.VideoSurveillance.Services.IMediaPipeline;
 global using IMotionDetectionService = AtcSoft.VideoSurveillance.Services.IMotionDetectionService;
+global using MotionBoxMapper = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
 global using ReconnectBackoff = AtcSoft.VideoSurveillance.Helpers.ReconnectBackoff;
 global using RecordingSession = AtcSoft.VideoSurveillance.Models.RecordingSession;
