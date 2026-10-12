@@ -1,3 +1,5 @@
+global using System.IO;
+
 global using Atc.Wpf.Notifications;
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Enums;

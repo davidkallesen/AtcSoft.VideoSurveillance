@@ -13,6 +13,10 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
     private const int FrameWidth = 320;
     private const int FrameHeight = 240;
 
+    // Attempts beyond one per tile, for captures that return nothing because
+    // the stream has not produced a picture yet.
+    private const int ExtraAttempts = 6;
+
     private readonly ILogger<ThumbnailGeneratorService> logger;
     private readonly ConcurrentDictionary<Guid, ThumbnailCaptureContext> captures = new();
 
@@ -25,7 +29,13 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Gets or sets the pause between two frame captures.
+    /// </summary>
+    internal TimeSpan CaptureInterval { get; set; } = TimeSpan.FromSeconds(1);
+
     /// <inheritdoc/>
+    [SuppressMessage("Reliability", "CA2025:Do not pass 'IDisposable' instances into unawaited tasks", Justification = "The context is disposed by Finish, which the capture task or StopCapture runs exactly once; the task only reads the token afterwards.")]
     public void StartCapture(
         Guid cameraId,
         string cameraName,
@@ -53,58 +63,21 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
 
         if (!captures.TryAdd(cameraId, context))
         {
+            context.Dispose();
             return;
         }
 
         LogStartingThumbnailCapture(cameraName, thumbnailPath, tileCount);
 
-        // Capture first frame immediately
-        context.ScheduledCaptures++;
-        _ = CaptureFrameAsync(cameraId, context);
-
-        // For single tile, we only need one frame - stop immediately
-        if (tileCount == 1)
-        {
-            StopCapture(cameraId);
-            return;
-        }
-
-        // Set up timer for remaining frames (only for 4-tile mode)
-        context.Timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1),
-        };
-
-        context.Timer.Tick += (_, _) => OnTimerTick(cameraId);
-        context.Timer.Start();
+        _ = Task.Run(() => RunCaptureAsync(cameraId, context));
     }
 
     /// <inheritdoc/>
     public void StopCapture(Guid cameraId)
     {
-        if (!captures.TryRemove(cameraId, out var context))
+        if (captures.TryRemove(cameraId, out var context))
         {
-            return;
-        }
-
-        context.Timer?.Stop();
-        context.Timer = null;
-
-        // Generate thumbnail with whatever frames we have
-        GenerateThumbnail(cameraId, context);
-
-        // Snapshot frames under lock; an in-flight CaptureFrameAsync may still be
-        // adding to the list on a thread-pool thread (ConfigureAwait(false))
-        Drawing.Bitmap?[] frames;
-        lock (context.FramesLock)
-        {
-            frames = [.. context.CapturedFrames];
-            context.CapturedFrames.Clear();
-        }
-
-        foreach (var frame in frames)
-        {
-            frame?.Dispose();
+            Finish(context);
         }
     }
 
@@ -123,66 +96,109 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
         }
     }
 
-    private void OnTimerTick(Guid cameraId)
-    {
-        if (!captures.TryGetValue(cameraId, out var context))
-        {
-            return;
-        }
+    /// <summary>
+    /// Gets how many frames the running capture of a camera holds so far.
+    /// </summary>
+    internal int CapturedFrameCount(Guid cameraId)
+        => captures.TryGetValue(cameraId, out var context)
+            ? context.FrameCount
+            : 0;
 
-        // Avoid scheduling more captures than tiles. The previous tick's
-        // CaptureFrameAsync may still be in flight on the thread pool, so we
-        // count scheduled (not completed) captures.
-        if (context.ScheduledCaptures < context.TileCount)
-        {
-            context.ScheduledCaptures++;
-            _ = CaptureFrameAsync(cameraId, context);
-        }
-
-        if (context.ScheduledCaptures >= context.TileCount)
-        {
-            StopCapture(cameraId);
-        }
-    }
-
-    private async Task CaptureFrameAsync(
+    /// <summary>
+    /// Captures one frame per interval until every tile has a frame, then
+    /// writes the thumbnail. A recording starts the moment its stream opens,
+    /// before the first picture is decoded, so an attempt that returns
+    /// nothing is simply tried again a little later instead of leaving its
+    /// tile black.
+    /// </summary>
+    private async Task RunCaptureAsync(
         Guid cameraId,
         ThumbnailCaptureContext context)
     {
+        var cancellationToken = context.CancellationToken;
+        var maxAttempts = context.TileCount + ExtraAttempts;
+
         try
         {
-            var pngBytes = await context.Pipeline.CaptureFrameAsync().ConfigureAwait(false);
+            for (var attempt = 0; attempt < maxAttempts && context.FrameCount < context.TileCount; attempt++)
+            {
+                if (attempt > 0)
+                {
+                    await Task.Delay(CaptureInterval, cancellationToken).ConfigureAwait(false);
+                }
 
-            int frameIndex;
+                await CaptureFrameAsync(context, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // StopCapture took over and writes the thumbnail.
+            return;
+        }
+
+        // Finished on its own. Whoever removes the entry writes the thumbnail,
+        // so a StopCapture racing with this cannot write it twice.
+        if (captures.TryRemove(new KeyValuePair<Guid, ThumbnailCaptureContext>(cameraId, context)))
+        {
+            Finish(context);
+        }
+    }
+
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The bitmap is handed to the context, which gives it to Finish for disposal; it is disposed here when the context no longer takes it.")]
+    private async Task CaptureFrameAsync(
+        ThumbnailCaptureContext context,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var pngBytes = await context.Pipeline.CaptureFrameAsync(cancellationToken).ConfigureAwait(false);
             if (pngBytes is null || pngBytes.Length == 0)
             {
                 LogSnapshotCaptureNoData(context.CameraName);
-                lock (context.FramesLock)
-                {
-                    context.CapturedFrames.Add(null);
-                    frameIndex = context.CapturedFrames.Count - 1;
-                }
+                return;
             }
-            else
+
+            using var memoryStream = new MemoryStream(pngBytes);
+            var bitmap = new Drawing.Bitmap(memoryStream);
+            var frameIndex = context.TryAddFrame(bitmap);
+            if (frameIndex < 0)
             {
-                using var memoryStream = new MemoryStream(pngBytes);
-                var bitmap = new Drawing.Bitmap(memoryStream);
-                lock (context.FramesLock)
-                {
-                    context.CapturedFrames.Add(bitmap);
-                    frameIndex = context.CapturedFrames.Count - 1;
-                }
+                // The capture was stopped while this frame was on its way.
+                bitmap.Dispose();
+                return;
             }
 
             LogCapturedFrame(frameIndex, context.CameraName);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             LogFrameCaptureFailed(ex, context.CameraName);
-            lock (context.FramesLock)
+        }
+    }
+
+    /// <summary>
+    /// Stops the capture, writes the thumbnail from the frames it has, and
+    /// releases them. Called once per capture, by whoever removed it.
+    /// </summary>
+    private void Finish(ThumbnailCaptureContext context)
+    {
+        var frames = context.Complete();
+        try
+        {
+            GenerateThumbnail(context, frames);
+        }
+        finally
+        {
+            foreach (var frame in frames)
             {
-                context.CapturedFrames.Add(null);
+                frame.Dispose();
             }
+
+            context.Dispose();
         }
     }
 
@@ -213,17 +229,9 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
     }
 
     private void GenerateThumbnail(
-        Guid cameraId,
-        ThumbnailCaptureContext context)
+        ThumbnailCaptureContext context,
+        Drawing.Bitmap[] frames)
     {
-        // Snapshot frames under lock; CaptureFrameAsync may still be running
-        // on a thread-pool thread when StopCapture invokes us
-        Drawing.Bitmap?[] frames;
-        lock (context.FramesLock)
-        {
-            frames = [.. context.CapturedFrames];
-        }
-
         if (frames.Length == 0)
         {
             LogNoFramesCaptured(context.CameraName);
@@ -319,8 +327,13 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
     /// <summary>
     /// Context for tracking thumbnail capture state for a single camera.
     /// </summary>
-    private sealed class ThumbnailCaptureContext
+    private sealed class ThumbnailCaptureContext : IDisposable
     {
+        private readonly Lock framesLock = new();
+        private readonly List<Drawing.Bitmap> capturedFrames = [];
+        private readonly CancellationTokenSource cancellation = new();
+        private bool completed;
+
         public ThumbnailCaptureContext(
             string cameraName,
             IMediaPipeline pipeline,
@@ -331,6 +344,7 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
             Pipeline = pipeline;
             ThumbnailPath = thumbnailPath;
             TileCount = tileCount;
+            CancellationToken = cancellation.Token;
         }
 
         public string CameraName { get; }
@@ -341,12 +355,54 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
 
         public int TileCount { get; }
 
-        public List<Drawing.Bitmap?> CapturedFrames { get; } = [];
+        public CancellationToken CancellationToken { get; }
 
-        public Lock FramesLock { get; } = new();
+        public int FrameCount
+        {
+            get
+            {
+                lock (framesLock)
+                {
+                    return capturedFrames.Count;
+                }
+            }
+        }
 
-        public DispatcherTimer? Timer { get; set; }
+        /// <summary>
+        /// Adds a captured frame and returns its index, or -1 when the
+        /// capture is already complete and the caller keeps ownership.
+        /// </summary>
+        public int TryAddFrame(Drawing.Bitmap frame)
+        {
+            lock (framesLock)
+            {
+                if (completed)
+                {
+                    return -1;
+                }
 
-        public int ScheduledCaptures { get; set; }
+                capturedFrames.Add(frame);
+                return capturedFrames.Count - 1;
+            }
+        }
+
+        /// <summary>
+        /// Ends the capture and hands its frames to the caller, who disposes them.
+        /// </summary>
+        public Drawing.Bitmap[] Complete()
+        {
+            cancellation.Cancel();
+
+            lock (framesLock)
+            {
+                completed = true;
+                Drawing.Bitmap[] frames = [.. capturedFrames];
+                capturedFrames.Clear();
+                return frames;
+            }
+        }
+
+        public void Dispose()
+            => cancellation.Dispose();
     }
 }
