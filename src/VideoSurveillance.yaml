@@ -991,10 +991,12 @@ components:
           format: int32
         useDailySubfolders:
           type: boolean
-          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder.
+          nullable: true
+          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings. Omit to leave the current value unchanged.
         separateThumbnailFolder:
           type: boolean
-          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos.
+          nullable: true
+          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos. On by default. Changing it moves the existing thumbnails. Omit to leave the current value unchanged.
         enableTimelapse:
           type: boolean
         timelapseInterval:

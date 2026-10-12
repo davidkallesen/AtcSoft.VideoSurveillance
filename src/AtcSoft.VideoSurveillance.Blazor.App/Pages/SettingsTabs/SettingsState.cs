@@ -100,9 +100,9 @@ public sealed class SettingsState
 
     public bool EnableHourlySegmentation { get; set; }
 
-    public bool UseDailySubfolders { get; set; }
+    public bool UseDailySubfolders { get; set; } = true;
 
-    public bool SeparateThumbnailFolder { get; set; }
+    public bool SeparateThumbnailFolder { get; set; } = true;
 
     public int MaxRecordingDurationMinutes { get; set; } = 60;
 
@@ -196,8 +196,8 @@ public sealed class SettingsState
         EnableHourlySegmentation = settings.EnableHourlySegmentation;
         MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes;
         ThumbnailTileCount = settings.ThumbnailTileCount;
-        UseDailySubfolders = settings.UseDailySubfolders;
-        SeparateThumbnailFolder = settings.SeparateThumbnailFolder;
+        UseDailySubfolders = settings.UseDailySubfolders ?? true;
+        SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
         EnableTimelapse = settings.EnableTimelapse;
         TimelapseInterval = settings.TimelapseInterval ?? "5m";
         CleanupSchedule = settings.CleanupSchedule ?? AppSettingsCleanupSchedule.Disabled;

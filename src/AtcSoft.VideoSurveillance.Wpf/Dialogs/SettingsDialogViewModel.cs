@@ -228,10 +228,10 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
     // Storage layout
     [ObservableProperty]
-    private bool useDailySubfolders;
+    private bool useDailySubfolders = true;
 
     [ObservableProperty]
-    private bool separateThumbnailFolder;
+    private bool separateThumbnailFolder = true;
 
     // Segmentation
     [ObservableProperty]
@@ -427,8 +427,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
             EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
             EnableHourlySegmentation = settings.EnableHourlySegmentation;
-            UseDailySubfolders = settings.UseDailySubfolders;
-            SeparateThumbnailFolder = settings.SeparateThumbnailFolder;
+            UseDailySubfolders = settings.UseDailySubfolders ?? true;
+            SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
             SelectedMaxRecordingDuration = settings.MaxRecordingDurationMinutes.ToString(CultureInfo.InvariantCulture);
             SelectedThumbnailTileCount = settings.ThumbnailTileCount.ToString(CultureInfo.InvariantCulture);
 
@@ -556,8 +556,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
         EnableHourlySegmentation = true;
-        UseDailySubfolders = false;
-        SeparateThumbnailFolder = false;
+        UseDailySubfolders = true;
+        SeparateThumbnailFolder = true;
         SelectedMaxRecordingDuration = DropDownItemsFactory.DefaultMaxRecordingDuration.ToString(CultureInfo.InvariantCulture);
         SelectedThumbnailTileCount = DropDownItemsFactory.DefaultThumbnailTileCount.ToString(CultureInfo.InvariantCulture);
 

@@ -26,17 +26,17 @@ public class RecordingSettings
     public int ThumbnailTileCount { get; set; } = 4;
 
     /// <summary>
-    /// Gets or sets a value indicating whether new recordings go into a
-    /// folder per day (<c>yyyy-MM-dd</c>) below the camera folder.
+    /// Gets or sets a value indicating whether recordings go into a folder
+    /// per day (<c>yyyy-MM-dd</c>) below the camera folder. On by default.
     /// </summary>
-    public bool UseDailySubfolders { get; set; }
+    public bool UseDailySubfolders { get; set; } = true;
 
     /// <summary>
     /// Gets or sets a value indicating whether thumbnails are kept in a
     /// <c>thumbnails</c> folder below the recording path instead of next to
-    /// the videos.
+    /// the videos. On by default.
     /// </summary>
-    public bool SeparateThumbnailFolder { get; set; }
+    public bool SeparateThumbnailFolder { get; set; } = true;
 
     public bool EnableTimelapse { get; set; }
 

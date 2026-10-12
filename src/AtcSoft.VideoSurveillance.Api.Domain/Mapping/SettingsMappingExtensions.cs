@@ -264,8 +264,18 @@ internal static class SettingsMappingExtensions
         recording.EnableRecordingOnMotion = api.EnableRecordingOnMotion;
         recording.EnableRecordingOnConnect = api.EnableRecordingOnConnect;
         recording.EnableHourlySegmentation = api.EnableHourlySegmentation;
-        recording.UseDailySubfolders = api.UseDailySubfolders;
-        recording.SeparateThumbnailFolder = api.SeparateThumbnailFolder;
+
+        // Changing the layout moves files, so a client that predates these
+        // properties (and sends nothing) must not change it.
+        if (api.UseDailySubfolders is not null)
+        {
+            recording.UseDailySubfolders = api.UseDailySubfolders.Value;
+        }
+
+        if (api.SeparateThumbnailFolder is not null)
+        {
+            recording.SeparateThumbnailFolder = api.SeparateThumbnailFolder.Value;
+        }
 
         if (api.MaxRecordingDurationMinutes > 0)
         {

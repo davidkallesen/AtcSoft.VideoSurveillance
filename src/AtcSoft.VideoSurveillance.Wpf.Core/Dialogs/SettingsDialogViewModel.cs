@@ -220,10 +220,10 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
     // Recording Storage Layout Settings
     [ObservableProperty]
-    private bool useDailySubfolders;
+    private bool useDailySubfolders = true;
 
     [ObservableProperty]
-    private bool separateThumbnailFolder;
+    private bool separateThumbnailFolder = true;
 
     // Recording Segmentation Settings
     [ObservableProperty]
@@ -420,8 +420,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         EnableRecordingOnConnect = false;
 
         // Recording Storage Layout
-        UseDailySubfolders = false;
-        SeparateThumbnailFolder = false;
+        UseDailySubfolders = true;
+        SeparateThumbnailFolder = true;
 
         // Recording Segmentation
         EnableHourlySegmentation = true;

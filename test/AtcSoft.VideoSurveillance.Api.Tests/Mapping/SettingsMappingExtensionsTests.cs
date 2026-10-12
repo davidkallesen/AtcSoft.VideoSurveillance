@@ -201,10 +201,11 @@ public class SettingsMappingExtensionsTests
     public void RecordingLayout_Settings_RoundTrip()
     {
         // Arrange
+        // Both differ from their defaults (on).
         var recording = new RecordingSettings
         {
-            UseDailySubfolders = true,
-            SeparateThumbnailFolder = true,
+            UseDailySubfolders = false,
+            SeparateThumbnailFolder = false,
         };
 
         // Act
@@ -227,10 +228,37 @@ public class SettingsMappingExtensionsTests
             new AdvancedSettings());
 
         // Assert
-        api.UseDailySubfolders.Should().BeTrue();
-        api.SeparateThumbnailFolder.Should().BeTrue();
-        target.UseDailySubfolders.Should().BeTrue();
-        target.SeparateThumbnailFolder.Should().BeTrue();
+        api.UseDailySubfolders.Should().BeFalse();
+        api.SeparateThumbnailFolder.Should().BeFalse();
+        target.UseDailySubfolders.Should().BeFalse();
+        target.SeparateThumbnailFolder.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplyToCore_Keeps_The_Recording_Layout_When_The_Request_Does_Not_Mention_It()
+    {
+        // Arrange — changing the layout moves files, so a client that does
+        // not know the two properties (and sends nothing) must not change it
+        var api = CreateFullAppSettings();
+        var recording = new RecordingSettings
+        {
+            UseDailySubfolders = false,
+            SeparateThumbnailFolder = false,
+        };
+
+        // Act
+        api.ApplyToCore(
+            new GeneralSettings(),
+            new CameraDisplayAppSettings(),
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            recording,
+            new AdvancedSettings());
+
+        // Assert
+        recording.UseDailySubfolders.Should().BeFalse();
+        recording.SeparateThumbnailFolder.Should().BeFalse();
     }
 
     [Fact]
@@ -371,8 +399,8 @@ public class SettingsMappingExtensionsTests
             EnableHourlySegmentation: false,
             MaxRecordingDurationMinutes: 60,
             ThumbnailTileCount: 4,
-            UseDailySubfolders: false,
-            SeparateThumbnailFolder: false,
+            UseDailySubfolders: null,
+            SeparateThumbnailFolder: null,
             EnableTimelapse: false,
             TimelapseInterval: "5m",
             CleanupSchedule: AppSettingsCleanupSchedule.Disabled,
