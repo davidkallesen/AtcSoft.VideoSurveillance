@@ -2,11 +2,13 @@ using ApiCamera = VideoSurveillance.Generated.Cameras.Models.Camera;
 using ApiCameraConnectionType = VideoSurveillance.Generated.Cameras.Models.CameraConnectionType;
 using ApiCameraOverlayPosition = VideoSurveillance.Generated.Cameras.Models.CameraOverlayPosition;
 using ApiCameraProtocol = VideoSurveillance.Generated.Cameras.Models.CameraProtocol;
+using ApiCameraRotation = VideoSurveillance.Generated.Cameras.Models.CameraRotation;
 using ApiCameraSource = VideoSurveillance.Generated.Cameras.Models.CameraSource;
 using ApiCameraStreamRtspTransport = VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport;
 
 using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
+using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
 using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
 
 using WpfCoreModels = AtcSoft.VideoSurveillance.Wpf.Core.Models;
@@ -41,6 +43,7 @@ public static class CameraModelMappingExtensions
         config.Display.DisplayName = camera.DisplayName;
         config.Display.Description = camera.Description ?? string.Empty;
         config.Display.OverlayPosition = camera.OverlayPosition?.ToCoreOverlayPosition() ?? CoreOverlayPosition.TopLeft;
+        config.Display.Rotation = camera.Rotation?.ToCoreRotation() ?? CoreCameraRotation.None;
 
         config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode;
         config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs;
@@ -72,7 +75,7 @@ public static class CameraModelMappingExtensions
             Description: config.Display.Description ?? string.Empty,
             Source: ApiCameraSource.Network,
             ConnectionType: config.Connection.ConnectionType.ToApiConnectionType(),
-            Rotation: null,
+            Rotation: config.Display.Rotation.ToApiRotation(),
             IpAddress: config.Connection.IpAddress,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
             Path: string.Empty,
@@ -116,7 +119,7 @@ public static class CameraModelMappingExtensions
             Description: config.Display.Description ?? string.Empty,
             Source: ApiCameraSource.Network,
             ConnectionType: config.Connection.ConnectionType.ToApiConnectionType(),
-            Rotation: null,
+            Rotation: config.Display.Rotation.ToApiRotation(),
             IpAddress: config.Connection.IpAddress,
             Port: config.Connection.Port,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
@@ -167,6 +170,32 @@ public static class CameraModelMappingExtensions
     /// <summary>
     /// Converts an API <see cref="ApiCameraProtocol"/> to a Core <see cref="CoreCameraProtocol"/>.
     /// </summary>
+    /// <summary>
+    /// Converts an API <see cref="ApiCameraRotation"/> to a Core <see cref="CoreCameraRotation"/>.
+    /// </summary>
+    public static CoreCameraRotation ToCoreRotation(
+        this ApiCameraRotation rotation)
+        => rotation switch
+        {
+            ApiCameraRotation.Rotate90 => CoreCameraRotation.Rotate90,
+            ApiCameraRotation.Rotate180 => CoreCameraRotation.Rotate180,
+            ApiCameraRotation.Rotate270 => CoreCameraRotation.Rotate270,
+            _ => CoreCameraRotation.None,
+        };
+
+    /// <summary>
+    /// Converts a Core <see cref="CoreCameraRotation"/> to an API <see cref="ApiCameraRotation"/>.
+    /// </summary>
+    public static ApiCameraRotation ToApiRotation(
+        this CoreCameraRotation rotation)
+        => rotation switch
+        {
+            CoreCameraRotation.Rotate90 => ApiCameraRotation.Rotate90,
+            CoreCameraRotation.Rotate180 => ApiCameraRotation.Rotate180,
+            CoreCameraRotation.Rotate270 => ApiCameraRotation.Rotate270,
+            _ => ApiCameraRotation.None,
+        };
+
     public static CoreCameraProtocol ToCoreProtocol(
         this ApiCameraProtocol protocol)
         => protocol switch

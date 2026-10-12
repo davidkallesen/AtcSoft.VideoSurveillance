@@ -386,6 +386,12 @@ Recordings made before version 1.3 carry no rotation flag and play back
 unrotated. Changing the rotation during a recording takes effect from the next
 segment.
 
+On the server, rotation is part of the camera resource (`rotation`: `none`,
+`rotate90`, `rotate180`, `rotate270`) and can be set from the Blazor camera
+form or the WPF API client's camera dialog. A change reaches a running camera
+within about 30 seconds. The WPF API client rotates its live picture; the
+Blazor live view does not yet.
+
 - `None` → 0° (default)
 - `Rotate90` → 90° clockwise
 - `Rotate180` → 180°

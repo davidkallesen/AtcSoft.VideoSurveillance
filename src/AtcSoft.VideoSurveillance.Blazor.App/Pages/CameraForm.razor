@@ -52,6 +52,14 @@ else
                         <MudSelectItem Value="CameraConnectionType.Lan">Wired (LAN)</MudSelectItem>
                         <MudSelectItem Value="CameraConnectionType.Wifi">Wi-Fi</MudSelectItem>
                     </MudSelect>
+                    <MudSelect @bind-Value="rotation"
+                               Label="Rotation (clockwise)"
+                               Class="mt-3">
+                        <MudSelectItem Value="CameraRotation.None">0&deg;</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate90">90&deg;</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate180">180&deg;</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate270">270&deg;</MudSelectItem>
+                    </MudSelect>
                     @if (IsEdit)
                     {
                         @* Server-side ONVIF detection with the stored credentials; the result can still be changed above. *@
@@ -144,6 +152,7 @@ else
     private string password = string.Empty;
 
     private CameraConnectionType connectionType = CameraConnectionType.None;
+    private CameraRotation rotation = CameraRotation.None;
     private CameraOverlayPosition overlayPosition = CameraOverlayPosition.TopLeft;
     private bool streamUseLowLatencyMode = true;
     private int streamMaxLatencyMs = 500;
@@ -167,6 +176,7 @@ else
                 username = camera.Username ?? string.Empty;
                 overlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
                 connectionType = camera.ConnectionType ?? CameraConnectionType.None;
+                rotation = camera.Rotation ?? CameraRotation.None;
                 streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
                 streamMaxLatencyMs = camera.StreamMaxLatencyMs;
                 streamRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
@@ -221,7 +231,7 @@ else
                 Description: description,
                 Source: CameraSource.Network,
                 ConnectionType: connectionType,
-                Rotation: null,
+                Rotation: rotation,
                 IpAddress: ipAddress,
                 Port: port,
                 Protocol: protocol,
@@ -260,7 +270,7 @@ else
                 Description: description,
                 Source: CameraSource.Network,
                 ConnectionType: connectionType,
-                Rotation: null,
+                Rotation: rotation,
                 IpAddress: ipAddress,
                 Protocol: protocol,
                 Path: path,

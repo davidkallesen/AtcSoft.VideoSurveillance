@@ -38,6 +38,9 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     private CameraConnectionType selectedConnectionType = CameraConnectionType.None;
 
     [ObservableProperty]
+    private CameraRotation selectedRotation = CameraRotation.None;
+
+    [ObservableProperty]
     private CameraOverlayPosition selectedOverlayPosition = CameraOverlayPosition.TopLeft;
 
     [ObservableProperty]
@@ -80,6 +83,17 @@ public partial class CameraEditDialogViewModel : ViewModelBase
         [nameof(CameraConnectionType.None)] = "Not set",
         [nameof(CameraConnectionType.Lan)] = "Wired (LAN)",
         [nameof(CameraConnectionType.Wifi)] = "Wi-Fi",
+    };
+
+    /// <summary>
+    /// Gets the clockwise rotations offered for the camera picture.
+    /// </summary>
+    public IDictionary<string, string> RotationItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [nameof(CameraRotation.None)] = "0\u00B0",
+        [nameof(CameraRotation.Rotate90)] = "90\u00B0",
+        [nameof(CameraRotation.Rotate180)] = "180\u00B0",
+        [nameof(CameraRotation.Rotate270)] = "270\u00B0",
     };
 
     /// <summary>
@@ -132,6 +146,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
         username = camera.Username ?? string.Empty;
         selectedOverlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
         selectedConnectionType = camera.ConnectionType ?? CameraConnectionType.None;
+        selectedRotation = camera.Rotation ?? CameraRotation.None;
         streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
         streamMaxLatencyMs = camera.StreamMaxLatencyMs;
         selectedRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
@@ -147,7 +162,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             Description: Description,
             Source: CameraSource.Network,
             ConnectionType: SelectedConnectionType,
-            Rotation: null,
+            Rotation: SelectedRotation,
             IpAddress: IpAddress,
             Protocol: SelectedProtocol,
             Path: Path,
@@ -177,7 +192,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             Description: Description,
             Source: CameraSource.Network,
             ConnectionType: SelectedConnectionType,
-            Rotation: null,
+            Rotation: SelectedRotation,
             IpAddress: IpAddress,
             Port: Port,
             Protocol: SelectedProtocol,

@@ -89,7 +89,7 @@ Open defects, wherever they are tracked.
 | Bug | Tracked in |
 |---|---|
 | Motion boxes reported misplaced at 180° — two possible causes fixed, not confirmed | [Video rotation](roadmap-video-rotation.md#the-180-report-is-not-explained) |
-| The API has no rotation: the API-client app and Blazor never rotate | [Video rotation](roadmap-video-rotation.md) |
+| The Blazor live view does not rotate a rotated camera (the API and the WPF API client do) | [Video rotation](roadmap-video-rotation.md) |
 | The server never generates recording thumbnails | [Recording storage layout](roadmap-recording-storage.md) |
 | Server-side motion detection is a no-op stub | [Suggestions](roadmap-suggestions.md) |
 

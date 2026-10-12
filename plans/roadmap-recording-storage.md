@@ -128,7 +128,8 @@ The generator's contract takes only the video path. The browser's delete, cleanu
 
 - The server never generates thumbnails (`ListRecordingsHandler` hard-codes `hasThumbnail: false`, and there is no thumbnail endpoint). The thumbnail option therefore only has a visible effect in the standalone CameraWall app for now.
 - Browsing and cleanup only cover the global recording path; per-camera path overrides are never browsed or cleaned.
-- The disk-space-guard settings and `TranscodeVideoCodec` never reached the API contract. Tracked in [suggestions](roadmap-suggestions.md).
+- ✅ The disk-space-guard settings never reached the API contract — fixed 2026-10-12; they are now in the contract, the WPF API client and Blazor.
+- `TranscodeVideoCodec` is not in the API contract either. It is left out on purpose: the engine has no transcoding path, so the setting has no effect anywhere yet.
 
 ---
 

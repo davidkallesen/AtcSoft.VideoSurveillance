@@ -57,6 +57,11 @@
                     Items="{Binding ConnectionTypeItems}"
                     LabelText="Connection Type"
                     SelectedKey="{Binding SelectedConnectionType}" />
+                <atc:LabelComboBox
+                    Margin="0,4"
+                    Items="{Binding RotationItems}"
+                    LabelText="Rotation (clockwise)"
+                    SelectedKey="{Binding SelectedRotation}" />
                 <!--  Server-side ONVIF detection (edit mode only; uses the stored credentials)  -->
                 <StackPanel
                     Margin="0,4"

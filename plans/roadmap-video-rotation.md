@@ -206,7 +206,8 @@ Where the build differs from, or adds to, the plan above.
 - **Cost of CPU rotation.** Rotating one 1920×1080 BGRA frame takes about 1.6 ms (release build, this machine), so a rotated software-decoded 1080p camera at 30 fps spends roughly 5% of one core on it. Hardware-decoded cameras rotate on the GPU and pay nothing.
 - **Shared rotation code.** `PixelRotator` (VideoEngine) rotates packed pixel buffers and is used by both `FrameCapture` (RGB24) and `CpuFrameUploader` (BGRA). `MotionBoxMapper` (Core) owns the box-to-screen mapping.
 - **Also fixed:** the full-screen camera window did not rotate a player it created itself. Boxes found before a rotation change are cleared rather than drawn in the old orientation.
-- **API-client app unchanged.** It has no rotation concept (rotation is not in the API contract), so its full-screen overlay still uses the stream size. Adding rotation to the API is a separate piece of work.
+- **Rotation in the API** *(added 2026-10-12)*. The camera resource and the create / update requests carry `rotation` (`none`, `rotate90`, `rotate180`, `rotate270`); an update that leaves it out keeps the current value. The server applies the stored rotation to a running pipeline on every connection-service pass, so a change takes effect within one polling interval (30 s): at once for snapshots, from the next segment for recordings. The WPF API client reads and sends it (camera edit dialog) and turns its own player, because the server streams the camera's own pixels. The Blazor camera form has the field too.
+- **Not done: the Blazor live view does not rotate.** It plays the server's HLS stream in a `<video>` element; turning that needs CSS rotation plus re-fitting the tile, and a camera to check it against.
 - **Thumbnails.** Only portrait frames are letterboxed; landscape frames fill the cell as before, so existing thumbnails look the same.
 
 ### The 180° report is not explained

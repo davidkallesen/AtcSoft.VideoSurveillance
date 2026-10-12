@@ -172,6 +172,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                         UsbDeviceId = camera.UsbDeviceId ?? string.Empty,
                         ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? AtcSoft.VideoSurveillance.Enums.CameraConnectionType.None,
                         ShowConnectionTypeIcon = showConnectionTypeIcon,
+                        Rotation = camera.Rotation?.ToCoreRotation() ?? AtcSoft.VideoSurveillance.Enums.CameraRotation.None,
                     };
 
                     CameraTiles.Add(tile);

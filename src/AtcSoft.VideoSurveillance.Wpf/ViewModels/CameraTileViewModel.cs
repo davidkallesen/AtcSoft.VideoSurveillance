@@ -54,6 +54,13 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     private bool showConnectionTypeIcon;
 
     /// <summary>
+    /// The clockwise rotation of the camera. The server streams the camera's
+    /// own pixels, so the picture is turned here, in the client's player.
+    /// </summary>
+    [ObservableProperty(AfterChangedCallback = nameof(ApplyRotation))]
+    private AtcSoft.VideoSurveillance.Enums.CameraRotation rotation;
+
+    /// <summary>
     /// Gets the connection type shown by the badge icon, or
     /// <see cref="CoreCameraConnectionType.None"/> while the icon is disabled.
     /// </summary>
@@ -110,6 +117,9 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     private DispatcherTimer? retryTimer;
     private int retryAttempt;
 
+    private void ApplyRotation()
+        => Player?.SetRotation((VideoRotation)(int)Rotation);
+
     public CameraTileViewModel(
         IVideoPlayerFactory videoPlayerFactory,
         SurveillanceHubService hubService,
@@ -123,6 +133,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
         Player = videoPlayerFactory.Create();
         Player.StateChanged += OnPlayerStateChanged;
+        ApplyRotation();
 
         hubService.OnStreamStarted += OnStreamStarted;
         hubService.OnConnectionStateChanged += OnHubConnectionStateChanged;
