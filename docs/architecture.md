@@ -255,7 +255,7 @@ sequenceDiagram
 
 | Assembly | Target | Description |
 |----------|--------|-------------|
-| **AtcSoft.VideoSurveillance.Core.Tests** | net10.0 | xUnit v3 unit tests for Core library. Tests models, enums, events, extensions, factories, and helpers. Uses AutoFixture, FluentAssertions, and NSubstitute. |
+| **AtcSoft.VideoSurveillance.Core.Tests** | net10.0 | xUnit v3 unit tests for Core library. Tests models, enums, events, extensions, factories, and helpers. Uses AutoFixture, AwesomeAssertions, and NSubstitute. |
 | **AtcSoft.VideoEngine.Tests** | net10.0 | xUnit v3 unit tests for VideoEngine. Tests FFmpeg integration, video player, and frame capture. |
 | **AtcSoft.VideoSurveillance.Api.Tests** | net10.0 | xUnit v3 unit tests for API handlers and domain logic. Tests CRUD operations and mapping extensions. |
 
@@ -282,7 +282,7 @@ sequenceDiagram
 | DI Registration | Atc.SourceGenerators (`[Registration]` attribute) |
 | Theming | Atc.Wpf.Theming |
 | Logging | Serilog (console + file sink) |
-| Testing | xUnit v3, AutoFixture, FluentAssertions, NSubstitute |
+| Testing | xUnit v3, AutoFixture, AwesomeAssertions, NSubstitute |
 | Versioning | release-please (Conventional Commits) |
 | Code Analysis | StyleCop, Meziantou, SonarAnalyzer, SecurityCodeScan |
 | Installer | WiX Toolset v5 |
