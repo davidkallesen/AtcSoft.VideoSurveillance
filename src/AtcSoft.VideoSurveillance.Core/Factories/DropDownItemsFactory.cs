@@ -42,6 +42,19 @@ public static class DropDownItemsFactory
         ["BottomRight"] = "Bottom Right",
     };
 
+    public static IDictionary<string, string> ConnectionTypeItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [nameof(CameraConnectionType.None)] = "Not set",
+        [nameof(CameraConnectionType.Lan)] = "Wired (LAN)",
+        [nameof(CameraConnectionType.Wifi)] = "Wi-Fi",
+    };
+
+    public static IDictionary<string, string> ConnectionTypeIconPlacementItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [nameof(ConnectionTypeIconPlacement.SameRow)] = "Same row as info box",
+        [nameof(ConnectionTypeIconPlacement.SameColumn)] = "Same column as info box",
+    };
+
     public static IDictionary<string, string> OverlayOpacityItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["0.0"] = "0%",
@@ -171,6 +184,8 @@ public static class DropDownItemsFactory
     public const string DefaultRecordingFormat = "mkv";
     public const string DefaultTranscodeVideoCodec = "None";
     public const string DefaultOverlayPosition = "TopLeft";
+    public const string DefaultConnectionType = nameof(CameraConnectionType.None);
+    public const string DefaultConnectionTypeIconPlacement = nameof(ConnectionTypeIconPlacement.SameRow);
     public const string DefaultOverlayOpacity = "0.7";
     public const string DefaultProtocol = "Rtsp";
     public const int DefaultMotionSensitivity = 30;

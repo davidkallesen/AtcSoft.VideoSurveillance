@@ -32,11 +32,19 @@ public class ConnectionSettings
     /// </summary>
     public UsbConnectionSettings? Usb { get; set; }
 
+    /// <summary>
+    /// The physical link to the camera, for display. Defaults to
+    /// <see cref="CameraConnectionType.None"/> so cameras stored before this
+    /// property existed deserialize correctly. Read the displayed value through
+    /// <see cref="Helpers.CameraConnectionTypeHelper.GetEffective(ConnectionSettings)"/>.
+    /// </summary>
+    public CameraConnectionType ConnectionType { get; set; } = CameraConnectionType.None;
+
     /// <inheritdoc />
     public override string ToString()
         => Source == CameraSource.Usb
             ? $"ConnectionSettings {{ Source=Usb, {Usb?.ToString() ?? "(no usb)"} }}"
-            : $"ConnectionSettings {{ Source=Network, Protocol={Protocol}, IpAddress='{IpAddress}', Port={Port.ToString(CultureInfo.InvariantCulture)} }}";
+            : $"ConnectionSettings {{ Source=Network, Protocol={Protocol}, IpAddress='{IpAddress}', Port={Port.ToString(CultureInfo.InvariantCulture)}, ConnectionType={ConnectionType} }}";
 
     public ConnectionSettings Clone()
         => new()
@@ -47,6 +55,7 @@ public class ConnectionSettings
             Port = Port,
             Path = Path,
             Usb = Usb?.Clone(),
+            ConnectionType = ConnectionType,
         };
 
     public void CopyFrom(ConnectionSettings source)
@@ -58,6 +67,7 @@ public class ConnectionSettings
         Port = source.Port;
         Path = source.Path;
         Usb = source.Usb?.Clone();
+        ConnectionType = source.ConnectionType;
     }
 
     public bool ValueEquals(ConnectionSettings? other)
@@ -79,6 +89,7 @@ public class ConnectionSettings
                Protocol == other.Protocol &&
                Port == other.Port &&
                string.Equals(Path, other.Path, StringComparison.Ordinal) &&
+               ConnectionType == other.ConnectionType &&
                usbEqual;
     }
 }

@@ -21,6 +21,20 @@ public class CameraDisplayAppSettings
     /// </summary>
     public bool ShowOverlayQuickActions { get; set; } = true;
 
+    /// <summary>
+    /// Show the connection-type icon (LAN / Wi-Fi / USB) in a free corner of
+    /// the tile. Opt-in. Cameras whose effective connection type is
+    /// <see cref="CameraConnectionType.None"/> show no icon.
+    /// </summary>
+    public bool ShowOverlayConnectionTypeIcon { get; set; }
+
+    /// <summary>
+    /// Which of the two corners adjacent to the info box the connection-type
+    /// icon uses. Relative, so it never collides with a per-camera overlay
+    /// position override.
+    /// </summary>
+    public ConnectionTypeIconPlacement ConnectionTypeIconPlacement { get; set; } = ConnectionTypeIconPlacement.SameRow;
+
     public double OverlayOpacity { get; set; } = 0.7;
 
     public OverlayPosition OverlayPosition { get; set; } = OverlayPosition.TopLeft;
@@ -33,5 +47,5 @@ public class CameraDisplayAppSettings
 
     /// <inheritdoc />
     public override string ToString()
-        => $"CameraDisplayAppSettings {{ Title={ShowOverlayTitle}, Status={ShowOverlayConnectionStatus}, Opacity={OverlayOpacity.ToString(CultureInfo.InvariantCulture)} }}";
+        => $"CameraDisplayAppSettings {{ Title={ShowOverlayTitle}, Status={ShowOverlayConnectionStatus}, ConnectionTypeIcon={ShowOverlayConnectionTypeIcon}, Opacity={OverlayOpacity.ToString(CultureInfo.InvariantCulture)} }}";
 }

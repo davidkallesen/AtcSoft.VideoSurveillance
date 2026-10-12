@@ -100,4 +100,51 @@ public class ConnectionSettingsTests
 
         settings.ToString().Should().Contain("Usb").And.Contain("Logitech BRIO");
     }
+
+    [Fact]
+    public void ConnectionType_Defaults_To_None()
+    {
+        new ConnectionSettings().ConnectionType.Should().Be(CameraConnectionType.None);
+    }
+
+    [Fact]
+    public void ConnectionType_Missing_From_Json_Deserializes_To_None()
+    {
+        const string json = """{"Source":0,"IpAddress":"10.0.0.5","Protocol":0,"Port":554}""";
+
+        var settings = JsonSerializer.Deserialize<ConnectionSettings>(json)!;
+
+        settings.ConnectionType.Should().Be(CameraConnectionType.None);
+    }
+
+    [Fact]
+    public void ConnectionType_Roundtrips_Through_Json()
+    {
+        var original = new ConnectionSettings { IpAddress = "10.0.0.5", ConnectionType = CameraConnectionType.Wifi };
+
+        var parsed = JsonSerializer.Deserialize<ConnectionSettings>(JsonSerializer.Serialize(original))!;
+
+        parsed.ConnectionType.Should().Be(CameraConnectionType.Wifi);
+    }
+
+    [Fact]
+    public void Clone_And_CopyFrom_Preserve_ConnectionType()
+    {
+        var original = new ConnectionSettings { ConnectionType = CameraConnectionType.Lan };
+        var target = new ConnectionSettings();
+
+        target.CopyFrom(original);
+
+        original.Clone().ConnectionType.Should().Be(CameraConnectionType.Lan);
+        target.ConnectionType.Should().Be(CameraConnectionType.Lan);
+    }
+
+    [Fact]
+    public void ValueEquals_Returns_False_When_ConnectionType_Differs()
+    {
+        var a = new ConnectionSettings { IpAddress = "10.0.0.5", ConnectionType = CameraConnectionType.Lan };
+        var b = new ConnectionSettings { IpAddress = "10.0.0.5", ConnectionType = CameraConnectionType.Wifi };
+
+        a.ValueEquals(b).Should().BeFalse();
+    }
 }
