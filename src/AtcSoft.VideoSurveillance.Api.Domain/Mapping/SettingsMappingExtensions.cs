@@ -28,6 +28,8 @@ internal static class SettingsMappingExtensions
             ShowOverlayDescription: cameraDisplay.ShowOverlayDescription,
             ShowOverlayTime: cameraDisplay.ShowOverlayTime,
             ShowOverlayConnectionStatus: cameraDisplay.ShowOverlayConnectionStatus,
+            ShowOverlayConnectionTypeIcon: cameraDisplay.ShowOverlayConnectionTypeIcon,
+            ConnectionTypeIconPlacement: ToApiConnectionTypeIconPlacement(cameraDisplay.ConnectionTypeIconPlacement),
             OverlayOpacity: cameraDisplay.OverlayOpacity,
             OverlayPosition: ParseOverlayPosition(cameraDisplay.OverlayPosition),
             AllowDragAndDropReorder: cameraDisplay.AllowDragAndDropReorder,
@@ -113,7 +115,13 @@ internal static class SettingsMappingExtensions
         cameraDisplay.ShowOverlayDescription = api.ShowOverlayDescription;
         cameraDisplay.ShowOverlayTime = api.ShowOverlayTime;
         cameraDisplay.ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus;
+        cameraDisplay.ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon;
         cameraDisplay.OverlayOpacity = api.OverlayOpacity;
+
+        if (api.ConnectionTypeIconPlacement is not null)
+        {
+            cameraDisplay.ConnectionTypeIconPlacement = ToCoreConnectionTypeIconPlacement(api.ConnectionTypeIconPlacement.Value);
+        }
 
         if (api.OverlayPosition is not null)
         {
@@ -336,6 +344,18 @@ internal static class SettingsMappingExtensions
             _ => AppSettingsRecordingFormat.Mp4,
         };
     }
+
+    private static AppSettingsConnectionTypeIconPlacement ToApiConnectionTypeIconPlacement(
+        AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement placement)
+        => placement == AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameColumn
+            ? AppSettingsConnectionTypeIconPlacement.SameColumn
+            : AppSettingsConnectionTypeIconPlacement.SameRow;
+
+    private static AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement ToCoreConnectionTypeIconPlacement(
+        AppSettingsConnectionTypeIconPlacement placement)
+        => placement == AppSettingsConnectionTypeIconPlacement.SameColumn
+            ? AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameColumn
+            : AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow;
 
     private static AppSettingsOverlayPosition? ParseOverlayPosition(
         AtcSoft.VideoSurveillance.Enums.OverlayPosition position)

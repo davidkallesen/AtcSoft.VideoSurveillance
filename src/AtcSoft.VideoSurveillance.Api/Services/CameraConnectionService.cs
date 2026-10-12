@@ -12,6 +12,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     private readonly IRecordingService recordingService;
     private readonly IMediaPipelineFactory pipelineFactory;
     private readonly IUsbCameraLifecycleCoordinator usbLifecycle;
+    private readonly CameraConnectionTypeAutoDetector? connectionTypeAutoDetector;
     private readonly ConcurrentDictionary<Guid, IMediaPipeline> managedPipelines = new();
     private readonly ConcurrentDictionary<Guid, BackoffState> backoffs = new();
 
@@ -23,7 +24,8 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         IApplicationSettingsService settingsService,
         IRecordingService recordingService,
         IMediaPipelineFactory pipelineFactory,
-        IUsbCameraLifecycleCoordinator usbLifecycle)
+        IUsbCameraLifecycleCoordinator usbLifecycle,
+        CameraConnectionTypeAutoDetector? connectionTypeAutoDetector = null)
         : base(logger, options, healthService)
     {
         this.storageService = storageService;
@@ -31,6 +33,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         this.recordingService = recordingService;
         this.pipelineFactory = pipelineFactory;
         this.usbLifecycle = usbLifecycle;
+        this.connectionTypeAutoDetector = connectionTypeAutoDetector;
 
         // Subscribe before Start so we never miss the first event the
         // watcher emits after subscription. Start is idempotent.
@@ -316,6 +319,9 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             }
 
             LogCameraConnected(camera.Id, camera.Display.DisplayName);
+
+            // Implicit connection-type detection (once per camera, fills "not set" only).
+            _ = connectionTypeAutoDetector?.OnCameraConnectedAsync(camera);
 
             if (recordingService.IsRecording(camera.Id) ||
                 !managedPipelines.TryGetValue(camera.Id, out var pipeline))

@@ -161,6 +161,42 @@ public class SettingsMappingExtensionsTests
         general.ThemeBase.Should().Be("Dark");
     }
 
+    [Fact]
+    public void ConnectionTypeIcon_Settings_RoundTrip()
+    {
+        // Arrange
+        var cameraDisplay = new CameraDisplayAppSettings
+        {
+            ShowOverlayConnectionTypeIcon = true,
+            ConnectionTypeIconPlacement = ConnectionTypeIconPlacement.SameColumn,
+        };
+
+        // Act
+        var api = SettingsMappingExtensions.ToApiModel(
+            new GeneralSettings(),
+            cameraDisplay,
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            new RecordingSettings(),
+            new AdvancedSettings());
+        var target = new CameraDisplayAppSettings();
+        api.ApplyToCore(
+            new GeneralSettings(),
+            target,
+            new ConnectionAppSettings(),
+            new PerformanceSettings(),
+            new MotionDetectionSettings(),
+            new RecordingSettings(),
+            new AdvancedSettings());
+
+        // Assert
+        api.ShowOverlayConnectionTypeIcon.Should().BeTrue();
+        api.ConnectionTypeIconPlacement.Should().Be(AppSettingsConnectionTypeIconPlacement.SameColumn);
+        target.ShowOverlayConnectionTypeIcon.Should().BeTrue();
+        target.ConnectionTypeIconPlacement.Should().Be(ConnectionTypeIconPlacement.SameColumn);
+    }
+
     private static AppSettings CreateFullAppSettings(
         AppSettingsThemeBase? themeBase = AppSettingsThemeBase.Dark,
         string language = "1033",
@@ -179,6 +215,8 @@ public class SettingsMappingExtensionsTests
             ShowOverlayDescription: true,
             ShowOverlayTime: false,
             ShowOverlayConnectionStatus: true,
+            ShowOverlayConnectionTypeIcon: false,
+            ConnectionTypeIconPlacement: null,
             OverlayOpacity: 0.7,
             OverlayPosition: AppSettingsOverlayPosition.TopLeft,
             AllowDragAndDropReorder: true,

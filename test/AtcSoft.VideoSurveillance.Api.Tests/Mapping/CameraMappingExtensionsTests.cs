@@ -224,6 +224,7 @@ public class CameraMappingExtensionsTests
             DisplayName: "USB Cam",
             Description: string.Empty,
             Source: ApiCameraSource.Usb,
+            ConnectionType: null,
             IpAddress: string.Empty,
             Protocol: null,
             Path: string.Empty,
@@ -280,6 +281,7 @@ public class CameraMappingExtensionsTests
             DisplayName: null!,
             Description: null!,
             Source: null,
+            ConnectionType: null,
             IpAddress: null!,
             Port: 0,
             Protocol: null,
@@ -325,6 +327,76 @@ public class CameraMappingExtensionsTests
         core.Connection.Usb.Should().BeNull();
     }
 
+    [Fact]
+    public void ToApiModel_Maps_Stored_Network_ConnectionType()
+    {
+        var core = new CameraConfiguration();
+        core.Connection.ConnectionType = CoreCameraConnectionType.Wifi;
+
+        core.ToApiModel().ConnectionType.Should().Be(ApiCameraConnectionType.Wifi);
+    }
+
+    [Fact]
+    public void ToApiModel_Usb_Source_Is_Always_Usb()
+    {
+        var core = new CameraConfiguration();
+        core.Connection.Source = CoreCameraSource.Usb;
+        core.Connection.ConnectionType = CoreCameraConnectionType.None;
+
+        core.ToApiModel().ConnectionType.Should().Be(ApiCameraConnectionType.Usb);
+    }
+
+    [Fact]
+    public void ToCoreModel_Maps_Network_ConnectionType()
+    {
+        var request = NetworkCreateRequest("Cam", ipAddress: "10.0.0.1") with { ConnectionType = ApiCameraConnectionType.Lan };
+
+        request.ToCoreModel().Connection.ConnectionType.Should().Be(CoreCameraConnectionType.Lan);
+    }
+
+    [Fact]
+    public void ToCoreModel_Network_Camera_Ignores_Usb_ConnectionType()
+    {
+        var request = NetworkCreateRequest("Cam", ipAddress: "10.0.0.1") with { ConnectionType = ApiCameraConnectionType.Usb };
+
+        request.ToCoreModel().Connection.ConnectionType.Should().Be(CoreCameraConnectionType.None);
+    }
+
+    [Fact]
+    public void ToCoreModel_Usb_Source_Forces_Usb_ConnectionType()
+    {
+        var request = NetworkCreateRequest("Cam") with
+        {
+            Source = ApiCameraSource.Usb,
+            UsbDeviceId = "dev",
+            ConnectionType = ApiCameraConnectionType.Wifi,
+        };
+
+        request.ToCoreModel().Connection.ConnectionType.Should().Be(CoreCameraConnectionType.Usb);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Sets_ConnectionType_When_Provided()
+    {
+        var core = new CameraConfiguration();
+        core.Connection.ConnectionType = CoreCameraConnectionType.Lan;
+
+        core.ApplyUpdate(NetworkUpdateRequest() with { ConnectionType = ApiCameraConnectionType.Wifi });
+
+        core.Connection.ConnectionType.Should().Be(CoreCameraConnectionType.Wifi);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Keeps_ConnectionType_When_Not_Provided()
+    {
+        var core = new CameraConfiguration();
+        core.Connection.ConnectionType = CoreCameraConnectionType.Lan;
+
+        core.ApplyUpdate(NetworkUpdateRequest());
+
+        core.Connection.ConnectionType.Should().Be(CoreCameraConnectionType.Lan);
+    }
+
     private static CreateCameraRequest NetworkCreateRequest(
         string displayName,
         string description = "",
@@ -338,6 +410,7 @@ public class CameraMappingExtensionsTests
             DisplayName: displayName,
             Description: description,
             Source: ApiCameraSource.Network,
+            ConnectionType: null,
             IpAddress: ipAddress,
             Protocol: protocol,
             Path: path,
@@ -367,6 +440,7 @@ public class CameraMappingExtensionsTests
             DisplayName: displayName,
             Description: null!,
             Source: null,
+            ConnectionType: null,
             IpAddress: null!,
             Port: 0,
             Protocol: null,

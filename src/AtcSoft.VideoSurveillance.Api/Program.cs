@@ -81,6 +81,13 @@ try
     // survives across DoWorkAsync ticks.
     builder.Services.AddSingleton<IUsbCameraLifecycleCoordinator, UsbCameraLifecycleCoordinator>();
 
+    // Connection-type detection (ONVIF): explicit via
+    // POST /cameras/{id}/detect-connection-type, implicit after a camera's
+    // first successful connect (CameraConnectionService).
+    builder.Services.AddSingleton<ICameraConnectionTypeDetector>(sp =>
+        new OnvifConnectionTypeDetector(sp.GetRequiredService<ILogger<OnvifConnectionTypeDetector>>()));
+    builder.Services.AddSingleton<CameraConnectionTypeAutoDetector>();
+
     // Configure CORS for Blazor client (AllowCredentials required for SignalR WebSocket transport).
     // Origins are loaded from configuration (Cors:AllowedOrigins). With AllowCredentials,
     // wildcard origins are forbidden — populate the section explicitly when fronting the

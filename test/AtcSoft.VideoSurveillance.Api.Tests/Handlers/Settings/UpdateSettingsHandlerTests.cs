@@ -89,6 +89,8 @@ public class UpdateSettingsHandlerTests
             ShowOverlayDescription: true,
             ShowOverlayTime: false,
             ShowOverlayConnectionStatus: true,
+            ShowOverlayConnectionTypeIcon: false,
+            ConnectionTypeIconPlacement: null,
             OverlayOpacity: 0.7,
             OverlayPosition: AppSettingsOverlayPosition.TopLeft,
             AllowDragAndDropReorder: true,

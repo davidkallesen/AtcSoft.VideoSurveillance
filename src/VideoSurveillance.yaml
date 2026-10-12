@@ -166,6 +166,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /cameras/{cameraId}/detect-connection-type:
+    post:
+      summary: Detect the camera's connection type (wired or Wi-Fi) via ONVIF
+      description: >-
+        Probes the camera with its stored credentials and returns the detected
+        connection type without saving it. The client decides whether to apply
+        it. Returns none when the camera does not support ONVIF, rejects the
+        credentials, or reports an unknown interface type.
+      operationId: detectConnectionType
+      tags:
+        - cameras
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionTypeDetection"
+        '404':
+          description: Camera not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /cameras/{cameraId}/recording:
     post:
       summary: Start recording a camera
@@ -454,6 +486,10 @@ components:
           type: string
           enum: [network, usb]
           default: network
+        connectionType:
+          type: string
+          enum: [none, lan, wifi, usb]
+          description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
         ipAddress:
           type: string
         port:
@@ -507,6 +543,14 @@ components:
         isRecording:
           type: boolean
 
+    ConnectionTypeDetection:
+      type: object
+      required:
+        - connectionType
+      properties:
+        connectionType:
+          type: string
+          enum: [none, lan, wifi, usb]
     UsbDeviceDescriptor:
       type: object
       required:
@@ -564,6 +608,10 @@ components:
           type: string
           enum: [network, usb]
           default: network
+        connectionType:
+          type: string
+          enum: [none, lan, wifi, usb]
+          description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
         ipAddress:
           type: string
         port:
@@ -625,6 +673,10 @@ components:
         source:
           type: string
           enum: [network, usb]
+        connectionType:
+          type: string
+          enum: [none, lan, wifi, usb]
+          description: Physical link to the camera, shown as the connection-type icon. USB cameras are always usb; network cameras use none, lan or wifi.
         ipAddress:
           type: string
         port:
@@ -810,6 +862,13 @@ components:
           type: boolean
         showOverlayConnectionStatus:
           type: boolean
+        showOverlayConnectionTypeIcon:
+          type: boolean
+          description: Show the connection-type icon (LAN / Wi-Fi / USB) in a free tile corner.
+        connectionTypeIconPlacement:
+          type: string
+          enum: [sameRow, sameColumn]
+          description: Which corner adjacent to the overlay info box holds the connection-type icon.
         overlayOpacity:
           type: number
           format: double

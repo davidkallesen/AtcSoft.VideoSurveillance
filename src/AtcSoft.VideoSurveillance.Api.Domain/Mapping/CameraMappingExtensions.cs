@@ -1,4 +1,6 @@
+using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConnectionTypeHelper;
 using CoreCameraConfiguration = AtcSoft.VideoSurveillance.Models.CameraConfiguration;
+using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
 using CoreCameraSource = AtcSoft.VideoSurveillance.Enums.CameraSource;
 using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
@@ -24,6 +26,7 @@ internal static class CameraMappingExtensions
             DisplayName: core.Display.DisplayName,
             Description: core.Display.Description ?? string.Empty,
             Source: core.Connection.Source.ToApiSource(),
+            ConnectionType: CameraConnectionTypeHelper.GetEffective(core.Connection).ToApiConnectionType(),
             IpAddress: core.Connection.IpAddress,
             Port: core.Connection.Port,
             Protocol: core.Connection.Protocol.ToApiProtocol(),
@@ -61,6 +64,7 @@ internal static class CameraMappingExtensions
                 Protocol = request.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp,
                 Path = request.Path,
                 Usb = source == CoreCameraSource.Usb ? BuildUsbSettings(request) : null,
+                ConnectionType = request.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None,
             },
             Authentication =
             {
@@ -73,6 +77,9 @@ internal static class CameraMappingExtensions
                 Description = request.Description,
             },
         };
+
+        // USB cameras are always USB; a network camera never keeps a stored USB value.
+        camera.Connection.ConnectionType = CameraConnectionTypeHelper.GetEffective(camera.Connection);
 
         if (request.OverlayPosition is not null)
         {
@@ -138,6 +145,11 @@ internal static class CameraMappingExtensions
             core.Connection.Path = request.Path;
         }
 
+        if (request.ConnectionType is not null)
+        {
+            core.Connection.ConnectionType = request.ConnectionType.Value.ToCoreConnectionType();
+        }
+
         if (request.Username is not null)
         {
             core.Authentication.UserName = request.Username;
@@ -149,6 +161,9 @@ internal static class CameraMappingExtensions
         }
 
         ApplyUsbUpdate(core, request);
+
+        // USB cameras are always USB; a network camera never keeps a stored USB value.
+        core.Connection.ConnectionType = CameraConnectionTypeHelper.GetEffective(core.Connection);
 
         if (request.OverlayPosition is not null)
         {
@@ -202,6 +217,26 @@ internal static class CameraMappingExtensions
         {
             CameraSource.Usb => CoreCameraSource.Usb,
             _ => CoreCameraSource.Network,
+        };
+
+    public static CameraConnectionType ToApiConnectionType(
+        this CoreCameraConnectionType connectionType)
+        => connectionType switch
+        {
+            CoreCameraConnectionType.Lan => CameraConnectionType.Lan,
+            CoreCameraConnectionType.Wifi => CameraConnectionType.Wifi,
+            CoreCameraConnectionType.Usb => CameraConnectionType.Usb,
+            _ => CameraConnectionType.None,
+        };
+
+    public static CoreCameraConnectionType ToCoreConnectionType(
+        this CameraConnectionType connectionType)
+        => connectionType switch
+        {
+            CameraConnectionType.Lan => CoreCameraConnectionType.Lan,
+            CameraConnectionType.Wifi => CoreCameraConnectionType.Wifi,
+            CameraConnectionType.Usb => CoreCameraConnectionType.Usb,
+            _ => CoreCameraConnectionType.None,
         };
 
     public static CameraConnectionState ToApiConnectionState(
