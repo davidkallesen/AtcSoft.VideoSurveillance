@@ -24,6 +24,10 @@ public sealed class SettingsState
 
     public AppSettingsOverlayPosition OverlayPosition { get; set; } = AppSettingsOverlayPosition.TopLeft;
 
+    public bool ShowOverlayConnectionTypeIcon { get; set; }
+
+    public AppSettingsConnectionTypeIconPlacement ConnectionTypeIconPlacement { get; set; } = AppSettingsConnectionTypeIconPlacement.SameRow;
+
     public bool AllowDragAndDropReorder { get; set; } = true;
 
     public bool AutoSaveLayoutChanges { get; set; } = true;
@@ -140,6 +144,8 @@ public sealed class SettingsState
         ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
         OverlayOpacity = settings.OverlayOpacity;
         OverlayPosition = settings.OverlayPosition ?? AppSettingsOverlayPosition.TopLeft;
+        ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
+        ConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement ?? AppSettingsConnectionTypeIconPlacement.SameRow;
         AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
         AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges;
         SnapshotPath = settings.SnapshotPath ?? string.Empty;
@@ -208,6 +214,8 @@ public sealed class SettingsState
             ShowOverlayDescription: ShowOverlayDescription,
             ShowOverlayTime: ShowOverlayTime,
             ShowOverlayConnectionStatus: ShowOverlayConnectionStatus,
+            ShowOverlayConnectionTypeIcon: ShowOverlayConnectionTypeIcon,
+            ConnectionTypeIconPlacement: ConnectionTypeIconPlacement,
             OverlayOpacity: OverlayOpacity,
             OverlayPosition: OverlayPosition,
             AllowDragAndDropReorder: AllowDragAndDropReorder,
@@ -260,4 +268,24 @@ public sealed class SettingsState
             PlaybackTimestampColor: PlaybackTimestampColor,
             EnableDebugLogging: EnableDebugLogging,
             LogPath: LogPath);
+
+    /// <summary>
+    /// Gets the concrete corner a placement resolves to for the current
+    /// overlay position: the icon always uses a corner adjacent to the info box.
+    /// </summary>
+    public string GetConnectionTypeIconPlacementLabel(
+        AppSettingsConnectionTypeIconPlacement placement)
+    {
+        var isTop = OverlayPosition is AppSettingsOverlayPosition.TopLeft or AppSettingsOverlayPosition.TopRight;
+        var isLeft = OverlayPosition is AppSettingsOverlayPosition.TopLeft or AppSettingsOverlayPosition.BottomLeft;
+
+        if (placement == AppSettingsConnectionTypeIconPlacement.SameColumn)
+        {
+            isTop = !isTop;
+            return $"{(isTop ? "Top" : "Bottom")} {(isLeft ? "Left" : "Right")} (same column as info box)";
+        }
+
+        isLeft = !isLeft;
+        return $"{(isTop ? "Top" : "Bottom")} {(isLeft ? "Left" : "Right")} (same row as info box)";
+    }
 }

@@ -1,9 +1,11 @@
 using ApiCamera = VideoSurveillance.Generated.Cameras.Models.Camera;
+using ApiCameraConnectionType = VideoSurveillance.Generated.Cameras.Models.CameraConnectionType;
 using ApiCameraOverlayPosition = VideoSurveillance.Generated.Cameras.Models.CameraOverlayPosition;
 using ApiCameraProtocol = VideoSurveillance.Generated.Cameras.Models.CameraProtocol;
 using ApiCameraSource = VideoSurveillance.Generated.Cameras.Models.CameraSource;
 using ApiCameraStreamRtspTransport = VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport;
 
+using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
 using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
 
@@ -32,6 +34,7 @@ public static class CameraModelMappingExtensions
         config.Connection.IpAddress = camera.IpAddress;
         config.Connection.Port = camera.Port;
         config.Connection.Protocol = camera.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp;
+        config.Connection.ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None;
 
         config.Authentication.UserName = camera.Username ?? string.Empty;
 
@@ -68,6 +71,7 @@ public static class CameraModelMappingExtensions
             DisplayName: config.Display.DisplayName,
             Description: config.Display.Description ?? string.Empty,
             Source: ApiCameraSource.Network,
+            ConnectionType: config.Connection.ConnectionType.ToApiConnectionType(),
             IpAddress: config.Connection.IpAddress,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
             Path: string.Empty,
@@ -110,6 +114,7 @@ public static class CameraModelMappingExtensions
             DisplayName: config.Display.DisplayName,
             Description: config.Display.Description ?? string.Empty,
             Source: ApiCameraSource.Network,
+            ConnectionType: config.Connection.ConnectionType.ToApiConnectionType(),
             IpAddress: config.Connection.IpAddress,
             Port: config.Connection.Port,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
@@ -130,6 +135,32 @@ public static class CameraModelMappingExtensions
             StreamRtspTransport: config.Stream.RtspTransport.ToApiRtspTransport(),
             StreamBufferDurationMs: config.Stream.BufferDurationMs);
     }
+
+    /// <summary>
+    /// Converts an API <see cref="ApiCameraConnectionType"/> to a Core <see cref="CoreCameraConnectionType"/>.
+    /// </summary>
+    public static CoreCameraConnectionType ToCoreConnectionType(
+        this ApiCameraConnectionType connectionType)
+        => connectionType switch
+        {
+            ApiCameraConnectionType.Lan => CoreCameraConnectionType.Lan,
+            ApiCameraConnectionType.Wifi => CoreCameraConnectionType.Wifi,
+            ApiCameraConnectionType.Usb => CoreCameraConnectionType.Usb,
+            _ => CoreCameraConnectionType.None,
+        };
+
+    /// <summary>
+    /// Converts a Core <see cref="CoreCameraConnectionType"/> to an API <see cref="ApiCameraConnectionType"/>.
+    /// </summary>
+    public static ApiCameraConnectionType ToApiConnectionType(
+        this CoreCameraConnectionType connectionType)
+        => connectionType switch
+        {
+            CoreCameraConnectionType.Lan => ApiCameraConnectionType.Lan,
+            CoreCameraConnectionType.Wifi => ApiCameraConnectionType.Wifi,
+            CoreCameraConnectionType.Usb => ApiCameraConnectionType.Usb,
+            _ => ApiCameraConnectionType.None,
+        };
 
     /// <summary>
     /// Converts an API <see cref="ApiCameraProtocol"/> to a Core <see cref="CoreCameraProtocol"/>.

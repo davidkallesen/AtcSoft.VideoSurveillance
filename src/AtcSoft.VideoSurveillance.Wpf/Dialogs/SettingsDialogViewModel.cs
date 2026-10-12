@@ -74,11 +74,27 @@ public partial class SettingsDialogViewModel : ViewModelBase
     public IDictionary<string, string> OverlayOpacityItems
         => DropDownItemsFactory.OverlayOpacityItems;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(ConnectionTypeIconPlacementItems)])]
     private string selectedOverlayPosition = DropDownItemsFactory.DefaultOverlayPosition;
 
     public IDictionary<string, string> OverlayPositionItems
         => DropDownItemsFactory.OverlayPositionItems;
+
+    [ObservableProperty]
+    private bool showCameraOverlayConnectionTypeIcon;
+
+    [ObservableProperty]
+    private string selectedConnectionTypeIconPlacement = DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
+
+    /// <summary>
+    /// Gets the icon placements, labelled with the concrete corner they resolve
+    /// to for the currently selected default overlay position.
+    /// </summary>
+    public IDictionary<string, string> ConnectionTypeIconPlacementItems
+        => DropDownItemsFactory.GetConnectionTypeIconPlacementItems(
+            Enum.TryParse<AtcSoft.VideoSurveillance.Enums.OverlayPosition>(SelectedOverlayPosition, out var position)
+                ? position
+                : AtcSoft.VideoSurveillance.Enums.OverlayPosition.TopLeft);
 
     [ObservableProperty]
     private bool allowDragAndDropReorder = true;
@@ -344,6 +360,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowCameraOverlayDescription = settings.ShowOverlayDescription;
             ShowCameraOverlayTime = settings.ShowOverlayTime;
             ShowCameraOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+            ShowCameraOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
+            SelectedConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement?.ToString() ?? DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
             SelectedOverlayOpacity = settings.OverlayOpacity.ToString("F1", CultureInfo.InvariantCulture);
             SelectedOverlayPosition = settings.OverlayPosition?.ToString() ?? "TopLeft";
             AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
@@ -467,6 +485,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
         ShowCameraOverlayQuickActions = true;
         SelectedOverlayOpacity = "0.7";
         SelectedOverlayPosition = "TopLeft";
+        ShowCameraOverlayConnectionTypeIcon = false;
+        SelectedConnectionTypeIconPlacement = DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
         AllowDragAndDropReorder = true;
         AutoSaveLayoutChanges = true;
         SnapshotPath = new DirectoryInfo(ApplicationPaths.DefaultSnapshotsPath);
@@ -584,6 +604,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
         // Parse enum values from string selections
         _ = Enum.TryParse<AppSettingsThemeBase>(apiThemeBase, out var themeBase);
         _ = Enum.TryParse<AppSettingsOverlayPosition>(SelectedOverlayPosition, out var overlayPosition);
+        _ = Enum.TryParse<AppSettingsConnectionTypeIconPlacement>(SelectedConnectionTypeIconPlacement, out var iconPlacement);
         _ = Enum.TryParse<AppSettingsDefaultProtocol>(SelectedDefaultProtocol, out var protocol);
         _ = Enum.TryParse<AppSettingsVideoQuality>(SelectedVideoQuality, out var videoQuality);
         _ = Enum.TryParse<AppSettingsRtspTransport>(SelectedRtspTransport, out var rtspTransport);
@@ -609,6 +630,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowOverlayDescription: ShowCameraOverlayDescription,
             ShowOverlayTime: ShowCameraOverlayTime,
             ShowOverlayConnectionStatus: ShowCameraOverlayConnectionStatus,
+            ShowOverlayConnectionTypeIcon: ShowCameraOverlayConnectionTypeIcon,
+            ConnectionTypeIconPlacement: iconPlacement,
             OverlayOpacity: opacity,
             OverlayPosition: overlayPosition,
             AllowDragAndDropReorder: AllowDragAndDropReorder,

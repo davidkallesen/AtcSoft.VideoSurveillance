@@ -115,6 +115,25 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Reads the connection-type icon toggle from the server settings. A failure
+    /// only hides the icon; it must never block the live view.
+    /// </summary>
+    private async Task<bool> IsConnectionTypeIconEnabledAsync()
+    {
+        try
+        {
+            var settings = await gatewayService
+                .GetSettingsAsync()
+                .ConfigureAwait(false);
+            return settings?.ShowOverlayConnectionTypeIcon ?? false;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
     [RelayCommand("Load")]
     private async Task LoadAsync()
     {
@@ -125,6 +144,8 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
             var cameras = await gatewayService
                 .GetCamerasAsync()
                 .ConfigureAwait(false);
+
+            var showConnectionTypeIcon = await IsConnectionTypeIconEnabledAsync().ConfigureAwait(false);
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -149,6 +170,8 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                         ConnectionState = MapApiConnectionState(camera.ConnectionState),
                         IsRecording = camera.IsRecording,
                         UsbDeviceId = camera.UsbDeviceId ?? string.Empty,
+                        ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? AtcSoft.VideoSurveillance.Enums.CameraConnectionType.None,
+                        ShowConnectionTypeIcon = showConnectionTypeIcon,
                     };
 
                     CameraTiles.Add(tile);

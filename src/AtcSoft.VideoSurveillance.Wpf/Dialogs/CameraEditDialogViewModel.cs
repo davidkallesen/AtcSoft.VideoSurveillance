@@ -6,6 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Dialogs;
 public partial class CameraEditDialogViewModel : ViewModelBase
 {
     private readonly Guid? cameraId;
+    private readonly Func<Guid, Task<CameraConnectionType?>>? detectConnectionType;
 
     public event EventHandler<DialogClosedEventArgs>? CloseRequested;
 
@@ -32,6 +33,9 @@ public partial class CameraEditDialogViewModel : ViewModelBase
 
     [ObservableProperty]
     private string password = string.Empty;
+
+    [ObservableProperty]
+    private CameraConnectionType selectedConnectionType = CameraConnectionType.None;
 
     [ObservableProperty]
     private CameraOverlayPosition selectedOverlayPosition = CameraOverlayPosition.TopLeft;
@@ -69,6 +73,16 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     };
 
     /// <summary>
+    /// Gets the connection types offered for a network camera.
+    /// </summary>
+    public IDictionary<string, string> ConnectionTypeItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [nameof(CameraConnectionType.None)] = "Not set",
+        [nameof(CameraConnectionType.Lan)] = "Wired (LAN)",
+        [nameof(CameraConnectionType.Wifi)] = "Wi-Fi",
+    };
+
+    /// <summary>
     /// Gets the overlay position items for the combobox.
     /// </summary>
     public IDictionary<string, string> OverlayPositionItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -99,9 +113,13 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraEditDialogViewModel"/> class for editing an existing camera.
     /// </summary>
-    public CameraEditDialogViewModel(Camera camera)
+    public CameraEditDialogViewModel(
+        Camera camera,
+        Func<Guid, Task<CameraConnectionType?>>? detectConnectionType = null)
     {
         ArgumentNullException.ThrowIfNull(camera);
+
+        this.detectConnectionType = detectConnectionType;
 
         IsEdit = true;
         cameraId = camera.Id;
@@ -113,6 +131,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
         path = camera.Path ?? string.Empty;
         username = camera.Username ?? string.Empty;
         selectedOverlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
+        selectedConnectionType = camera.ConnectionType ?? CameraConnectionType.None;
         streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
         streamMaxLatencyMs = camera.StreamMaxLatencyMs;
         selectedRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
@@ -127,6 +146,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             DisplayName: DisplayName,
             Description: Description,
             Source: CameraSource.Network,
+            ConnectionType: SelectedConnectionType,
             IpAddress: IpAddress,
             Protocol: SelectedProtocol,
             Path: Path,
@@ -155,6 +175,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             DisplayName: DisplayName,
             Description: Description,
             Source: CameraSource.Network,
+            ConnectionType: SelectedConnectionType,
             IpAddress: IpAddress,
             Port: Port,
             Protocol: SelectedProtocol,
@@ -179,6 +200,51 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// Gets the camera ID for update operations.
     /// </summary>
     public Guid? CameraId => cameraId;
+
+    /// <summary>
+    /// Gets a value indicating whether server-side detection is available
+    /// (edit mode only: the server probes with the stored credentials).
+    /// </summary>
+    public bool IsConnectionTypeDetectionAvailable
+        => detectConnectionType is not null;
+
+    [ObservableProperty]
+    private string connectionTypeDetectionStatus = string.Empty;
+
+    [ObservableProperty]
+    private bool isDetectingConnectionType;
+
+    /// <summary>
+    /// Explicit detection: applies a detected LAN / Wi-Fi value to the picker;
+    /// the user can still change it before saving.
+    /// </summary>
+    [RelayCommand("DetectConnectionType", CanExecute = nameof(CanDetectConnectionType))]
+    private async Task DetectConnectionTypeAsync()
+    {
+        IsDetectingConnectionType = true;
+        ConnectionTypeDetectionStatus = "Detecting…";
+
+        try
+        {
+            var detected = await detectConnectionType!(cameraId!.Value).ConfigureAwait(true);
+            if (detected is CameraConnectionType.Lan or CameraConnectionType.Wifi)
+            {
+                SelectedConnectionType = detected.Value;
+                ConnectionTypeDetectionStatus = "Detected: " + ConnectionTypeItems[detected.Value.ToString()];
+            }
+            else
+            {
+                ConnectionTypeDetectionStatus = "Could not detect the connection type";
+            }
+        }
+        finally
+        {
+            IsDetectingConnectionType = false;
+        }
+    }
+
+    private bool CanDetectConnectionType()
+        => detectConnectionType is not null && cameraId is not null && !IsDetectingConnectionType;
 
     [RelayCommand(CanExecute = nameof(CanSave))]
     private void Save()

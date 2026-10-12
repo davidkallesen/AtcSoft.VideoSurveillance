@@ -129,7 +129,7 @@ public partial class CameraListViewModel : ViewModelBase
 
         await Application.Current.Dispatcher.InvokeAsync(() =>
         {
-            viewModel = new CameraEditDialogViewModel(camera);
+            viewModel = new CameraEditDialogViewModel(camera, id => gatewayService.DetectConnectionTypeAsync(id));
             var dialog = new CameraEditDialog(viewModel)
             {
                 Owner = Application.Current.MainWindow,

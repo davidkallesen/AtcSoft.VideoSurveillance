@@ -1,4 +1,5 @@
 using ConnectionState = Atc.Network.ConnectionState;
+using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 
 namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
@@ -34,11 +35,36 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
     /// events back to the right tile.
     /// </summary>
-    [ObservableProperty(DependentPropertyNames = [nameof(IsUsbSource)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(IsUsbSource), nameof(ShowUsbBadge)])]
     private string usbDeviceId = string.Empty;
 
     /// <summary>True when this tile represents a USB camera source.</summary>
     public bool IsUsbSource => !string.IsNullOrEmpty(UsbDeviceId);
+
+    /// <summary>
+    /// Effective connection type reported by the server (USB cameras are always USB).
+    /// </summary>
+    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType), nameof(ShowUsbBadge)])]
+    private CoreCameraConnectionType connectionType;
+
+    /// <summary>
+    /// Whether the connection-type icon is enabled in the server settings.
+    /// </summary>
+    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType), nameof(ShowUsbBadge)])]
+    private bool showConnectionTypeIcon;
+
+    /// <summary>
+    /// Gets the connection type shown by the badge icon, or
+    /// <see cref="CoreCameraConnectionType.None"/> while the icon is disabled.
+    /// </summary>
+    public CoreCameraConnectionType DisplayedConnectionType
+        => ShowConnectionTypeIcon ? ConnectionType : CoreCameraConnectionType.None;
+
+    /// <summary>
+    /// Gets a value indicating whether the legacy "USB" text shows: only while
+    /// the connection-type icon is off (scheduled for removal, connection-icon roadmap Phase 8).
+    /// </summary>
+    public bool ShowUsbBadge => IsUsbSource && !ShowConnectionTypeIcon;
 
     /// <summary>
     /// True when the underlying USB device is currently unplugged.

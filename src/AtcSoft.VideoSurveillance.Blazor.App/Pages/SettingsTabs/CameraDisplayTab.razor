@@ -12,6 +12,13 @@
     <MudSelectItem Value="AppSettingsOverlayPosition.BottomLeft">Bottom Left</MudSelectItem>
     <MudSelectItem Value="AppSettingsOverlayPosition.BottomRight">Bottom Right</MudSelectItem>
 </MudSelect>
+
+<MudCheckBox @bind-Value="State.ShowOverlayConnectionTypeIcon" Label="Show connection-type icon" Class="mt-2" />
+<MudSelect @bind-Value="State.ConnectionTypeIconPlacement" Label="Connection-type icon position" Disabled="!State.ShowOverlayConnectionTypeIcon" Class="mt-2">
+    <MudSelectItem Value="AppSettingsConnectionTypeIconPlacement.SameRow">@State.GetConnectionTypeIconPlacementLabel(AppSettingsConnectionTypeIconPlacement.SameRow)</MudSelectItem>
+    <MudSelectItem Value="AppSettingsConnectionTypeIconPlacement.SameColumn">@State.GetConnectionTypeIconPlacementLabel(AppSettingsConnectionTypeIconPlacement.SameColumn)</MudSelectItem>
+</MudSelect>
+
 <MudCheckBox @bind-Value="State.AllowDragAndDropReorder" Label="Allow drag and drop reorder" Class="mt-2" />
 <MudCheckBox @bind-Value="State.AutoSaveLayoutChanges" Label="Auto save layout changes" Class="mt-2" />
 <MudTextField @bind-Value="State.SnapshotPath" Label="Snapshot Path" Class="mt-2" />

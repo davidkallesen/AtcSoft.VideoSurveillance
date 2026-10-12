@@ -45,6 +45,25 @@ public sealed partial class GatewayService
             : null;
     }
 
+    /// <summary>
+    /// Asks the server to probe the camera (ONVIF) with its stored credentials.
+    /// Returns the detected type without saving it, or <see langword="null"/>
+    /// when the request failed.
+    /// </summary>
+    public async Task<CameraConnectionType?> DetectConnectionTypeAsync(
+        Guid cameraId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new DetectConnectionTypeParameters(CameraId: cameraId);
+        var result = await detectConnectionTypeEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsOk
+            ? result.OkContent.ConnectionType
+            : null;
+    }
+
     public async Task<Camera?> UpdateCameraAsync(
         Guid cameraId,
         UpdateCameraRequest request,

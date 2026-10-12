@@ -44,14 +44,22 @@
                                 FontSize="9"
                                 Foreground="#AAAAAA"
                                 Text="{Binding Path=HostDataContext.ConnectionState, Converter={x:Static atcNetworkValueConverters:ConnectionStateToTextValueConverter.Instance}}" />
+                            <!--  Connection-type glyph (LAN / Wi-Fi / USB), inline next to the status, tinted by link health  -->
+                            <coreControls:ConnectionTypeIcon
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                ConnectionState="{Binding Path=HostDataContext.ConnectionState}"
+                                ConnectionType="{Binding Path=HostDataContext.DisplayedConnectionType}"
+                                IconSize="10"
+                                ShowBackground="False" />
                         </StackPanel>
-                        <!--  USB source badge (visible when the camera is a USB device)  -->
+                        <!--  Legacy USB source badge: only while the connection-type icon is off (roadmap Phase 8 removes it)  -->
                         <StackPanel Orientation="Horizontal">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=HostDataContext.IsUsbSource}" Value="True">
+                                        <DataTrigger Binding="{Binding Path=HostDataContext.ShowUsbBadge}" Value="True">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>

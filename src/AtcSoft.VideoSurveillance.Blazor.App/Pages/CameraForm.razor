@@ -45,6 +45,26 @@ else
                                   Label="Path"
                                   Placeholder="/stream1"
                                   Class="mt-3" />
+                    <MudSelect @bind-Value="connectionType"
+                               Label="Connection Type"
+                               Class="mt-3">
+                        <MudSelectItem Value="CameraConnectionType.None">Not set</MudSelectItem>
+                        <MudSelectItem Value="CameraConnectionType.Lan">Wired (LAN)</MudSelectItem>
+                        <MudSelectItem Value="CameraConnectionType.Wifi">Wi-Fi</MudSelectItem>
+                    </MudSelect>
+                    @if (IsEdit)
+                    {
+                        @* Server-side ONVIF detection with the stored credentials; the result can still be changed above. *@
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="2">
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       OnClick="DetectConnectionTypeAsync"
+                                       Disabled="isDetecting">
+                                @(isDetecting ? "Detecting..." : "Detect")
+                            </MudButton>
+                            <MudText Typo="Typo.body2">@detectionStatus</MudText>
+                        </MudStack>
+                    }
                     <MudTextField @bind-Value="username"
                                   Label="Username"
                                   Class="mt-3" />
@@ -123,6 +143,7 @@ else
     private string username = string.Empty;
     private string password = string.Empty;
 
+    private CameraConnectionType connectionType = CameraConnectionType.None;
     private CameraOverlayPosition overlayPosition = CameraOverlayPosition.TopLeft;
     private bool streamUseLowLatencyMode = true;
     private int streamMaxLatencyMs = 500;
@@ -145,6 +166,7 @@ else
                 path = camera.Path ?? string.Empty;
                 username = camera.Username ?? string.Empty;
                 overlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
+                connectionType = camera.ConnectionType ?? CameraConnectionType.None;
                 streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
                 streamMaxLatencyMs = camera.StreamMaxLatencyMs;
                 streamRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
@@ -152,6 +174,33 @@ else
             }
 
             isLoading = false;
+        }
+    }
+
+    private bool isDetecting;
+    private string detectionStatus = string.Empty;
+
+    private async Task DetectConnectionTypeAsync()
+    {
+        isDetecting = true;
+        detectionStatus = string.Empty;
+
+        try
+        {
+            var detected = await Gateway.DetectConnectionTypeAsync(CameraId!.Value);
+            if (detected is CameraConnectionType.Lan or CameraConnectionType.Wifi)
+            {
+                connectionType = detected.Value;
+                detectionStatus = detected == CameraConnectionType.Lan ? "Detected: Wired (LAN)" : "Detected: Wi-Fi";
+            }
+            else
+            {
+                detectionStatus = "Could not detect the connection type";
+            }
+        }
+        finally
+        {
+            isDetecting = false;
         }
     }
 
@@ -171,6 +220,7 @@ else
                 DisplayName: displayName,
                 Description: description,
                 Source: CameraSource.Network,
+                ConnectionType: connectionType,
                 IpAddress: ipAddress,
                 Port: port,
                 Protocol: protocol,
@@ -208,6 +258,7 @@ else
                 DisplayName: displayName,
                 Description: description,
                 Source: CameraSource.Network,
+                ConnectionType: connectionType,
                 IpAddress: ipAddress,
                 Protocol: protocol,
                 Path: path,
