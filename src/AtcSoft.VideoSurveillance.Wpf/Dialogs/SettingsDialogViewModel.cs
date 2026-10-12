@@ -227,11 +227,30 @@ public partial class SettingsDialogViewModel : ViewModelBase
     private bool enableRecordingOnConnect;
 
     // Storage layout
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(RecordingLayoutExampleSummary), nameof(SeparateThumbnailFolderHint)])]
     private bool useDailySubfolders = true;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(RecordingLayoutExampleSummary), nameof(UseDailySubfoldersHint)])]
     private bool separateThumbnailFolder = true;
+
+    /// <summary>
+    /// Gets the example shown under the two layout switches. The server
+    /// moves its recordings when the settings are saved.
+    /// </summary>
+    public string RecordingLayoutExampleSummary
+        => RecordingLayoutExamples.Summary(UseDailySubfolders, SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets the hover help of the "folder per day" switch.
+    /// </summary>
+    public string UseDailySubfoldersHint
+        => RecordingLayoutExamples.DailySubfoldersHint(SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets the hover help of the "separate thumbnail folder" switch.
+    /// </summary>
+    public string SeparateThumbnailFolderHint
+        => RecordingLayoutExamples.SeparateThumbnailFolderHint(UseDailySubfolders, SelectedRecordingFormat);
 
     // Segmentation
     [ObservableProperty]

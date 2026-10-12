@@ -8,15 +8,19 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 public partial class SettingsDialogViewModel : ViewModelDialogBase
 {
     private readonly IApplicationSettingsService settingsService;
+    private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
 
     // Original values for restoration on cancel
     private string originalThemeBase = "Dark";
     private string originalThemeAccent = "Blue";
     private string originalLanguage = "1033";
 
-    public SettingsDialogViewModel(IApplicationSettingsService settingsService)
+    public SettingsDialogViewModel(
+        IApplicationSettingsService settingsService,
+        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
         LoadSettings();
     }
 
@@ -206,7 +210,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     [ObservableProperty]
     private DirectoryInfo? recordingPath;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(RecordingPathExample), nameof(ThumbnailPathExample), nameof(RecordingLayoutExampleSummary), nameof(UseDailySubfoldersHint), nameof(SeparateThumbnailFolderHint)])]
     private string selectedRecordingFormat = DropDownItemsFactory.DefaultRecordingFormat;
 
     public IDictionary<string, string> RecordingFormatItems
@@ -219,11 +223,48 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     private bool enableRecordingOnConnect;
 
     // Recording Storage Layout Settings
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(RecordingPathExample), nameof(ThumbnailPathExample), nameof(RecordingLayoutExampleSummary), nameof(SeparateThumbnailFolderHint)])]
     private bool useDailySubfolders = true;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(RecordingPathExample), nameof(ThumbnailPathExample), nameof(RecordingLayoutExampleSummary), nameof(UseDailySubfoldersHint)])]
     private bool separateThumbnailFolder = true;
+
+    /// <summary>
+    /// Gets where a recording goes with the current choice, relative to the recording folder.
+    /// </summary>
+    public string RecordingPathExample
+        => RecordingLayoutExamples.Video(UseDailySubfolders, SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets where a thumbnail goes with the current choice, relative to the recording folder.
+    /// </summary>
+    public string ThumbnailPathExample
+        => RecordingLayoutExamples.Thumbnail(UseDailySubfolders, SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets the example shown under the two layout switches.
+    /// </summary>
+    public string RecordingLayoutExampleSummary
+        => RecordingLayoutExamples.Summary(UseDailySubfolders, SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets the hover help of the "folder per day" switch.
+    /// </summary>
+    public string UseDailySubfoldersHint
+        => RecordingLayoutExamples.DailySubfoldersHint(SeparateThumbnailFolder, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Gets the hover help of the "separate thumbnail folder" switch.
+    /// </summary>
+    public string SeparateThumbnailFolderHint
+        => RecordingLayoutExamples.SeparateThumbnailFolderHint(UseDailySubfolders, SelectedRecordingFormat);
+
+    /// <summary>
+    /// Whether the recordings are being moved to a changed folder layout.
+    /// The dialog shows a busy indicator and stays open meanwhile.
+    /// </summary>
+    [ObservableProperty]
+    private bool isApplyingRecordingLayout;
 
     // Recording Segmentation Settings
     [ObservableProperty]
@@ -335,9 +376,15 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
     #region Commands
 
-    [RelayCommand]
-    private void Save()
+    /// <summary>
+    /// Saves every tab. When the recording folder layout changed, the
+    /// existing recordings are moved to match before the dialog closes.
+    /// </summary>
+    [RelayCommand("Save")]
+    public async Task SaveAsync()
     {
+        var layoutBefore = (settingsService.Recording.UseDailySubfolders, settingsService.Recording.SeparateThumbnailFolder);
+
         SaveGeneralSettings();
         SaveCameraDisplaySettings();
         SaveConnectionSettings();
@@ -345,7 +392,33 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SaveMotionDetectionSettings();
         SaveRecordingSettings();
         SaveAdvancedSettings();
+
+        var layoutAfter = (settingsService.Recording.UseDailySubfolders, settingsService.Recording.SeparateThumbnailFolder);
+        if (recordingLayoutSynchronizer is not null && layoutBefore != layoutAfter)
+        {
+            await ApplyRecordingLayoutAsync().ConfigureAwait(true);
+        }
+
         CloseRequested?.Invoke(this, new DialogClosedEventArgs(dialogResult: true));
+    }
+
+    private async Task ApplyRecordingLayoutAsync()
+    {
+        IsApplyingRecordingLayout = true;
+        try
+        {
+            await recordingLayoutSynchronizer!.SynchronizeAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // The settings are saved; files that could not be moved stay
+            // readable where they are and are picked up at the next start.
+            System.Diagnostics.Debug.WriteLine($"Moving recordings to the new folder layout failed: {ex.Message}");
+        }
+        finally
+        {
+            IsApplyingRecordingLayout = false;
+        }
     }
 
     [RelayCommand]
@@ -565,9 +638,12 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     private void SaveGeneralSettings()
     {
         // Get current theme/accent from ThemeManager (since selectors update it directly)
-        var currentTheme = ThemeManager.Current.DetectTheme(Application.Current);
-        var themeBase = currentTheme?.BaseColorScheme ?? "Dark";
-        var themeAccent = currentTheme?.ColorScheme ?? "Blue";
+        // Without a running application (no theme to detect) the loaded values stand.
+        var currentTheme = Application.Current is null
+            ? null
+            : ThemeManager.Current.DetectTheme(Application.Current);
+        var themeBase = currentTheme?.BaseColorScheme ?? originalThemeBase;
+        var themeAccent = currentTheme?.ColorScheme ?? originalThemeAccent;
 
         // Get language from CultureManager (since LabelLanguageSelector updates it directly via UpdateUiCultureOnChangeEvent)
         var language = CultureManager.UiCulture.LCID.ToString(CultureInfo.InvariantCulture);

@@ -27,6 +27,8 @@
         </Style>
     </atc:NiceWindow.Resources>
 
+    <!--  Busy while recordings are moved to a changed folder layout  -->
+    <atc:BusyOverlay BusyContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingLayoutMoving}" IsBusy="{Binding Path=IsApplyingRecordingLayout}">
     <atc:GridEx Margin="16" Rows="*,Auto">
 
         <!--  Tabbed Settings  -->
@@ -150,4 +152,5 @@
                 IsCancel="True" />
         </atc:UniformSpacingPanel>
     </atc:GridEx>
+    </atc:BusyOverlay>
 </atc:NiceWindow>

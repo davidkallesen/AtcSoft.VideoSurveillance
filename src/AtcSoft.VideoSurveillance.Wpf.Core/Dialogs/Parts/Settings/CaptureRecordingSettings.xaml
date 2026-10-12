@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
+    xmlns:atcDataDisplay="clr-namespace:Atc.Wpf.Controls.DataDisplay;assembly=Atc.Wpf.Controls"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
@@ -37,17 +38,31 @@
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedThumbnailTileCount, Mode=TwoWay}" />
 
+            <!--  Folder layout. Each switch has a hover help (the info icon) showing its path when on and off; the text below shows the result of the current choice.  -->
             <atc:LabelToggleSwitch
+                InformationText="{Binding Path=UseDailySubfoldersHint}"
                 IsOn="{Binding Path=UseDailySubfolders, Mode=TwoWay}"
                 LabelPosition="Right"
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                 Key=UseDailySubfolders}" />
 
             <atc:LabelToggleSwitch
+                InformationText="{Binding Path=SeparateThumbnailFolderHint}"
                 IsOn="{Binding Path=SeparateThumbnailFolder, Mode=TwoWay}"
                 LabelPosition="Right"
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                 Key=SeparateThumbnailFolder}" />
+
+            <atcDataDisplay:Alert
+                Margin="0,0,0,16"
+                IsDense="True"
+                Severity="Info"
+                Variant="Outlined">
+                <TextBlock
+                    FontFamily="Consolas"
+                    Text="{Binding Path=RecordingLayoutExampleSummary}"
+                    TextWrapping="Wrap" />
+            </atcDataDisplay:Alert>
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=EnableRecordingOnMotion, Mode=TwoWay}"

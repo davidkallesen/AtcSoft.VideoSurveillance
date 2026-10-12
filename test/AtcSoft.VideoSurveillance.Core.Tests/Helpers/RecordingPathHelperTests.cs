@@ -278,6 +278,27 @@ public sealed class RecordingPathHelperTests : IDisposable
         RecordingPathHelper.IsBeingWritten(Path.Combine(root, "Cam", "none.mkv")).Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(false, false, @"Camera 1\Camera 1_20261012_101500_123.mkv", @"Camera 1\Camera 1_20261012_101500_123.png")]
+    [InlineData(true, false, @"Camera 1\2026-10-12\Camera 1_20261012_101500_123.mkv", @"Camera 1\2026-10-12\Camera 1_20261012_101500_123.png")]
+    [InlineData(false, true, @"Camera 1\Camera 1_20261012_101500_123.mkv", @"thumbnails\Camera 1\Camera 1_20261012_101500_123.png")]
+    [InlineData(true, true, @"Camera 1\2026-10-12\Camera 1_20261012_101500_123.mkv", @"thumbnails\Camera 1\2026-10-12\Camera 1_20261012_101500_123.png")]
+    public void BuildExample_Shows_Where_A_Recording_And_Its_Thumbnail_Go(
+        bool daily,
+        bool separateThumbnails,
+        string expectedVideo,
+        string expectedThumbnail)
+    {
+        var (video, thumbnail) = RecordingPathHelper.BuildExample(
+            "Camera 1",
+            Timestamp,
+            "mkv",
+            new RecordingLayoutOptions(daily, separateThumbnails));
+
+        video.Should().Be(expectedVideo);
+        thumbnail.Should().Be(expectedThumbnail);
+    }
+
     private static string Touch(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

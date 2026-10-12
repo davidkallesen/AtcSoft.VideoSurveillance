@@ -1329,4 +1329,13 @@
   <data name="SeparateThumbnailFolder" xml:space="preserve">
     <value>Vorschaubilder in einem separaten Ordner speichern</value>
   </data>
+  <data name="RecordingLayoutOnOffHint" xml:space="preserve">
+    <value>Ein: {0}&#xD;&#xA;Aus: {1}</value>
+  </data>
+  <data name="RecordingLayoutExampleSummary" xml:space="preserve">
+    <value>Video:        {0}&#xD;&#xA;Vorschaubild: {1}&#xD;&#xA;Vorhandene Aufnahmen werden beim Speichern verschoben.</value>
+  </data>
+  <data name="RecordingLayoutMoving" xml:space="preserve">
+    <value>Aufnahmen werden verschoben...</value>
+  </data>
 </root>

@@ -119,6 +119,31 @@ public static partial class RecordingPathHelper
     }
 
     /// <summary>
+    /// Builds an example of where a recording and its thumbnail go under a
+    /// layout, relative to the recording folder. For showing a user what a
+    /// layout option does before they choose it.
+    /// </summary>
+    /// <param name="cameraName">The camera name to use in the example.</param>
+    /// <param name="timestamp">The recording time to use in the example.</param>
+    /// <param name="format">The container format, with or without a leading dot.</param>
+    /// <param name="layout">The layout to illustrate.</param>
+    public static (string Video, string Thumbnail) BuildExample(
+        string cameraName,
+        DateTime timestamp,
+        string? format,
+        RecordingLayoutOptions layout)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+
+        // Any rooted path will do: only the part below it is returned.
+        var root = Path.Combine(Path.GetTempPath(), "recordings");
+        var video = BuildRecordingPath(root, GetCameraFolderName(cameraName, Guid.Empty), timestamp, format, layout);
+        var thumbnail = BuildThumbnailPath(video, root, layout);
+
+        return (Path.GetRelativePath(root, video), Path.GetRelativePath(root, thumbnail));
+    }
+
+    /// <summary>
     /// Gets every place the thumbnail of a recording may be, newest layout
     /// first. Use it to find or delete a thumbnail without knowing which
     /// layout the recording was made under.

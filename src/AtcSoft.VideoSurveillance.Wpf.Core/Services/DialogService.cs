@@ -12,6 +12,7 @@ public class DialogService : IDialogService
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
     private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
+    private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DialogService"/> class.
@@ -37,13 +38,15 @@ public class DialogService : IDialogService
         IMotionDetectionService motionDetectionService,
         IVideoPlayerFactory videoPlayerFactory,
         AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator,
-        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null)
+        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null,
+        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));
         this.videoPlayerFactory = videoPlayerFactory ?? throw new ArgumentNullException(nameof(videoPlayerFactory));
         this.usbCameraEnumerator = usbCameraEnumerator ?? throw new ArgumentNullException(nameof(usbCameraEnumerator));
         this.connectionTypeDetector = connectionTypeDetector;
+        this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
     }
 
     /// <inheritdoc />
@@ -291,7 +294,7 @@ public class DialogService : IDialogService
             CultureManager.UiCulture = new CultureInfo(lcid);
         }
 
-        var viewModel = new SettingsDialogViewModel(settingsService);
+        var viewModel = new SettingsDialogViewModel(settingsService, recordingLayoutSynchronizer);
         var dialog = new SettingsDialog(viewModel)
         {
             Owner = Application.Current.MainWindow,

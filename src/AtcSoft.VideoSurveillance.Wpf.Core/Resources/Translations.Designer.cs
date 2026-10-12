@@ -2554,6 +2554,33 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Video:      {0}.
+        /// </summary>
+        public static string RecordingLayoutExampleSummary {
+            get {
+                return ResourceManager.GetString("RecordingLayoutExampleSummary", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Moving recordings....
+        /// </summary>
+        public static string RecordingLayoutMoving {
+            get {
+                return ResourceManager.GetString("RecordingLayoutMoving", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to On:  {0}.
+        /// </summary>
+        public static string RecordingLayoutOnOffHint {
+            get {
+                return ResourceManager.GetString("RecordingLayoutOnOffHint", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Recording Overrides.
         /// </summary>
         public static string RecordingOverrides {
