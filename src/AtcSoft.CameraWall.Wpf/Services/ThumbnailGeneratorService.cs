@@ -183,6 +183,32 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
         }
     }
 
+    /// <summary>
+    /// Gets where a frame is drawn inside its thumbnail cell. A landscape
+    /// frame fills the cell. A portrait frame, which a camera rotated a
+    /// quarter turn produces, is fitted and centred so it is not squashed.
+    /// </summary>
+    private static Drawing.Rectangle FitIntoCell(
+        Drawing.Image frame,
+        int cellX,
+        int cellY)
+    {
+        if (frame.Width >= frame.Height || frame.Width <= 0)
+        {
+            return new Drawing.Rectangle(cellX, cellY, FrameWidth, FrameHeight);
+        }
+
+        var scale = Math.Min((double)FrameWidth / frame.Width, (double)FrameHeight / frame.Height);
+        var width = Math.Max(1, (int)Math.Round(frame.Width * scale));
+        var height = Math.Max(1, (int)Math.Round(frame.Height * scale));
+
+        return new Drawing.Rectangle(
+            cellX + ((FrameWidth - width) / 2),
+            cellY + ((FrameHeight - height) / 2),
+            width,
+            height);
+    }
+
     private void GenerateThumbnail(
         Guid cameraId,
         ThumbnailCaptureContext context)
@@ -229,8 +255,7 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
                 var frame = frames.Length > 0 ? frames[0] : null;
                 if (frame is not null)
                 {
-                    var destRect = new Drawing.Rectangle(0, 0, FrameWidth, FrameHeight);
-                    graphics.DrawImage(frame, destRect);
+                    graphics.DrawImage(frame, FitIntoCell(frame, 0, 0));
                 }
             }
             else
@@ -253,12 +278,7 @@ public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
 
                     if (frame is not null)
                     {
-                        var destRect = new Drawing.Rectangle(
-                            positions[i].X,
-                            positions[i].Y,
-                            FrameWidth,
-                            FrameHeight);
-                        graphics.DrawImage(frame, destRect);
+                        graphics.DrawImage(frame, FitIntoCell(frame, positions[i].X, positions[i].Y));
                     }
 
                     // Missing frames stay black (already filled)
