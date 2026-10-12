@@ -8,7 +8,12 @@ namespace AtcSoft.VideoSurveillance.Helpers;
 /// </summary>
 public static class MediaCleanupRunner
 {
-    private static readonly TimeSpan EmptyDirectoryGracePeriod = TimeSpan.FromMinutes(1);
+    /// <summary>
+    /// How old an empty folder must be before a cleanup pass removes it. A
+    /// recording creates its folder a moment before its file, and cleanup can
+    /// run at any time.
+    /// </summary>
+    public static readonly TimeSpan EmptyDirectoryGracePeriod = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Deletes files in <paramref name="rootPath"/> (recursive) whose

@@ -166,7 +166,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
 
         var vm = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
             SelectedRecording.PlaybackUrl.AbsoluteUri,
-            SelectedRecording.FileName);
+            SelectedRecording.FileName,
+            recordingStartTime: SelectedRecording.RecordingTime.LocalDateTime);
 
         var window = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
         window.Show();

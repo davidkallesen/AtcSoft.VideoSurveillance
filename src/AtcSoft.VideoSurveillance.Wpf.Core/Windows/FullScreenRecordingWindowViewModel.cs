@@ -79,10 +79,17 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// <param name="filePath">The path to the recording file.</param>
     /// <param name="fileName">The display name of the recording file.</param>
     /// <param name="overlaySettings">The playback overlay settings.</param>
+    /// <param name="recordingStartTime">
+    /// When the recording started, in local time. When <see langword="null"/>
+    /// it is read from the file name, which is local time for recordings made
+    /// by the standalone app. A caller that knows the real start time (the
+    /// server names its files in UTC) should pass it.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
-        PlaybackOverlaySettings? overlaySettings = null)
+        PlaybackOverlaySettings? overlaySettings = null,
+        DateTime? recordingStartTime = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
@@ -90,7 +97,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         this.filePath = filePath;
         this.overlaySettings = overlaySettings ?? new PlaybackOverlaySettings();
         FileName = fileName;
-        recordingStartTime = ParseRecordingStartTime(fileName);
+        this.recordingStartTime = recordingStartTime ?? ParseRecordingStartTime(fileName);
 
         // Apply overlay settings
         ShowFilename = this.overlaySettings.ShowFilename;

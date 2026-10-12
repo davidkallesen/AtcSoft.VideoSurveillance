@@ -178,7 +178,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             }
 
             // The last recording of a day leaves an empty day folder behind
-            _ = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(basePath, TimeSpan.FromMinutes(1));
+            _ = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(basePath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
 
             Recordings.Remove(SelectedRecording);
             SelectedRecording = null;

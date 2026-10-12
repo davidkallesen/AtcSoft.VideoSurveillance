@@ -192,7 +192,7 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
             summary.BytesFreed += run.BytesFreed;
             ApplyErrors(run.Errors, summary);
 
-            var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath);
+            var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
             ApplyEmptyDirectoriesResult(emptyDirs, summary);
         }
 
@@ -223,7 +223,7 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
         summary.BytesFreed += snapshotRun.BytesFreed;
         ApplyErrors(snapshotRun.Errors, summary);
 
-        var snapshotEmpty = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(snapshotPath);
+        var snapshotEmpty = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(snapshotPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
         ApplyEmptyDirectoriesResult(snapshotEmpty, summary);
 
         return summary;

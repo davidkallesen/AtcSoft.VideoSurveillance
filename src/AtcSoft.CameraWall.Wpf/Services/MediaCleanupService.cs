@@ -258,7 +258,7 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
 
             ApplyRecordingRunResult(run, result);
 
-            var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath);
+            var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
             ApplyEmptyDirectoriesResult(emptyDirs, result);
         }
 
@@ -282,7 +282,7 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
 
         ApplySnapshotRunResult(snapshotRun, result);
 
-        var snapshotEmpty = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(snapshotPath);
+        var snapshotEmpty = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(snapshotPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
         ApplyEmptyDirectoriesResult(snapshotEmpty, result);
     }
 

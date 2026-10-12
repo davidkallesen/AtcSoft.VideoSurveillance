@@ -202,6 +202,8 @@ Where the build differs from, or adds to, the plan above.
 - **Sign of the display matrix.** `av_display_rotation_get` reports counter-clockwise degrees and is the negation of what `av_display_rotation_set` is given, so a clockwise camera angle is passed to the setter as-is. 🧪 Confirmed two ways: in-process tests write MP4 and MKV through `Remuxer` at each angle and read it back, and FFmpeg's own decoder turned a corner marker clockwise for the same flag.
 - **`MediaElement` ignores the flag.** 🧪 Rendering flagged MP4 and MKV files in a WPF `MediaElement` and sampling a corner marker showed no rotation at any angle, and `NaturalVideoWidth/Height` stay unrotated. So the recording player always applies the rotation itself (a `LayoutTransform` from `MediaProbe.GetRotation`), and no double-rotation guard is needed.
 - **End-to-end snapshot check.** 🧪 A marked stream was played through `VideoPlayer` on all three paths — hardware-decoded with GPU, software-decoded with GPU, and no GPU — at 0 / 90 / 180 / 270. All twelve snapshots came back with the marker in the expected corner and the expected dimensions.
+- **Recordings from the real pipeline.** 🧪 Recording the marked stream through `VideoPlayer` → `Remuxer` at 90 / 180 / 270, in MP4 and MKV, gave files that `ffprobe` reports as rotation -90 / -180 / 90, and FFmpeg's decoder showed the marker in the top-right / bottom-right / bottom-left corner — clockwise, matching the live picture.
+- **Cost of CPU rotation.** Rotating one 1920×1080 BGRA frame takes about 1.6 ms (release build, this machine), so a rotated software-decoded 1080p camera at 30 fps spends roughly 5% of one core on it. Hardware-decoded cameras rotate on the GPU and pay nothing.
 - **Shared rotation code.** `PixelRotator` (VideoEngine) rotates packed pixel buffers and is used by both `FrameCapture` (RGB24) and `CpuFrameUploader` (BGRA). `MotionBoxMapper` (Core) owns the box-to-screen mapping.
 - **Also fixed:** the full-screen camera window did not rotate a player it created itself. Boxes found before a rotation change are cleared rather than drawn in the old orientation.
 - **API-client app unchanged.** It has no rotation concept (rotation is not in the API contract), so its full-screen overlay still uses the stream size. Adding rotation to the API is a separate piece of work.
@@ -213,8 +215,9 @@ The reporter sees misplaced boxes at 180° too. The cause found (wrong aspect ra
 
 - A **tile swap** left the two streams with each other's rotation, so the picture and the analysis could disagree with the setting.
 - Whenever the GPU snapshot failed, the **CPU fallback returned an unrotated frame**. Frame differencing between a rotated and an unrotated frame produces boxes in the wrong place.
+- A **full-screen window that created its own player** showed the picture unrotated, while its boxes came from the tile's rotated analysis. At 180° that looks exactly like "boxes mirrored through the centre". This only applies if the boxes were seen in full screen.
 
-If boxes are still off at 180° after this change, capture: the camera's codec and whether hardware acceleration is on, whether tiles were swapped, and a snapshot taken at the same moment.
+If boxes are still off at 180° after this change, capture: grid or full screen, the camera's codec and whether hardware acceleration is on, whether tiles were swapped, and a snapshot taken at the same moment.
 
 ---
 
