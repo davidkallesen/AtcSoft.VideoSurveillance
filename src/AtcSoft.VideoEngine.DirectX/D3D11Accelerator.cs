@@ -175,10 +175,12 @@ public sealed unsafe partial class D3D11Accelerator : IGpuAccelerator
     {
         // Take frameLock so a concurrent OnFrameDecoded sees a coherent view of
         // (rotation + cached pipeline). The renderer's EnsurePipeline reallocates
-        // the output texture if the rotation flips dimensions.
+        // the output texture if the rotation flips dimensions. Software frames
+        // bypass the renderer, so the uploader rotates those.
         lock (frameLock)
         {
             renderer.SetRotation(rotation);
+            cpuUploader.SetRotation(rotation);
         }
     }
 

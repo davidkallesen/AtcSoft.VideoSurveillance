@@ -6,8 +6,10 @@ namespace AtcSoft.VideoEngine.DirectX;
 /// fallback when the decoder doesn't deliver D3D11 textures — most
 /// commonly MJPEG (no D3D11VA path on Windows), and any codec that
 /// falls back to a CPU decoder. Caches the SWS context and the output
-/// texture per (width, height, src-format) triple so steady-state
-/// playback allocates nothing.
+/// texture per (width, height, src-format, rotation) so steady-state
+/// playback allocates nothing. These frames never reach the video
+/// processor that rotates hardware frames, so the rotation is applied
+/// here, on the CPU, before the upload.
 /// </summary>
 [SuppressMessage("", "CA1806:return value not used (av_*)", Justification = "FFmpeg APIs use return codes but failures still produce usable state in this path")]
 internal sealed unsafe class CpuFrameUploader : IDisposable
@@ -17,11 +19,16 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
 
     private SwsContext* swsCtx;
     private AVFrame* bgraFrame;
+    private AVFrame* rotatedFrame;
     private ID3D11Texture2D? bgraTexture;
 
     private int cachedWidth;
     private int cachedHeight;
+    private int outputWidth;
+    private int outputHeight;
     private AVPixelFormat cachedSrcFormat = AVPixelFormat.None;
+    private VideoRotation cachedRotation = VideoRotation.None;
+    private VideoRotation rotation = VideoRotation.None;
     private bool disposed;
 
     public CpuFrameUploader(D3D11Device d3d11Device)
@@ -32,9 +39,23 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
 
     public ID3D11Texture2D? BgraTexture => bgraTexture;
 
-    public int Width => cachedWidth;
+    /// <summary>
+    /// Gets the texture width, which is the frame height after a quarter turn.
+    /// </summary>
+    public int Width => outputWidth;
 
-    public int Height => cachedHeight;
+    /// <summary>
+    /// Gets the texture height, which is the frame width after a quarter turn.
+    /// </summary>
+    public int Height => outputHeight;
+
+    /// <summary>
+    /// Sets the clockwise rotation applied to subsequent frames.
+    /// </summary>
+    public void SetRotation(VideoRotation rotation)
+    {
+        this.rotation = rotation;
+    }
 
     /// <summary>
     /// Uploads <paramref name="frame"/> (any libswscale-supported CPU
@@ -92,12 +113,28 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
 
         sws_scale(swsCtx, srcData, srcStride, 0, frame->height, dstData, dstStride);
 
+        var upload = bgraFrame;
+        if (rotatedFrame is not null)
+        {
+            PixelRotator.Rotate(
+                (byte*)bgraFrame->data[0],
+                bgraFrame->linesize[0],
+                cachedWidth,
+                cachedHeight,
+                bytesPerPixel: 4,
+                cachedRotation,
+                (byte*)rotatedFrame->data[0],
+                rotatedFrame->linesize[0]);
+
+            upload = rotatedFrame;
+        }
+
         deviceContext.UpdateSubresource(
             bgraTexture!,
             0,
             null,
-            bgraFrame->data[0],
-            (uint)bgraFrame->linesize[0],
+            upload->data[0],
+            (uint)upload->linesize[0],
             0);
 
         return true;
@@ -123,12 +160,16 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
             && bgraTexture is not null
             && cachedWidth == width
             && cachedHeight == height
-            && cachedSrcFormat == srcFormat)
+            && cachedSrcFormat == srcFormat
+            && cachedRotation == rotation)
         {
             return true;
         }
 
         ReleasePipeline();
+
+        var targetRotation = rotation;
+        var (rotatedWidth, rotatedHeight) = PixelRotator.GetRotatedSize(width, height, targetRotation);
 
         try
         {
@@ -149,28 +190,25 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
                 return false;
             }
 
-            bgraFrame = av_frame_alloc();
+            bgraFrame = AllocateBgraFrame(width, height);
             if (bgraFrame is null)
             {
                 return false;
             }
 
-            bgraFrame->format = (int)AVPixelFormat.Bgra;
-            bgraFrame->width = width;
-            bgraFrame->height = height;
-
-            // Align to 32 bytes — comfortably above the 16-byte SIMD
-            // boundary sws_scale prefers and a multiple of 4 bytes/pixel
-            // so each scanline has the same stride.
-            if (av_frame_get_buffer(bgraFrame, 32) < 0)
+            if (targetRotation != VideoRotation.None)
             {
-                return false;
+                rotatedFrame = AllocateBgraFrame(rotatedWidth, rotatedHeight);
+                if (rotatedFrame is null)
+                {
+                    return false;
+                }
             }
 
             var desc = new Texture2DDescription
             {
-                Width = (uint)width,
-                Height = (uint)height,
+                Width = (uint)rotatedWidth,
+                Height = (uint)rotatedHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 Format = Format.B8G8R8A8_UNorm,
@@ -183,7 +221,10 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
 
             cachedWidth = width;
             cachedHeight = height;
+            outputWidth = rotatedWidth;
+            outputHeight = rotatedHeight;
             cachedSrcFormat = srcFormat;
+            cachedRotation = targetRotation;
             return true;
         }
         catch
@@ -193,6 +234,32 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
         }
     }
 
+    private static AVFrame* AllocateBgraFrame(
+        int width,
+        int height)
+    {
+        var frame = av_frame_alloc();
+        if (frame is null)
+        {
+            return null;
+        }
+
+        frame->format = (int)AVPixelFormat.Bgra;
+        frame->width = width;
+        frame->height = height;
+
+        // Align to 32 bytes — comfortably above the 16-byte SIMD
+        // boundary sws_scale prefers and a multiple of 4 bytes/pixel
+        // so each scanline has the same stride.
+        if (av_frame_get_buffer(frame, 32) < 0)
+        {
+            av_frame_free(ref frame);
+            return null;
+        }
+
+        return frame;
+    }
+
     private void ReleasePipeline()
     {
         if (bgraFrame is not null)
@@ -200,6 +267,13 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
             var f = bgraFrame;
             av_frame_free(ref f);
             bgraFrame = null;
+        }
+
+        if (rotatedFrame is not null)
+        {
+            var f = rotatedFrame;
+            av_frame_free(ref f);
+            rotatedFrame = null;
         }
 
         if (swsCtx is not null)
@@ -213,6 +287,9 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
 
         cachedWidth = 0;
         cachedHeight = 0;
+        outputWidth = 0;
+        outputHeight = 0;
         cachedSrcFormat = AVPixelFormat.None;
+        cachedRotation = VideoRotation.None;
     }
 }

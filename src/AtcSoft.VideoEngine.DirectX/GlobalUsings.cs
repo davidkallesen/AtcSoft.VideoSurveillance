@@ -3,6 +3,7 @@ global using System.Numerics;
 global using System.Runtime.InteropServices;
 
 global using AtcSoft.VideoEngine.FFmpeg;
+global using AtcSoft.VideoEngine.Helpers;
 global using Flyleaf.FFmpeg;
 global using Microsoft.Extensions.Logging;
 global using Vortice;

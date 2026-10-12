@@ -2,8 +2,9 @@ namespace AtcSoft.VideoSurveillance.Enums;
 
 /// <summary>
 /// Specifies the clockwise rotation applied to a camera stream.
-/// Applied at the GPU video processor stage so display, snapshots, and
-/// (via MP4 metadata) recordings are all rotated.
+/// The live picture, motion analysis, snapshots and thumbnails are rotated.
+/// Recordings keep the camera's own pixels and carry a rotation flag that
+/// players apply at playback.
 /// </summary>
 public enum CameraRotation
 {

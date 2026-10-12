@@ -220,8 +220,10 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
                 try
                 {
+                    // The GPU snapshot is already rotated; rotate here too so
+                    // a capture looks the same whichever path produced it.
                     frameCapture ??= new FrameCapture();
-                    return frameCapture.CaptureFrame(clone);
+                    return frameCapture.CaptureFrame(clone, rotation);
                 }
                 finally
                 {
