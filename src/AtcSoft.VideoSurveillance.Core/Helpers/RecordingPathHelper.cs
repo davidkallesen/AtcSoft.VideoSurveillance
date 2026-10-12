@@ -255,6 +255,37 @@ public static partial class RecordingPathHelper
         return string.Join('/', segments.Select(Uri.EscapeDataString));
     }
 
+    /// <summary>
+    /// Determines whether a recording is still being written, that is,
+    /// whether another process or thread has the file open for writing.
+    /// Such a file has no finished header or index yet, so reading its
+    /// length or duration gives nothing useful.
+    /// </summary>
+    /// <param name="filePath">The recording path.</param>
+    public static bool IsBeingWritten(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            // Asking to share the file with readers only is refused while a
+            // writer has it open.
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return false;
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     private static bool TryGetSeparateThumbnailPath(
         string videoPath,
         string? recordingRoot,

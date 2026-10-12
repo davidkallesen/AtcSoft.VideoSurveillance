@@ -354,8 +354,15 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         return ext is ".MP4" or ".MKV" or ".AVI";
     }
 
+    /// <summary>
+    /// Gets the length of a recording. A recording that is still being made
+    /// has no length yet, and probing it only makes FFmpeg report a broken
+    /// file, so it is left at zero.
+    /// </summary>
     private static TimeSpan GetVideoDuration(string filePath)
-        => MediaProbe.GetDuration(filePath);
+        => RecordingPathHelper.IsBeingWritten(filePath)
+            ? TimeSpan.Zero
+            : MediaProbe.GetDuration(filePath);
 
     private IEnumerable<RecordingEntry> ApplyDayFilter(
         IEnumerable<RecordingEntry> recordings)

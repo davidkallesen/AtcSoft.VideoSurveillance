@@ -226,7 +226,6 @@ public partial class CameraTile : IDisposable
     private bool isSwapping;
     private bool isDragging;
     private Point dragStartPoint;
-    private ConnectionState previousState = ConnectionState.Disconnected;
     private OverlayPosition currentOverlayPosition = OverlayPosition.TopLeft;
     private CameraOverlay? cachedOverlay;
     private MotionBoundingBoxOverlay? cachedMotionOverlay;
@@ -1875,8 +1874,11 @@ public partial class CameraTile : IDisposable
             return;
         }
 
-        var previous = previousState;
-        previousState = ConnectionState;
+        // The state being left. (This used to report the state before that
+        // one, so listeners saw 'Disconnected -> Connected' for a camera that
+        // was 'Connecting', and a drop from 'Connected' was not recognised as
+        // a disconnect by the notification below.)
+        var previous = ConnectionState;
         ConnectionState = newState;
 
         // Force update overlay directly

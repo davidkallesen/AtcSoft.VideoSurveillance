@@ -252,6 +252,32 @@ public sealed class RecordingPathHelperTests : IDisposable
         RecordingPathHelper.EscapePathSegments(relativePath).Should().BeEmpty();
     }
 
+    [Fact]
+    public void IsBeingWritten_Is_True_While_A_Recorder_Has_The_File_Open()
+    {
+        var path = Touch(Path.Combine(root, "Cam", "live.mkv"));
+
+        // A recorder keeps the file open for writing and lets others read it.
+        using (new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+        {
+            RecordingPathHelper.IsBeingWritten(path).Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public void IsBeingWritten_Is_False_For_A_Finished_Recording()
+    {
+        var path = Touch(Path.Combine(root, "Cam", "done.mkv"));
+
+        RecordingPathHelper.IsBeingWritten(path).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsBeingWritten_Is_False_For_A_Missing_File()
+    {
+        RecordingPathHelper.IsBeingWritten(Path.Combine(root, "Cam", "none.mkv")).Should().BeFalse();
+    }
+
     private static string Touch(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
