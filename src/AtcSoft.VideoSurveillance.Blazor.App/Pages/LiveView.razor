@@ -307,7 +307,7 @@ else
         }
         catch (Exception ex)
         {
-            errors[cameraId] = ex.Message;
+            errors[cameraId] = StreamErrorText.For(ex.Message);
         }
         finally
         {
