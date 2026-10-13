@@ -68,16 +68,18 @@ internal sealed unsafe class Remuxer : IDisposable
     /// <summary>
     /// Opens a live stream for browsers: an HLS playlist at
     /// <paramref name="playlistPath"/> with segments of two seconds next to
-    /// it. Old segments are removed as new ones are written.
+    /// it. Old segments are removed as new ones are written. With
+    /// <paramref name="audioCodecpar"/> the segments carry a sound track.
     /// </summary>
     public void OpenLive(
         string playlistPath,
         AVCodecParameters* codecpar,
-        AVRational inputTimeBase)
+        AVRational inputTimeBase,
+        AVCodecParameters* audioCodecpar = null)
     {
         lock (syncLock)
         {
-            OpenLocked(playlistPath, codecpar, inputTimeBase, rotationDegrees: 0, audioCodecpar: null, live: true);
+            OpenLocked(playlistPath, codecpar, inputTimeBase, rotationDegrees: 0, audioCodecpar, live: true);
             EnsureWriterRunning();
         }
     }

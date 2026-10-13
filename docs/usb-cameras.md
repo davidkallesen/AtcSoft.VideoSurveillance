@@ -151,7 +151,7 @@ A USB camera whose *Capture audio* is on, with a microphone named, is opened tog
 - The sound is encoded to AAC (128 kbit/s), whatever the file format: a microphone delivers uncompressed sound, which MP4 does not take and browsers do not play.
 - Sound and picture come from the same clock and keep their place against each other; sound from before a file's first picture is left out.
 - A camera whose sound cannot be encoded is recorded without it, with a warning in the log.
-- No live picture has sound, in the apps or in the web client: a USB camera's browser stream is written by the server's own pipeline, picture only.
+- The live picture in the desktop apps has no sound. The web client's live view has: the server's pipeline writes the sound into the browser stream, from the same encoder as the recording. A tile starts muted; the sound is turned on with the player's own control (a tile whose picture is turned has no controls, and so no sound).
 - A camera whose microphone is named but not there (it sat in a monitor or dock that is not connected) is opened for its picture alone, with a warning in the log that names the microphone. Its recordings then have no sound. The microphone is tried again every time the camera is opened.
 - The engine switch is `StreamOptions.RecordAudio`, off by default. Network cameras do not use it yet.
 
@@ -159,7 +159,6 @@ A USB camera whose *Capture audio* is on, with a microphone named, is opened tog
 
 | Feature | Where it lives | Why deferred |
 |---------|----------------|--------------|
-| Sound in a USB camera's live view in the web client | `VideoPlayer.StartStreaming`, `Remuxer.OpenLive` | The browser stream of a USB camera comes from the camera's one pipeline, which writes the picture only. The recording has the sound. |
 | Capability discovery (resolution × FPS × pixfmt) | `MediaFoundationEnumerator` | Phase 3 first cut returns devices with empty `Capabilities`. The dialog will populate the capability picker by opening each device on demand once Phase 4.3 lands. |
 | UVC property pages (brightness, focus, …) | New `IUsbCameraPropertyService` | Phase 11. Blue-Iris-grade — pulls in `IAMCameraControl` / `IAMVideoProcAmp` interop. |
 | V4L2 + AVFoundation enumerators | `AtcSoft.VideoEngine.Linux` (future), `AtcSoft.VideoEngine.macOS` | Phase 10. The demuxer already accepts `InputFormatKind.V4l2` / `AVFoundation` and translates the option dict correctly — only the enumerator + DI binding are missing. |

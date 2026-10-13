@@ -182,6 +182,129 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
         (await File.ReadAllTextAsync(playlist, cancellationToken)).Should().Contain("#EXT-X-ENDLIST", "a stream that was stopped says so");
     }
 
+    [Fact]
+    public async Task The_Stream_To_Browsers_Has_The_Sound_And_Keeps_It_When_A_Recording_Comes_And_Goes()
+    {
+        // The stream and the recording share the one sound encoder, as they
+        // share the picture encoder. Whichever stops must leave it running
+        // for the other.
+        TestEngine.Require();
+        var tool = FindFFmpegTool();
+        Assert.SkipWhen(tool is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var port = GetFreePort();
+        using var source = StartRawVideoStream(tool!, port, withSound: true);
+        var recording = Path.Combine(directory, "sound-while-streaming.mkv");
+        var secondRecording = Path.Combine(directory, "sound-after-streaming.mkv");
+        var liveFolder = Path.Combine(directory, "live-sound");
+        Directory.CreateDirectory(liveFolder);
+        var playlist = Path.Combine(liveFolder, "stream.m3u8");
+        string duringRecording;
+        string afterRecording;
+
+        using (var player = new VideoPlayer(Microsoft.Extensions.Logging.Abstractions.NullLogger<VideoPlayer>.Instance))
+        {
+            try
+            {
+                player.Open(
+                    new Uri($"tcp://127.0.0.1:{port}"),
+                    new StreamOptions { HardwareAcceleration = false, RecordAudio = true });
+                await WaitUntilAsync(() => player.State == PlayerState.Playing && player.FramesDecoded > 0, cancellationToken);
+
+                // The stream starts alone, a recording joins and leaves.
+                player.StartStreaming(playlist);
+                player.StartRecording(recording);
+                await WaitUntilAsync(() => FinishedSegments(liveFolder).Count >= 2, cancellationToken);
+                duringRecording = Keep(FinishedSegments(liveFolder)[^1], "during.ts");
+                player.StopRecording();
+
+                var segmentsAtStop = FinishedSegments(liveFolder).Count;
+                await WaitUntilAsync(() => FinishedSegments(liveFolder).Count >= segmentsAtStop + 2, cancellationToken);
+                afterRecording = Keep(FinishedSegments(liveFolder)[^1], "after.ts");
+
+                // The stream leaves while a second recording runs on.
+                player.StartRecording(secondRecording);
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                player.StopStreaming();
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                player.StopRecording();
+            }
+            finally
+            {
+                player.Close();
+                Stop(source);
+            }
+        }
+
+        ReadStreams(duringRecording).Select(s => s.Codec).Should().Equal(AVCodecID.H264, AVCodecID.Aac);
+        ReadStreams(afterRecording).Select(s => s.Codec).Should().Equal(
+            [AVCodecID.H264, AVCodecID.Aac],
+            "the recording that stopped must not take the sound with it");
+
+        var first = ReadStreams(recording);
+        first.Select(s => s.Codec).Should().Equal(AVCodecID.H264, AVCodecID.Aac);
+
+        var second = ReadStreams(secondRecording);
+        second.Select(s => s.Codec).Should().Equal(AVCodecID.H264, AVCodecID.Aac);
+        second[1].Seconds.Should().BeInRange(
+            second[0].Seconds - 0.7,
+            second[0].Seconds + 0.7,
+            "the stream that stopped must not take the sound with it");
+    }
+
+    [Fact]
+    public async Task A_Stream_Of_A_Source_Whose_Sound_Was_Not_Asked_For_Has_The_Picture_Only()
+    {
+        TestEngine.Require();
+        var tool = FindFFmpegTool();
+        Assert.SkipWhen(tool is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var port = GetFreePort();
+        using var source = StartRawVideoStream(tool!, port, withSound: true);
+        var liveFolder = Path.Combine(directory, "live-silent");
+        Directory.CreateDirectory(liveFolder);
+        string segment;
+
+        using (var player = new VideoPlayer(Microsoft.Extensions.Logging.Abstractions.NullLogger<VideoPlayer>.Instance))
+        {
+            try
+            {
+                player.Open(new Uri($"tcp://127.0.0.1:{port}"), new StreamOptions { HardwareAcceleration = false });
+                await WaitUntilAsync(() => player.State == PlayerState.Playing && player.FramesDecoded > 0, cancellationToken);
+
+                player.StartStreaming(Path.Combine(liveFolder, "stream.m3u8"));
+                await WaitUntilAsync(() => FinishedSegments(liveFolder).Count >= 1, cancellationToken);
+                segment = Keep(FinishedSegments(liveFolder)[^1], "silent.ts");
+            }
+            finally
+            {
+                player.Close();
+                Stop(source);
+            }
+        }
+
+        ReadStreams(segment).Select(s => s.Codec).Should().Equal(AVCodecID.H264);
+    }
+
+    // The newest segment is still being written; the ones before it are whole.
+    private static List<string> FinishedSegments(string liveFolder)
+    {
+        var segments = Directory.GetFiles(liveFolder, "*.ts").Order(StringComparer.Ordinal).ToList();
+        return segments.Count == 0 ? segments : segments[..^1];
+    }
+
+    // The stream removes its old segments; a copy stays to be looked at.
+    private string Keep(
+        string segment,
+        string name)
+    {
+        var copy = Path.Combine(directory, name);
+        File.Copy(segment, copy, overwrite: true);
+        return copy;
+    }
+
     [Theory]
     [InlineData(true, AVCodecID.H264)]
     [InlineData(false, AVCodecID.Hevc)]

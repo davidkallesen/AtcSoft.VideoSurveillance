@@ -41,6 +41,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private bool recordingIsEncoded;
     private bool liveIsEncoded;
 
+    // Which of the two outputs has a sound track. They share the one sound
+    // encoder, as they share the picture encoder.
+    private bool recordingHasSound;
+    private bool liveHasSound;
+
     // A picture decoded on the graphics card, copied back to memory for the encoder.
     private AVFrame* memoryFrame;
     private FrameCapture? frameCapture;
@@ -164,16 +169,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        var sound = OpenAudioEncoder(source);
-        try
+        if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id, transcodeToH264))
         {
-            if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id, transcodeToH264))
+            StartEncodedRecording(outputFilePath, source, sourceDecoder);
+        }
+        else
+        {
+            lock (encoderLock)
             {
-                StartEncodedRecording(outputFilePath, source, sourceDecoder, sound);
-            }
-            else
-            {
-                lock (encoderLock)
+                // A live stream that is already running has the sound encoder open.
+                var sound = audioEncoder ?? OpenAudioEncoder(source);
+                try
                 {
                     remuxer.Open(
                         outputFilePath,
@@ -182,13 +188,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                         (int)rotation,
                         sound is null ? null : sound.CodecParameters);
                     audioEncoder = sound;
+                    recordingHasSound = sound is not null;
+                }
+                catch
+                {
+                    DisposeUnlessShared(sound);
+                    throw;
                 }
             }
-        }
-        catch
-        {
-            sound?.Dispose();
-            throw;
         }
 
         LogRecordingStarted(outputFilePath);
@@ -213,8 +220,10 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 frameEncoder = null;
             }
 
-            if (audioEncoder is not null)
+            if (audioEncoder is not null && recordingHasSound && !(liveHasSound && liveRemuxer is { IsOpen: true }))
             {
+                // As with the pictures: with a live stream on the same
+                // encoder it runs on.
                 audioEncoder.Flush(writeEncodedAudioPacket);
                 audioEncoder.Dispose();
                 audioEncoder = null;
@@ -222,6 +231,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
             remuxer.Close();
             recordingIsEncoded = false;
+            recordingHasSound = false;
+            ReleaseAudioEncoderIfUnused();
         }
 
         LogRecordingStopped();
@@ -251,7 +262,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         lock (encoderLock)
         {
             // The sound encoder runs on across the switch: the sound has no gap.
-            var sound = audioEncoder is null ? null : audioEncoder.CodecParameters;
+            var sound = audioEncoder is null || !recordingHasSound ? null : audioEncoder.CodecParameters;
 
             if (frameEncoder is not null && recordingIsEncoded)
             {
@@ -299,15 +310,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private void StartEncodedRecording(
         string outputFilePath,
         Demuxer source,
-        VideoDecoder sourceDecoder,
-        AudioEncoder? sound)
+        VideoDecoder sourceDecoder)
     {
         lock (encoderLock)
         {
-            // A live stream that is already running has the encoder open.
+            // A live stream that is already running has the encoders open.
             var encoder = frameEncoder ?? OpenFrameEncoder(source, sourceDecoder);
+            AudioEncoder? sound = null;
             try
             {
+                sound = audioEncoder ?? OpenAudioEncoder(source);
+
                 var recorder = remuxer
                     ?? throw new InvalidOperationException("Cannot record: player is not playing.");
 
@@ -322,6 +335,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 frameEncoder = encoder;
                 recordingIsEncoded = true;
                 audioEncoder = sound;
+                recordingHasSound = sound is not null;
             }
             catch
             {
@@ -330,6 +344,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                     encoder.Dispose();
                 }
 
+                DisposeUnlessShared(sound);
                 throw;
             }
 
@@ -373,11 +388,45 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         frameEncoder = null;
     }
 
+    // Must be called while holding encoderLock.
+    private void ReleaseAudioEncoderIfUnused()
+    {
+        if (audioEncoder is null ||
+            (recordingHasSound && remuxer is { IsOpen: true }) ||
+            (liveHasSound && liveRemuxer is { IsOpen: true }))
+        {
+            return;
+        }
+
+        audioEncoder.Dispose();
+        audioEncoder = null;
+    }
+
+    // A sound encoder that was opened for an output that then failed to
+    // open is closed again; the one already in use is not.
+    private void DisposeUnlessShared(AudioEncoder? sound)
+    {
+        if (sound is not null && !ReferenceEquals(audioEncoder, sound))
+        {
+            sound.Dispose();
+        }
+    }
+
     private void WriteEncodedAudioPacket(AVPacket* packet)
     {
-        if (remuxer is { IsOpen: true } && audioEncoder is not null)
+        if (audioEncoder is null)
+        {
+            return;
+        }
+
+        if (recordingHasSound && remuxer is { IsOpen: true })
         {
             remuxer.WriteAudioPacket(packet, audioEncoder.TimeBase);
+        }
+
+        if (liveHasSound && liveRemuxer is { IsOpen: true })
+        {
+            liveRemuxer.WriteAudioPacket(packet, audioEncoder.TimeBase);
         }
     }
 
@@ -419,8 +468,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             }
 
             var live = new Remuxer();
+            AudioEncoder? sound = null;
             try
             {
+                // The sound encoder is shared with a recording as well. A
+                // source whose sound cannot be encoded is streamed without it.
+                sound = audioEncoder ?? OpenAudioEncoder(source);
+                var soundParameters = sound is null ? null : sound.CodecParameters;
+
                 if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
                 {
                     // The encoder is shared with a recording, whichever of
@@ -428,14 +483,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                     var encoder = frameEncoder ?? OpenFrameEncoder(source, sourceDecoder);
                     frameEncoder = encoder;
                     encoder.RequestKeyFrame();
-                    live.OpenLive(playlistPath, encoder.CodecParameters, encoder.TimeBase);
+                    live.OpenLive(playlistPath, encoder.CodecParameters, encoder.TimeBase, soundParameters);
                     liveIsEncoded = true;
                 }
                 else
                 {
                     // A compressed source is passed on as it is, also while
                     // its recording is being made as H.264.
-                    live.OpenLive(playlistPath, source.VideoCodecParameters, source.VideoTimeBase);
+                    live.OpenLive(playlistPath, source.VideoCodecParameters, source.VideoTimeBase, soundParameters);
                     liveIsEncoded = false;
                 }
             }
@@ -443,9 +498,12 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             {
                 live.Dispose();
                 ReleaseFrameEncoderIfUnused();
+                DisposeUnlessShared(sound);
                 throw;
             }
 
+            audioEncoder = sound;
+            liveHasSound = sound is not null;
             liveRemuxer = live;
         }
 
@@ -464,7 +522,9 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             liveRemuxer.Dispose();
             liveRemuxer = null;
             liveIsEncoded = false;
+            liveHasSound = false;
             ReleaseFrameEncoderIfUnused();
+            ReleaseAudioEncoderIfUnused();
         }
 
         LogStreamingStopped();
@@ -642,6 +702,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 liveRemuxer = null;
                 liveIsEncoded = false;
                 recordingIsEncoded = false;
+                liveHasSound = false;
+                recordingHasSound = false;
                 remuxer?.Dispose();
                 remuxer = null;
             }

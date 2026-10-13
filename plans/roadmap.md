@@ -34,7 +34,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | Area | What |
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
-| [USB cameras](roadmap-usb-cameras.md) | Sound in a USB camera's live view in the web client; a look at the USB paths in the server's desktop client |
+| [USB cameras](roadmap-usb-cameras.md) | A look at the USB paths in the server's desktop client |
 | [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen; so is the per-camera *Recording video* row in CameraWall's camera dialog |
 
 ### Later
@@ -55,7 +55,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | 🟨 | Phases 2, 5, 7; phases 1, 3, 4, 6 built; the web client's live view rotates | Hands-on checks; the 180° box report is not explained |
 | 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built; move-on-save; server thumbnails and a corrected recordings listing | Hands-on checks in each layout |
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
-| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | Live-view sound; ⏸️ phases 10–11 |
+| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | ⏸️ phases 10–11 |
 | 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |
@@ -96,7 +96,7 @@ Done with two USB cameras attached, then with the IP cameras back. Details in th
 | The server is the one owner of a camera's pipeline; a motion recording borrows it | Stopping a motion recording must not close the connection that watches for the next motion |
 | A motion lasts until the scene has been quiet for the post-motion time | An end at every pause would start and stop recordings and webhooks many times a minute |
 | Only a USB camera is streamed from the server's pipeline | It cannot be opened twice. A network camera can, and its own stream carries its sound |
-| Every use of a USB camera goes through the one pipeline `CameraConnectionService` keeps for it | A live view with a process of its own held the camera, and a recording was refused until the viewers were gone. The price: no sound in a USB camera's browser live view until the pipeline's stream carries it |
+| Every use of a USB camera goes through the one pipeline `CameraConnectionService` keeps for it | A live view with a process of its own held the camera, and a recording was refused until the viewers were gone. The sound a process of its own carried was lost with it for a few hours; the pipeline's stream carries it since the same day |
 | The server analyses at most four pictures a second for motion | Each analysed picture is captured as a PNG and decoded again |
 | Webhook receivers from the configuration stay read-only in the API | An operator's configuration should not be changed from a web page; added receivers live in `webhooks.json` |
 | `recordAsH264` is a plain yes/no in the API | The setting has two values; an enum there would only add a translation |

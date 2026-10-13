@@ -10,6 +10,14 @@ window.hlsInterop = {
             return;
         }
 
+        // An element that is marked muted starts muted. The attribute alone
+        // does not do it for an element the page adds later, and a browser
+        // refuses to start a stream with sound by itself unless it is muted.
+        // The viewer turns the sound on with the player's own control.
+        if (video.hasAttribute('muted')) {
+            video.muted = true;
+        }
+
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
             var hls = new Hls({
                 enableWorker: true,
