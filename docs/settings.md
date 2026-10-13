@@ -198,7 +198,7 @@ A camera's video is normally copied into the recording as it arrives, which cost
 - **Which cameras:** those that send H.265 or MJPEG. A camera that already sends H.264 is copied as before, whatever the setting. A USB camera that delivers uncompressed video is always encoded.
 - **Cost:** processor time for every such camera, and larger files. One 1280x720 H.265 camera at 15 pictures a second took about a sixth of a processor core on the server instead of a twentieth, and its recording grew from about 1.1 to about 4 Mbit/s.
 - **When:** the choice is read when a camera is opened, so a change reaches a camera the next time it connects.
-- **Per camera:** `Overrides.Recording.TranscodeVideoCodec` overrides the application's choice for one camera. There is no field for it in the camera dialog yet.
+- **Per camera:** `Overrides.Recording.TranscodeVideoCodec` overrides the application's choice for one camera. In CameraWall it is the *Recording video* row under the camera dialog's capture overrides. Cameras kept on the server have no per-camera overrides, so there the application's choice counts for all of them.
 
 ### Recording Format Options
 

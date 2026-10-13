@@ -57,6 +57,23 @@
 
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
+                    IsOn="{Binding Path=UseDefaultTranscodeVideoCodec, Mode=TwoWay}"
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                     Key=OverrideToggleLocal}"
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=OverrideToggleMaster}" />
+                <atc:LabelComboBox
+                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                          Key=TranscodeVideoCodecInfo}"
+                    IsEnabled="{Binding Path=UseDefaultTranscodeVideoCodec, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    Items="{Binding Path=TranscodeVideoCodecItems}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                    Key=TranscodeVideoCodec}"
+                    SelectedKey="{Binding Path=OverrideTranscodeVideoCodec, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultThumbnailTileCount, Mode=TwoWay}"
                     OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                      Key=OverrideToggleLocal}"

@@ -360,6 +360,9 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     public IDictionary<string, string> RecordingFormatItems
         => DropDownItemsFactory.RecordingFormatItems;
 
+    public IDictionary<string, string> TranscodeVideoCodecItems
+        => AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.TranscodeVideoCodecItems;
+
     public IDictionary<string, string> OpacityItems
         => DropDownItemsFactory.OverlayOpacityItems;
 
@@ -942,6 +945,47 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         {
             EnsureOverrides();
             Camera.Overrides!.Recording.RecordingFormat = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool UseDefaultTranscodeVideoCodec
+    {
+        get => Camera.Overrides?.Recording.TranscodeVideoCodec is null;
+        set
+        {
+            if (value)
+            {
+                if (Camera.Overrides is not null)
+                {
+                    Camera.Overrides.Recording.TranscodeVideoCodec = null;
+                }
+            }
+            else
+            {
+                EnsureOverrides();
+                Camera.Overrides!.Recording.TranscodeVideoCodec = settingsService.Recording.TranscodeVideoCodec;
+            }
+
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(OverrideTranscodeVideoCodec));
+        }
+    }
+
+    public string OverrideTranscodeVideoCodec
+    {
+        get => (Camera.Overrides?.Recording.TranscodeVideoCodec ?? settingsService.Recording.TranscodeVideoCodec).ToString();
+        set
+        {
+            // The combo box hands over a key; anything else is not a choice.
+            if (!TranscodeVideoCodecItems.ContainsKey(value ?? string.Empty) ||
+                !Enum.TryParse<VideoTranscodeCodec>(value, out var codec))
+            {
+                return;
+            }
+
+            EnsureOverrides();
+            Camera.Overrides!.Recording.TranscodeVideoCodec = codec;
             RaisePropertyChanged();
         }
     }

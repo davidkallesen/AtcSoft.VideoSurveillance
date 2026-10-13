@@ -35,7 +35,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
 | [USB cameras](roadmap-usb-cameras.md) | Recording a USB camera that is being watched live first (needs one owner for every use of the camera); a look at the USB paths in the server's desktop client |
-| [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen. A field for the per-camera "record as H.264" override in the camera dialog |
+| [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen; so is the per-camera *Recording video* row in CameraWall's camera dialog |
 
 ### Later
 
