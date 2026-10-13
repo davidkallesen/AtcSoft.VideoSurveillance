@@ -7,7 +7,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Core` - Shared library: models, enums, events, service interfaces, helpers (net10.0, no WPF)
 - `AtcSoft.VideoEngine` - Cross-platform video engine (net10.0): demux, decode, record, capture via in-process FFmpeg
 - `AtcSoft.VideoEngine.DirectX` - D3D11VA GPU acceleration, Video Processor, swap chain (net10.0-windows)
-- `AtcSoft.VideoEngine.Windows` - Windows-only USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), `IUsbCameraEnumerator` / `IUsbCameraWatcher` implementations (net10.0-windows)
+- `AtcSoft.VideoEngine.Windows` - Windows-only parts shared by the standalone app and the server, not published: USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), and the recording thumbnail generator (GDI+) (net10.0-windows)
 - `AtcSoft.VideoPlayer.Wpf` - WPF VideoHost control with DComp surface + XAML overlay (net10.0-windows)
 - `AtcSoft.CameraWall.Wpf` - WPF library with the complete camera wall: UI, dialogs, VideoEngine integration (not published; consumed by the CameraWall app)
 - `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
@@ -17,7 +17,8 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
-- `AtcSoft.VideoSurveillance.Core.Tests` - xUnit v3 tests for Core library
+- `AtcSoft.VideoSurveillance.Blazor.App` - Blazor WebAssembly client for the API server (MudBlazor). Its logic lives in plain classes under `Logic/`, tested in `AtcSoft.VideoSurveillance.Blazor.App.Tests`
+- `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App)
 
 ## NuGet Packages
 Five projects are published to nuget.org so external WPF apps can embed live camera tiles:
@@ -54,6 +55,18 @@ The REST API + SignalR server enables headless video surveillance:
 - **Endpoints**: Cameras CRUD, Layouts CRUD, Recordings list, Settings get/update, Snapshot capture, Recording start/stop
 - **SignalR hub**: `/hubs/surveillance` broadcasts connection state, motion, and recording events
 - **Run with Aspire**: `dotnet run --project src/AtcSoft.VideoSurveillance.Aspire` starts the API with the Aspire dashboard
+
+### Server rules
+- **Data folder:** the server takes the location of `settings.json` / `cameras.json` from `ServerDataPaths` (`Storage:DataPath`). Never read `ApplicationPaths.Default*` directly in the server.
+- **Settings contract:** every setting a client can change has to survive Core -> API model -> Core. `SettingsRoundTripTests` checks all of them by reflection; a setting left out of the API on purpose is listed there with the reason.
+- **One vocabulary:** values shared between clients are written the same way everywhere — video quality through `VideoQualityHelper`, colours by name.
+- **Secrets in logs:** camera credentials and webhook secrets never go into a log or to a client. FFmpeg command lines and output are cleaned with `HlsStreamCommand.Redact`; a webhook receiver is named by `WebhookEndpoint.LogName`.
+- **Host tests:** `test/AtcSoft.VideoSurveillance.Api.Tests/Host` runs the real server in-process (`ApiHostFixture`) against a temp data folder. Tests that need a camera start a live test stream with the FFmpeg command-line tool and skip without it.
+- See `docs/server.md`.
+
+### Web client rules
+- The web client does not reference Core. Where it needs the same rule (recording path example, default settings, colour names, video qualities) it has its own copy under `Logic/`, and a test in `AtcSoft.VideoSurveillance.Blazor.App.Tests` (which does reference Core) keeps the copy equal to the original.
+- Keep logic out of the `.razor` files: counts, filters, formatting and styles are plain classes with tests.
 
 ## Hosted Background Services (Atc.Hosting)
 Long-running periodic work uses `Atc.Hosting` base classes instead of hand-rolled `System.Threading.Timer` loops. The base class supplies the loop, sequential (no-overlap) ticking, exception logging via `OnExceptionAsync`, and optional health tracking.

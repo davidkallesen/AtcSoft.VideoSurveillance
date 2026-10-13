@@ -2,6 +2,7 @@
   <Folder Name="/docs/">
     <File Path="docs/architecture.md" />
     <File Path="docs/motion-detection.md" />
+    <File Path="docs/server.md" />
     <File Path="docs/settings.md" />
     <File Path="docs/disk-space-guard.md" />
     <File Path="docs/usb-cameras.md" />

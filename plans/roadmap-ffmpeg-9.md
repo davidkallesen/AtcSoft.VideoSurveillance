@@ -90,19 +90,16 @@ Most of the 9.0 headline list does nothing for a surveillance recorder: AMF colo
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Make a failed FFmpeg load visible in tests | ⬜ |
+| 1 | Make a failed FFmpeg load visible in tests | ✅ |
 | 2 | TLS verification as an explicit setting | ⬜ |
 | 3 | Bindings 9.0.2 and the code adaptation | ⬜ |
 | 4 | FFmpeg 9 everywhere it is provided | ⬜ |
 | 5 | Re-verify the engine against FFmpeg 9 | ⬜ |
 | 6 | Use what is new | ⏸️ |
 
-### Phase 1 — Make a failed FFmpeg load visible in tests ⬜
+### Phase 1 — Make a failed FFmpeg load visible in tests ✅
 
-Worth doing even if the upgrade never happens.
-
-- Today the engine tests skip when FFmpeg is missing **or** fails to load, and nothing distinguishes the two.
-- Keep "not installed" as a skip (CI test jobs have no FFmpeg), but make "found but will not load" a **failure**, and print the loaded FFmpeg version in the test output.
+Done 2026-10-13. `VideoEngineBootstrap.FindFFmpegPath` tells "not installed" from "installed"; the engine tests skip in the first case and **fail** with the loader's message in the second, and print the FFmpeg version they ran against. The API host tests, which need the engine to start the server, skip the same way.
 
 ### Phase 2 — TLS verification as an explicit setting ⬜
 

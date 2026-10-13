@@ -112,7 +112,7 @@ Video playback and streaming configuration.
 
 | Setting | Type | Default | Override | Description |
 |---------|------|---------|----------|-------------|
-| `VideoQuality` | string | `"Auto"` | Yes | Target video resolution limit |
+| `VideoQuality` | string | `"Auto"` | Yes | Target video resolution limit — one of the values below, the same in every client and in the API |
 | `HardwareAcceleration` | bool | `true` | Yes | Use GPU acceleration (D3D11VA) for decoding |
 | `LowLatencyMode` | bool | `false` | No | Enable low-latency streaming (reduces buffer) |
 | `BufferDurationMs` | int | `500` | No | Video buffer duration in milliseconds |
@@ -505,6 +505,12 @@ The REST API exposes settings via endpoints:
 
 The API returns and accepts the full `ApplicationSettings` structure (General, CameraDisplay, Connection, Performance, MotionDetection, Recording, Advanced).
 
+A few settings are left out of the API on purpose: `StartRibbonCollapsed` (each desktop client keeps its own), `TranscodeVideoCodec` (no effect yet) and the two recordings-browser switches of the standalone app. A test (`SettingsRoundTripTests`) sends every other setting through the API and back, and fails by name for one that is added to the model and forgotten in the contract or the mapping.
+
+The web client's settings page has the same tabs and choices as the desktop apps' settings dialog.
+
+What the server reads from its own configuration instead (data folder, CORS, webhooks) is described in [server.md](server.md).
+
 Per-camera overrides are managed through camera endpoints:
 - `PUT /cameras/{cameraId}` - Update camera with overrides in the request body
 
@@ -512,7 +518,7 @@ Per-camera overrides are managed through camera endpoints:
 
 ## 📁 Application Paths
 
-All default paths are relative to `%ProgramData%\AtcSoft\CameraWall\`:
+The standalone CameraWall app keeps its files in `%ProgramData%\AtcSoft\CameraWall\`, the server in `%ProgramData%\AtcSoft\VideoSurveillance\` (or the folder given as `Storage:DataPath`, see [server.md](server.md)), so both can run on one machine. Below that folder:
 
 | Path | Purpose |
 |------|---------|

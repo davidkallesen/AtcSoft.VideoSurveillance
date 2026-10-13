@@ -126,7 +126,7 @@ The generator's contract takes only the video path. The browser's delete, cleanu
 
 ### Out of scope (noted, not fixed here)
 
-- The server never generates thumbnails (`ListRecordingsHandler` hard-codes `hasThumbnail: false`, and there is no thumbnail endpoint). The thumbnail option therefore only has a visible effect in the standalone CameraWall app for now.
+- ✅ The server never generated thumbnails — fixed 2026-10-13, see *Implementation Notes*.
 - Browsing and cleanup only cover the global recording path; per-camera path overrides are never browsed or cleaned.
 - ✅ The disk-space-guard settings never reached the API contract — fixed 2026-10-12; they are now in the contract, the WPF API client and Blazor.
 - `TranscodeVideoCodec` is not in the API contract either. It is left out on purpose: the engine has no transcoding path, so the setting has no effect anywhere yet.
@@ -192,7 +192,7 @@ Test-first: each phase starts with failing tests in `AtcSoft.VideoSurveillance.C
 | 3 | Layout options in Core + both recording services | 🟨 Built; awaiting a real recording in each layout |
 | 4 | Cleanup and empty folders | ✅ |
 | 5 | Settings UI (standalone app) | 🟨 Built; awaiting a visual check |
-| 6 | API contract, API-client app and Blazor | 🟨 Built and unit-tested (mapping); UI awaits a visual check |
+| 6 | API contract, API-client app and Blazor | 🟨 Built and unit-tested (mapping); the web client checked in a browser, the API client's dialog awaits a visual check |
 | 7 | Docs | ✅ |
 
 ### Phase 1 — Core path helper (no behaviour change) ✅
@@ -273,6 +273,11 @@ Where the build differs from, or adds to, the plan above.
 - **Per-camera recording paths.** A camera with its own `RecordingPath` gets its day folders and its `thumbnails` folder below that path. As before, such paths are not browsed or cleaned.
 
 ---
+
+- **Server thumbnails** *(added 2026-10-13)*. The thumbnail generator moved from the CameraWall library to `AtcSoft.VideoEngine.Windows` (shared by the app and the server, not a NuGet package, because it draws with GDI+). `ServerRecordingService` starts a capture per recording file and finishes it before the pipeline is disposed. `GET /recordings` returns `thumbnailPath` (relative, fetched from `/recordings-files/`), and both the WPF API client and the web client show it. A host test records a live test stream and fetches the thumbnail the server made.
+- **The recordings listing** *(2026-10-13)*: start time from the file name instead of the file's creation time, stable ids, AVI listed, relative paths and `inProgress` for recordings in progress, and the length of finished recordings (read once per file and remembered).
+- **`/recordings-files` follows the settings** *(2026-10-13)*. It served the folder that was configured at start-up, so a changed recording path needed a restart. It also serves recordings and thumbnails only.
+- **Web client** *(2026-10-13)*. The folder switches have the same on/off path hints and the same example as the desktop dialog; the example turns into a warning when saving will move files, and saving shows a busy overlay. Checked in a browser against a running server: saving a changed layout moved the files.
 
 ## ✅ To Verify by Hand
 

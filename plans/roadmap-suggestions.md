@@ -219,11 +219,11 @@ Ordered by impact-to-effort.
 2. **Fix the `ServerRecordingService` `TryAdd`/`TryUpdate` race** — remove the `ContainsKey` pre-check, switch the segment swap to `TryUpdate`. Prevents leaked pipelines and orphaned files.
 3. ✅ **Bracket IPv6 literals in `CameraConfiguration.BuildUri`** — small correctness fix; IPv6 cameras currently can't connect at all.
 4. ✅ **Run DataAnnotations validation in `CameraConfigurationDialogViewModel.CanSave`** — call `Validator.ValidateObject`; stops invalid ports/empty fields persisting.
-5. **Outbound webhook dispatcher on existing events** — POST on motion/connect/recording; opens IFTTT/Zapier/Slack/HA. Thin layer over `SurveillanceHub`.
+5. ✅ *(Done 2026-10-13 — see `docs/server.md`)* **Outbound webhook dispatcher on existing events** — POST on motion/connect/recording; opens IFTTT/Zapier/Slack/HA. Configured in the server's configuration; a settings page for it is not built.
 6. **`AutomationProperties.Name` on icon buttons + status dots** in `CameraListView.xaml`/`LayoutListView.xaml`/`CameraTileBadge.xaml` — mechanical, closes the accessibility gap.
-7. **Keyboard shortcuts in CameraWall.Wpf.App `MainWindow.xaml`** — copy the binding set already in VideoSurveillance.Wpf.App.
+7. ✅ *(Done 2026-10-13)* **Keyboard shortcuts in CameraWall.Wpf.App `MainWindow.xaml`** — Ctrl+1 to Ctrl+9 switch layout, Ctrl+N, Ctrl+Shift+N, Ctrl+R, Ctrl+, , F5 and F1 (lists them); Enter plays in the recordings browser.
 8. **Replace `Debug.WriteLine` with `ILogger<CameraTile>`** in `CameraTile.xaml.cs` motion paths — the logger is already injected; makes motion events visible in Serilog.
-9. **Camera search/filter box** in `LiveView.xaml` and `CameraListView.xaml` — a `CollectionViewSource` filter; big usability gain.
+9. 🟨 **Camera search/filter box** — done 2026-10-13 in `CameraListView.xaml` (filters as you type on name, description, address and state). Still open in `LiveView.xaml`.
 10. **Layout quick-select preset buttons** (1×1/2×2/3×3/4×4) in `LiveView.xaml`.
 11. **Disk-usage indicator** in both status bars — surfaces the data the disk-space guard already computes.
 
