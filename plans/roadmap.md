@@ -34,8 +34,8 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | Area | What |
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
-| [USB cameras](roadmap-usb-cameras.md) | Hardware verification of recording-on-connect / motion for USB; audio capture at packet level |
-| [Suggestions](roadmap-suggestions.md) | Quick wins left: disk-usage indicator, accessibility names. (Grid sizes with pages are in both desktop apps, and the server client's live view has a camera filter, since 2026-10-13; neither has been looked at on screen yet.) |
+| [USB cameras](roadmap-usb-cameras.md) | Recording a USB camera that is being watched live first (needs one owner for every use of the camera); a look at the USB paths in the server's desktop client |
+| [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen. A field for the per-camera "record as H.264" override in the camera dialog |
 
 ### Later
 
@@ -55,7 +55,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | 🟨 | Phases 2, 5, 7; phases 1, 3, 4, 6 built; the web client's live view rotates | Hands-on checks; the 180° box report is not explained |
 | 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built; move-on-save; server thumbnails and a corrected recordings listing | Hands-on checks in each layout |
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
-| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–4, 6–8, 12 | Phase 5 hardware verification; phase 9 audio packets; ⏸️ phases 10–11 |
+| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | Watched-first-then-recorded; ⏸️ phases 10–11 |
 | 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |
@@ -75,6 +75,31 @@ A long session without an area file of its own. The details are in the commit me
 | Only reads are retried by the web client, and slow calls get minutes, not seconds | Starting a recording and saving a layout change were cut off after ten seconds and sent again |
 | The API tests run the real server in-process against a temp data folder | Routing, serialization, the file server and the real recording pipeline are covered, including a live test stream from the FFmpeg tool |
 
+### What changed later on 2026-10-13 (USB cameras, motion, and the rest of the quick wins)
+
+Done with two USB cameras attached, then with the IP cameras back. Details in the commit messages, [`docs/server.md`](../docs/server.md), [`docs/usb-cameras.md`](../docs/usb-cameras.md) and [`docs/settings.md`](../docs/settings.md).
+
+| What | State |
+|---|---|
+| USB cameras record (encoded to H.264), with sound from a microphone | Seen on the server and in CameraWall |
+| Server-side motion detection: watch, record while it moves, events and webhooks | Seen with two cameras and a webhook receiver |
+| A USB camera the server has open is streamed to browsers from that pipeline | Seen: live in the web client while watched and recorded |
+| "Record as H.264" for cameras that send H.265 or MJPEG | Seen with a real H.265 camera, on the server and in CameraWall |
+| Webhook receivers added, changed, tested and removed while the server runs; a page for it | Seen in a browser |
+| USB cameras in the web client's camera form and list | Seen in a browser |
+| Grid sizes with pages (both desktop apps), camera filter (server client) | Tested with the real grid control; not looked at on screen |
+| Disk indicator in every client; names on icon-only buttons | Web dashboard seen; the desktop status bars not |
+
+| Decision | Why |
+|---|---|
+| A fixed grid hides the tiles of the other pages instead of removing them | In CameraWall a camera is connected and recorded by its tile; removing the tile would stop the recording |
+| The server is the one owner of a camera's pipeline; a motion recording borrows it | Stopping a motion recording must not close the connection that watches for the next motion |
+| A motion lasts until the scene has been quiet for the post-motion time | An end at every pause would start and stop recordings and webhooks many times a minute |
+| Only a USB camera is streamed from the server's pipeline | It cannot be opened twice. A network camera can, and its own stream carries its sound |
+| The server analyses at most four pictures a second for motion | Each analysed picture is captured as a PNG and decoded again |
+| Webhook receivers from the configuration stay read-only in the API | An operator's configuration should not be changed from a web page; added receivers live in `webhooks.json` |
+| `recordAsH264` is a plain yes/no in the API | The setting has two values; an enum there would only add a translation |
+
 ### Supporting plans
 
 | Plan | Purpose |
@@ -92,8 +117,6 @@ Things that are built but cannot be closed without hands, eyes or hardware.
 |---|---|---|
 | Icon placement in all four info-box corners, grid and full screen | A visual check | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
 | ONVIF detection against a wired, a Wi-Fi and a Tapo camera | Real cameras | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
-| USB recording-on-connect / motion, dshow open, remux of MJPEG | A USB camera | [USB cameras](roadmap-usb-cameras.md) |
-| USB audio capture | A USB camera with a microphone | [USB cameras](roadmap-usb-cameras.md) |
 | Boxes at 0 / 90 / 180 / 270, rotation after a setting change and a tile swap (rotated playback is confirmed in the app; VLC needs MP4) | A real camera | [Video rotation](roadmap-video-rotation.md#-to-verify-by-hand) |
 | Record, browse, play and delete in each of the four folder layouts; midnight rollover | The app and some recording time | [Recording storage layout](roadmap-recording-storage.md#-to-verify-by-hand) |
 | The CameraWall keyboard shortcuts (Ctrl+1 to 9, Ctrl+N, Ctrl+R, F5, F1) and Enter in the recordings browser | The app | [Suggestions](roadmap-suggestions.md) |
