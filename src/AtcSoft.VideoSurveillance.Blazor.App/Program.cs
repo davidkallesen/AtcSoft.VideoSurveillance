@@ -16,6 +16,7 @@ builder.Services
     {
         client.BaseAddress = new Uri(apiBaseAddress);
     })
+    .AddHttpMessageHandler(() => new ServerUnavailableHandler())
     .AddStandardResilienceHandler(options =>
     {
         // Some calls are slow by nature: starting a recording waits for the

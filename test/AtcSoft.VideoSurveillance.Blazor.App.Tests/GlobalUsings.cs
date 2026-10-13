@@ -1,4 +1,6 @@
-﻿global using AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
+﻿global using System.Diagnostics.CodeAnalysis;
+
+global using AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
 
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Recordings.Models;

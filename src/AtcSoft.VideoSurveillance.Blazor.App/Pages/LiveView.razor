@@ -36,6 +36,12 @@
 {
     <MudProgressCircular Indeterminate="true" />
 }
+else if (loadFailed)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" Style="max-width: 700px;">
+        The server did not answer. Check that it is running, then reload the page.
+    </MudAlert>
+}
 else if (layouts.Length == 0)
 {
     <MudAlert Severity="Severity.Info" Style="max-width: 700px;">
@@ -185,6 +191,7 @@ else
     private Layout? activeLayout;
     private Guid selectedLayoutId;
     private bool isLoading = true;
+    private bool loadFailed;
     private readonly Dictionary<Guid, string> streamUrls = new();
     private readonly HashSet<Guid> starting = new();
     private readonly Dictionary<Guid, string> errors = new();
@@ -204,7 +211,10 @@ else
 
         await Hub.ConnectAsync();
 
-        layouts = await Gateway.GetLayoutsAsync() ?? [];
+        // No answer is not the same as no layouts.
+        var loadedLayouts = await Gateway.GetLayoutsAsync();
+        loadFailed = loadedLayouts is null;
+        layouts = loadedLayouts ?? [];
         cameras = await Gateway.GetCamerasAsync() ?? [];
 
         if (layouts.Length > 0)

@@ -8,6 +8,11 @@ public static class HlsStreamCommand
     private const string ToolName = "ffmpeg";
     private const string RedactedCredentials = "***:***@";
 
+    // A password shorter than this is only removed where it stands as a
+    // password ("user:password@"). Removing every "1" or "ab" from a log
+    // line would ruin the line without hiding anything.
+    private const int MinimumLengthToRemoveEverywhere = 6;
+
     /// <summary>
     /// Finds the FFmpeg command-line tool. It is taken from the folder the
     /// engine loads its libraries from, so it is the same version and needs
@@ -130,7 +135,7 @@ public static class HlsStreamCommand
             text = text.Replace($"{userName}:{password}@", RedactedCredentials, StringComparison.Ordinal);
         }
 
-        if (!string.IsNullOrEmpty(password))
+        if (!string.IsNullOrEmpty(password) && password.Length >= MinimumLengthToRemoveEverywhere)
         {
             text = text.Replace(password, "***", StringComparison.Ordinal);
         }

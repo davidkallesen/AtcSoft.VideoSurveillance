@@ -76,6 +76,21 @@ public sealed class HlsStreamCommandTests
     }
 
     [Fact]
+    public void A_Short_Password_Is_Removed_Where_It_Is_A_Password_And_Nowhere_Else()
+    {
+        // Removing every "1" from a line would ruin it without hiding anything.
+        var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);
+        camera.Authentication.UserName = "admin";
+        camera.Authentication.Password = "1";
+        var line = $"Input #0, rtsp, from '{camera.BuildUri()}': frame=  120 fps= 15";
+
+        var logged = HlsStreamCommand.Redact(line, camera);
+
+        logged.Should().NotContain("admin:1@");
+        logged.Should().Contain("192.0.2.10:554/stream1").And.EndWith("frame=  120 fps= 15");
+    }
+
+    [Fact]
     public void Text_Without_Credentials_Is_Left_As_It_Is()
     {
         var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);

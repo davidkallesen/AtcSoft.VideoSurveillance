@@ -141,7 +141,16 @@ else
 
         if (result is { Canceled: false })
         {
-            await Gateway.DeleteLayoutAsync(layout.Id);
+            try
+            {
+                await Gateway.DeleteLayoutAsync(layout.Id);
+            }
+            catch (HttpRequestException)
+            {
+                Snackbar.Add($"Layout '{layout.Name}' could not be deleted.", Severity.Error);
+                return;
+            }
+
             Snackbar.Add($"Layout '{layout.Name}' deleted.", Severity.Success);
 
             if (editingLayout?.Id == layout.Id)

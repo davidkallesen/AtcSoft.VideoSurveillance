@@ -38,7 +38,7 @@ The log folder is decided before the rest of the configuration is read. For the 
 | `filePath` | Where the recording is, below the recording folder, with forward slashes |
 | `thumbnailPath` | Where its thumbnail is, the same way; `null` when it has none |
 | `startedAt` | When it started. Taken from the file name, which is in UTC on the server |
-| `duration` | Its length, ISO 8601 (`PT1M5S`). Empty while it is being recorded, or when the file cannot be read |
+| `duration` | Its length, ISO 8601 (`PT1M5S`). Empty while it is being recorded, when the file cannot be read, or when the server has not read the file yet: lengths are read in the background after a start, so a large archive fills in over the following listings |
 | `inProgress` | `true` while it is still being recorded |
 | `id` | The same for a file every time it is listed |
 
@@ -126,3 +126,4 @@ X-AtcSoft-Signature: sha256=6d0f...
 - A receiver has 10 seconds to answer.
 - Events wait in a queue of 500. When receivers are slower than events arrive, the oldest are dropped and the server says so in its log.
 - The log names a receiver by scheme and host only, and never contains the secret.
+- The receivers are read when the server starts. Restart the server after changing them.

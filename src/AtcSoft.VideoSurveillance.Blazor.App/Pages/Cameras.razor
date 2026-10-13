@@ -183,8 +183,16 @@ else
 
         if (result is { Canceled: false })
         {
-            await Gateway.DeleteCameraAsync(camera.Id);
-            Snackbar.Add($"Camera '{camera.DisplayName}' deleted.", Severity.Success);
+            try
+            {
+                await Gateway.DeleteCameraAsync(camera.Id);
+                Snackbar.Add($"Camera '{camera.DisplayName}' deleted.", Severity.Success);
+            }
+            catch (HttpRequestException)
+            {
+                Snackbar.Add($"Camera '{camera.DisplayName}' could not be deleted.", Severity.Error);
+            }
+
             await LoadCamerasAsync();
         }
     }
