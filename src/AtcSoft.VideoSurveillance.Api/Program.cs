@@ -85,6 +85,7 @@ try
     builder.Services.AddSingleton<IMediaPipelineFactory, VideoEngineMediaPipelineFactory>();
     builder.Services.AddSingleton<StreamingService>();
     builder.Services.AddSingleton<ILiveStreamStatus>(sp => sp.GetRequiredService<StreamingService>());
+    builder.Services.AddSingleton<ICameraConnectionStateSink>(sp => sp.GetRequiredService<ServerRecordingService>());
 
     // USB-camera support — Null fallback first so non-Windows hosts
     // still compose; Windows then replaces the binding via

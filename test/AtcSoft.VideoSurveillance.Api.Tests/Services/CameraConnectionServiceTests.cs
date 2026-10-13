@@ -31,7 +31,8 @@ public sealed class CameraConnectionServiceTests
             settings,
             recordingService,
             pipelineFactory,
-            Substitute.For<IUsbCameraLifecycleCoordinator>());
+            Substitute.For<IUsbCameraLifecycleCoordinator>(),
+            Substitute.For<IMotionDetectionService>());
 
         await sut.DoWorkAsync(CancellationToken.None);
         recordingService.IsRecording(camera.Id).Returns(true);

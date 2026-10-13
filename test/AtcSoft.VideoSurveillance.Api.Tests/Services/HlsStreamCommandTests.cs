@@ -195,23 +195,23 @@ public sealed class HlsStreamCommandTests
     }
 
     [Fact]
-    public void A_Usb_Camera_The_Server_Is_Recording_Cannot_Be_Streamed_As_Well()
+    public void A_Usb_Camera_The_Server_Has_Open_Cannot_Be_Streamed_As_Well()
     {
         // Windows lets one program at a time open a USB camera. The second
         // one gets no pictures and no clear error, so it is refused up front.
-        var reason = HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isRecording: true);
+        var reason = HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isInUseByServer: true);
 
-        reason.Should().Contain("recording").And.Contain("USB");
+        reason.Should().Contain("recording").And.Contain("motion").And.Contain("USB");
     }
 
     [Fact]
     public void A_Usb_Camera_That_Is_Not_Being_Recorded_Can_Be_Streamed()
-        => HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isRecording: false)
+        => HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isInUseByServer: false)
             .Should().BeNull();
 
     [Fact]
     public void A_Network_Camera_Can_Be_Streamed_While_It_Is_Recorded()
-        => HlsStreamCommand.GetUnavailableReason(CreateCamera(CoreCameraProtocol.Rtsp, 554), isRecording: true)
+        => HlsStreamCommand.GetUnavailableReason(CreateCamera(CoreCameraProtocol.Rtsp, 554), isInUseByServer: true)
             .Should().BeNull();
 
     private static CameraConfiguration CreateUsbCamera(string friendlyName)

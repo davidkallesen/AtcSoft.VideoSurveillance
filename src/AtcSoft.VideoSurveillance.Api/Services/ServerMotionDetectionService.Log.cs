@@ -17,6 +17,9 @@ public sealed partial class ServerMotionDetectionService
     [LoggerMessage(Level = LogLevel.Warning, Message = "No picture for motion detection from camera {CameraId} ({ConsecutiveFailures} in a row)")]
     private partial void LogFrameCaptureFailed(Exception ex, Guid cameraId, int consecutiveFailures);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "The pipeline of camera {CameraId} was closed; its motion detection ends")]
+    private partial void LogPipelineClosed(Guid cameraId);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "A subscriber to motion events failed for camera {CameraId}")]
     private partial void LogMotionSubscriberFailed(Exception ex, Guid cameraId);
 }

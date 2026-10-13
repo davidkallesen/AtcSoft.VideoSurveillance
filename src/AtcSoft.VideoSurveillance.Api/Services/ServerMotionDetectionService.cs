@@ -189,6 +189,14 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         {
             throw;
         }
+        catch (ObjectDisposedException)
+        {
+            // Whoever owns the pipeline closed it. There will be no more
+            // pictures, so the detection ends, and any motion with it.
+            LogPipelineClosed(cameraId);
+            StopDetection(cameraId);
+            return;
+        }
         catch (Exception ex)
         {
             // A camera that dropped out is the pipeline owner's business;

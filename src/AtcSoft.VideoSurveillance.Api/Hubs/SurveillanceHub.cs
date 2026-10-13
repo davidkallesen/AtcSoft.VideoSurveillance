@@ -17,6 +17,7 @@ public sealed partial class SurveillanceHub : Hub
     private readonly IRecordingService recordingService;
     private readonly IMediaPipelineFactory pipelineFactory;
     private readonly StreamingService streamingService;
+    private readonly IMotionDetectionService motionDetectionService;
     private readonly ILogger<SurveillanceHub> logger;
 
     public SurveillanceHub(
@@ -24,12 +25,14 @@ public sealed partial class SurveillanceHub : Hub
         IRecordingService recordingService,
         IMediaPipelineFactory pipelineFactory,
         StreamingService streamingService,
+        IMotionDetectionService motionDetectionService,
         ILogger<SurveillanceHub> logger)
     {
         this.storage = storage;
         this.recordingService = recordingService;
         this.pipelineFactory = pipelineFactory;
         this.streamingService = streamingService;
+        this.motionDetectionService = motionDetectionService;
         this.logger = logger;
     }
 
@@ -139,7 +142,9 @@ public sealed partial class SurveillanceHub : Hub
         try
         {
             if (storage.GetCameraById(cameraId) is { } camera &&
-                HlsStreamCommand.GetUnavailableReason(camera, recordingService.IsRecording(cameraId)) is { } reason)
+                HlsStreamCommand.GetUnavailableReason(
+                    camera,
+                    recordingService.IsRecording(cameraId) || motionDetectionService.IsDetectionActive(cameraId)) is { } reason)
             {
                 throw new InvalidOperationException(reason);
             }

@@ -136,6 +136,22 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Pipeline_That_Was_Closed_Ends_The_Detection_And_The_Motion()
+    {
+        // Whoever owns the pipeline closed it (the camera was unplugged, or
+        // its recording was stopped). Going on asking it for pictures would
+        // fail four times a second for ever.
+        await ShowAsync(EmptyScene, SceneWithBlock);
+        events.Clear();
+        pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns<byte[]?>(_ => throw new ObjectDisposedException("VideoPlayer"));
+
+        await sut.AnalyzeOnceAsync(cameraId, TestContext.Current.CancellationToken);
+
+        sut.IsDetectionActive(cameraId).Should().BeFalse();
+        events.Should().ContainSingle().Which.IsMotionActive.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task A_Camera_That_Is_No_Longer_Watched_Raises_Nothing()
     {
         await ShowAsync(EmptyScene);

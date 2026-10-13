@@ -1,4 +1,4 @@
-namespace AtcSoft.VideoSurveillance.Api.Services;
+﻿namespace AtcSoft.VideoSurveillance.Api.Services;
 
 public sealed partial class CameraConnectionService
 {
@@ -61,4 +61,13 @@ public sealed partial class CameraConnectionService
 
     [LoggerMessage(Level = LogLevel.Information, Message = "USB camera {CameraId} ('{FriendlyName}') replugged — backoff cleared, will reconnect on next tick")]
     private partial void LogUsbCameraReplugged(Guid cameraId, string friendlyName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Opening camera {CameraId} ({CameraName}) to watch it for motion")]
+    private partial void LogStartingMotionWatch(Guid cameraId, string cameraName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Motion detection could not be started for camera {CameraId} ({CameraName})")]
+    private partial void LogStartMotionWatchFailed(Exception ex, Guid cameraId, string cameraName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "The motion recording of camera {CameraId} could not be started")]
+    private partial void LogStartMotionRecordingFailed(Exception ex, Guid cameraId);
 }

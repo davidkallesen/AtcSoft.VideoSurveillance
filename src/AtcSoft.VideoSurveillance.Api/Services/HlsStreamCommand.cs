@@ -63,18 +63,19 @@ public static class HlsStreamCommand
     /// Tells why a camera cannot be streamed right now.
     /// </summary>
     /// <param name="camera">The camera to stream.</param>
-    /// <param name="isRecording">Whether the server is recording the camera.</param>
+    /// <param name="isInUseByServer">Whether the server has the camera open itself: it is recording it, or watching it for motion.</param>
     /// <returns>The reason, to show to the user, or <c>null</c> when the camera can be streamed.</returns>
     public static string? GetUnavailableReason(
         CameraConfiguration camera,
-        bool isRecording)
+        bool isInUseByServer)
     {
         ArgumentNullException.ThrowIfNull(camera);
 
         // Windows lets one program at a time open a USB camera. A second
         // one gets no pictures and no clear error either.
-        return camera.Connection.Source == CameraSource.Usb && isRecording
-            ? "The server is recording this USB camera, and a USB camera can only be used by one program at a time. Stop the recording to watch it live."
+        return camera.Connection.Source == CameraSource.Usb && isInUseByServer
+            ? "The server is using this USB camera (it is recording it, or watching it for motion), and a USB camera can only be used by one program at a time. " +
+              "Stop the recording, or turn off motion recording for the camera, to watch it live."
             : null;
     }
 

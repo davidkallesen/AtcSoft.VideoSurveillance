@@ -3,7 +3,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// <summary>
 /// Server-side implementation of <see cref="IRecordingService"/> using FFmpeg media pipelines.
 /// </summary>
-public sealed partial class ServerRecordingService : IRecordingService, IDisposable
+public sealed partial class ServerRecordingService : IRecordingService, ICameraConnectionStateSink, IDisposable
 {
     // Mirrors WPF's CameraTile stream-stale threshold — long enough to absorb
     // a slow keyframe interval, short enough to recover within one CCM tick.
@@ -15,6 +15,15 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     private readonly ICameraStorageService cameraStorageService;
     private readonly ILogger<ServerRecordingService> logger;
     private readonly IThumbnailGeneratorService? thumbnailService;
+    private readonly TimeProvider timeProvider;
+
+    // Cameras whose recording runs on a pipeline it does not own: a motion
+    // recording uses the pipeline that watches the camera, and leaves it
+    // running when it stops.
+    private readonly ConcurrentDictionary<Guid, byte> borrowedPipelines = new();
+
+    // When each camera's last motion recording stopped, for the cooldown.
+    private readonly ConcurrentDictionary<Guid, DateTimeOffset> motionRecordingStops = new();
     private readonly ConcurrentDictionary<Guid, RecordingSession> sessions = new();
     private readonly ConcurrentDictionary<Guid, IMediaPipeline> pipelines = new();
 
@@ -34,16 +43,19 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     /// Makes a thumbnail for each recording segment. Optional: a host that
     /// cannot draw thumbnails (not Windows) records without them.
     /// </param>
+    /// <param name="timeProvider">The clock; the system's when not given.</param>
     public ServerRecordingService(
         IApplicationSettingsService settingsService,
         ICameraStorageService cameraStorageService,
         ILogger<ServerRecordingService> logger,
-        IThumbnailGeneratorService? thumbnailService = null)
+        IThumbnailGeneratorService? thumbnailService = null,
+        TimeProvider? timeProvider = null)
     {
         this.settingsService = settingsService;
         this.cameraStorageService = cameraStorageService;
         this.logger = logger;
         this.thumbnailService = thumbnailService;
+        this.timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <inheritdoc/>
@@ -58,8 +70,14 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     public event Action<Guid, ConnectionState>? CameraConnectionStateChanged;
 
     /// <inheritdoc/>
+    public void Report(
+        Guid cameraId,
+        ConnectionState state)
+        => CameraConnectionStateChanged?.Invoke(cameraId, state);
+
+    /// <inheritdoc/>
     public RecordingState GetRecordingState(Guid cameraId)
-        => sessions.ContainsKey(cameraId) ? RecordingState.Recording : RecordingState.Idle;
+        => sessions.TryGetValue(cameraId, out var session) ? session.State : RecordingState.Idle;
 
     /// <inheritdoc/>
     public RecordingSession? GetSession(Guid cameraId)
@@ -69,6 +87,12 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     public bool StartRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline)
+        => StartRecording(camera, pipeline, startedByMotion: false);
+
+    private bool StartRecording(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline,
+        bool startedByMotion)
     {
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentNullException.ThrowIfNull(pipeline);
@@ -94,7 +118,7 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
 
         pipeline.StartRecording(filePath);
 
-        var session = new RecordingSession(camera.Id, camera.Display.DisplayName, filePath, isManualRecording: true);
+        var session = new RecordingSession(camera.Id, camera.Display.DisplayName, filePath, isManualRecording: !startedByMotion);
 
         if (!sessions.TryAdd(camera.Id, session))
         {
@@ -109,19 +133,27 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
                 LogStopPipelineFailed(ex, camera.Id);
             }
 
-            try
+            // A borrowed pipeline is its owner's to close.
+            if (!startedByMotion)
             {
-                pipeline.Dispose();
-            }
-            catch (Exception ex)
-            {
-                LogDisposePipelineFailed(ex, camera.Id);
+                try
+                {
+                    pipeline.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    LogDisposePipelineFailed(ex, camera.Id);
+                }
             }
 
             return false;
         }
 
         pipelines[camera.Id] = pipeline;
+        if (startedByMotion)
+        {
+            borrowedPipelines[camera.Id] = 0;
+        }
 
         // Forward subsequent pipeline connection-state changes onto the
         // aggregated event so the broadcaster (and any other observer) sees
@@ -141,7 +173,7 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
 
         StartThumbnail(camera, pipeline, filePath);
 
-        RaiseStateChanged(camera.Id, RecordingState.Idle, RecordingState.Recording, filePath);
+        RaiseStateChanged(camera.Id, RecordingState.Idle, session.State, filePath);
         LogRecordingStarted(camera.Display.DisplayName, camera.Id, filePath);
 
         return true;
@@ -164,6 +196,14 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
         // Stop via REST/SignalR cleans up the underlying VideoPlayer's RTSP
         // connection, decoder thread, and GPU resources. Without this, every
         // Start/Stop cycle leaks an entire pipeline.
+        // A motion recording ran on the pipeline that watches the camera:
+        // that pipeline stays open, and the camera stays connected.
+        var borrowed = borrowedPipelines.TryRemove(cameraId, out _);
+        if (!session.IsManualRecording)
+        {
+            motionRecordingStops[cameraId] = timeProvider.GetUtcNow();
+        }
+
         if (pipelines.TryRemove(cameraId, out var pipeline))
         {
             // Write the thumbnail from the frames captured so far while the
@@ -187,22 +227,28 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
                 LogStopPipelineFailed(ex, cameraId);
             }
 
-            try
+            if (!borrowed)
             {
-                pipeline.Dispose();
-            }
-            catch (Exception ex)
-            {
-                LogDisposePipelineFailed(ex, cameraId);
+                try
+                {
+                    pipeline.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    LogDisposePipelineFailed(ex, cameraId);
+                }
             }
         }
 
         // The recording lifecycle ended — let connection-state subscribers
         // know the camera is no longer being observed by us. Mirrors the
         // synthetic Connected we fired in StartRecording.
-        CameraConnectionStateChanged?.Invoke(cameraId, ConnectionState.Disconnected);
+        if (!borrowed)
+        {
+            CameraConnectionStateChanged?.Invoke(cameraId, ConnectionState.Disconnected);
+        }
 
-        RaiseStateChanged(cameraId, RecordingState.Recording, RecordingState.Idle, session.CurrentFilePath);
+        RaiseStateChanged(cameraId, session.State, RecordingState.Idle, session.CurrentFilePath);
         LogRecordingStopped(session.CameraName, cameraId);
     }
 
@@ -216,13 +262,27 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
         IMediaPipeline pipeline)
     {
         ArgumentNullException.ThrowIfNull(camera);
+        ArgumentNullException.ThrowIfNull(pipeline);
 
-        if (IsRecording(camera.Id))
+        // Already recording, whoever started it: the motion is in it.
+        if (sessions.TryGetValue(camera.Id, out var running))
         {
-            return false;
+            running.LastMotionTime = timeProvider.GetUtcNow().UtcDateTime;
+            return true;
         }
 
-        return StartRecording(camera, pipeline);
+        // A camera that sees motion again right after a motion recording
+        // waits for the cooldown, so it does not make a file every few seconds.
+        if (motionRecordingStops.TryGetValue(camera.Id, out var stoppedAt))
+        {
+            var cooldown = MotionDetectionPolicy.Resolve(camera, settingsService.MotionDetection).CooldownSeconds;
+            if (cooldown > 0 && timeProvider.GetUtcNow() - stoppedAt < TimeSpan.FromSeconds(cooldown))
+            {
+                return false;
+            }
+        }
+
+        return StartRecording(camera, pipeline, startedByMotion: true);
     }
 
     /// <inheritdoc/>

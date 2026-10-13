@@ -1,18 +1,30 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// Background service that proactively connects cameras and starts recording
-/// when <see cref="RecordingSettings.EnableRecordingOnConnect"/> is enabled
-/// (respecting per-camera overrides).
+/// Background service that keeps open the cameras the server has work for,
+/// and owns their pipelines:
+/// a camera recorded on connect (<see cref="RecordingSettings.EnableRecordingOnConnect"/>)
+/// is recorded as soon as it plays; a camera recorded on motion
+/// (<see cref="RecordingSettings.EnableRecordingOnMotion"/>) is watched for
+/// motion, and a motion records it on the same pipeline for as long as it
+/// lasts. Both respect per-camera overrides.
 /// </summary>
 public sealed partial class CameraConnectionService : BackgroundServiceBase<CameraConnectionService>
 {
+    // A watched camera is not recording most of the time, so "not recording"
+    // cannot tell that its pipeline died. Silence can: a camera that plays
+    // sends packets all the time.
+    private static readonly TimeSpan WatchedCameraSilenceLimit = TimeSpan.FromSeconds(30);
+
     private readonly ICameraStorageService storageService;
     private readonly IApplicationSettingsService settingsService;
     private readonly IRecordingService recordingService;
     private readonly IMediaPipelineFactory pipelineFactory;
     private readonly IUsbCameraLifecycleCoordinator usbLifecycle;
+    private readonly IMotionDetectionService motionDetectionService;
     private readonly CameraConnectionTypeAutoDetector? connectionTypeAutoDetector;
+    private readonly ILiveStreamStatus? liveStreams;
+    private readonly ICameraConnectionStateSink? connectionStates;
     private readonly ConcurrentDictionary<Guid, IMediaPipeline> managedPipelines = new();
     private readonly ConcurrentDictionary<Guid, BackoffState> backoffs = new();
 
@@ -25,7 +37,10 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         IRecordingService recordingService,
         IMediaPipelineFactory pipelineFactory,
         IUsbCameraLifecycleCoordinator usbLifecycle,
-        CameraConnectionTypeAutoDetector? connectionTypeAutoDetector = null)
+        IMotionDetectionService motionDetectionService,
+        CameraConnectionTypeAutoDetector? connectionTypeAutoDetector = null,
+        ILiveStreamStatus? liveStreams = null,
+        ICameraConnectionStateSink? connectionStates = null)
         : base(logger, options, healthService)
     {
         this.storageService = storageService;
@@ -33,7 +48,12 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         this.recordingService = recordingService;
         this.pipelineFactory = pipelineFactory;
         this.usbLifecycle = usbLifecycle;
+        this.motionDetectionService = motionDetectionService;
         this.connectionTypeAutoDetector = connectionTypeAutoDetector;
+        this.liveStreams = liveStreams;
+        this.connectionStates = connectionStates;
+
+        this.motionDetectionService.MotionDetected += OnMotionDetected;
 
         // Subscribe before Start so we never miss the first event the
         // watcher emits after subscription. Start is idempotent.
@@ -111,9 +131,33 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
 
             try
             {
-                if (!RecordingPolicyHelper.ShouldRecordOnConnect(camera, appDefault))
+                var recordOnConnect = RecordingPolicyHelper.ShouldRecordOnConnect(camera, appDefault);
+                var watchForMotion = ShouldWatchForMotion(camera);
+
+                // Motion recording was turned off: the camera is no longer watched.
+                if (!watchForMotion && motionDetectionService.IsDetectionActive(camera.Id))
                 {
-                    LogRecordingOnConnectDisabled(camera.Id, camera.Display.DisplayName);
+                    StopWatching(camera.Id);
+                }
+
+                if (!recordOnConnect)
+                {
+                    if (watchForMotion)
+                    {
+                        EnsureWatching(camera);
+                    }
+                    else
+                    {
+                        // Nothing left to do with the camera. A recording
+                        // someone started on it is theirs and is left alone.
+                        if (managedPipelines.ContainsKey(camera.Id) && !recordingService.IsRecording(camera.Id))
+                        {
+                            ReleaseWatchedCamera(camera.Id);
+                        }
+
+                        LogRecordingOnConnectDisabled(camera.Id, camera.Display.DisplayName);
+                    }
+
                     continue;
                 }
 
@@ -191,10 +235,13 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     public override void Dispose()
     {
         usbLifecycle.StateChanged -= OnUsbLifecycleChanged;
+        motionDetectionService.MotionDetected -= OnMotionDetected;
 
         // Pipelines should already be stopped by StopAsync; dispose cleans up remaining resources
         foreach (var kvp in managedPipelines)
         {
+            motionDetectionService.StopDetection(kvp.Key);
+
             try
             {
                 kvp.Value.Dispose();
@@ -207,6 +254,144 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
 
         managedPipelines.Clear();
         base.Dispose();
+    }
+
+    private bool ShouldWatchForMotion(CameraConfiguration camera)
+        => MotionDetectionPolicy.ShouldRecordOnMotion(camera, settingsService.Recording.EnableRecordingOnMotion);
+
+    /// <summary>
+    /// Keeps a camera that is recorded on motion open. Its pipeline is not
+    /// recording most of the time, so it is checked by whether the camera
+    /// still sends anything.
+    /// </summary>
+    private void EnsureWatching(CameraConfiguration camera)
+    {
+        // Windows gives a USB camera to one program at a time. Opened a
+        // second time it connects and then delivers nothing, so a camera
+        // someone is watching live is left to them until they are done.
+        if (camera.Connection.Source == CameraSource.Usb && liveStreams?.IsStreaming(camera.Id) == true)
+        {
+            return;
+        }
+
+        if (managedPipelines.TryGetValue(camera.Id, out var watching))
+        {
+            var lastPacket = watching.LastPacketUtc;
+            if (lastPacket != DateTime.MinValue && DateTime.UtcNow - lastPacket > WatchedCameraSilenceLimit)
+            {
+                LogDeadPipelineDetected(camera.Id, camera.Display.DisplayName);
+                ReleaseWatchedCamera(camera.Id);
+                return;
+            }
+
+            // The state change was missed (it can come before the handler is
+            // attached): a camera that plays is watched from here.
+            if (watching.FramesDecoded > 0 && !motionDetectionService.IsDetectionActive(camera.Id))
+            {
+                StartWatching(camera, watching);
+            }
+
+            return;
+        }
+
+        LogStartingMotionWatch(camera.Id, camera.Display.DisplayName);
+
+        var pipeline = pipelineFactory.Create(camera);
+        managedPipelines[camera.Id] = pipeline;
+
+        var capturedCamera = camera;
+        pipeline.ConnectionStateChanged += (_, e) =>
+            OnManagedPipelineConnected(capturedCamera, e);
+    }
+
+    private void StartWatching(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline)
+    {
+        try
+        {
+            motionDetectionService.StartDetection(
+                camera.Id,
+                pipeline,
+                MotionDetectionPolicy.Resolve(camera, settingsService.MotionDetection));
+        }
+        catch (Exception ex)
+        {
+            LogStartMotionWatchFailed(ex, camera.Id, camera.Display.DisplayName);
+        }
+    }
+
+    /// <summary>
+    /// Stops watching a camera for motion, and the recording a motion
+    /// started. A recording started any other way is left running.
+    /// </summary>
+    private void StopWatching(Guid cameraId)
+    {
+        motionDetectionService.StopDetection(cameraId);
+        StopMotionRecording(cameraId);
+    }
+
+    private void StopMotionRecording(Guid cameraId)
+    {
+        try
+        {
+            if (recordingService.GetSession(cameraId) is { IsManualRecording: false })
+            {
+                recordingService.StopRecording(cameraId);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogStopRecordingShutdownError(ex, cameraId);
+        }
+    }
+
+    /// <summary>
+    /// Stops watching a camera and closes its pipeline.
+    /// </summary>
+    private void ReleaseWatchedCamera(Guid cameraId)
+    {
+        StopWatching(cameraId);
+        ScheduleDeferredDisposal(cameraId);
+        connectionStates?.Report(cameraId, ConnectionState.Disconnected);
+    }
+
+    /// <summary>
+    /// A motion on a camera that is only recorded on motion starts a
+    /// recording on the pipeline that watches it; the end of the motion
+    /// stops it. Runs on the detector's thread.
+    /// </summary>
+    private void OnMotionDetected(
+        object? sender,
+        MotionDetectedEventArgs e)
+    {
+        if (!managedPipelines.TryGetValue(e.CameraId, out var pipeline))
+        {
+            return;
+        }
+
+        if (!e.IsMotionActive)
+        {
+            StopMotionRecording(e.CameraId);
+            return;
+        }
+
+        try
+        {
+            var camera = storageService.GetCameraById(e.CameraId);
+            if (camera is null ||
+                !ShouldWatchForMotion(camera) ||
+                RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect))
+            {
+                return;
+            }
+
+            recordingService.TriggerMotionRecording(camera, pipeline);
+        }
+        catch (Exception ex)
+        {
+            LogStartMotionRecordingFailed(ex, e.CameraId);
+        }
     }
 
     /// <summary>
@@ -256,10 +441,16 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         }
     }
 
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "The pipeline is disposed right after it is taken out of the dictionary.")]
     private void StopAllManagedRecordings()
     {
         foreach (var cameraId in managedPipelines.Keys.ToList())
         {
+            motionDetectionService.StopDetection(cameraId);
+
             try
             {
                 LogStoppingManagedRecording(cameraId);
@@ -270,10 +461,21 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                 LogStopRecordingShutdownError(ex, cameraId);
             }
 
-            // recordingService.StopRecording disposes the pipeline; drop the
-            // now-disposed reference so CCM.Dispose doesn't redundantly
-            // re-dispose (the call is idempotent but the iteration is wasted).
-            managedPipelines.TryRemove(cameraId, out _);
+            // recordingService.StopRecording closes the pipeline of a
+            // recording that owns it, but not the one a motion recording
+            // borrowed, nor that of a camera that was only watched. Closing
+            // it again does no harm.
+            if (managedPipelines.TryRemove(cameraId, out var pipeline))
+            {
+                try
+                {
+                    pipeline.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    LogDisposePipelineError(ex, cameraId);
+                }
+            }
         }
     }
 
@@ -331,8 +533,24 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             // Implicit connection-type detection (once per camera, fills "not set" only).
             _ = connectionTypeAutoDetector?.OnCameraConnectedAsync(camera);
 
-            if (recordingService.IsRecording(camera.Id) ||
-                !managedPipelines.TryGetValue(camera.Id, out var pipeline))
+            if (!managedPipelines.TryGetValue(camera.Id, out var pipeline))
+            {
+                return;
+            }
+
+            if (ShouldWatchForMotion(camera))
+            {
+                StartWatching(camera, pipeline);
+            }
+
+            // A camera that is only watched is not recorded until it moves.
+            if (!RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect))
+            {
+                connectionStates?.Report(camera.Id, ConnectionState.Connected);
+                return;
+            }
+
+            if (recordingService.IsRecording(camera.Id))
             {
                 return;
             }
@@ -368,6 +586,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
         {
             LogPipelineConnectionFailed(camera.Id, camera.Display.DisplayName);
             RecordFailure(camera);
+            StopWatching(camera.Id);
             ScheduleDeferredDisposal(camera.Id);
         }
     }
@@ -420,6 +639,9 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     {
         if (managedPipelines.TryRemove(cameraId, out var pipeline))
         {
+            // The detector must not be left asking a closed pipeline for pictures.
+            motionDetectionService.StopDetection(cameraId);
+
             try
             {
                 pipeline.Dispose();
@@ -444,6 +666,9 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     {
         if (managedPipelines.TryRemove(cameraId, out var pipeline))
         {
+            // The detector must not be left asking a closed pipeline for pictures.
+            motionDetectionService.StopDetection(cameraId);
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
