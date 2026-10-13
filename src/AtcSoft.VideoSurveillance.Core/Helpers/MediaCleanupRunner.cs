@@ -151,10 +151,28 @@ public static class MediaCleanupRunner
         long targetFreeBytes,
         IReadOnlySet<string> skipPaths,
         bool deleteCompanionThumbnail)
+        => ReclaimBySize(
+            rootPath,
+            extensions,
+            targetFreeBytes,
+            skipPaths,
+            deleteCompanionThumbnail,
+            driveRoot => new DriveInfo(driveRoot).AvailableFreeSpace);
+
+    // The free space is read through a function so that tests can give it:
+    // the real disk's changes with everything else the machine does.
+    internal static MediaCleanupRunResult ReclaimBySize(
+        string rootPath,
+        IReadOnlyCollection<string> extensions,
+        long targetFreeBytes,
+        IReadOnlySet<string> skipPaths,
+        bool deleteCompanionThumbnail,
+        Func<string, long> readFreeBytes)
     {
         ArgumentException.ThrowIfNullOrEmpty(rootPath);
         ArgumentNullException.ThrowIfNull(extensions);
         ArgumentNullException.ThrowIfNull(skipPaths);
+        ArgumentNullException.ThrowIfNull(readFreeBytes);
 
         var deleted = new List<string>();
         var deletedThumbnails = new List<string>();
@@ -176,7 +194,7 @@ public static class MediaCleanupRunner
         long initialFreeBytes;
         try
         {
-            initialFreeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
+            initialFreeBytes = readFreeBytes(driveRoot);
         }
         catch (Exception ex)
         {

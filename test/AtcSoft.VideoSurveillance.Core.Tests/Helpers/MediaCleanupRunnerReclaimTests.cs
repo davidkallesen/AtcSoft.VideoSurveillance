@@ -123,9 +123,11 @@ public sealed class MediaCleanupRunnerReclaimTests : IDisposable
         var middle = WriteFile("cam_middle.mkv", payload, DateTime.Now.AddDays(-5));
         var newest = WriteFile("cam_newest.mkv", payload, DateTime.Now.AddDays(-1));
 
-        var root = Path.GetPathRoot(Path.GetFullPath(tempDir))!;
-        var initialFree = new DriveInfo(root).AvailableFreeSpace;
-        var targetFreeBytes = initialFree + 100; // need to free exactly 100 bytes
+        // The free space is given, not read from the disk the tests run
+        // on: everything else on the machine writes to and deletes from
+        // that disk while the test runs.
+        const long initialFree = 5_000;
+        const long targetFreeBytes = initialFree + 100; // need to free exactly 100 bytes
 
         // Act
         var result = MediaCleanupRunner.ReclaimBySize(
@@ -133,7 +135,8 @@ public sealed class MediaCleanupRunnerReclaimTests : IDisposable
             RecordingExtensions,
             targetFreeBytes,
             EmptySkipSet,
-            deleteCompanionThumbnail: false);
+            deleteCompanionThumbnail: false,
+            _ => initialFree);
 
         // Assert — only the oldest file deleted; middle and newest preserved
         result.DeletedFiles.Should().ContainSingle();
@@ -210,21 +213,63 @@ public sealed class MediaCleanupRunnerReclaimTests : IDisposable
             Path.GetFullPath(file2),
         };
 
-        var root = Path.GetPathRoot(Path.GetFullPath(tempDir))!;
-        var targetFreeBytes = new DriveInfo(root).AvailableFreeSpace + 1; // need 1 more byte
+        // One byte short. The free space is given, not read from the disk
+        // the tests run on: a byte freed there by anything else between
+        // reading it here and reading it in the method made the target
+        // "already met" and the test fail now and then.
+        const long freeBytes = 5_000;
 
         // Act
         var result = MediaCleanupRunner.ReclaimBySize(
             tempDir,
             RecordingExtensions,
-            targetFreeBytes,
+            targetFreeBytes: freeBytes + 1,
             skipPaths,
-            deleteCompanionThumbnail: false);
+            deleteCompanionThumbnail: false,
+            _ => freeBytes);
 
         // Assert — nothing deleted; couldn't reach target
         result.DeletedFiles.Should().BeEmpty();
         result.BytesFreed.Should().Be(0);
         result.StillShort.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ReclaimBySize_ReadsTheFreeSpaceOfTheDriveTheFolderIsOn()
+    {
+        string? asked = null;
+
+        MediaCleanupRunner.ReclaimBySize(
+            tempDir,
+            RecordingExtensions,
+            targetFreeBytes: 1,
+            EmptySkipSet,
+            deleteCompanionThumbnail: false,
+            driveRoot =>
+            {
+                asked = driveRoot;
+                return 0;
+            });
+
+        asked.Should().Be(Path.GetPathRoot(Path.GetFullPath(tempDir)));
+    }
+
+    [Fact]
+    public void ReclaimBySize_FreeSpaceThatCannotBeRead_IsReportedAndNothingIsDeleted()
+    {
+        var file = WriteFile("cam.mkv", "aaa", DateTime.Now.AddDays(-10));
+
+        var result = MediaCleanupRunner.ReclaimBySize(
+            tempDir,
+            RecordingExtensions,
+            targetFreeBytes: long.MaxValue,
+            EmptySkipSet,
+            deleteCompanionThumbnail: false,
+            _ => throw new IOException("The drive is not ready."));
+
+        result.Errors.Should().ContainSingle();
+        result.DeletedFiles.Should().BeEmpty();
+        File.Exists(file).Should().BeTrue();
     }
 
     private string WriteFile(
