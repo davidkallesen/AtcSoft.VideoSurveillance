@@ -24,7 +24,10 @@ public static class MediaProbe
                 return TimeSpan.Zero;
             }
 
-            ret = avformat_find_stream_info(fmtCtx, ref dict);
+            // Not "ref dict": this argument is one dictionary per stream,
+            // and FFmpeg reads past a single one as soon as the file has a
+            // second stream (sound), which takes the process down.
+            ret = avformat_find_stream_info(fmtCtx, (AVDictionary**)null);
             if (ret < 0)
             {
                 return TimeSpan.Zero;

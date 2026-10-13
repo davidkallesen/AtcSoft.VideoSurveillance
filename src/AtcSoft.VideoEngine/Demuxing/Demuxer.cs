@@ -73,7 +73,6 @@ internal sealed unsafe partial class Demuxer : IDisposable
         }
 
         AVDictionary* dict = null;
-        AVDictionary* infoDict = null;
 
         try
         {
@@ -137,7 +136,11 @@ internal sealed unsafe partial class Demuxer : IDisposable
             }
 
             timeoutWatch.Restart();
-            ret = avformat_find_stream_info(fmtCtx, ref infoDict);
+
+            // No options: the argument is one dictionary per stream, and
+            // FFmpeg reads past a single one when the source has a second
+            // stream (a camera with sound).
+            ret = avformat_find_stream_info(fmtCtx, (AVDictionary**)null);
             if (ret < 0)
             {
                 throw new FFmpegException(ret, "Failed to find stream info");
@@ -169,7 +172,6 @@ internal sealed unsafe partial class Demuxer : IDisposable
             // Free option dictionaries on every path; FFmpeg may leave unconsumed
             // entries even on success
             av_dict_free(ref dict);
-            av_dict_free(ref infoDict);
         }
     }
 
