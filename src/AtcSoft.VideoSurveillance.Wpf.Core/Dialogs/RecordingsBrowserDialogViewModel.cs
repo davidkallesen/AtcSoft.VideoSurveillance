@@ -107,14 +107,16 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     }
 
     /// <summary>
-    /// Gets a value indicating whether a recording can be played.
+    /// Gets a value indicating whether a recording can be played. One that
+    /// is still being recorded cannot: it would show a black picture.
     /// </summary>
-    public bool CanPlay => SelectedRecording is not null;
+    public bool CanPlay => IsFinished(SelectedRecording);
 
     /// <summary>
-    /// Gets a value indicating whether a recording can be deleted.
+    /// Gets a value indicating whether a recording can be deleted. One that
+    /// is still being recorded cannot: the recorder has the file.
     /// </summary>
-    public bool CanDelete => SelectedRecording is not null;
+    public bool CanDelete => IsFinished(SelectedRecording);
 
     /// <summary>
     /// Gets the playback overlay settings from the application settings.
@@ -190,7 +192,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     [RelayCommand(CanExecute = nameof(CanPlay))]
     private void Play()
     {
-        if (SelectedRecording is null)
+        if (SelectedRecording is null || !CanPlay)
         {
             return;
         }
@@ -201,7 +203,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private void Delete()
     {
-        if (SelectedRecording is null)
+        if (SelectedRecording is null || !CanDelete)
         {
             return;
         }
@@ -316,7 +318,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                     .Where(IsVideoFile))
                 {
                     var info = new FileInfo(file);
-                    var duration = GetVideoDuration(file);
+                    var isBeingRecorded = RecordingPathHelper.IsBeingWritten(file);
+                    var duration = isBeingRecorded ? TimeSpan.Zero : MediaProbe.GetDuration(file);
 
                     entries.Add(new RecordingEntry
                     {
@@ -328,6 +331,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                             : info.CreationTime,
                         FileSizeBytes = info.Length,
                         Duration = duration,
+                        IsBeingRecorded = isBeingRecorded,
                     });
                 }
             }
@@ -407,10 +411,10 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     /// has no length yet, and probing it only makes FFmpeg report a broken
     /// file, so it is left at zero.
     /// </summary>
-    private static TimeSpan GetVideoDuration(string filePath)
-        => RecordingPathHelper.IsBeingWritten(filePath)
-            ? TimeSpan.Zero
-            : MediaProbe.GetDuration(filePath);
+    // The list is as old as its last refresh, so the file itself is asked:
+    // a recording may have started, or ended, since.
+    private static bool IsFinished(RecordingEntry? recording)
+        => recording is not null && !RecordingPathHelper.IsBeingWritten(recording.FilePath);
 
     private IEnumerable<RecordingEntry> ApplyDayFilter(
         IEnumerable<RecordingEntry> recordings)

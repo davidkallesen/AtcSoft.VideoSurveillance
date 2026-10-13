@@ -85,6 +85,19 @@
                 RowHeight="68"
                 SelectedItem="{Binding Path=SelectedRecording}"
                 SelectionMode="Single">
+                <DataGrid.RowStyle>
+                    <!--  A file that is still being recorded cannot be played or deleted: its row says why.  -->
+                    <Style BasedOn="{StaticResource {x:Type DataGridRow}}" TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsBeingRecorded}" Value="True">
+                                <Setter Property="IsEnabled" Value="False" />
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+                                <Setter Property="ToolTip" Value="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingInProgressInfo}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="90" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Thumbnail}">
                         <DataGridTemplateColumn.CellTemplate>

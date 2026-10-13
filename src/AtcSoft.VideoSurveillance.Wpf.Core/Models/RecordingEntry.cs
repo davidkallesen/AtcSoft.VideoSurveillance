@@ -36,6 +36,13 @@ public class RecordingEntry
     public TimeSpan Duration { get; set; }
 
     /// <summary>
+    /// Gets a value indicating whether the file was still being recorded
+    /// when the list was made. Such a file has no finished index: it has no
+    /// length to show and plays as a black picture.
+    /// </summary>
+    public bool IsBeingRecorded { get; init; }
+
+    /// <summary>
     /// Gets the formatted file size string.
     /// </summary>
     public string FormattedFileSize => FormatFileSize(FileSizeBytes);
@@ -43,7 +50,8 @@ public class RecordingEntry
     /// <summary>
     /// Gets the formatted duration string.
     /// </summary>
-    public string FormattedDuration => FormatDuration(Duration);
+    public string FormattedDuration
+        => IsBeingRecorded ? Translations.RecordingInProgress : FormatDuration(Duration);
 
     /// <summary>
     /// Gets the formatted recording time string.

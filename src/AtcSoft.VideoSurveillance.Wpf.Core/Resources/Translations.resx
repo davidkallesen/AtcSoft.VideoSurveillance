@@ -1392,4 +1392,10 @@
   <data name="DiskSpaceInfo" xml:space="preserve">
     <value>The disk with the recordings. Shown in red when less is free than the recordings need (Settings, Storage); new recordings are then refused.</value>
   </data>
+  <data name="RecordingInProgress" xml:space="preserve">
+    <value>Recording…</value>
+  </data>
+  <data name="RecordingInProgressInfo" xml:space="preserve">
+    <value>This file is still being recorded. It can be played and deleted when the recording has ended.</value>
+  </data>
 </root>

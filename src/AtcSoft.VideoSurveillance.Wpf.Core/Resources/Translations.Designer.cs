@@ -2536,6 +2536,24 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recording….
+        /// </summary>
+        public static string RecordingInProgress {
+            get {
+                return ResourceManager.GetString("RecordingInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file is still being recorded. It can be played and dele.
+        /// </summary>
+        public static string RecordingInProgressInfo {
+            get {
+                return ResourceManager.GetString("RecordingInProgressInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disk:.
         /// </summary>
         public static string DiskSpaceLabel {

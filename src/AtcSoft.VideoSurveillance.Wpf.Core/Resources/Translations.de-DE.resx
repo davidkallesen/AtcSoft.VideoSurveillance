@@ -1392,4 +1392,10 @@
   <data name="DiskSpaceInfo" xml:space="preserve">
     <value>Der Datenträger mit den Aufnahmen. Rot, wenn weniger frei ist, als die Aufnahmen brauchen (Einstellungen, Speicher); neue Aufnahmen werden dann abgelehnt.</value>
   </data>
+  <data name="RecordingInProgress" xml:space="preserve">
+    <value>Aufnahme läuft…</value>
+  </data>
+  <data name="RecordingInProgressInfo" xml:space="preserve">
+    <value>Diese Datei wird noch aufgenommen. Sie kann abgespielt und gelöscht werden, sobald die Aufnahme beendet ist.</value>
+  </data>
 </root>

@@ -1392,4 +1392,10 @@
   <data name="DiskSpaceInfo" xml:space="preserve">
     <value>Disken med optagelserne. Vises med rødt, når der er mindre ledig plads, end optagelserne kræver (Indstillinger, Lager); nye optagelser afvises da.</value>
   </data>
+  <data name="RecordingInProgress" xml:space="preserve">
+    <value>Optager…</value>
+  </data>
+  <data name="RecordingInProgressInfo" xml:space="preserve">
+    <value>Denne fil bliver stadig optaget. Den kan afspilles og slettes, når optagelsen er afsluttet.</value>
+  </data>
 </root>
