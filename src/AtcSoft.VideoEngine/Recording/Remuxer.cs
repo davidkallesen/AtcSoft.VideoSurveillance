@@ -31,6 +31,7 @@ internal sealed unsafe class Remuxer : IDisposable
     private long firstDts = AV_NOPTS_VALUE;
     private long lastDts = AV_NOPTS_VALUE;
     private bool receivedKeyframe;
+    private string? outputPath;
     private bool disposed;
 
     private volatile bool stopWriter;
@@ -81,33 +82,34 @@ internal sealed unsafe class Remuxer : IDisposable
         try
         {
             OpenOutputLocked(outputPath, codecpar, rotationDegrees);
+            this.outputPath = outputPath;
         }
         catch
         {
             // A recording that could not be started must not stay "open":
             // the next start would be taken for one that is already running,
             // and packets would go into a file without a header.
-            AbandonOutputLocked(outputPath);
+            if (outputCtx is not null)
+            {
+                if (outputCtx->pb is not null)
+                {
+                    avio_closep(ref outputCtx->pb);
+                }
+
+                avformat_free_context(outputCtx);
+                outputCtx = null;
+            }
+
+            DeleteFile(outputPath);
             throw;
         }
     }
 
-    private void AbandonOutputLocked(string outputPath)
+    private static void DeleteFile(string path)
     {
-        if (outputCtx is not null)
-        {
-            if (outputCtx->pb is not null)
-            {
-                avio_closep(ref outputCtx->pb);
-            }
-
-            avformat_free_context(outputCtx);
-            outputCtx = null;
-        }
-
         try
         {
-            File.Delete(outputPath);
+            File.Delete(path);
         }
         catch (IOException)
         {
@@ -406,7 +408,8 @@ internal sealed unsafe class Remuxer : IDisposable
         // syncLock by us, so this drain is exclusive.
         DrainQueueLocked();
 
-        if (receivedKeyframe)
+        var hasPictures = receivedKeyframe;
+        if (hasPictures)
         {
             av_write_trailer(outputCtx);
         }
@@ -414,6 +417,15 @@ internal sealed unsafe class Remuxer : IDisposable
         avio_closep(ref outputCtx->pb);
         avformat_free_context(outputCtx);
         outputCtx = null;
+
+        // A header and nothing to play is not a recording: the camera
+        // stopped delivering right after the start.
+        if (!hasPictures && outputPath is not null)
+        {
+            DeleteFile(outputPath);
+        }
+
+        outputPath = null;
         firstDts = AV_NOPTS_VALUE;
         lastDts = AV_NOPTS_VALUE;
         receivedKeyframe = false;

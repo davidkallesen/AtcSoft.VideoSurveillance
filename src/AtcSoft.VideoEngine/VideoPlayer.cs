@@ -507,10 +507,16 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private void ProcessVideoPacket()
     {
         // A stream that is being encoded is recorded picture by picture
-        // further down; its packets are not what goes into the file.
-        if (remuxer is { IsOpen: true } && frameEncoder is null)
+        // further down; its packets are not what goes into the file. The
+        // check is made under the lock: a recording being started or
+        // stopped on another thread has the file open for a moment without
+        // the encoder, and a raw packet would land in an H.264 file.
+        lock (encoderLock)
         {
-            remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+            if (remuxer is { IsOpen: true } && frameEncoder is null)
+            {
+                remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+            }
         }
 
         if (!decoder!.SendPacket(demuxer!.CurrentPacket))
