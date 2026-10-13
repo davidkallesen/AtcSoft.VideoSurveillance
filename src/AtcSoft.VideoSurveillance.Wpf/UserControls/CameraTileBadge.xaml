@@ -161,7 +161,7 @@
             VerticalAlignment="Center"
             FontSize="14"
             Foreground="#666666"
-            Text="No Stream">
+            Text="{Binding Path=PlaceholderText}">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="Visibility" Value="Collapsed" />

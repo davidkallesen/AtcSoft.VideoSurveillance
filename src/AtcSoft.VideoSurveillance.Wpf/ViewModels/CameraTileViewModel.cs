@@ -85,8 +85,18 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// overlay surfaces both signals. Cleared automatically when the
     /// watcher reports the device returned.
     /// </summary>
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(PlaceholderText)])]
     private bool isDeviceUnplugged;
+
+    /// <summary>
+    /// Gets what the tile says while it has no picture. A USB camera that
+    /// was pulled out says so: "no stream" would send the user looking at
+    /// the server, and the cable is where to look.
+    /// </summary>
+    public string PlaceholderText
+        => IsDeviceUnplugged
+            ? AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.UsbDeviceUnplugged
+            : "No Stream";
 
     private bool isRecording;
     private DispatcherTimer? recordingTimer;

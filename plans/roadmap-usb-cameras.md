@@ -497,8 +497,8 @@ The API client app is a *consumer* of phases 1–6 and reuses the same Wpf.Core 
 
 #### 7.3 Tile UX (deferred)
 
-- ⬜ Add USB badge to `CameraTileBadge` / `CameraTileControl` in `AtcSoft.VideoSurveillance.Wpf`. Tracked under Phase 4 (dialog UI work) since the badge ships alongside the same XAML changes.
-- ⬜ Update tile/dashboard to show "Device removed" overlay state when the watcher fires `DeviceRemoved`. Same rationale as the badge.
+- ✅ USB badge on `CameraTileBadge` in `AtcSoft.VideoSurveillance.Wpf` (shown while the connection-type icon is off). It had been built with the connection icons; this list was not updated.
+- ✅ "USB device unplugged" on the tile when the watcher fires `DeviceRemoved`: in the info box, and since 2026-10-13 also as the text in the middle of the tile instead of "No Stream". Not seen on screen.
 
 **Acceptance for Phase 7:** ✅ for the underlying contract — the WpfApp can list and pick server-attached USB cameras through the dialog (once Phase 4.3's `UsbDevicePart` lands), and unplug/replug cycles propagate through SignalR end-to-end without client polling. The remaining ⬜ items are visual affordances on the camera tile, which belong under the same Phase 4 PR that introduces the dialog itself.
 
