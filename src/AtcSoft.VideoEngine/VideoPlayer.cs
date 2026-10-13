@@ -548,6 +548,29 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         frameCapture = null;
     }
 
+    // A camera that is opened together with a microphone does not open at
+    // all when the microphone is not there. The picture matters more than
+    // the sound: it is then opened without it. The options keep naming the
+    // microphone, so the next open tries it again.
+    private void OpenDemuxer(
+        Demuxer target,
+        Uri streamUri,
+        StreamOptions options,
+        CancellationToken ct)
+    {
+        try
+        {
+            target.Open(streamUri, options, ct);
+        }
+        catch (FFmpegException ex) when (
+            !ct.IsCancellationRequested &&
+            CaptureDeviceSpec.TryWithoutAudio(options, out var videoOnly, out var microphone))
+        {
+            LogOpeningWithoutMicrophone(options.Source, microphone!, ex.Message);
+            target.Open(streamUri, videoOnly!, ct);
+        }
+    }
+
     private void DemuxLoop(
         Uri streamUri,
         StreamOptions options,
@@ -563,7 +586,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             localDecoder = new VideoDecoder();
 
             LogOpeningStream(source, UriRedactor.Redact(streamUri));
-            localDemuxer.Open(streamUri, options, ct);
+            OpenDemuxer(localDemuxer, streamUri, options, ct);
             LogStreamDemuxerOpened(source);
 
             var threadCount = VideoEngineBootstrap.Config?.DecoderThreads ?? 0;

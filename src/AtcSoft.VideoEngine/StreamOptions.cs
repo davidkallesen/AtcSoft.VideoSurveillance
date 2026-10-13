@@ -122,4 +122,12 @@ public sealed class StreamOptions
         => InputFormat == InputFormatKind.Auto
             ? $"StreamOptions {{ Source='{Source}', Transport='{RtspTransport}', LowLatency={UseLowLatencyMode}, MaxLatency={MaxLatencyMs}ms, HwAccel={HardwareAcceleration} }}"
             : $"StreamOptions {{ Source='{Source}', InputFormat={InputFormat}, Device='{RawDeviceSpec}', VideoSize='{VideoSize}', FrameRate='{FrameRate}', PixelFormat='{PixelFormat}' }}";
+
+    // The same options for another device specifier.
+    internal StreamOptions CopyWithDeviceSpec(string rawDeviceSpec)
+    {
+        var copy = (StreamOptions)MemberwiseClone();
+        copy.RawDeviceSpec = rawDeviceSpec;
+        return copy;
+    }
 }
