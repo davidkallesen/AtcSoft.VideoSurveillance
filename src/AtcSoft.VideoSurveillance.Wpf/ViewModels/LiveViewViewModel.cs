@@ -17,6 +17,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     private readonly string apiBaseAddress;
     private readonly AtcSoft.VideoSurveillance.Services.IApplicationSettingsService? settingsService;
     private bool disposed;
+    private bool loadedOnce;
     private bool usbWatcherSubscribed;
 
     [ObservableProperty]
@@ -167,6 +168,21 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         // first LoadAsync (e.g. SignalR backlog replay) are still
         // applied once the matching tile materializes.
         SubscribeToUsbWatcher();
+
+        hubService.OnReconnected += OnHubReconnected;
+    }
+
+    // The server stopped this client's streams when the connection went,
+    // and cameras may have been added or removed meanwhile: the view is
+    // loaded again. A view nobody has opened yet stays unloaded.
+    private void OnHubReconnected()
+    {
+        if (disposed || !loadedOnce || IsLoading)
+        {
+            return;
+        }
+
+        _ = LoadAsync();
     }
 
     private void SubscribeToUsbWatcher()
@@ -252,6 +268,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     [RelayCommand("Load")]
     private async Task LoadAsync()
     {
+        loadedOnce = true;
         IsLoading = true;
 
         try
@@ -390,6 +407,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         }
 
         disposed = true;
+        hubService.OnReconnected -= OnHubReconnected;
 
         if (usbWatcherSubscribed)
         {

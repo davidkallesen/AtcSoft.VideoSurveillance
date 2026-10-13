@@ -57,7 +57,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
 | 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | ⏸️ phases 10–11 |
 | 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
-| 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
+| 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities) |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |
 | 🌐 Web client | — (see the note below) | 🟨 | Settings, live view, recordings and dashboard brought in line with the desktop apps on 2026-10-13 | Camera and layout pages untouched. Recordings can be deleted, and the motion boxes were seen against server-side motion, since 2026-10-13; boxes over a picture turned a quarter are built and tested but not seen |
 

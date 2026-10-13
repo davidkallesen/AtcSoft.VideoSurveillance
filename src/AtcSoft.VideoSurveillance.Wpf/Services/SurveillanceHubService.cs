@@ -27,6 +27,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 public sealed class SurveillanceHubService : IAsyncDisposable
 {
     private HubConnection? hubConnection;
+    private Func<Task>? stopConnecting;
 
     public event Action<ConnectionStateEvent>? OnConnectionStateChanged;
 
@@ -39,6 +40,14 @@ public sealed class SurveillanceHubService : IAsyncDisposable
     public event Action<UsbCameraLifecycleEvent>? OnUsbCameraLifecycleChanged;
 
     public event Action<string>? OnHubConnectionStateChanged;
+
+    /// <summary>
+    /// Raised when the connection is there again after it was lost, or
+    /// after the server was not there at the start. The server has
+    /// forgotten this client meanwhile (its streams were stopped), and what
+    /// the client shows may be out of date: whoever shows it loads it again.
+    /// </summary>
+    public event Action? OnReconnected;
 
     public bool IsConnected
         => hubConnection?.State == HubConnectionState.Connected;
@@ -53,6 +62,10 @@ public sealed class SurveillanceHubService : IAsyncDisposable
         ApiBaseUrl = apiBaseUrl;
     }
 
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "The token source is disposed by stopConnecting when the client disconnects.")]
     public async Task ConnectAsync()
     {
         if (hubConnection is not null)
@@ -64,7 +77,7 @@ public sealed class SurveillanceHubService : IAsyncDisposable
 
         hubConnection = new HubConnectionBuilder()
             .WithUrl(hubUrl)
-            .WithAutomaticReconnect()
+            .WithAutomaticReconnect(new HubReconnectPolicy())
             .Build();
 
         hubConnection.On<ConnectionStateEvent>("ConnectionStateChanged", e =>
@@ -101,6 +114,7 @@ public sealed class SurveillanceHubService : IAsyncDisposable
         hubConnection.Reconnected += _ =>
         {
             OnHubConnectionStateChanged?.Invoke("Connected");
+            OnReconnected?.Invoke();
             return Task.CompletedTask;
         };
 
@@ -110,14 +124,60 @@ public sealed class SurveillanceHubService : IAsyncDisposable
             return Task.CompletedTask;
         };
 
+        // Ends the trying below when the client disconnects on purpose.
+        var closing = new CancellationTokenSource();
+        stopConnecting = async () =>
+        {
+            await closing.CancelAsync().ConfigureAwait(false);
+            closing.Dispose();
+        };
+
+        var connection = hubConnection;
+        var cancellationToken = closing.Token;
+
+        if (await TryStartAsync(connection, cancellationToken).ConfigureAwait(false))
+        {
+            OnHubConnectionStateChanged?.Invoke("Connected");
+            return;
+        }
+
+        // The server is not there (yet). SignalR only reconnects a
+        // connection that was established once, so this one is tried here
+        // until it is.
+        OnHubConnectionStateChanged?.Invoke("Reconnecting...");
+        _ = KeepConnectingAsync(connection, cancellationToken);
+    }
+
+    private static async Task<bool> TryStartAsync(
+        HubConnection connection,
+        CancellationToken cancellationToken)
+    {
         try
         {
-            await hubConnection.StartAsync().ConfigureAwait(false);
-            OnHubConnectionStateChanged?.Invoke("Connected");
+            await connection.StartAsync(cancellationToken).ConfigureAwait(false);
+            return true;
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or IOException or TimeoutException or System.Net.Sockets.SocketException or System.Net.WebSockets.WebSocketException or InvalidOperationException)
         {
-            OnHubConnectionStateChanged?.Invoke("Disconnected");
+            return false;
+        }
+    }
+
+    private async Task KeepConnectingAsync(
+        HubConnection connection,
+        CancellationToken cancellationToken)
+    {
+        var connected = await HubReconnectPolicy
+            .KeepTryingAsync(
+                token => TryStartAsync(connection, token),
+                Task.Delay,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (connected)
+        {
+            OnHubConnectionStateChanged?.Invoke("Connected");
+            OnReconnected?.Invoke();
         }
     }
 
@@ -175,6 +235,12 @@ public sealed class SurveillanceHubService : IAsyncDisposable
     {
         if (hubConnection is not null)
         {
+            if (stopConnecting is not null)
+            {
+                await stopConnecting().ConfigureAwait(false);
+                stopConnecting = null;
+            }
+
             await hubConnection.StopAsync().ConfigureAwait(false);
             await hubConnection.DisposeAsync().ConfigureAwait(false);
             hubConnection = null;

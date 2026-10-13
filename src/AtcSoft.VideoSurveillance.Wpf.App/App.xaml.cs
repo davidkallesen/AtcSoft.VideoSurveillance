@@ -198,6 +198,11 @@ public partial class App
         // Connect SignalR hub (70%)
         RenderSplashMessage("Connecting to server...", 70);
         var hubService = host.Services.GetRequiredService<SurveillanceHubService>();
+
+        // Settings read while the server was away came from this computer
+        // alone; with the server back they are read from it.
+        hubService.OnReconnected += () => _ = ReloadSettingsAsync(appSettingsService);
+
         try
         {
             await hubService.ConnectAsync();
@@ -405,6 +410,20 @@ public partial class App
                 services.AddSingleton<MainWindow>();
             })
             .Build();
+    }
+
+    private async Task ReloadSettingsAsync(
+        IApplicationSettingsService appSettingsService)
+    {
+        try
+        {
+            await appSettingsService.LoadAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException)
+        {
+            // The server went away again; the next reconnect reads them.
+            LogSignalRConnectionFailed(ex);
+        }
     }
 
     private static void RenderSplashMessage(

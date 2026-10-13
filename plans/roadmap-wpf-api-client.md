@@ -179,7 +179,7 @@ The following VS.Wpf dialogs/windows intentionally remain app-specific because t
 - [x] Server profile storage in local JSON config (`%LocalAppData%\AtcSoft\VideoSurveillance\servers.json`)
 - [x] "Change Server" backstage button (restarts with `--choose-server` flag)
 - [x] Aspire detection (skip dialog, hide Change Server when Aspire-managed)
-- [ ] Auto-reconnect to API and SignalR on network recovery (deferred)
+- [x] Auto-reconnect on network recovery (2026-10-14): the hub connection is retried for as long as the client runs (soon at first, then every 30 s), also when the server was not there at the start; when it is back, the live view is loaded again and the settings are read from the server. Seen with the real client: started before the server, and across a server that was down for 75 s
 
 #### 9.2 Notifications ✅
 - [x] Toast notification service (WPF toast via IToastNotificationService)
