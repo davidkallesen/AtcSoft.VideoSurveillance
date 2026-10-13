@@ -39,6 +39,10 @@ internal sealed unsafe class Remuxer : IDisposable
     private long lastAudioDts = AV_NOPTS_VALUE;
     private bool receivedKeyframe;
     private string? outputPath;
+
+    // The stream's parameters (SPS/PPS), to put in front of every key frame
+    // of a live stream. Null when the packets carry them already.
+    private byte[]? liveParameterSets;
     private bool disposed;
 
     private volatile bool stopWriter;
@@ -58,6 +62,34 @@ internal sealed unsafe class Remuxer : IDisposable
         {
             OpenLocked(outputPath, codecpar, inputTimeBase, rotationDegrees, audioCodecpar);
             EnsureWriterRunning();
+        }
+    }
+
+    /// <summary>
+    /// Opens a live stream for browsers: an HLS playlist at
+    /// <paramref name="playlistPath"/> with segments of two seconds next to
+    /// it. Old segments are removed as new ones are written.
+    /// </summary>
+    public void OpenLive(
+        string playlistPath,
+        AVCodecParameters* codecpar,
+        AVRational inputTimeBase)
+    {
+        lock (syncLock)
+        {
+            OpenLocked(playlistPath, codecpar, inputTimeBase, rotationDegrees: 0, audioCodecpar: null, live: true);
+            EnsureWriterRunning();
+        }
+    }
+
+    /// <summary>
+    /// Writes out every packet that is still queued.
+    /// </summary>
+    public void Flush()
+    {
+        lock (syncLock)
+        {
+            DrainQueueLocked();
         }
     }
 
@@ -87,11 +119,12 @@ internal sealed unsafe class Remuxer : IDisposable
         AVCodecParameters* codecpar,
         AVRational inputTimeBase,
         int rotationDegrees,
-        AVCodecParameters* audioCodecpar)
+        AVCodecParameters* audioCodecpar,
+        bool live = false)
     {
         try
         {
-            OpenOutputLocked(outputPath, codecpar, rotationDegrees, audioCodecpar);
+            OpenOutputLocked(outputPath, codecpar, rotationDegrees, audioCodecpar, live);
             this.outputPath = outputPath;
         }
         catch
@@ -135,11 +168,14 @@ internal sealed unsafe class Remuxer : IDisposable
         string outputPath,
         AVCodecParameters* codecpar,
         int rotationDegrees,
-        AVCodecParameters* audioCodecpar)
+        AVCodecParameters* audioCodecpar,
+        bool live)
     {
         AVFormatContext* ctx = null;
 
-        var ret = avformat_alloc_output_context2(ref ctx, null, null, outputPath);
+        var ret = live
+            ? avformat_alloc_output_context2(ref ctx, null, "hls", outputPath)
+            : avformat_alloc_output_context2(ref ctx, null, null, outputPath);
         if (ret < 0 || ctx is null)
         {
             throw new FFmpegException(ret, "Failed to allocate output context");
@@ -184,16 +220,28 @@ internal sealed unsafe class Remuxer : IDisposable
             audioStream->codecpar->codec_tag = 0;
         }
 
-        ret = avio_open(ref outputCtx->pb, outputPath, IOFlags.Write);
-        if (ret < 0)
+        // A live stream is many files, which its muxer opens itself.
+        if (!live)
         {
-            throw new FFmpegException(ret, "Failed to open output file");
+            ret = avio_open(ref outputCtx->pb, outputPath, IOFlags.Write);
+            if (ret < 0)
+            {
+                throw new FFmpegException(ret, "Failed to open output file");
+            }
         }
 
         AVDictionary* opts = null;
         try
         {
-            if (IsMp4Family(outputPath))
+            if (live)
+            {
+                // Short segments keep the delay low; only the last few are
+                // listed, and the ones no longer listed are deleted.
+                av_dict_set(ref opts, "hls_time", "2", DictWriteFlags.None);
+                av_dict_set(ref opts, "hls_list_size", "5", DictWriteFlags.None);
+                av_dict_set(ref opts, "hls_flags", "delete_segments", DictWriteFlags.None);
+            }
+            else if (IsMp4Family(outputPath))
             {
                 // A plain MP4 keeps its index (the moov box) for the end of
                 // the file, so a recording cut short by a crash or a power
@@ -217,12 +265,60 @@ internal sealed unsafe class Remuxer : IDisposable
         }
 
         outputTimeBase = outStream->time_base;
+        liveParameterSets = live ? ReadAnnexBParameterSets(codecpar) : null;
         hasAudio = audioStream is not null;
         audioOutputTimeBase = hasAudio ? audioStream->time_base : default;
         originMicroseconds = AV_NOPTS_VALUE;
         lastDts = AV_NOPTS_VALUE;
         lastAudioDts = AV_NOPTS_VALUE;
         receivedKeyframe = false;
+    }
+
+    // An encoder that keeps the stream's parameters (SPS/PPS) for the file
+    // header leaves them out of the packets. A recording has that header; a
+    // live stream's segments are played one by one from wherever the viewer
+    // joins, so each needs the parameters in front of its key frame.
+    // Only parameters in start-code form can be put in front as they are;
+    // in the other form (as in an MP4) the muxer converts the packets and
+    // adds them itself.
+    private static byte[]? ReadAnnexBParameterSets(AVCodecParameters* codecpar)
+    {
+        if (codecpar->extradata is null || codecpar->extradata_size < 4)
+        {
+            return null;
+        }
+
+        var extradata = new ReadOnlySpan<byte>(codecpar->extradata, codecpar->extradata_size);
+        var startsWithStartCode =
+            extradata[0] == 0 && extradata[1] == 0 &&
+            (extradata[2] == 1 || (extradata[2] == 0 && extradata[3] == 1));
+
+        return startsWithStartCode ? extradata.ToArray() : null;
+    }
+
+    private static void PrependParameterSets(
+        ref AVPacket* packet,
+        byte[] parameterSets)
+    {
+        var withParameters = av_packet_alloc();
+        if (withParameters is null)
+        {
+            return;
+        }
+
+        if (av_new_packet(withParameters, parameterSets.Length + packet->size) < 0 ||
+            av_packet_copy_props(withParameters, packet) < 0)
+        {
+            av_packet_free(ref withParameters);
+            return;
+        }
+
+        var target = new Span<byte>(withParameters->data, withParameters->size);
+        parameterSets.CopyTo(target);
+        new ReadOnlySpan<byte>(packet->data, packet->size).CopyTo(target[parameterSets.Length..]);
+
+        av_packet_free(ref packet);
+        packet = withParameters;
     }
 
     private static bool IsMp4Family(string outputPath)
@@ -286,6 +382,11 @@ internal sealed unsafe class Remuxer : IDisposable
                 }
 
                 lastDts = clonedPkt->dts;
+
+                if (isKeyframe && liveParameterSets is not null)
+                {
+                    PrependParameterSets(ref clonedPkt, liveParameterSets);
+                }
 
                 // Hand the packet to the background writer. The synchronous
                 // disk write used to block the demux thread; on a slow
@@ -501,10 +602,15 @@ internal sealed unsafe class Remuxer : IDisposable
             av_write_trailer(outputCtx);
         }
 
-        avio_closep(ref outputCtx->pb);
+        if (outputCtx->pb is not null)
+        {
+            avio_closep(ref outputCtx->pb);
+        }
+
         avformat_free_context(outputCtx);
         outputCtx = null;
         hasAudio = false;
+        liveParameterSets = null;
 
         // A header and nothing to play is not a recording: the camera
         // stopped delivering right after the start.

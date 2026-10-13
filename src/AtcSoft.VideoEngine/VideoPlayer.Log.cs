@@ -14,6 +14,12 @@ public sealed partial class VideoPlayer
     [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "The camera delivers uncompressed video; recording it as H.264 with {Encoder}")]
     private partial void LogRecordingEncoder(string encoder);
 
+    [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "Live stream started: {Path}")]
+    private partial void LogStreamingStarted(string path);
+
+    [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "Live stream stopped")]
+    private partial void LogStreamingStopped();
+
     [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Warning, Message = "The source's sound cannot be recorded, recording the picture only: {Reason}")]
     private partial void LogRecordingWithoutSound(string reason);
 

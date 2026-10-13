@@ -82,6 +82,30 @@ public interface IVideoPlayer : IDisposable
     void SwitchRecording(string newOutputFilePath);
 
     /// <summary>
+    /// Gets a value indicating whether the player is writing a live stream
+    /// for browsers.
+    /// </summary>
+    bool IsStreaming => false;
+
+    /// <summary>
+    /// Starts writing a live stream for browsers: an HLS playlist at
+    /// <paramref name="playlistPath"/> with its segments next to it. It runs
+    /// next to a recording, from the same open source. A source that
+    /// delivers uncompressed video is encoded to H.264; any other is passed
+    /// on as it is.
+    /// </summary>
+    /// <param name="playlistPath">The playlist file (.m3u8) to write, in a folder of its own.</param>
+    void StartStreaming(string playlistPath)
+        => throw new NotSupportedException("This player cannot write a live stream.");
+
+    /// <summary>
+    /// Stops the live stream.
+    /// </summary>
+    void StopStreaming()
+    {
+    }
+
+    /// <summary>
     /// Captures a single frame from the stream as PNG image bytes.
     /// </summary>
     /// <param name="ct">Cancellation token.</param>

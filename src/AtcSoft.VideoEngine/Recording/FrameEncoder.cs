@@ -37,6 +37,7 @@ internal sealed unsafe class FrameEncoder : IDisposable
     private AVPixelFormat sourceFormat;
     private long frameDuration;
     private long lastPts = AV_NOPTS_VALUE;
+    private long lastKeyFramePts = AV_NOPTS_VALUE;
     private bool keyFrameRequested;
     private bool disposed;
 
@@ -179,8 +180,19 @@ internal sealed unsafe class FrameEncoder : IDisposable
 
         Convert(frame);
 
+        // Key frames go by the clock, not by counting pictures: a webcam in
+        // poor light delivers fewer pictures than it promised, and a live
+        // stream is cut into segments at key frames.
+        var keyFrame = keyFrameRequested ||
+                       lastKeyFramePts == AV_NOPTS_VALUE ||
+                       pts - lastKeyFramePts >= (long)KeyFrameIntervalSeconds * TimeBase.Den;
+        if (keyFrame)
+        {
+            lastKeyFramePts = pts;
+        }
+
         converted->pts = pts;
-        converted->pict_type = keyFrameRequested ? AVPictureType.I : AVPictureType.None;
+        converted->pict_type = keyFrame ? AVPictureType.I : AVPictureType.None;
         keyFrameRequested = false;
         lastPts = pts;
 
@@ -273,7 +285,10 @@ internal sealed unsafe class FrameEncoder : IDisposable
         ctx->pix_fmt = format;
         ctx->time_base = TimeBase;
         ctx->framerate = new AVRational { Num = framesPerSecond, Den = 1 };
-        ctx->gop_size = framesPerSecond * KeyFrameIntervalSeconds;
+
+        // The key frames are asked for by the clock (see Encode). This is
+        // only the most pictures the encoder may let pass without one.
+        ctx->gop_size = framesPerSecond * KeyFrameIntervalSeconds * 2;
 
         // No pictures that refer to later ones: packets then come out in
         // the order the pictures went in, which the recorder relies on.
@@ -293,6 +308,10 @@ internal sealed unsafe class FrameEncoder : IDisposable
                 av_dict_set(ref opts, "preset", "veryfast", DictWriteFlags.None);
                 av_dict_set(ref opts, "tune", "zerolatency", DictWriteFlags.None);
                 av_dict_set(ref opts, "crf", "23", DictWriteFlags.None);
+
+                // No key frames of the encoder's own at a change of scene:
+                // they would move the regular ones away from the clock.
+                av_dict_set(ref opts, "sc_threshold", "0", DictWriteFlags.None);
             }
             else
             {

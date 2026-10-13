@@ -28,6 +28,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private Demuxer? demuxer;
     private VideoDecoder? decoder;
     private Remuxer? remuxer;
+    private Remuxer? liveRemuxer;
     private FrameEncoder? frameEncoder;
     private AudioEncoder? audioEncoder;
     private volatile bool recordAudio;
@@ -72,6 +73,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         : new DateTime(Interlocked.Read(ref lastPacketTicks), DateTimeKind.Utc);
 
     public bool IsRecording => remuxer?.IsOpen ?? false;
+
+    public bool IsStreaming => liveRemuxer?.IsOpen ?? false;
 
     public IGpuAccelerator? GpuAccelerator => gpuAccelerator;
 
@@ -188,9 +191,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
         lock (encoderLock)
         {
-            if (frameEncoder is not null)
+            if (frameEncoder is not null && liveRemuxer is not { IsOpen: true })
             {
-                // What the encoder still holds belongs in this file.
+                // What the encoder still holds belongs in this file. With a
+                // live stream running the encoder runs on, and holds nothing
+                // back anyway.
                 frameEncoder.Flush(writeEncodedPacket);
                 frameEncoder.Dispose();
                 frameEncoder = null;
@@ -284,20 +289,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         VideoDecoder sourceDecoder,
         AudioEncoder? sound)
     {
-        var frameRate = source.VideoFrameRate;
-        var framesPerSecond = frameRate is { Num: > 0, Den: > 0 }
-            ? (int)Math.Round((double)frameRate.Num / frameRate.Den, MidpointRounding.AwayFromZero)
-            : 0;
-
-        var encoder = new FrameEncoder();
-        try
+        lock (encoderLock)
         {
-            encoder.Open(sourceDecoder.Width, sourceDecoder.Height, sourceDecoder.PixelFormat, framesPerSecond);
-
-            lock (encoderLock)
+            // A live stream that is already running has the encoder open.
+            var encoder = frameEncoder ?? OpenFrameEncoder(source, sourceDecoder);
+            try
             {
                 var recorder = remuxer
                     ?? throw new InvalidOperationException("Cannot record: player is not playing.");
+
+                // The file starts with the next picture, as a key frame.
+                encoder.RequestKeyFrame();
                 recorder.Open(
                     outputFilePath,
                     encoder.CodecParameters,
@@ -307,14 +309,54 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 frameEncoder = encoder;
                 audioEncoder = sound;
             }
+            catch
+            {
+                if (!ReferenceEquals(frameEncoder, encoder))
+                {
+                    encoder.Dispose();
+                }
+
+                throw;
+            }
+
+            LogRecordingEncoder(encoder.EncoderName ?? string.Empty);
+        }
+    }
+
+    private static FrameEncoder OpenFrameEncoder(
+        Demuxer source,
+        VideoDecoder sourceDecoder)
+    {
+        var frameRate = source.VideoFrameRate;
+        var framesPerSecond = frameRate is { Num: > 0, Den: > 0 }
+            ? (int)Math.Round((double)frameRate.Num / frameRate.Den, MidpointRounding.AwayFromZero)
+            : 0;
+
+        var encoder = new FrameEncoder();
+        try
+        {
+            encoder.Open(sourceDecoder.Width, sourceDecoder.Height, sourceDecoder.PixelFormat, framesPerSecond);
+            return encoder;
         }
         catch
         {
             encoder.Dispose();
             throw;
         }
+    }
 
-        LogRecordingEncoder(encoder.EncoderName ?? string.Empty);
+    // Must be called while holding encoderLock.
+    private void ReleaseFrameEncoderIfUnused()
+    {
+        if (frameEncoder is null ||
+            remuxer is { IsOpen: true } ||
+            liveRemuxer is { IsOpen: true })
+        {
+            return;
+        }
+
+        frameEncoder.Dispose();
+        frameEncoder = null;
     }
 
     private void WriteEncodedAudioPacket(AVPacket* packet)
@@ -327,10 +369,86 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
     private void WriteEncodedPacket(AVPacket* packet)
     {
-        if (remuxer is { IsOpen: true } && frameEncoder is not null)
+        if (frameEncoder is null)
+        {
+            return;
+        }
+
+        if (remuxer is { IsOpen: true })
         {
             remuxer.WritePacket(packet, frameEncoder.TimeBase);
         }
+
+        if (liveRemuxer is { IsOpen: true })
+        {
+            liveRemuxer.WritePacket(packet, frameEncoder.TimeBase);
+        }
+    }
+
+    public void StartStreaming(string playlistPath)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        ArgumentException.ThrowIfNullOrEmpty(playlistPath);
+
+        var source = demuxer;
+        var sourceDecoder = decoder;
+        if (state != PlayerState.Playing || source is null || sourceDecoder is null)
+        {
+            throw new InvalidOperationException("Cannot stream: player is not playing.");
+        }
+
+        lock (encoderLock)
+        {
+            if (liveRemuxer is { IsOpen: true })
+            {
+                return;
+            }
+
+            var live = new Remuxer();
+            try
+            {
+                if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
+                {
+                    // The encoder is shared with a recording, whichever of
+                    // the two came first. A stream starts with a key frame.
+                    var encoder = frameEncoder ?? OpenFrameEncoder(source, sourceDecoder);
+                    frameEncoder = encoder;
+                    encoder.RequestKeyFrame();
+                    live.OpenLive(playlistPath, encoder.CodecParameters, encoder.TimeBase);
+                }
+                else
+                {
+                    live.OpenLive(playlistPath, source.VideoCodecParameters, source.VideoTimeBase);
+                }
+            }
+            catch
+            {
+                live.Dispose();
+                ReleaseFrameEncoderIfUnused();
+                throw;
+            }
+
+            liveRemuxer = live;
+        }
+
+        LogStreamingStarted(playlistPath);
+    }
+
+    public void StopStreaming()
+    {
+        lock (encoderLock)
+        {
+            if (liveRemuxer is null)
+            {
+                return;
+            }
+
+            liveRemuxer.Dispose();
+            liveRemuxer = null;
+            ReleaseFrameEncoderIfUnused();
+        }
+
+        LogStreamingStopped();
     }
 
     public void SetRotation(VideoRotation rotation)
@@ -478,6 +596,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 frameEncoder = null;
                 audioEncoder?.Dispose();
                 audioEncoder = null;
+                liveRemuxer?.Dispose();
+                liveRemuxer = null;
                 remuxer?.Dispose();
                 remuxer = null;
             }
@@ -603,9 +723,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         // the encoder, and a raw packet would land in an H.264 file.
         lock (encoderLock)
         {
-            if (remuxer is { IsOpen: true } && frameEncoder is null)
+            if (frameEncoder is null)
             {
-                remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+                if (remuxer is { IsOpen: true })
+                {
+                    remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+                }
+
+                if (liveRemuxer is { IsOpen: true })
+                {
+                    liveRemuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+                }
             }
         }
 

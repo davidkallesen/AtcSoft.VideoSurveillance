@@ -129,6 +129,59 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task A_Source_Is_Streamed_To_Browsers_And_Recorded_At_The_Same_Time()
+    {
+        // One open camera serves both: a webcam can only be opened once.
+        TestEngine.Require();
+        var tool = FindFFmpegTool();
+        Assert.SkipWhen(tool is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var port = GetFreePort();
+        using var source = StartRawVideoStream(tool!, port);
+        var recording = Path.Combine(directory, "while-streaming.mkv");
+        var liveFolder = Path.Combine(directory, "live");
+        Directory.CreateDirectory(liveFolder);
+        var playlist = Path.Combine(liveFolder, "stream.m3u8");
+
+        using (var player = new VideoPlayer(Microsoft.Extensions.Logging.Abstractions.NullLogger<VideoPlayer>.Instance))
+        {
+            try
+            {
+                player.Open(new Uri($"tcp://127.0.0.1:{port}"), new StreamOptions { HardwareAcceleration = false });
+                await WaitUntilAsync(() => player.State == PlayerState.Playing && player.FramesDecoded > 0, cancellationToken);
+
+                // Act — the stream starts first, the recording joins and leaves
+                player.StartStreaming(playlist);
+                player.IsStreaming.Should().BeTrue();
+                player.StartRecording(recording);
+                await WaitUntilAsync(() => File.Exists(playlist) && Directory.GetFiles(liveFolder, "*.ts").Length >= 2, cancellationToken);
+                player.StopRecording();
+
+                // Assert — the stream goes on after the recording stopped
+                var segmentsAtStop = Directory.GetFiles(liveFolder, "*.ts").Length;
+                await WaitUntilAsync(() => Directory.GetFiles(liveFolder, "*.ts").Length > segmentsAtStop, cancellationToken);
+                player.IsStreaming.Should().BeTrue();
+                player.IsRecording.Should().BeFalse();
+
+                player.StopStreaming();
+                player.IsStreaming.Should().BeFalse();
+            }
+            finally
+            {
+                player.Close();
+                Stop(source);
+            }
+        }
+
+        var recorded = ReadBack(recording);
+        recorded.Codec.Should().Be(AVCodecID.H264);
+        recorded.Frames.Should().BeGreaterThan(20);
+        recorded.FirstIsKeyFrame.Should().BeTrue();
+        (await File.ReadAllTextAsync(playlist, cancellationToken)).Should().Contain("#EXT-X-ENDLIST", "a stream that was stopped says so");
+    }
+
     private static string? FindFFmpegTool()
     {
         var folder = VideoEngineBootstrap.FindFFmpegPath();
