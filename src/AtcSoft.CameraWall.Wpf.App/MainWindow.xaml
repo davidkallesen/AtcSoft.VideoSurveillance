@@ -22,6 +22,73 @@
     WindowState="{Binding Path=WindowState}"
     mc:Ignorable="d">
 
+    <!--  Keyboard shortcuts; F1 lists them (Translations.KeyboardShortcutsText)  -->
+    <atcTheming:NiceWindow.InputBindings>
+        <KeyBinding
+            Key="D1"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="1"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D2"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="2"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D3"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="3"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D4"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="4"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D5"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="5"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D6"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="6"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D7"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="7"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D8"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="8"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="D9"
+            Command="{Binding Path=SelectLayoutCommand}"
+            CommandParameter="9"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="N"
+            Command="{Binding Path=AddCameraCommand}"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="N"
+            Command="{Binding Path=NewLayoutCommand}"
+            Modifiers="Ctrl+Shift" />
+        <KeyBinding
+            Key="R"
+            Command="{Binding Path=ShowRecordingsBrowserCommand}"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="OemComma"
+            Command="{Binding Path=ShowSettingsCommand}"
+            Modifiers="Ctrl" />
+        <KeyBinding Key="F5" Command="{Binding Path=ReconnectAllCommand}" />
+        <KeyBinding Key="F1" Command="{Binding Path=ShowKeyboardShortcutsCommand}" />
+    </atcTheming:NiceWindow.InputBindings>
+
     <AdornerDecorator>
         <atcTheming:GridEx Rows="Auto,*,Auto">
 

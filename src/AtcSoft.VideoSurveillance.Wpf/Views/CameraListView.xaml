@@ -50,6 +50,24 @@
                     <TextBlock Margin="6,0,0,0" Text="Refresh" />
                 </StackPanel>
             </Button>
+            <Separator />
+            <!--  Filters on name, description, address and state as you type  -->
+            <TextBlock
+                Margin="6,0,6,0"
+                VerticalAlignment="Center"
+                Text="Filter" />
+            <TextBox
+                Width="220"
+                VerticalAlignment="Center"
+                Text="{Binding Path=FilterText, UpdateSourceTrigger=PropertyChanged}"
+                ToolTip="Show the cameras that contain this text" />
+            <Button Command="{Binding ClearFilterCommand}" ToolTip="Clear the filter">
+                <fontIcons:ImageAwesomeSolid
+                    Width="12"
+                    Height="12"
+                    Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}"
+                    Icon="Times" />
+            </Button>
         </ToolBar>
 
         <!--  Camera DataGrid  -->

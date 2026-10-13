@@ -1353,4 +1353,10 @@
   <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
     <value>Til: browseren åbner med de kamera-, dag- og tidsfiltre og den optagelse, du sidst brugte.&#xD;&#xA;Fra: browseren åbner altid med alle optagelser.&#xD;&#xA;Huskes, indtil appen lukkes.</value>
   </data>
+  <data name="KeyboardShortcuts" xml:space="preserve">
+    <value>Tastaturgenveje</value>
+  </data>
+  <data name="KeyboardShortcutsText" xml:space="preserve">
+    <value>Ctrl+1 til Ctrl+9&#x9;Skift til det layout i listen&#xD;&#xA;Ctrl+N&#x9;Tilføj et kamera&#xD;&#xA;Ctrl+Shift+N&#x9;Nyt layout&#xD;&#xA;Ctrl+R&#x9;Gennemse optagelser&#xD;&#xA;Ctrl+,&#x9;Indstillinger&#xD;&#xA;F5&#x9;Gentilslut alle kameraer&#xD;&#xA;F1&#x9;Denne liste&#xD;&#xA;&#xD;&#xA;I optagelsesbrowseren:&#xD;&#xA;Enter&#x9;Afspil den valgte optagelse&#xD;&#xA;Esc&#x9;Luk afspilleren eller browseren</value>
+  </data>
 </root>

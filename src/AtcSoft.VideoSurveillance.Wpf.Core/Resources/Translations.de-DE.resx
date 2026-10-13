@@ -1353,4 +1353,10 @@
   <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
     <value>Ein: Der Browser öffnet mit den zuletzt verwendeten Kamera-, Tag- und Zeitfiltern und der zuletzt gewählten Aufnahme.&#xD;&#xA;Aus: Der Browser öffnet immer mit allen Aufnahmen.&#xD;&#xA;Wird gemerkt, bis die App geschlossen wird.</value>
   </data>
+  <data name="KeyboardShortcuts" xml:space="preserve">
+    <value>Tastenkürzel</value>
+  </data>
+  <data name="KeyboardShortcutsText" xml:space="preserve">
+    <value>Strg+1 bis Strg+9&#x9;Zu diesem Layout in der Liste wechseln&#xD;&#xA;Strg+N&#x9;Kamera hinzufügen&#xD;&#xA;Strg+Umschalt+N&#x9;Neues Layout&#xD;&#xA;Strg+R&#x9;Aufnahmen durchsuchen&#xD;&#xA;Strg+,&#x9;Einstellungen&#xD;&#xA;F5&#x9;Alle Kameras neu verbinden&#xD;&#xA;F1&#x9;Diese Liste&#xD;&#xA;&#xD;&#xA;Im Aufnahmen-Browser:&#xD;&#xA;Eingabe&#x9;Ausgewählte Aufnahme abspielen&#xD;&#xA;Esc&#x9;Player oder Browser schließen</value>
+  </data>
 </root>

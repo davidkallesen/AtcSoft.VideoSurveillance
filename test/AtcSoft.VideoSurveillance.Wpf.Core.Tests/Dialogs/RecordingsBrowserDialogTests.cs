@@ -103,6 +103,47 @@ public sealed class RecordingsBrowserDialogTests : IDisposable
         closedBeforePlay.Should().BeTrue();
     }
 
+    [Fact]
+    public void Enter_Plays_The_Selected_Recording()
+    {
+        // Arrange
+        Touch("Garden", "Garden_20261012_220000_000.mkv");
+
+        var settingsService = Substitute.For<IWpfCoreSettingsService>();
+        settingsService.Recording.Returns(new RecordingSettings { RecordingPath = root });
+
+        string? played = null;
+        var handled = false;
+
+        // Act
+        var error = WpfTestThread.Run(() =>
+        {
+            var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
+            var dialog = new RecordingsBrowserDialog(viewModel, recording => played = recording.FileName);
+            viewModel.SelectedRecording = viewModel.FilteredRecordings.Single();
+
+            // A key event needs a source; the dialog itself is never shown.
+            using var source = new System.Windows.Interop.HwndSource(new System.Windows.Interop.HwndSourceParameters("test"));
+            var grid = (System.Windows.Controls.DataGrid)dialog.FindName("RecordingsGrid");
+            var enter = new System.Windows.Input.KeyEventArgs(
+                System.Windows.Input.Keyboard.PrimaryDevice,
+                source,
+                timestamp: 0,
+                System.Windows.Input.Key.Enter)
+            {
+                RoutedEvent = System.Windows.Input.Keyboard.PreviewKeyDownEvent,
+            };
+
+            grid.RaiseEvent(enter);
+            handled = enter.Handled;
+        });
+
+        // Assert — and the grid does not also move the selection down a row
+        error.Should().BeNull();
+        played.Should().Be("Garden_20261012_220000_000.mkv");
+        handled.Should().BeTrue();
+    }
+
     private void Touch(params string[] segments)
     {
         var path = System.IO.Path.Combine([root, .. segments]);

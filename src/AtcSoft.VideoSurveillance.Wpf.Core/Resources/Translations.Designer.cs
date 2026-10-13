@@ -2608,6 +2608,24 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Keyboard Shortcuts.
+        /// </summary>
+        public static string KeyboardShortcuts {
+            get {
+                return ResourceManager.GetString("KeyboardShortcuts", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Ctrl+1 to Ctrl+9.
+        /// </summary>
+        public static string KeyboardShortcutsText {
+            get {
+                return ResourceManager.GetString("KeyboardShortcutsText", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Moving recordings....
         /// </summary>
         public static string RecordingLayoutMoving {

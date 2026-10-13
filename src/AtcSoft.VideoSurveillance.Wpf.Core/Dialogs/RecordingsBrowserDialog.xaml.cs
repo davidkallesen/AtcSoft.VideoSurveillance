@@ -34,6 +34,7 @@ public partial class RecordingsBrowserDialog : IDisposable
         viewModel.ThumbnailPreviewRequested += OnThumbnailPreviewRequested;
         Closed += OnWindowClosed;
         ContentRendered += OnContentRendered;
+        RecordingsGrid.PreviewKeyDown += OnRecordingsGridPreviewKeyDown;
     }
 
     /// <inheritdoc />
@@ -61,6 +62,7 @@ public partial class RecordingsBrowserDialog : IDisposable
             viewModel.ThumbnailPreviewRequested -= OnThumbnailPreviewRequested;
             Closed -= OnWindowClosed;
             ContentRendered -= OnContentRendered;
+            RecordingsGrid.PreviewKeyDown -= OnRecordingsGridPreviewKeyDown;
         }
 
         disposed = true;
@@ -93,6 +95,24 @@ public partial class RecordingsBrowserDialog : IDisposable
         playRecording(recording);
 
         FocusSelectedRecording();
+    }
+
+    /// <summary>
+    /// Enter plays the selected recording. Handled before the grid sees the
+    /// key, which would otherwise move the selection down a row.
+    /// </summary>
+    private void OnRecordingsGridPreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter ||
+            !viewModel.PlayCommand.CanExecute(parameter: null))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        viewModel.PlayCommand.Execute(parameter: null);
     }
 
     /// <summary>

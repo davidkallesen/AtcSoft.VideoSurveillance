@@ -5,18 +5,24 @@ namespace AtcSoft.CameraWall.Wpf.App;
 /// </summary>
 public partial class MainWindowViewModel : MainWindowViewModelBase
 {
+    private readonly IDialogService dialogService;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
     /// </summary>
     /// <param name="cameraWallManager">The camera wall manager.</param>
     /// <param name="settingsService">The application settings service.</param>
+    /// <param name="dialogService">The dialog service.</param>
     public MainWindowViewModel(
         ICameraWallManager cameraWallManager,
-        IApplicationSettingsService settingsService)
+        IApplicationSettingsService settingsService,
+        IDialogService dialogService)
     {
         ArgumentNullException.ThrowIfNull(cameraWallManager);
         ArgumentNullException.ThrowIfNull(settingsService);
+        ArgumentNullException.ThrowIfNull(dialogService);
 
+        this.dialogService = dialogService;
         Manager = cameraWallManager;
         Manager.PropertyChanged += OnManagerPropertyChanged;
         Manager.Layouts.CollectionChanged += OnLayoutsCollectionChanged;
@@ -328,6 +334,23 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     [RelayCommand]
     private void ShowRecordingsBrowser()
         => Manager.ShowRecordingsBrowserDialog();
+
+    /// <summary>
+    /// Switches to the layout in the given place of the layout list
+    /// (Ctrl+1 to Ctrl+9). A number without a layout does nothing.
+    /// </summary>
+    [RelayCommand]
+    private void SelectLayout(string? number)
+    {
+        if (LayoutQuickSelect.GetByNumber(Manager.Layouts, number) is { } layout)
+        {
+            Manager.CurrentLayout = layout;
+        }
+    }
+
+    [RelayCommand]
+    private void ShowKeyboardShortcuts()
+        => dialogService.ShowInfo(Translations.KeyboardShortcutsText, Translations.KeyboardShortcuts);
 
     [RelayCommand]
     private void DownloadUpdate()

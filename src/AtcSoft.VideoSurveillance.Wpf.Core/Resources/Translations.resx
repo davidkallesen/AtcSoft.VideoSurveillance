@@ -1353,4 +1353,10 @@
   <data name="RememberRecordingsBrowserStateHint" xml:space="preserve">
     <value>On:  the browser opens with the camera, day and time filters and the recording you last used.&#xD;&#xA;Off: the browser always opens with all recordings.&#xD;&#xA;Remembered until the app is closed.</value>
   </data>
+  <data name="KeyboardShortcuts" xml:space="preserve">
+    <value>Keyboard Shortcuts</value>
+  </data>
+  <data name="KeyboardShortcutsText" xml:space="preserve">
+    <value>Ctrl+1 to Ctrl+9&#x9;Switch to that layout in the list&#xD;&#xA;Ctrl+N&#x9;Add a camera&#xD;&#xA;Ctrl+Shift+N&#x9;New layout&#xD;&#xA;Ctrl+R&#x9;Browse recordings&#xD;&#xA;Ctrl+,&#x9;Settings&#xD;&#xA;F5&#x9;Reconnect all cameras&#xD;&#xA;F1&#x9;This list&#xD;&#xA;&#xD;&#xA;In the recordings browser:&#xD;&#xA;Enter&#x9;Play the selected recording&#xD;&#xA;Esc&#x9;Close the player or the browser</value>
+  </data>
 </root>

@@ -14,6 +14,9 @@ public partial class CameraListViewModel : ViewModelBase
     [ObservableProperty]
     private bool isLoading;
 
+    [ObservableProperty(AfterChangedCallback = nameof(OnFilterTextChanged))]
+    private string filterText = string.Empty;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraListViewModel"/> class.
     /// </summary>
@@ -30,6 +33,20 @@ public partial class CameraListViewModel : ViewModelBase
         this.hubService.OnConnectionStateChanged += OnConnectionStateChanged;
         this.hubService.OnRecordingStateChanged += OnRecordingStateChanged;
     }
+
+    /// <summary>
+    /// Shows only the cameras that match the filter text. The grid's view of
+    /// the collection is filtered, so rows keep their selection and sorting.
+    /// </summary>
+    private void OnFilterTextChanged()
+    {
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Cameras);
+        view.Filter = item => item is CameraItemViewModel camera && camera.Matches(FilterText);
+    }
+
+    [RelayCommand]
+    private void ClearFilter()
+        => FilterText = string.Empty;
 
     [RelayCommand("Load")]
     private async Task LoadAsync()
