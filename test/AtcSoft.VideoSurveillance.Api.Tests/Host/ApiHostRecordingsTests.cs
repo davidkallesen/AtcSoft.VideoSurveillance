@@ -93,6 +93,55 @@ public sealed class ApiHostRecordingsTests(ApiHostFixture host)
         }
     }
 
+    [Fact]
+    public async Task A_Recording_Is_Deleted_By_The_Path_The_Listing_Gave_And_Is_Gone_From_The_Listing()
+    {
+        using var client = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(client);
+        var camera = "Delete " + Guid.NewGuid().ToString("N")[..8];
+        var video = Path.Combine(recordingPath, camera, "2026-10-12", camera + "_20261012_101500_000.mp4");
+        var thumbnail = Path.Combine(recordingPath, "thumbnails", camera, "2026-10-12", camera + "_20261012_101500_000.png");
+        Write(video, [1, 2, 3, 4]);
+        Write(thumbnail, Png);
+        var listedPath = (await ListAsync(client)).Single(p => p.Contains(camera, StringComparison.Ordinal));
+
+        var deleted = await client.DeleteAsync(DeleteUrl(listedPath), TestContext.Current.CancellationToken);
+
+        deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        File.Exists(video).Should().BeFalse();
+        File.Exists(thumbnail).Should().BeFalse();
+        (await ListAsync(client)).Should().NotContain(p => p.Contains(camera, StringComparison.Ordinal));
+
+        var again = await client.DeleteAsync(DeleteUrl(listedPath), TestContext.Current.CancellationToken);
+        again.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Theory]
+    [InlineData("../settings.json")]
+    [InlineData("../../cameras.json")]
+    [InlineData("thumbnails/x/x_20261012_101500_000.png")]
+    public async Task Nothing_But_A_Recording_Can_Be_Deleted_Through_The_Api(
+        string filePath)
+    {
+        // The server's own files sit next to the recording folder.
+        using var client = host.CreateClient();
+
+        var response = await client.DeleteAsync(DeleteUrl(filePath), TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var settings = await client.GetAsync(new Uri("/settings", UriKind.Relative), TestContext.Current.CancellationToken);
+        settings.StatusCode.Should().Be(HttpStatusCode.OK, "the server still has its settings");
+    }
+
+    private static Uri DeleteUrl(string filePath)
+        => new("/recordings?filePath=" + Uri.EscapeDataString(filePath), UriKind.Relative);
+
+    private static async Task<List<string>> ListAsync(HttpClient client)
+    {
+        var recordings = await client.GetFromJsonAsync<JsonElement>("/recordings", TestContext.Current.CancellationToken);
+        return [.. recordings.EnumerateArray().Select(r => r.GetProperty("filePath").GetString()!)];
+    }
+
     private static async Task<string> GetRecordingPathAsync(HttpClient client)
     {
         var settings = await client.GetFromJsonAsync<JsonElement>("/settings", TestContext.Current.CancellationToken);

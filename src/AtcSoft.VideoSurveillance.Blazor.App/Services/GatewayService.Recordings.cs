@@ -18,4 +18,33 @@ public sealed partial class GatewayService
             ? result.OkContent.ToArray()
             : null;
     }
+
+    /// <summary>
+    /// Deletes a finished recording on the server.
+    /// </summary>
+    /// <param name="filePath">The recording's path, as the listing gave it.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    public async Task<RecordingDeletionOutcome> DeleteRecordingAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new DeleteRecordingParameters(FilePath: filePath);
+        var result = await deleteRecordingEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.IsNoContent)
+        {
+            return RecordingDeletionOutcome.Deleted;
+        }
+
+        if (result.IsConflict)
+        {
+            return RecordingDeletionOutcome.InProgress;
+        }
+
+        return result.IsNotFound
+            ? RecordingDeletionOutcome.NotFound
+            : RecordingDeletionOutcome.Failed;
+    }
 }

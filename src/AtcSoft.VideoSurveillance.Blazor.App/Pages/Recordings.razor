@@ -2,6 +2,7 @@
 @inject GatewayService Gateway
 @inject SurveillanceHubService Hub
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @implements IDisposable
 
@@ -65,7 +66,7 @@
         <MudTh>Length</MudTh>
         <MudTh><MudTableSortLabel SortBy="@(new Func<Recording, object?>(r => r.FileSizeBytes))">Size</MudTableSortLabel></MudTh>
         <MudTh>File</MudTh>
-        <MudTh Style="width: 110px;"></MudTh>
+        <MudTh Style="width: 150px;"></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Thumbnail">
@@ -111,6 +112,14 @@
                                Size="Size.Small"
                                Disabled="context.InProgress"
                                OnClick="@(() => DownloadRecordingAsync(context))" />
+            </MudTooltip>
+            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Delete")">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Size="Size.Small"
+                               Color="Color.Error"
+                               aria-label="Delete recording"
+                               Disabled="context.InProgress"
+                               OnClick="@(() => DeleteRecordingAsync(context))" />
             </MudTooltip>
         </MudTd>
     </RowTemplate>
@@ -236,6 +245,44 @@
         if (RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath) is { } url)
         {
             await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", url, RecordingDisplay.FileName(recording.FilePath));
+        }
+    }
+
+    private async Task DeleteRecordingAsync(Recording recording)
+    {
+        if (recording.InProgress || string.IsNullOrEmpty(recording.FilePath))
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, RecordingDeletion.Question(recording.CameraName, recording.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)) },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete recording", parameters);
+        if (await dialog.Result is not { Canceled: false })
+        {
+            return;
+        }
+
+        var outcome = await Gateway.DeleteRecordingAsync(recording.FilePath);
+        Snackbar.Add(
+            RecordingDeletion.ResultText(outcome),
+            RecordingDeletion.Succeeded(outcome) ? Severity.Success : Severity.Warning);
+
+        if (RecordingDeletion.IsGone(outcome))
+        {
+            recordings = [.. recordings.Where(r => !ReferenceEquals(r, recording))];
+            ApplyFilter();
+        }
+        else
+        {
+            // It may have started recording again, or the server is away:
+            // the list shows what is true now.
+            await LoadRecordingsAsync();
         }
     }
 

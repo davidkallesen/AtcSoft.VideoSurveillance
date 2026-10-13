@@ -428,6 +428,40 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Recording"
+    delete:
+      summary: Delete a recording
+      description: Deletes one finished recording together with its thumbnail. A recording that is still being made cannot be deleted.
+      operationId: deleteRecording
+      tags:
+        - recordings
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          description: The recording's path relative to the recordings root, as the listing returns it in filePath.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recording deleted
+        '400':
+          description: The path does not name a recording
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: Recording not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '409':
+          description: The recording is still being made
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /settings:
     get:
