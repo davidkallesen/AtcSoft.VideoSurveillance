@@ -1,7 +1,10 @@
 ﻿namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// The FFmpeg command line that turns a camera stream into HLS for browsers.
+/// The FFmpeg command line that turns a network camera's stream into HLS
+/// for browsers. A USB camera is not streamed this way: Windows gives it to
+/// one program at a time, so it is streamed from the one pipeline the
+/// server keeps for it (<see cref="ICameraPipelineHost"/>).
 /// </summary>
 public static class HlsStreamCommand
 {
@@ -12,13 +15,6 @@ public static class HlsStreamCommand
     // password ("user:password@"). Removing every "1" or "ab" from a log
     // line would ruin the line without hiding anything.
     private const int MinimumLengthToRemoveEverywhere = 6;
-
-    // What a USB camera delivers when no format was chosen for it.
-    private const double DefaultUsbFrameRate = 30;
-
-    // The length of an HLS segment. A USB camera gets a key frame this often,
-    // so every segment can start with one.
-    private const int SegmentSeconds = 2;
 
     /// <summary>
     /// Finds the FFmpeg command-line tool. It is taken from the folder the
@@ -54,89 +50,14 @@ public static class HlsStreamCommand
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentException.ThrowIfNullOrEmpty(playlistPath);
 
-        return camera.Connection.Source == CameraSource.Usb
-            ? BuildUsbArguments(camera, playlistPath)
-            : BuildNetworkArguments(camera, playlistPath);
-    }
-
-    /// <summary>
-    /// Tells why a camera cannot be streamed right now.
-    /// </summary>
-    /// <param name="camera">The camera to stream.</param>
-    /// <param name="isInUseByServer">Whether the server has the camera open itself: it is recording it, or watching it for motion.</param>
-    /// <returns>The reason, to show to the user, or <c>null</c> when the camera can be streamed.</returns>
-    public static string? GetUnavailableReason(
-        CameraConfiguration camera,
-        bool isInUseByServer)
-    {
-        ArgumentNullException.ThrowIfNull(camera);
-
-        // Windows lets one program at a time open a USB camera. A second
-        // one gets no pictures and no clear error either.
-        return camera.Connection.Source == CameraSource.Usb && isInUseByServer
-            ? "The server is using this USB camera (it is recording it, or watching it for motion), and a USB camera can only be used by one program at a time. " +
-              "Stop the recording, or turn off motion recording for the camera, to watch it live."
-            : null;
-    }
-
-    private static string BuildUsbArguments(
-        CameraConfiguration camera,
-        string playlistPath)
-    {
-        var source = CameraUriHelper.BuildSourceLocator(camera);
-        var frameRate = camera.Connection.Usb?.Format is { FrameRate: > 0 } format
-            ? format.FrameRate
-            : DefaultUsbFrameRate;
-        var keyFrameInterval = (int)Math.Round(frameRate * SegmentSeconds, MidpointRounding.AwayFromZero);
-
-        var arguments = new List<string>
+        if (camera.Connection.Source == CameraSource.Usb)
         {
-            "-nostats",
-            "-v info",
-
-            // Room for the pictures that arrive while the encoder starts;
-            // the default is too small for anything above 720p.
-            "-rtbufsize 256M",
-            $"-f {source.InputFormat}",
-        };
-
-        // The capture options belong to the input, so they stand before it.
-        if (source.VideoSize is not null)
-        {
-            arguments.Add($"-video_size {source.VideoSize}");
+            throw new ArgumentException(
+                "A USB camera is streamed from its shared pipeline, not by an FFmpeg process.",
+                nameof(camera));
         }
 
-        if (source.FrameRate is not null)
-        {
-            arguments.Add($"-framerate {source.FrameRate}");
-        }
-
-        // A webcam sends uncompressed pictures, which cannot be copied into
-        // HLS: they are encoded here. Browsers only play H.264 with 4:2:0
-        // colour, and a webcam sends 4:2:2. The fastest preset keeps the
-        // processor load and the delay low.
-        arguments.AddRange(
-        [
-            $"-i \"{source.RawDeviceSpec}\"",
-            "-c:v libx264",
-            "-preset ultrafast",
-            "-tune zerolatency",
-            "-pix_fmt yuv420p",
-            string.Create(CultureInfo.InvariantCulture, $"-g {keyFrameInterval} -keyint_min {keyFrameInterval}"),
-            "-sc_threshold 0",
-
-            // By the clock as well: a webcam that drops pictures in poor
-            // light would otherwise stretch a segment to twice its length.
-            string.Create(CultureInfo.InvariantCulture, $"-force_key_frames \"expr:gte(t,n_forced*{SegmentSeconds})\""),
-            "-c:a aac -b:a 64k",
-            "-f hls",
-            string.Create(CultureInfo.InvariantCulture, $"-hls_time {SegmentSeconds}"),
-            "-hls_list_size 5",
-            "-hls_flags delete_segments",
-            $"\"{playlistPath}\"",
-        ]);
-
-        return string.Join(' ', arguments);
+        return BuildNetworkArguments(camera, playlistPath);
     }
 
     private static string BuildNetworkArguments(

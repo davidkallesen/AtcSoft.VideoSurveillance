@@ -13,7 +13,6 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
     private readonly IMediaPipelineFactory pipelineFactory = Substitute.For<IMediaPipelineFactory>();
     private readonly IMediaPipeline pipeline = Substitute.For<IMediaPipeline>();
     private readonly IMotionDetectionService motionDetection = Substitute.For<IMotionDetectionService>();
-    private readonly ILiveStreamStatus liveStreams = Substitute.For<ILiveStreamStatus>();
     private readonly ICameraConnectionStateSink connectionStates = Substitute.For<ICameraConnectionStateSink>();
     private readonly RecordingSettings recordingSettings = new() { EnableRecordingOnMotion = true };
     private readonly CameraConnectionService sut;
@@ -39,7 +38,6 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
             Substitute.For<IUsbCameraLifecycleCoordinator>(),
             motionDetection,
             connectionTypeAutoDetector: null,
-            liveStreams,
             connectionStates);
     }
 
@@ -191,20 +189,6 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
         motionDetection.Received().StopDetection(camera.Id);
         recordingService.Received(1).StopRecording(camera.Id);
         connectionStates.Received(1).Report(camera.Id, ConnectionState.Disconnected);
-    }
-
-    [Fact]
-    public async Task A_Usb_Camera_Someone_Is_Watching_Live_Is_Left_To_Them()
-    {
-        // Windows gives a USB camera to one program at a time; opening it a
-        // second time connects and then delivers nothing.
-        camera.Connection.Source = CoreCameraSource.Usb;
-        camera.Connection.Usb = new UsbConnectionSettings { DeviceId = "usb#1", FriendlyName = "Webcam" };
-        liveStreams.IsStreaming(camera.Id).Returns(true);
-
-        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
-
-        pipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
     }
 
     private async Task ConnectAsync()

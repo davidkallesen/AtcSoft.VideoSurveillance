@@ -84,13 +84,12 @@ try
         new VideoPlayerFactory(sp.GetRequiredService<ILoggerFactory>()));
     builder.Services.AddSingleton<IMediaPipelineFactory, VideoEngineMediaPipelineFactory>();
 
-    // The streaming service finds the cameras the server has open when it
-    // first needs them: the service that keeps them open needs this one.
+    // The streaming service asks for the host of the USB cameras' pipelines
+    // when it first streams one, so the host is not created just for it.
     builder.Services.AddSingleton(sp => new StreamingService(
         sp.GetRequiredService<ICameraStorageService>(),
         sp.GetRequiredService<ILogger<StreamingService>>(),
         sp));
-    builder.Services.AddSingleton<ILiveStreamStatus>(sp => sp.GetRequiredService<StreamingService>());
     builder.Services.AddSingleton<ICameraConnectionStateSink>(sp => sp.GetRequiredService<ServerRecordingService>());
 
     // USB-camera support — Null fallback first so non-Windows hosts
@@ -179,10 +178,11 @@ try
     // dead sessions every 30s.
     builder.Services.AddSingleton(new CameraConnectionServiceOptions());
 
-    // One instance, as the hosted worker and for whoever asks which cameras it has open.
+    // One instance, as the hosted worker and as the host of the one
+    // pipeline a USB camera has for watching and recording alike.
     builder.Services.AddSingleton<CameraConnectionService>();
     builder.Services.AddHostedService(sp => sp.GetRequiredService<CameraConnectionService>());
-    builder.Services.AddSingleton<ICameraPipelineLookup, OpenCameraPipelines>();
+    builder.Services.AddSingleton<ICameraPipelineHost>(sp => sp.GetRequiredService<CameraConnectionService>());
 
     // Periodic disk-retention enforcement; without this, continuous server
     // recording fills the disk and crashes the host.

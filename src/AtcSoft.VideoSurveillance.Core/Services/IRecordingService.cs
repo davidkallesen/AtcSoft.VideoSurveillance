@@ -15,6 +15,23 @@ public interface IRecordingService
         CameraConfiguration camera,
         IMediaPipeline pipeline);
 
+    /// <summary>
+    /// Starts a recording someone asked for on a pipeline that belongs to
+    /// an <see cref="ICameraPipelineHost"/>: the pipeline is left open when
+    /// the recording stops.
+    /// </summary>
+    /// <param name="camera">The camera to record.</param>
+    /// <param name="pipeline">The camera's shared pipeline.</param>
+    /// <returns>
+    /// <see langword="true"/> when the recording started. A recording
+    /// service that owns every pipeline it records on returns
+    /// <see langword="false"/>.
+    /// </returns>
+    bool StartRecordingOnSharedPipeline(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline)
+        => false;
+
     void StopRecording(Guid cameraId);
 
     bool IsRecording(Guid cameraId);

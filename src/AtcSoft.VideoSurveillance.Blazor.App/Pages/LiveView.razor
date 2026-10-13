@@ -321,6 +321,11 @@ else
         starting.Remove(cameraId);
         errors.Remove(cameraId);
 
+        // Taken off the page first: a camera that was only open for this
+        // viewer is closed by the stop, and its "disconnected" must not be
+        // taken for a stream that broke.
+        var wasShown = streamUrls.Remove(cameraId);
+
         try
         {
             await Hub.StopStreamAsync(cameraId);
@@ -330,7 +335,7 @@ else
             Snackbar.Add($"The stream could not be stopped: {ex.Message}", Severity.Error);
         }
 
-        if (streamUrls.Remove(cameraId))
+        if (wasShown)
         {
             await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
         }

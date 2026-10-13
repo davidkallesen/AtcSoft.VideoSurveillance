@@ -8,7 +8,7 @@ public sealed class StartRecordingHandler(
     ICameraStorageService storage,
     IRecordingService recordingService,
     IMediaPipelineFactory pipelineFactory,
-    ILiveStreamStatus? liveStreams = null) : IStartRecordingHandler
+    ICameraPipelineHost? pipelineHost = null) : IStartRecordingHandler
 {
     // Wait at most this long for the camera to reach the Connected state
     // before reporting failure. Longer than the typical RTSP open (1-3 s)
@@ -27,19 +27,23 @@ public sealed class StartRecordingHandler(
             return StartRecordingResult.NotFound($"Camera {parameters.CameraId} not found.");
         }
 
-        // Windows gives a USB camera to one program at a time. A second
-        // opener connects and then gets no pictures, so it is refused here.
-        if (camera.Connection.Source == AtcSoft.VideoSurveillance.Enums.CameraSource.Usb &&
-            liveStreams?.IsStreaming(parameters.CameraId) == true)
-        {
-            return StartRecordingResult.Conflict(
-                "This USB camera is being watched live, and a USB camera can only be used by one program at a time. " +
-                "Close the live view to record it.");
-        }
-
         if (recordingService.IsRecording(parameters.CameraId))
         {
             return StartRecordingResult.Conflict($"Camera {parameters.CameraId} is already recording.");
+        }
+
+        // Windows gives a USB camera to one program at a time, so it is
+        // not opened here: it is recorded on the one pipeline it has, which
+        // someone may be watching it on already.
+        if (pipelineHost?.Hosts(camera) == true)
+        {
+            var outcome = await HostedCameraRecording
+                .StartAsync(pipelineHost, recordingService, camera, ConnectionTimeout, cancellationToken)
+                .ConfigureAwait(false);
+
+            return outcome == HostedCameraRecordingOutcome.Started
+                ? StartRecordingResult.Ok(BuildStatus(parameters.CameraId))
+                : StartRecordingResult.Conflict(HostedCameraRecording.Describe(outcome, ConnectionTimeout));
         }
 
         var pipeline = pipelineFactory.Create(camera);
@@ -78,15 +82,18 @@ public sealed class StartRecordingHandler(
             throw;
         }
 
-        var session = recordingService.GetSession(parameters.CameraId);
-        var state = recordingService.GetRecordingState(parameters.CameraId);
+        return StartRecordingResult.Ok(BuildStatus(parameters.CameraId));
+    }
 
-        var status = new RecordingStatus(
-            CameraId: parameters.CameraId,
+    private RecordingStatus BuildStatus(Guid cameraId)
+    {
+        var session = recordingService.GetSession(cameraId);
+        var state = recordingService.GetRecordingState(cameraId);
+
+        return new RecordingStatus(
+            CameraId: cameraId,
             State: state.ToApiRecordingState(),
             FilePath: session?.CurrentFilePath ?? string.Empty,
             StartedAt: session is not null ? new DateTimeOffset(session.StartTime, TimeSpan.Zero) : DateTimeOffset.UtcNow);
-
-        return StartRecordingResult.Ok(status);
     }
 }

@@ -13,11 +13,15 @@ namespace AtcSoft.VideoSurveillance.Api.Hubs;
 /// </remarks>
 public sealed partial class SurveillanceHub : Hub
 {
+    // How long a USB camera that had to be opened for a recording gets to
+    // deliver its first picture.
+    private static readonly TimeSpan HostedCameraTimeout = TimeSpan.FromSeconds(15);
+
     private readonly ICameraStorageService storage;
     private readonly IRecordingService recordingService;
     private readonly IMediaPipelineFactory pipelineFactory;
     private readonly StreamingService streamingService;
-    private readonly IMotionDetectionService motionDetectionService;
+    private readonly ICameraPipelineHost pipelineHost;
     private readonly ILogger<SurveillanceHub> logger;
 
     public SurveillanceHub(
@@ -25,14 +29,14 @@ public sealed partial class SurveillanceHub : Hub
         IRecordingService recordingService,
         IMediaPipelineFactory pipelineFactory,
         StreamingService streamingService,
-        IMotionDetectionService motionDetectionService,
+        ICameraPipelineHost pipelineHost,
         ILogger<SurveillanceHub> logger)
     {
         this.storage = storage;
         this.recordingService = recordingService;
         this.pipelineFactory = pipelineFactory;
         this.streamingService = streamingService;
-        this.motionDetectionService = motionDetectionService;
+        this.pipelineHost = pipelineHost;
         this.logger = logger;
     }
 
@@ -81,11 +85,21 @@ public sealed partial class SurveillanceHub : Hub
             return;
         }
 
-        if (camera.Connection.Source == CameraSource.Usb && ((ILiveStreamStatus)streamingService).IsStreaming(cameraId))
+        // A USB camera has one pipeline for everything; it is not opened here.
+        if (pipelineHost.Hosts(camera))
         {
-            await Clients.Caller
-                .SendAsync("Error", $"Camera {cameraId} is a USB camera that is being watched live; it can only be used by one program at a time.")
+            var outcome = await HostedCameraRecording
+                .StartAsync(pipelineHost, recordingService, camera, HostedCameraTimeout, Context.ConnectionAborted)
                 .ConfigureAwait(false);
+
+            if (outcome != HostedCameraRecordingOutcome.Started)
+            {
+                await Clients.Caller
+                    .SendAsync("Error", HostedCameraRecording.Describe(outcome, HostedCameraTimeout))
+                    .ConfigureAwait(false);
+            }
+
+            LogRecordingResult(outcome == HostedCameraRecordingOutcome.Started ? "started" : "failed to start", cameraId);
             return;
         }
 
@@ -141,17 +155,6 @@ public sealed partial class SurveillanceHub : Hub
         var connectionId = Context.ConnectionId;
         try
         {
-            // A USB camera the server has open is streamed from that open
-            // pipeline. Only when that cannot be done is it refused.
-            if (storage.GetCameraById(cameraId) is { } camera &&
-                !streamingService.CanStreamFromServerPipeline(camera) &&
-                HlsStreamCommand.GetUnavailableReason(
-                    camera,
-                    recordingService.IsRecording(cameraId) || motionDetectionService.IsDetectionActive(cameraId)) is { } reason)
-            {
-                throw new InvalidOperationException(reason);
-            }
-
             var playlistPath = streamingService.StartStream(cameraId, connectionId);
 
             // Wait for FFmpeg to create the playlist and first segment (up to 60 seconds).
@@ -178,7 +181,9 @@ public sealed partial class SurveillanceHub : Hub
                     var errors = streamingService.GetProcessError(cameraId);
                     streamingService.StopStream(cameraId, connectionId);
                     throw new InvalidOperationException(
-                        $"FFmpeg exited unexpectedly. Output: {errors}");
+                        string.IsNullOrWhiteSpace(errors)
+                            ? "The camera could not be opened."
+                            : $"The stream ended before it had started. Output: {errors}");
                 }
 
                 if (DateTime.UtcNow - start > timeout)
@@ -186,10 +191,10 @@ public sealed partial class SurveillanceHub : Hub
                     var errors = streamingService.GetProcessError(cameraId);
                     streamingService.StopStream(cameraId, connectionId);
                     throw new TimeoutException(
-                        $"FFmpeg did not produce the HLS playlist within {timeout.TotalSeconds:F0}s. " +
+                        $"The stream did not produce its HLS playlist within {timeout.TotalSeconds:F0}s. " +
                         "The most common cause is a very long camera GOP (keyframe interval) — " +
                         "reduce it in the camera's encoder settings if possible. " +
-                        $"Last FFmpeg output: {errors}");
+                        $"Last output: {errors}");
                 }
 
                 await Task.Delay(500, cancellationToken).ConfigureAwait(false);

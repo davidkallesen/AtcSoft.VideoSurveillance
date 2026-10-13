@@ -1,12 +1,13 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// Manages the HLS streams browsers watch. A camera gets an FFmpeg process of
-/// its own that turns its stream into segments; a USB camera the server
-/// already has open is streamed from that open pipeline instead, because
-/// Windows gives a USB camera to one program at a time.
+/// Manages the HLS streams browsers watch. A network camera gets an FFmpeg
+/// process of its own that turns its stream into segments. A USB camera is
+/// streamed from the one pipeline the <see cref="ICameraPipelineHost"/> keeps
+/// for it, because Windows gives a USB camera to one program at a time: a
+/// process of its own would shut out every recording of the camera.
 /// </summary>
-public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
+public sealed partial class StreamingService : IDisposable
 {
     // A client that drops its socket without calling StopStream leaves the
     // viewer count > 0 and the FFmpeg transcoder running. With CPU-heavy
@@ -32,20 +33,20 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
     private readonly Lock ownershipLock = new();
     private readonly string hlsOutputRoot;
-    private ICameraPipelineLookup? pipelineLookup;
+    private ICameraPipelineHost? pipelineHost;
     private bool disposed;
 
     public StreamingService(
         ICameraStorageService storage,
         ILogger<StreamingService> logger,
-        ICameraPipelineLookup pipelineLookup)
+        ICameraPipelineHost pipelineHost)
         : this(storage, logger)
-        => this.pipelineLookup = pipelineLookup;
+        => this.pipelineHost = pipelineHost;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamingService"/> class
-    /// that looks the open pipelines up when it first needs them: the
-    /// service that keeps cameras open needs this one in turn.
+    /// that looks the pipeline host up when it first needs it, so that the
+    /// host and its own dependencies are not created before the first stream.
     /// </summary>
     public StreamingService(
         ICameraStorageService storage,
@@ -209,25 +210,6 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
         => sessions.ContainsKey(cameraId);
 
     /// <summary>
-    /// Gets whether a stream has the camera open with a process of its own.
-    /// A stream from the server's own pipeline does not.
-    /// </summary>
-    bool ILiveStreamStatus.IsStreaming(Guid cameraId)
-        => sessions.TryGetValue(cameraId, out var session) && session.HoldsCamera;
-
-    /// <summary>
-    /// Gets whether a camera would be streamed from a pipeline the server
-    /// already has open, instead of by a process of its own.
-    /// </summary>
-    /// <param name="camera">The camera.</param>
-    /// <returns><see langword="true"/> for a USB camera the server has open.</returns>
-    public bool CanStreamFromServerPipeline(CameraConfiguration camera)
-    {
-        ArgumentNullException.ThrowIfNull(camera);
-        return FindServerPipeline(camera) is not null;
-    }
-
-    /// <summary>
     /// Gets the current viewer count for a camera stream.
     /// </summary>
     public int GetViewerCount(Guid cameraId)
@@ -244,7 +226,8 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
             : null;
 
     /// <summary>
-    /// Gets whether the FFmpeg process for a camera has exited (crashed or finished).
+    /// Gets whether a camera's stream has ended by itself: its FFmpeg
+    /// process exited, or the camera's pipeline failed or was closed.
     /// </summary>
     public bool HasProcessExited(Guid cameraId)
         => sessions.TryGetValue(cameraId, out var session) && session.HasExited;
@@ -337,11 +320,21 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
         var playlistPath = Path.Combine(outputDir, "stream.m3u8");
 
-        if (FindServerPipeline(camera) is { } pipeline)
+        if (camera.Connection.Source == CameraSource.Usb)
         {
-            pipeline.StartLiveStream(playlistPath);
+            pipelineHost ??= services?.GetService<ICameraPipelineHost>();
+
+            var pipeline = pipelineHost?.Acquire(camera, CameraPipelineUse.Viewing)
+                ?? throw new InvalidOperationException(
+                    "This USB camera cannot be opened right now: it is unplugged, or the server is still connecting to it. Try again in a moment.");
+
+            var host = pipelineHost!;
             LogHlsStreamStartedFromPipeline(cameraId, playlistPath);
-            return new StreamSession(pipeline, playlistPath, outputDir);
+            return new StreamSession(
+                pipeline,
+                () => host.Release(cameraId, CameraPipelineUse.Viewing),
+                playlistPath,
+                outputDir);
         }
 
         var args = HlsStreamCommand.BuildArguments(camera, playlistPath);
@@ -382,30 +375,25 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
         return session;
     }
 
-    // Only a USB camera is streamed from the server's pipeline: it cannot be
-    // opened a second time. A network camera can, and the stream of its own
-    // carries its sound.
-    private IMediaPipeline? FindServerPipeline(CameraConfiguration camera)
-    {
-        if (camera.Connection.Source != CameraSource.Usb)
-        {
-            return null;
-        }
-
-        pipelineLookup ??= services?.GetService<ICameraPipelineLookup>();
-        return pipelineLookup?.Find(camera.Id);
-    }
-
     private sealed class StreamSession : IDisposable
     {
         // Only the last lines are ever asked for; FFmpeg writes several a
         // second for as long as the stream runs.
         private const int MaxErrorLines = 50;
 
+        // How often a pipeline that was just opened is asked whether it
+        // delivers pictures yet.
+        private static readonly TimeSpan PipelinePollInterval = TimeSpan.FromMilliseconds(200);
+
         private readonly Process? process;
         private readonly IMediaPipeline? pipeline;
+        private readonly Action? releasePipeline;
         private readonly string outputDir;
         private readonly Queue<string> errorLines = new();
+        private readonly Lock pipelineStreamLock = new();
+        private bool pipelineStreamStarted;
+        private bool pipelineFailed;
+        private bool closed;
         private int viewerCount;
         private long lastActivityUtcTicks;
 
@@ -422,33 +410,52 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamSession"/> class
-        /// for a stream written by a pipeline the server has open. The
-        /// pipeline is its owner's: it is told to stop the stream, never closed.
+        /// for a stream written by the camera's shared pipeline. The pipeline
+        /// is its host's: it is told to stop the stream and given back,
+        /// never closed. A pipeline that was opened just now cannot stream
+        /// yet; the stream starts when it delivers pictures.
         /// </summary>
         public StreamSession(
             IMediaPipeline pipeline,
+            Action releasePipeline,
             string playlistPath,
             string outputDir)
         {
             this.pipeline = pipeline;
+            this.releasePipeline = releasePipeline;
             this.outputDir = outputDir;
             PlaylistPath = playlistPath;
             lastActivityUtcTicks = DateTime.UtcNow.Ticks;
-        }
 
-        /// <summary>
-        /// Gets a value indicating whether the stream has the camera open itself.
-        /// </summary>
-        public bool HoldsCamera => process is not null;
+            pipeline.ConnectionStateChanged += OnPipelineStateChanged;
+            if (!TryStartPipelineStream())
+            {
+                _ = StartPipelineStreamWhenPlayingAsync();
+            }
+        }
 
         public string PlaylistPath { get; }
 
         public int ViewerCount => Volatile.Read(ref viewerCount);
 
         public bool HasExited
-            => process is not null
-                ? process.HasExited
-                : pipeline is null || !IsPipelineStreaming(pipeline);
+        {
+            get
+            {
+                if (process is not null)
+                {
+                    return process.HasExited;
+                }
+
+                lock (pipelineStreamLock)
+                {
+                    // Not started yet is not ended: the camera is coming up.
+                    return pipeline is null ||
+                           pipelineFailed ||
+                           (pipelineStreamStarted && !IsPipelineStreaming(pipeline));
+                }
+            }
+        }
 
         public DateTime LastActivityUtc
             => new(Interlocked.Read(ref lastActivityUtcTicks), DateTimeKind.Utc);
@@ -513,6 +520,68 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
             }
         }
 
+        // Runs on the pipeline's own thread: it only takes a note.
+        private void OnPipelineStateChanged(
+            object? sender,
+            ConnectionStateChangedEventArgs e)
+        {
+            if (e.NewState == ConnectionState.Error)
+            {
+                lock (pipelineStreamLock)
+                {
+                    pipelineFailed = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts the stream when the pipeline plays.
+        /// </summary>
+        /// <returns><see langword="false"/> when it does not play yet and has to be asked again.</returns>
+        private bool TryStartPipelineStream()
+        {
+            lock (pipelineStreamLock)
+            {
+                if (closed || pipelineFailed || pipelineStreamStarted)
+                {
+                    return true;
+                }
+
+                try
+                {
+                    if (pipeline!.FramesDecoded <= 0)
+                    {
+                        return false;
+                    }
+
+                    pipeline.StartLiveStream(PlaylistPath);
+                    pipelineStreamStarted = true;
+                    return true;
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Its host closed it meanwhile.
+                    pipelineFailed = true;
+                    return true;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Not playing yet. Should it never get there, this is
+                    // what the viewer is told when the wait is given up.
+                    AddErrorLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        private async Task StartPipelineStreamWhenPlayingAsync()
+        {
+            while (!TryStartPipelineStream())
+            {
+                await Task.Delay(PipelinePollInterval).ConfigureAwait(false);
+            }
+        }
+
         private void StopPipelineStream()
         {
             if (pipeline is null)
@@ -520,14 +589,23 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
                 return;
             }
 
+            lock (pipelineStreamLock)
+            {
+                closed = true;
+            }
+
+            pipeline.ConnectionStateChanged -= OnPipelineStateChanged;
+
             try
             {
                 pipeline.StopLiveStream();
             }
             catch (ObjectDisposedException)
             {
-                // Its owner closed it; the stream ended with it.
+                // Its host closed it; the stream ended with it.
             }
+
+            releasePipeline?.Invoke();
         }
 
         private void StopProcess()

@@ -18,8 +18,9 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     private readonly TimeProvider timeProvider;
 
     // Cameras whose recording runs on a pipeline it does not own: a motion
-    // recording uses the pipeline that watches the camera, and leaves it
-    // running when it stops.
+    // recording uses the pipeline that watches the camera, a recording of a
+    // USB camera the one pipeline the camera has. Both leave it running
+    // when they stop.
     private readonly ConcurrentDictionary<Guid, byte> borrowedPipelines = new();
 
     // When each camera's last motion recording stopped, for the cooldown.
@@ -95,11 +96,18 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     public bool StartRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline)
-        => StartRecording(camera, pipeline, startedByMotion: false);
+        => StartRecording(camera, pipeline, borrowed: false, startedByMotion: false);
+
+    /// <inheritdoc/>
+    public bool StartRecordingOnSharedPipeline(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline)
+        => StartRecording(camera, pipeline, borrowed: true, startedByMotion: false);
 
     private bool StartRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline,
+        bool borrowed,
         bool startedByMotion)
     {
         ArgumentNullException.ThrowIfNull(camera);
@@ -142,7 +150,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
             }
 
             // A borrowed pipeline is its owner's to close.
-            if (!startedByMotion)
+            if (!borrowed)
             {
                 try
                 {
@@ -158,15 +166,15 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         }
 
         pipelines[camera.Id] = pipeline;
-        if (startedByMotion)
+        if (borrowed)
         {
             borrowedPipelines[camera.Id] = 0;
         }
 
-        // A motion recording runs on a pipeline whose owner reports the
-        // camera's connection state already; a second report from here
-        // would tell clients the camera connected at every motion.
-        if (!startedByMotion)
+        // A borrowed pipeline's owner reports the camera's connection state
+        // already; a second report from here would tell clients the camera
+        // connected at every motion.
+        if (!borrowed)
         {
             // Forward subsequent pipeline connection-state changes onto the
             // aggregated event so the broadcaster (and any other observer) sees
@@ -296,7 +304,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
             }
         }
 
-        return StartRecording(camera, pipeline, startedByMotion: true);
+        return StartRecording(camera, pipeline, borrowed: true, startedByMotion: true);
     }
 
     /// <inheritdoc/>

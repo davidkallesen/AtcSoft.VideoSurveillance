@@ -70,4 +70,13 @@ public sealed partial class CameraConnectionService
 
     [LoggerMessage(Level = LogLevel.Error, Message = "The motion recording of camera {CameraId} could not be started")]
     private partial void LogStartMotionRecordingFailed(Exception ex, Guid cameraId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Opening camera {CameraId} ({CameraName}) for {Use}")]
+    private partial void LogOpeningForUse(Guid cameraId, string cameraName, CameraPipelineUse use);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Camera {CameraId} ({CameraName}) could not be opened for {Use}")]
+    private partial void LogOpenForUseFailed(Exception ex, Guid cameraId, string cameraName, CameraPipelineUse use);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Closing camera {CameraId}: nothing uses it any more")]
+    private partial void LogClosingUnusedCamera(Guid cameraId);
 }
