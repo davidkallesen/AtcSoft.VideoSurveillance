@@ -59,7 +59,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |
-| 🌐 Web client | — (see the note below) | 🟨 | Settings, live view, recordings and dashboard brought in line with the desktop apps on 2026-10-13 | Camera and layout pages untouched; no delete of recordings; motion boxes untested (no server-side motion) |
+| 🌐 Web client | — (see the note below) | 🟨 | Settings, live view, recordings and dashboard brought in line with the desktop apps on 2026-10-13 | Camera and layout pages untouched. Recordings can be deleted, and the motion boxes were seen against server-side motion, since 2026-10-13; boxes over a picture turned a quarter are built and tested but not seen |
 
 ### What changed on 2026-10-13
 

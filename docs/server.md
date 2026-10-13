@@ -44,6 +44,17 @@ The log folder is decided before the rest of the configuration is read. For the 
 
 The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`. Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request.
 
+`DELETE /recordings?filePath={filePath}` deletes one finished recording, its thumbnail, and the day folder it leaves empty. `filePath` is the path the listing returned. The answers:
+
+| Answer | When |
+|---|---|
+| `204` | The recording is deleted |
+| `409` | It is still being made, by the server or by another program that has the file open |
+| `404` | There is no such recording |
+| `400` | The path does not name a recording: it leads out of the recording folder, is a full path, or is a thumbnail or any other file. Nothing is touched |
+
+The server has no login yet, so whoever can reach it can delete recordings, as they can already delete cameras and change the retention.
+
 The server makes a thumbnail for every recording file, the way the standalone app does: one picture or a 2 x 2 grid (the *Thumbnail tiles* setting), stored next to the video or in `thumbnails\` (the *Keep thumbnails in a separate folder* setting). Thumbnails are drawn with GDI+, so a server that is not running on Windows records without them.
 
 ---

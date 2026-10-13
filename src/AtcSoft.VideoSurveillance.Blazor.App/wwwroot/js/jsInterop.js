@@ -43,6 +43,13 @@ window.hlsInterop = {
         }
     },
 
+    // The size of the picture a video element plays: [width, height],
+    // zeros until the first picture has arrived.
+    videoSize: function (elementId) {
+        var video = document.getElementById(elementId);
+        return video ? [video.videoWidth || 0, video.videoHeight || 0] : [0, 0];
+    },
+
     destroyPlayer: function (elementId) {
         var player = this._players[elementId];
         if (!player) {

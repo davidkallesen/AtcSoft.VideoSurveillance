@@ -115,6 +115,7 @@ else
                                    muted
                                    playsinline
                                    controls="@(!VideoRotationStyle.IsRotated(camera.Rotation))"
+                                   @onloadedmetadata="@(() => ReadPictureSizeAsync(camera.Id))"
                                    style="@VideoRotationStyle.For(camera.Rotation)"></video>
                             <div style="position: absolute; bottom: 4px; right: 4px;">
                                 <MudTooltip Text="Stop">
@@ -155,15 +156,25 @@ else
                         </div>
                         @if (motionStates.TryGetValue(camera.Id, out var motion) && motion.IsActive)
                         {
-                            <svg viewBox="0 0 @motion.AnalysisWidth @motion.AnalysisHeight"
-                                 preserveAspectRatio="none"
+                            @* The outer drawing has the picture's shape and is fitted into the tile the way the
+                               picture is, bars and all; the inner one spreads the analysed picture over it. Until
+                               the picture's size is known, the tile's own shape is the best guess. *@
+                            var shown = MotionOverlay.ShownSize(pictureSizes.GetValueOrDefault(camera.Id), camera.Rotation) ?? (Width: 16, Height: 9);
+                            <svg viewBox="0 0 @shown.Width @shown.Height"
+                                 preserveAspectRatio="xMidYMid meet"
                                  style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;">
-                                @foreach (var box in motion.BoundingBoxes)
-                                {
-                                    <rect x="@box.X" y="@box.Y"
-                                          width="@box.Width" height="@box.Height"
-                                          fill="none" stroke="red" stroke-width="2" />
-                                }
+                                <svg class="motion-boxes"
+                                     x="0" y="0" width="@shown.Width" height="@shown.Height"
+                                     viewBox="0 0 @motion.AnalysisWidth @motion.AnalysisHeight"
+                                     preserveAspectRatio="none">
+                                    @foreach (var box in motion.BoundingBoxes)
+                                    {
+                                        <rect x="@box.X" y="@box.Y"
+                                              width="@box.Width" height="@box.Height"
+                                              fill="none" stroke="red" stroke-width="2"
+                                              vector-effect="non-scaling-stroke" />
+                                    }
+                                </svg>
                             </svg>
                             <div class="live-tile-label" style="top: 4px; right: 4px; background: rgba(220,20,20,0.85); animation: pulse-motion 1s ease-in-out infinite;">
                                 <MudText Typo="Typo.caption" Style="font-weight: bold;">MOTION</MudText>
@@ -197,6 +208,9 @@ else
     private readonly Dictionary<Guid, string> errors = new();
     private readonly HashSet<Guid> pendingStreamInits = new();
     private readonly Dictionary<Guid, MotionState> motionStates = new();
+
+    // What each playing video's picture measures, as the browser reports it.
+    private readonly Dictionary<Guid, int[]> pictureSizes = new();
     private readonly CancellationTokenSource heartbeatCancellation = new();
 
     private bool HasStoppedTiles
@@ -402,6 +416,11 @@ else
 
     private void OnHubConnectionStateChanged(string state)
         => InvokeAsync(StateHasChanged);
+
+    private async Task ReadPictureSizeAsync(Guid cameraId)
+    {
+        pictureSizes[cameraId] = await JS.InvokeAsync<int[]>("hlsInterop.videoSize", $"video-{cameraId}");
+    }
 
     private void OnMotionDetected(SurveillanceHubService.MotionDetectedEvent e)
     {
