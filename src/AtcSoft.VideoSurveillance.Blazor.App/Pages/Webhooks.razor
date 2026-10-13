@@ -1,0 +1,202 @@
+@page "/webhooks"
+@inject GatewayService Gateway
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h4" Class="mb-1">Webhooks</MudText>
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-4" Style="max-width: 760px;">
+    The server posts camera, recording and motion events to these receivers as they happen.
+    A change here takes effect at once.
+</MudText>
+
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.Add"
+           Class="mb-4"
+           Disabled="@(loadFailed || isLoading)"
+           OnClick="AddAsync">
+    Add receiver
+</MudButton>
+
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (loadFailed)
+{
+    <MudAlert Severity="Severity.Error" Style="max-width: 700px;">
+        The server did not answer. Check that it is running, then reload the page.
+    </MudAlert>
+}
+else
+{
+    <MudTable Items="@webhooks" Hover="true" Striped="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Address</MudTh>
+            <MudTh>Events</MudTh>
+            <MudTh>Signed</MudTh>
+            <MudTh>Set in</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Address" Style="word-break: break-all;">@context.Url</MudTd>
+            <MudTd DataLabel="Events">@WebhookEventChoices.Describe(context.Events)</MudTd>
+            <MudTd DataLabel="Signed">@(context.HasSecret ? "Yes" : "No")</MudTd>
+            <MudTd DataLabel="Set in">@(context.IsEditable ? "This page" : "Server configuration")</MudTd>
+            <MudTd>
+                <MudTooltip Text="Send a test event">
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   Size="Size.Small"
+                                   aria-label="Send a test event"
+                                   Disabled="@testing.Contains(context.Id)"
+                                   OnClick="@(() => TestAsync(context))" />
+                </MudTooltip>
+                @if (context.IsEditable)
+                {
+                    <MudTooltip Text="Edit">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Size="Size.Small"
+                                       aria-label="Edit"
+                                       OnClick="@(() => EditAsync(context))" />
+                    </MudTooltip>
+                    <MudTooltip Text="Remove">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       aria-label="Remove"
+                                       OnClick="@(() => DeleteAsync(context))" />
+                    </MudTooltip>
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No receivers yet. Click "Add receiver" to send the server's events somewhere.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+
+    @if (webhooks.Any(w => !w.IsEditable))
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">
+            A receiver from the server's configuration is changed there, not here.
+        </MudText>
+    }
+}
+
+@code {
+    private readonly HashSet<Guid> testing = new();
+    private Webhook[] webhooks = [];
+    private bool isLoading = true;
+    private bool loadFailed;
+
+    protected override Task OnInitializedAsync()
+        => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var loaded = await Gateway.GetWebhooksAsync();
+        loadFailed = loaded is null;
+        webhooks = loaded ?? [];
+        isLoading = false;
+    }
+
+    private async Task AddAsync()
+    {
+        if (await AskAsync(webhook: null) is not { } entered)
+        {
+            return;
+        }
+
+        var created = await Gateway.CreateWebhookAsync(new CreateWebhookRequest(
+            Url: entered.Url,
+            Secret: string.IsNullOrEmpty(entered.Secret) ? null : entered.Secret,
+            Events: [.. entered.Events]));
+
+        Snackbar.Add(
+            created is null ? "The receiver could not be added." : "Receiver added.",
+            created is null ? Severity.Error : Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task EditAsync(Webhook webhook)
+    {
+        if (await AskAsync(webhook) is not { } entered)
+        {
+            return;
+        }
+
+        var updated = await Gateway.UpdateWebhookAsync(
+            webhook.Id,
+            new UpdateWebhookRequest(
+                Url: entered.Url,
+                Secret: entered.Secret,
+                Events: [.. entered.Events]));
+
+        Snackbar.Add(
+            updated is null ? "The receiver could not be saved." : "Receiver saved.",
+            updated is null ? Severity.Error : Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Webhook webhook)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Remove the receiver '{webhook.Url}'? It gets no more events." },
+            { x => x.ButtonText, "Remove" },
+            { x => x.Color, Color.Error },
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove receiver", parameters);
+        if (await dialog.Result is not { Canceled: false })
+        {
+            return;
+        }
+
+        var removed = await Gateway.DeleteWebhookAsync(webhook.Id);
+        Snackbar.Add(
+            removed ? "Receiver removed." : "The receiver could not be removed.",
+            removed ? Severity.Success : Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task TestAsync(Webhook webhook)
+    {
+        if (!testing.Add(webhook.Id))
+        {
+            return;
+        }
+
+        try
+        {
+            // The server tries a few times before it gives up, so this can take a while.
+            var delivered = await Gateway.TestWebhookAsync(webhook.Id);
+            Snackbar.Add(
+                delivered switch
+                {
+                    true => "The receiver took the test event.",
+                    false => "The receiver did not take the test event. Check the address, and that it answers with a success status.",
+                    null => "The server could not be asked to send the test event.",
+                },
+                delivered == true ? Severity.Success : Severity.Error);
+        }
+        finally
+        {
+            testing.Remove(webhook.Id);
+        }
+    }
+
+    private async Task<WebhookDialogResult?> AskAsync(Webhook? webhook)
+    {
+        var parameters = new DialogParameters<WebhookDialog>
+        {
+            { x => x.Webhook, webhook },
+        };
+
+        var dialog = await DialogService.ShowAsync<WebhookDialog>(title: null, parameters);
+        var result = await dialog.Result;
+
+        return result is { Canceled: false, Data: WebhookDialogResult entered }
+            ? entered
+            : null;
+    }
+}

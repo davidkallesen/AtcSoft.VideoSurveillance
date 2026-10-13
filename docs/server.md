@@ -102,6 +102,22 @@ The server can post what happens to other systems (Home Assistant, Slack, a scri
 | `Secret` | Optional. When set, the body is signed |
 | `Events` | Optional. The events this receiver wants, by name or by group (`motion.*`). Left out: all of them |
 
+### Receivers added while the server runs
+
+Receivers can also be added, changed, tested and removed without touching the configuration: on the **Webhooks** page of the web client, or over the API.
+
+| Call | Does |
+|---|---|
+| `GET /webhooks` | Lists all receivers, those from the configuration first |
+| `POST /webhooks` | Adds one (`url`, optional `secret`, optional `events`) |
+| `PUT /webhooks/{id}` | Changes one. Without `secret` the secret stays as it is; an empty `secret` removes it |
+| `DELETE /webhooks/{id}` | Removes one |
+| `POST /webhooks/{id}/test` | Sends a `webhook.test` event to that one receiver and answers whether it took it |
+
+- They are kept in `webhooks.json` next to `settings.json`, secret included, like the camera passwords in `cameras.json`.
+- A secret is never sent back: a receiver only says whether it has one.
+- A receiver from the configuration is listed, and can be tested, but is changed in the configuration (`409 Conflict` otherwise).
+
 ### Events
 
 | Event | When | `data` |
@@ -145,4 +161,4 @@ X-AtcSoft-Signature: sha256=6d0f...
 - A receiver has 10 seconds to answer.
 - Events wait in a queue of 500. When receivers are slower than events arrive, the oldest are dropped and the server says so in its log.
 - The log names a receiver by scheme and host only, and never contains the secret.
-- The receivers are read when the server starts. Restart the server after changing them.
+- Receivers in the configuration are read when the server starts. Receivers added through the API or the web client take effect at once.

@@ -29,4 +29,7 @@ global using VideoSurveillance.Generated.Recordings.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Settings.Client;
 global using VideoSurveillance.Generated.Settings.Endpoints.Interfaces;
-global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Webhooks.Client;
+global using VideoSurveillance.Generated.Webhooks.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Webhooks.Models;
