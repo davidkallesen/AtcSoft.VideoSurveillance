@@ -2536,6 +2536,24 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disk:.
+        /// </summary>
+        public static string DiskSpaceLabel {
+            get {
+                return ResourceManager.GetString("DiskSpaceLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The disk with the recordings. Shown in red when less is free.
+        /// </summary>
+        public static string DiskSpaceInfo {
+            get {
+                return ResourceManager.GetString("DiskSpaceInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Grid.
         /// </summary>
         public static string GridSizeGroup {

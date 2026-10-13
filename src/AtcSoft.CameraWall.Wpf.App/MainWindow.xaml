@@ -355,6 +355,22 @@
                         <Run Text=" " /><Run Text="{Binding Path=ConnectedCount, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
+                <StatusBarItem ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=DiskSpaceInfo}" Visibility="{Binding Path=HasDiskSpace, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                    <TextBlock>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=IsDiskSpaceLow}" Value="True">
+                                        <Setter Property="Foreground" Value="OrangeRed" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=DiskSpaceLabel}" />
+                        <Run Text=" " /><Run Text="{Binding Path=DiskSpaceText, Mode=OneWay}" />
+                    </TextBlock>
+                </StatusBarItem>
                 <StatusBarItem Visibility="{Binding Path=HasPages, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                     <TextBlock>
                         <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=PageLabel}" />

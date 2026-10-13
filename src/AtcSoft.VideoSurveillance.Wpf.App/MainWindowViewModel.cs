@@ -51,6 +51,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string serverLatency = "--";
 
+    // The server's disk with the recordings ("120 GB free of 500 GB").
+    [ObservableProperty]
+    private string serverDiskSpace = "--";
+
+    [ObservableProperty]
+    private bool isServerDiskSpaceLow;
+
     [ObservableProperty(AfterChangedCallback = nameof(OnStartWithWindowsChanged))]
     private bool startWithWindows;
 
@@ -412,9 +419,14 @@ public partial class MainWindowViewModel : ViewModelBase
             await gatewayService.GetSettingsAsync().ConfigureAwait(false);
             sw.Stop();
 
+            // Asked with the same beat: recordings stop when the disk runs out.
+            var storage = await gatewayService.GetStorageStatusAsync().ConfigureAwait(false);
+
             _ = Application.Current?.Dispatcher.InvokeAsync(() =>
             {
                 ServerLatency = $"{sw.ElapsedMilliseconds} ms";
+                ServerDiskSpace = storage?.Text ?? "N/A";
+                IsServerDiskSpaceLow = storage?.IsLow ?? false;
             });
         }
         catch
@@ -422,6 +434,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _ = Application.Current?.Dispatcher.InvokeAsync(() =>
             {
                 ServerLatency = "N/A";
+                ServerDiskSpace = "N/A";
+                IsServerDiskSpaceLow = false;
             });
         }
     }

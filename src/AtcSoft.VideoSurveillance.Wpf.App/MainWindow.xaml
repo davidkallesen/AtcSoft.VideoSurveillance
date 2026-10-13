@@ -272,6 +272,22 @@
                 </TextBlock>
             </StatusBarItem>
             <Separator />
+            <StatusBarItem ToolTip="The server's disk with the recordings. Shown in red when less is free than the recordings need; new recordings are then refused.">
+                <TextBlock AutomationProperties.Name="Server recording disk">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=IsServerDiskSpaceLow}" Value="True">
+                                    <Setter Property="Foreground" Value="OrangeRed" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <Run Text="Disk: " /><Run Text="{Binding Path=ServerDiskSpace, Mode=OneWay}" />
+                </TextBlock>
+            </StatusBarItem>
+            <Separator />
             <StatusBarItem
                 HorizontalAlignment="Right"
                 Margin="0,0,16,0">

@@ -5,7 +5,12 @@ namespace AtcSoft.CameraWall.Wpf.App;
 /// </summary>
 public partial class MainWindowViewModel : MainWindowViewModelBase
 {
+    // The disk is looked at this often; it fills slowly.
+    private static readonly TimeSpan DiskSpaceRefreshInterval = TimeSpan.FromSeconds(30);
+
     private readonly IDialogService dialogService;
+    private readonly IApplicationSettingsService settingsService;
+    private readonly DispatcherTimer diskSpaceTimer;
     private CameraGrid? cameraGrid;
 
     /// <summary>
@@ -24,7 +29,15 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
         ArgumentNullException.ThrowIfNull(dialogService);
 
         this.dialogService = dialogService;
+        this.settingsService = settingsService;
         Manager = cameraWallManager;
+
+        // Recordings stop when the disk runs out, so the status bar shows
+        // how much is left before it does.
+        diskSpaceTimer = new DispatcherTimer { Interval = DiskSpaceRefreshInterval };
+        diskSpaceTimer.Tick += (_, _) => RefreshDiskSpace();
+        diskSpaceTimer.Start();
+        RefreshDiskSpace();
         Manager.PropertyChanged += OnManagerPropertyChanged;
         Manager.Layouts.CollectionChanged += OnLayoutsCollectionChanged;
 
@@ -143,6 +156,37 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
             OnPropertyChanged(nameof(HasPages));
             CommandManager.InvalidateRequerySuggested();
         };
+    }
+
+    /// <summary>
+    /// Gets how full the disk with the recordings is ("120 GB free of 500 GB");
+    /// empty when the disk cannot be read.
+    /// </summary>
+    public string DiskSpaceText { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether less is free than the recordings need.
+    /// </summary>
+    public bool IsDiskSpaceLow { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether there is a disk status to show.
+    /// </summary>
+    public bool HasDiskSpace => DiskSpaceText.Length > 0;
+
+    private void RefreshDiskSpace()
+    {
+        var recording = settingsService.Recording;
+        var status = AtcSoft.VideoSurveillance.Helpers.DiskSpaceStatus.Read(
+            recording.RecordingPath,
+            recording.Cleanup.MinFreeSpaceMb,
+            recording.Cleanup.EnableDiskSpaceGuard);
+
+        DiskSpaceText = status?.Text ?? string.Empty;
+        IsDiskSpaceLow = status?.IsLow ?? false;
+        OnPropertyChanged(nameof(DiskSpaceText));
+        OnPropertyChanged(nameof(IsDiskSpaceLow));
+        OnPropertyChanged(nameof(HasDiskSpace));
     }
 
     /// <summary>

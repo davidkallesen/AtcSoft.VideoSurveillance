@@ -467,6 +467,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /settings/storage:
+    get:
+      summary: Get how full the disk with the recordings is
+      operationId: getStorageStatus
+      tags:
+        - settings
+      responses:
+        '200':
+          description: The space on the disk the recording folder is on.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageStatus"
+        '503':
+          description: The disk of the recording folder cannot be read (a share that is offline, a drive that is gone).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /webhooks:
     get:
       summary: List the receivers the server posts its events to
@@ -1263,3 +1283,32 @@ components:
         delivered:
           type: boolean
           description: Whether the receiver answered the test event with a success status.
+
+    StorageStatus:
+      type: object
+      required:
+        - freeBytes
+        - totalBytes
+        - isLow
+      properties:
+        freeBytes:
+          type: integer
+          format: int64
+          description: The space left on the disk.
+        totalBytes:
+          type: integer
+          format: int64
+          description: The size of the disk.
+        minFreeBytes:
+          type: integer
+          format: int64
+          description: The space the disk-space guard keeps free; zero when the guard is off.
+        isLow:
+          type: boolean
+          description: Whether less is left than the guard keeps free. New recordings are then refused.
+        usedPercent:
+          type: integer
+          format: int32
+        text:
+          type: string
+          description: The status in words, for a status bar ("120 GB free of 500 GB").

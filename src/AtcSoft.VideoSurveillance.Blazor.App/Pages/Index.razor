@@ -59,6 +59,29 @@
     </MudItem>
 </MudGrid>
 
+@if (storage is not null)
+{
+    @* Recordings stop when the disk runs out, so it is shown before it does. *@
+    <MudPaper Class="pa-3 mt-4" Elevation="1" Style="max-width: 560px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Storage" Color="@(storage.IsLow ? Color.Error : Color.Default)" />
+            <MudText Typo="Typo.body2">Recording disk: @storage.Text</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@storage.UsedPercent % used</MudText>
+        </MudStack>
+        <MudProgressLinear Value="@storage.UsedPercent"
+                           Color="@(storage.IsLow ? Color.Error : Color.Primary)"
+                           Class="mt-2"
+                           aria-label="Share of the recording disk in use" />
+        @if (storage.IsLow)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">
+                Less is free than the recordings need. New recordings are refused until space is freed.
+            </MudText>
+        }
+    </MudPaper>
+}
+
 <MudStack Row="true" Spacing="2" Class="mt-4" Wrap="Wrap.Wrap">
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/live" StartIcon="@Icons.Material.Filled.LiveTv">Live view</MudButton>
     <MudButton Variant="Variant.Outlined" Href="/recordings" StartIcon="@Icons.Material.Filled.VideoLibrary">Recordings</MudButton>
@@ -105,6 +128,7 @@ else if (!isLoading && !loadFailed)
 </MudText>
 
 @code {
+    private StorageStatus? storage;
     private readonly CameraStatusBoard board = new();
     private Camera[] cameras = [];
     private int layoutCount;
@@ -128,6 +152,7 @@ else if (!isLoading && !loadFailed)
         board.Load(cameras.Select(c => (c.Id, c.ConnectionState == CameraConnectionState.Connected, c.IsRecording)));
 
         layoutCount = (await Gateway.GetLayoutsAsync())?.Length ?? 0;
+        storage = await Gateway.GetStorageStatusAsync();
         isLoading = false;
     }
 
