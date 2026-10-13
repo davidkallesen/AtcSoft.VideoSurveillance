@@ -24,34 +24,108 @@ else
                                   Label="Description"
                                   Lines="2"
                                   Class="mt-3" />
-                    <MudTextField @bind-Value="ipAddress"
-                                  Label="IP Address"
-                                  Required="true"
-                                  RequiredError="IP address is required"
-                                  Class="mt-3" />
-                    <MudNumericField @bind-Value="port"
-                                     Label="Port"
-                                     Min="1"
-                                     Max="65535"
-                                     Class="mt-3" />
-                    <MudSelect @bind-Value="protocol"
-                               Label="Protocol"
+                    <MudSelect T="CameraSource"
+                               Value="source"
+                               ValueChanged="OnSourceChangedAsync"
+                               Label="Source"
+                               HelperText="@(IsEdit ? "The kind of camera cannot be changed afterwards." : "A network camera, or a USB camera plugged into the server.")"
+                               Disabled="IsEdit"
                                Class="mt-3">
-                        <MudSelectItem Value="CameraProtocol.Rtsp">RTSP</MudSelectItem>
-                        <MudSelectItem Value="CameraProtocol.Http">HTTP</MudSelectItem>
-                        <MudSelectItem Value="CameraProtocol.Https">HTTPS</MudSelectItem>
+                        <MudSelectItem Value="CameraSource.Network">Network camera</MudSelectItem>
+                        <MudSelectItem Value="CameraSource.Usb">USB camera on the server</MudSelectItem>
                     </MudSelect>
-                    <MudTextField @bind-Value="path"
-                                  Label="Path"
-                                  Placeholder="/stream1"
-                                  Class="mt-3" />
-                    <MudSelect @bind-Value="connectionType"
-                               Label="Connection Type"
-                               Class="mt-3">
-                        <MudSelectItem Value="CameraConnectionType.None">Not set</MudSelectItem>
-                        <MudSelectItem Value="CameraConnectionType.Lan">Wired (LAN)</MudSelectItem>
-                        <MudSelectItem Value="CameraConnectionType.Wifi">Wi-Fi</MudSelectItem>
-                    </MudSelect>
+
+                    @if (IsUsb)
+                    {
+                        @if (usbDevicesFailed)
+                        {
+                            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3">
+                                The server could not list its USB cameras.
+                            </MudAlert>
+                        }
+
+                        <MudSelect T="string"
+                                   Value="usbDeviceId"
+                                   ValueChanged="OnUsbDeviceChanged"
+                                   Label="Camera"
+                                   Required="true"
+                                   RequiredError="Choose a camera"
+                                   HelperText="@(IsEdit ? "The camera cannot be changed afterwards." : "The cameras plugged into the server right now.")"
+                                   Disabled="IsEdit"
+                                   Class="mt-3">
+                            @foreach (var device in UsbChoices)
+                            {
+                                <MudSelectItem Value="@device.DeviceId">@device.FriendlyName</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        @if (usbSizes.Count > 0)
+                        {
+                            <MudSelect T="string"
+                                       Value="UsbSizeKey"
+                                       ValueChanged="OnUsbSizeChanged"
+                                       Label="Picture size"
+                                       HelperText="Larger pictures cost more processor time to record and to watch."
+                                       Class="mt-3">
+                                @foreach (var size in usbSizes)
+                                {
+                                    <MudSelectItem Value="@($"{size.Width}x{size.Height}")">@size.Width &times; @size.Height</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect @bind-Value="usbFrameRate"
+                                       Label="Pictures a second"
+                                       Class="mt-3">
+                                @foreach (var rate in usbFrameRates)
+                                {
+                                    <MudSelectItem Value="@rate">@rate.ToString("0.##", CultureInfo.InvariantCulture)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+
+                        <MudSwitch @bind-Value="usbCaptureAudio"
+                                   Label="Record sound"
+                                   Color="Color.Primary"
+                                   Class="mt-3" />
+                        @if (usbCaptureAudio)
+                        {
+                            <MudTextField @bind-Value="usbAudioDeviceName"
+                                          Label="Microphone"
+                                          Placeholder="Microphone (HD Webcam)"
+                                          HelperText="The microphone's name as Windows shows it on the server."
+                                          Class="mt-1" />
+                        }
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="ipAddress"
+                                      Label="IP Address"
+                                      Required="true"
+                                      RequiredError="IP address is required"
+                                      Class="mt-3" />
+                        <MudNumericField @bind-Value="port"
+                                         Label="Port"
+                                         Min="1"
+                                         Max="65535"
+                                         Class="mt-3" />
+                        <MudSelect @bind-Value="protocol"
+                                   Label="Protocol"
+                                   Class="mt-3">
+                            <MudSelectItem Value="CameraProtocol.Rtsp">RTSP</MudSelectItem>
+                            <MudSelectItem Value="CameraProtocol.Http">HTTP</MudSelectItem>
+                            <MudSelectItem Value="CameraProtocol.Https">HTTPS</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField @bind-Value="path"
+                                      Label="Path"
+                                      Placeholder="/stream1"
+                                      Class="mt-3" />
+                        <MudSelect @bind-Value="connectionType"
+                                   Label="Connection Type"
+                                   Class="mt-3">
+                            <MudSelectItem Value="CameraConnectionType.None">Not set</MudSelectItem>
+                            <MudSelectItem Value="CameraConnectionType.Lan">Wired (LAN)</MudSelectItem>
+                            <MudSelectItem Value="CameraConnectionType.Wifi">Wi-Fi</MudSelectItem>
+                        </MudSelect>
+                    }
                     <MudSelect @bind-Value="rotation"
                                Label="Rotation (clockwise)"
                                Class="mt-3">
@@ -60,7 +134,7 @@ else
                         <MudSelectItem Value="CameraRotation.Rotate180">180&deg;</MudSelectItem>
                         <MudSelectItem Value="CameraRotation.Rotate270">270&deg;</MudSelectItem>
                     </MudSelect>
-                    @if (IsEdit)
+                    @if (IsEdit && !IsUsb)
                     {
                         @* Server-side ONVIF detection with the stored credentials; the result can still be changed above. *@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="2">
@@ -73,13 +147,16 @@ else
                             <MudText Typo="Typo.body2">@detectionStatus</MudText>
                         </MudStack>
                     }
-                    <MudTextField @bind-Value="username"
-                                  Label="Username"
-                                  Class="mt-3" />
-                    <MudTextField @bind-Value="password"
-                                  Label="Password"
-                                  InputType="InputType.Password"
-                                  Class="mt-3" />
+                    @if (!IsUsb)
+                    {
+                        <MudTextField @bind-Value="username"
+                                      Label="Username"
+                                      Class="mt-3" />
+                        <MudTextField @bind-Value="password"
+                                      Label="Password"
+                                      InputType="InputType.Password"
+                                      Class="mt-3" />
+                    }
                 </MudExpansionPanel>
 
                 <MudExpansionPanel Text="Display">
@@ -93,6 +170,8 @@ else
                     </MudSelect>
                 </MudExpansionPanel>
 
+                @if (!IsUsb)
+                {
                 <MudExpansionPanel Text="Stream Settings">
                     <MudCheckBox @bind-Value="streamUseLowLatencyMode"
                                  Label="Low latency mode"
@@ -114,6 +193,7 @@ else
                                      Max="5000"
                                      Class="mt-2" />
                 </MudExpansionPanel>
+                }
             </MudExpansionPanels>
 
             <MudStack Row="true" Class="mt-4" Spacing="2">
@@ -159,6 +239,112 @@ else
     private CameraStreamRtspTransport streamRtspTransport = CameraStreamRtspTransport.Tcp;
     private int streamBufferDurationMs;
 
+    private CameraSource source = CameraSource.Network;
+    private UsbDeviceDescriptor[] usbDevices = [];
+    private bool usbDevicesLoaded;
+    private bool usbDevicesFailed;
+    private string usbDeviceId = string.Empty;
+    private string usbFriendlyName = string.Empty;
+    private int usbWidth;
+    private int usbHeight;
+    private double usbFrameRate;
+    private string usbPixelFormat = string.Empty;
+    private bool usbCaptureAudio;
+    private string usbAudioDeviceName = string.Empty;
+    private IReadOnlyList<(int Width, int Height)> usbSizes = [];
+    private IReadOnlyList<double> usbFrameRates = [];
+
+    private bool IsUsb => source == CameraSource.Usb;
+
+    private string UsbSizeKey => $"{usbWidth}x{usbHeight}";
+
+    // The stored camera stays in the list while it is unplugged, so its
+    // settings can still be opened and saved.
+    private IEnumerable<UsbDeviceDescriptor> UsbChoices
+        => usbDevices.Any(d => d.DeviceId == usbDeviceId) || string.IsNullOrEmpty(usbDeviceId)
+            ? usbDevices
+            : usbDevices.Append(new UsbDeviceDescriptor(
+                DeviceId: usbDeviceId,
+                FriendlyName: $"{usbFriendlyName} (not plugged in)",
+                VendorId: string.Empty,
+                ProductId: string.Empty,
+                IsPresent: false,
+                Capabilities: []));
+
+    private async Task OnSourceChangedAsync(CameraSource value)
+    {
+        source = value;
+        if (IsUsb)
+        {
+            await LoadUsbDevicesAsync();
+        }
+    }
+
+    private async Task LoadUsbDevicesAsync()
+    {
+        if (usbDevicesLoaded)
+        {
+            return;
+        }
+
+        var devices = await Gateway.GetUsbDevicesAsync();
+        usbDevicesFailed = devices is null;
+        usbDevices = devices ?? [];
+        usbDevicesLoaded = true;
+        RefreshUsbFormats(keepChoice: true);
+    }
+
+    private void OnUsbDeviceChanged(string deviceId)
+    {
+        usbDeviceId = deviceId;
+        usbFriendlyName = usbDevices.FirstOrDefault(d => d.DeviceId == deviceId)?.FriendlyName ?? usbFriendlyName;
+        RefreshUsbFormats(keepChoice: false);
+    }
+
+    private void OnUsbSizeChanged(string key)
+    {
+        var parts = key.Split('x');
+        if (parts.Length == 2 &&
+            int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
+            int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var height))
+        {
+            usbWidth = width;
+            usbHeight = height;
+            RefreshUsbFrameRates();
+        }
+    }
+
+    // What the chosen camera offers. A stored choice is kept when the
+    // camera still offers it; a new camera gets the default.
+    private void RefreshUsbFormats(bool keepChoice)
+    {
+        var capabilities = usbDevices.FirstOrDefault(d => d.DeviceId == usbDeviceId)?.Capabilities;
+        usbSizes = UsbFormatChoices.Sizes(capabilities);
+
+        if (usbSizes.Count == 0)
+        {
+            usbFrameRates = [];
+            return;
+        }
+
+        if (!keepChoice || !usbSizes.Contains((usbWidth, usbHeight)))
+        {
+            (usbWidth, usbHeight, usbFrameRate) = UsbFormatChoices.Default(capabilities);
+        }
+
+        RefreshUsbFrameRates();
+    }
+
+    private void RefreshUsbFrameRates()
+    {
+        var capabilities = usbDevices.FirstOrDefault(d => d.DeviceId == usbDeviceId)?.Capabilities;
+        usbFrameRates = UsbFormatChoices.FrameRates(capabilities, usbWidth, usbHeight);
+        if (usbFrameRates.Count > 0 && !usbFrameRates.Contains(usbFrameRate))
+        {
+            usbFrameRate = usbFrameRates[0];
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         if (IsEdit)
@@ -167,6 +353,15 @@ else
             var camera = await Gateway.GetCameraByIdAsync(CameraId!.Value);
             if (camera is not null)
             {
+                source = camera.Source ?? CameraSource.Network;
+                usbDeviceId = camera.UsbDeviceId ?? string.Empty;
+                usbFriendlyName = camera.UsbFriendlyName ?? string.Empty;
+                usbWidth = camera.UsbWidth;
+                usbHeight = camera.UsbHeight;
+                usbFrameRate = camera.UsbFrameRate;
+                usbPixelFormat = camera.UsbPixelFormat ?? string.Empty;
+                usbCaptureAudio = camera.UsbCaptureAudio;
+                usbAudioDeviceName = camera.UsbAudioDeviceName ?? string.Empty;
                 displayName = camera.DisplayName;
                 description = camera.Description ?? string.Empty;
                 ipAddress = camera.IpAddress;
@@ -181,6 +376,11 @@ else
                 streamMaxLatencyMs = camera.StreamMaxLatencyMs;
                 streamRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
                 streamBufferDurationMs = camera.StreamBufferDurationMs;
+            }
+
+            if (IsUsb)
+            {
+                await LoadUsbDevicesAsync();
             }
 
             isLoading = false;
@@ -229,8 +429,8 @@ else
             var request = new UpdateCameraRequest(
                 DisplayName: displayName,
                 Description: description,
-                Source: CameraSource.Network,
-                ConnectionType: connectionType,
+                Source: source,
+                ConnectionType: IsUsb ? CameraConnectionType.Usb : connectionType,
                 Rotation: rotation,
                 IpAddress: ipAddress,
                 Port: port,
@@ -238,14 +438,14 @@ else
                 Path: path,
                 Username: username,
                 Password: password,
-                UsbDeviceId: string.Empty,
-                UsbFriendlyName: string.Empty,
-                UsbWidth: 0,
-                UsbHeight: 0,
-                UsbFrameRate: 0,
-                UsbPixelFormat: string.Empty,
-                UsbCaptureAudio: false,
-                UsbAudioDeviceName: string.Empty,
+                UsbDeviceId: IsUsb ? usbDeviceId : string.Empty,
+                UsbFriendlyName: IsUsb ? usbFriendlyName : string.Empty,
+                UsbWidth: IsUsb ? usbWidth : 0,
+                UsbHeight: IsUsb ? usbHeight : 0,
+                UsbFrameRate: IsUsb ? usbFrameRate : 0,
+                UsbPixelFormat: IsUsb ? usbPixelFormat : string.Empty,
+                UsbCaptureAudio: IsUsb && usbCaptureAudio,
+                UsbAudioDeviceName: IsUsb ? usbAudioDeviceName : string.Empty,
                 OverlayPosition: overlayPosition,
                 StreamUseLowLatencyMode: streamUseLowLatencyMode,
                 StreamMaxLatencyMs: streamMaxLatencyMs,
@@ -268,22 +468,22 @@ else
             var request = new CreateCameraRequest(
                 DisplayName: displayName,
                 Description: description,
-                Source: CameraSource.Network,
-                ConnectionType: connectionType,
+                Source: source,
+                ConnectionType: IsUsb ? CameraConnectionType.Usb : connectionType,
                 Rotation: rotation,
                 IpAddress: ipAddress,
                 Protocol: protocol,
                 Path: path,
                 Username: username,
                 Password: password,
-                UsbDeviceId: string.Empty,
-                UsbFriendlyName: string.Empty,
-                UsbWidth: 0,
-                UsbHeight: 0,
-                UsbFrameRate: 0,
-                UsbPixelFormat: string.Empty,
-                UsbCaptureAudio: false,
-                UsbAudioDeviceName: string.Empty,
+                UsbDeviceId: IsUsb ? usbDeviceId : string.Empty,
+                UsbFriendlyName: IsUsb ? usbFriendlyName : string.Empty,
+                UsbWidth: IsUsb ? usbWidth : 0,
+                UsbHeight: IsUsb ? usbHeight : 0,
+                UsbFrameRate: IsUsb ? usbFrameRate : 0,
+                UsbPixelFormat: IsUsb ? usbPixelFormat : string.Empty,
+                UsbCaptureAudio: IsUsb && usbCaptureAudio,
+                UsbAudioDeviceName: IsUsb ? usbAudioDeviceName : string.Empty,
                 OverlayPosition: overlayPosition,
                 StreamUseLowLatencyMode: streamUseLowLatencyMode,
                 StreamMaxLatencyMs: streamMaxLatencyMs,

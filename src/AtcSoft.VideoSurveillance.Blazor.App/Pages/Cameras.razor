@@ -26,18 +26,20 @@ else
     <MudTable Items="@cameras" Hover="true" Striped="true" Dense="true">
         <HeaderContent>
             <MudTh>Name</MudTh>
-            <MudTh>IP Address</MudTh>
-            <MudTh>Port</MudTh>
-            <MudTh>Protocol</MudTh>
+            <MudTh>Source</MudTh>
             <MudTh>State</MudTh>
             <MudTh>Recording</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.DisplayName</MudTd>
-            <MudTd DataLabel="IP Address">@context.IpAddress</MudTd>
-            <MudTd DataLabel="Port">@context.Port</MudTd>
-            <MudTd DataLabel="Protocol">@context.Protocol</MudTd>
+            <MudTd DataLabel="Source">@UsbFormatChoices.DescribeSource(
+                context.Source == CameraSource.Usb,
+                context.UsbFriendlyName,
+                context.Protocol?.ToString(),
+                context.IpAddress,
+                context.Port,
+                context.Path)</MudTd>
             <MudTd DataLabel="State">
                 <MudChip T="string"
                          Size="Size.Small"
