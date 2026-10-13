@@ -64,6 +64,7 @@ public class RecordingEntryViewModelTests
                 Duration: string.Empty,
                 FileSizeBytes: 0,
                 HasThumbnail: thumbnailPath is not null,
+                InProgress: false,
                 ThumbnailPath: thumbnailPath),
             ApiBaseUrl);
 }

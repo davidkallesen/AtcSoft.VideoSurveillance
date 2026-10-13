@@ -28,6 +28,7 @@ internal static class SettingsMappingExtensions
             ShowOverlayDescription: cameraDisplay.ShowOverlayDescription,
             ShowOverlayTime: cameraDisplay.ShowOverlayTime,
             ShowOverlayConnectionStatus: cameraDisplay.ShowOverlayConnectionStatus,
+            ShowOverlayQuickActions: cameraDisplay.ShowOverlayQuickActions,
             ShowOverlayConnectionTypeIcon: cameraDisplay.ShowOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement: ToApiConnectionTypeIconPlacement(cameraDisplay.ConnectionTypeIconPlacement),
             OverlayOpacity: cameraDisplay.OverlayOpacity,
@@ -43,7 +44,7 @@ internal static class SettingsMappingExtensions
             ShowNotificationOnDisconnect: connection.ShowNotificationOnDisconnect,
             ShowNotificationOnReconnect: connection.ShowNotificationOnReconnect,
             PlayNotificationSound: connection.PlayNotificationSound,
-            VideoQuality: ParseVideoQuality(performance.VideoQuality),
+            VideoQuality: VideoQualityHelper.Normalize(performance.VideoQuality) ?? VideoQualityHelper.Auto,
             HardwareAcceleration: performance.HardwareAcceleration,
             LowLatencyMode: performance.LowLatencyMode,
             BufferDurationMs: performance.BufferDurationMs,
@@ -119,6 +120,14 @@ internal static class SettingsMappingExtensions
         cameraDisplay.ShowOverlayDescription = api.ShowOverlayDescription;
         cameraDisplay.ShowOverlayTime = api.ShowOverlayTime;
         cameraDisplay.ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus;
+
+        // On by default, so a client that predates the property (and sends
+        // nothing) must not switch it off.
+        if (api.ShowOverlayQuickActions is not null)
+        {
+            cameraDisplay.ShowOverlayQuickActions = api.ShowOverlayQuickActions.Value;
+        }
+
         cameraDisplay.ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon;
         cameraDisplay.OverlayOpacity = api.OverlayOpacity;
 
@@ -165,9 +174,10 @@ internal static class SettingsMappingExtensions
         connection.ShowNotificationOnReconnect = api.ShowNotificationOnReconnect;
         connection.PlayNotificationSound = api.PlayNotificationSound;
 
-        if (api.VideoQuality is not null)
+        // A value that is not a video quality leaves the setting as it is.
+        if (VideoQualityHelper.Normalize(api.VideoQuality) is { } videoQuality)
         {
-            performance.VideoQuality = api.VideoQuality.Value.ToString();
+            performance.VideoQuality = videoQuality;
         }
 
         performance.HardwareAcceleration = api.HardwareAcceleration;
@@ -422,23 +432,6 @@ internal static class SettingsMappingExtensions
             AppSettingsDefaultProtocol.Https => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Https,
             _ => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Rtsp,
         };
-
-    private static AppSettingsVideoQuality? ParseVideoQuality(string? quality)
-    {
-        if (string.IsNullOrEmpty(quality))
-        {
-            return null;
-        }
-
-        return quality.ToUpperInvariant() switch
-        {
-            "LOW" => AppSettingsVideoQuality.Low,
-            "MEDIUM" => AppSettingsVideoQuality.Medium,
-            "HIGH" => AppSettingsVideoQuality.High,
-            "ULTRA" => AppSettingsVideoQuality.Ultra,
-            _ => AppSettingsVideoQuality.Auto,
-        };
-    }
 
     private static AppSettingsRtspTransport? ParseRtspTransport(
         string? transport)

@@ -16,6 +16,7 @@ internal static class RecordingMappingExtensions
             Duration: core.Duration.ToString("c"),
             FileSizeBytes: core.FileSizeBytes,
             HasThumbnail: core.HasThumbnail,
+            InProgress: false,
             ThumbnailPath: null);
 
     /// <summary>

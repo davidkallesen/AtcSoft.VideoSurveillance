@@ -849,6 +849,9 @@ components:
           format: int64
         hasThumbnail:
           type: boolean
+        inProgress:
+          type: boolean
+          description: True while the recording is still being made. Its size and duration are not final, and it may not play until it is finished.
         thumbnailPath:
           type: string
           nullable: true
@@ -878,6 +881,10 @@ components:
           type: boolean
         showOverlayConnectionStatus:
           type: boolean
+        showOverlayQuickActions:
+          type: boolean
+          nullable: true
+          description: Show the quick-action buttons on a camera tile. On by default. Omit to leave the current value unchanged.
         showOverlayConnectionTypeIcon:
           type: boolean
           description: Show the connection-type icon (LAN / Wi-Fi / USB) in a free tile corner.
@@ -921,7 +928,7 @@ components:
         # Performance
         videoQuality:
           type: string
-          enum: [auto, low, medium, high, ultra]
+          description: "The highest resolution to decode at: Auto (the camera's own), 1080p, 720p, 480p or 360p. The older names low, medium, high and ultra are still accepted."
         hardwareAcceleration:
           type: boolean
         lowLatencyMode:

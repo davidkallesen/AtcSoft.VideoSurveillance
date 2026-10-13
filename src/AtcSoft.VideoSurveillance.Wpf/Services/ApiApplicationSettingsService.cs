@@ -337,6 +337,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             ShowOverlayDescription = api.ShowOverlayDescription,
             ShowOverlayTime = api.ShowOverlayTime,
             ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus,
+            ShowOverlayQuickActions = api.ShowOverlayQuickActions ?? true,
             ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement = ParseEnumOrDefault(api.ConnectionTypeIconPlacement?.ToString(), AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow),
             OverlayOpacity = api.OverlayOpacity,
@@ -360,7 +361,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
 
         result.Performance = new PerformanceSettings
         {
-            VideoQuality = api.VideoQuality?.ToString() ?? "Auto",
+            VideoQuality = AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Normalize(api.VideoQuality) ?? AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Auto,
             HardwareAcceleration = api.HardwareAcceleration,
             LowLatencyMode = api.LowLatencyMode,
             BufferDurationMs = api.BufferDurationMs,
@@ -441,7 +442,6 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         _ = Enum.TryParse<AppSettingsThemeBase>(settings.General.ThemeBase, out var themeBase);
         _ = Enum.TryParse<AppSettingsOverlayPosition>(settings.CameraDisplay.OverlayPosition.ToString(), out var overlayPosition);
         _ = Enum.TryParse<AppSettingsDefaultProtocol>(settings.Connection.DefaultProtocol.ToString(), out var protocol);
-        _ = Enum.TryParse<AppSettingsVideoQuality>(settings.Performance.VideoQuality, out var videoQuality);
         _ = Enum.TryParse<AppSettingsRtspTransport>(settings.Performance.RtspTransport, true, out var rtspTransport);
         _ = Enum.TryParse<AppSettingsRecordingFormat>(settings.Recording.RecordingFormat, true, out var recordingFormat);
         _ = Enum.TryParse<AppSettingsCleanupSchedule>(settings.Recording.Cleanup.Schedule.ToString(), out var cleanupSchedule);
@@ -456,6 +456,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             ShowOverlayDescription: settings.CameraDisplay.ShowOverlayDescription,
             ShowOverlayTime: settings.CameraDisplay.ShowOverlayTime,
             ShowOverlayConnectionStatus: settings.CameraDisplay.ShowOverlayConnectionStatus,
+            ShowOverlayQuickActions: settings.CameraDisplay.ShowOverlayQuickActions,
             ShowOverlayConnectionTypeIcon: settings.CameraDisplay.ShowOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement: ParseEnumOrDefault(settings.CameraDisplay.ConnectionTypeIconPlacement.ToString(), AppSettingsConnectionTypeIconPlacement.SameRow),
             OverlayOpacity: settings.CameraDisplay.OverlayOpacity,
@@ -471,7 +472,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             ShowNotificationOnDisconnect: settings.Connection.ShowNotificationOnDisconnect,
             ShowNotificationOnReconnect: settings.Connection.ShowNotificationOnReconnect,
             PlayNotificationSound: settings.Connection.PlayNotificationSound,
-            VideoQuality: videoQuality,
+            VideoQuality: settings.Performance.VideoQuality,
             HardwareAcceleration: settings.Performance.HardwareAcceleration,
             LowLatencyMode: settings.Performance.LowLatencyMode,
             BufferDurationMs: settings.Performance.BufferDurationMs,

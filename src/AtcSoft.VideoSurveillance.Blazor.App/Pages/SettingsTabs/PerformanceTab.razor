@@ -1,9 +1,9 @@
 <MudSelect @bind-Value="State.VideoQuality" Label="Video Quality" Class="mt-2">
-    <MudSelectItem Value="AppSettingsVideoQuality.Auto">Auto</MudSelectItem>
-    <MudSelectItem Value="AppSettingsVideoQuality.Low">Low</MudSelectItem>
-    <MudSelectItem Value="AppSettingsVideoQuality.Medium">Medium</MudSelectItem>
-    <MudSelectItem Value="AppSettingsVideoQuality.High">High</MudSelectItem>
-    <MudSelectItem Value="AppSettingsVideoQuality.Ultra">Ultra</MudSelectItem>
+    <MudSelectItem Value="@("Auto")">Auto (source quality)</MudSelectItem>
+    <MudSelectItem Value="@("1080p")">1080p</MudSelectItem>
+    <MudSelectItem Value="@("720p")">720p</MudSelectItem>
+    <MudSelectItem Value="@("480p")">480p</MudSelectItem>
+    <MudSelectItem Value="@("360p")">360p</MudSelectItem>
 </MudSelect>
 <MudCheckBox @bind-Value="State.HardwareAcceleration" Label="Hardware acceleration" Class="mt-2" />
 <MudCheckBox @bind-Value="State.LowLatencyMode" Label="Low latency mode" Class="mt-2" />

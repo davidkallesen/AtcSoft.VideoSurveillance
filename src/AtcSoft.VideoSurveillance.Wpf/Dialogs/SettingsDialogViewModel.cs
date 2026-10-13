@@ -60,11 +60,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
     [ObservableProperty]
     private bool showCameraOverlayConnectionStatus = true;
 
-    // The API DTO (AppSettings) doesn't currently expose
-    // ShowOverlayQuickActions, so this round-trips in-memory only — the
-    // toggle is wired up so the shared XAML works in this dialog, and so
-    // settings change handlers can react locally during the session.
-    // Persist via API requires a YAML contract update (out of scope here).
     [ObservableProperty]
     private bool showCameraOverlayQuickActions = true;
 
@@ -402,6 +397,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowCameraOverlayDescription = settings.ShowOverlayDescription;
             ShowCameraOverlayTime = settings.ShowOverlayTime;
             ShowCameraOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+            ShowCameraOverlayQuickActions = settings.ShowOverlayQuickActions ?? true;
             ShowCameraOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
             SelectedConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement?.ToString() ?? DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
             SelectedOverlayOpacity = settings.OverlayOpacity.ToString("F1", CultureInfo.InvariantCulture);
@@ -421,7 +417,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             PlayNotificationSound = settings.PlayNotificationSound;
 
             // Performance
-            SelectedVideoQuality = settings.VideoQuality?.ToString() ?? "Auto";
+            SelectedVideoQuality = AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Normalize(settings.VideoQuality) ?? DropDownItemsFactory.DefaultVideoQuality;
             HardwareAcceleration = settings.HardwareAcceleration;
             LowLatencyMode = settings.LowLatencyMode;
             BufferDurationMs = settings.BufferDurationMs;
@@ -658,7 +654,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
         _ = Enum.TryParse<AppSettingsOverlayPosition>(SelectedOverlayPosition, out var overlayPosition);
         _ = Enum.TryParse<AppSettingsConnectionTypeIconPlacement>(SelectedConnectionTypeIconPlacement, out var iconPlacement);
         _ = Enum.TryParse<AppSettingsDefaultProtocol>(SelectedDefaultProtocol, out var protocol);
-        _ = Enum.TryParse<AppSettingsVideoQuality>(SelectedVideoQuality, out var videoQuality);
         _ = Enum.TryParse<AppSettingsRtspTransport>(SelectedRtspTransport, out var rtspTransport);
         _ = Enum.TryParse<AppSettingsRecordingFormat>(SelectedRecordingFormat, out var recordingFormat);
         _ = Enum.TryParse<AppSettingsCleanupSchedule>(SelectedCleanupSchedule, out var cleanupSchedule);
@@ -687,6 +682,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowOverlayDescription: ShowCameraOverlayDescription,
             ShowOverlayTime: ShowCameraOverlayTime,
             ShowOverlayConnectionStatus: ShowCameraOverlayConnectionStatus,
+            ShowOverlayQuickActions: ShowCameraOverlayQuickActions,
             ShowOverlayConnectionTypeIcon: ShowCameraOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement: iconPlacement,
             OverlayOpacity: opacity,
@@ -702,7 +698,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowNotificationOnDisconnect: ShowNotificationOnDisconnect,
             ShowNotificationOnReconnect: ShowNotificationOnReconnect,
             PlayNotificationSound: PlayNotificationSound,
-            VideoQuality: videoQuality,
+            VideoQuality: SelectedVideoQuality,
             HardwareAcceleration: HardwareAcceleration,
             LowLatencyMode: LowLatencyMode,
             BufferDurationMs: BufferDurationMs,

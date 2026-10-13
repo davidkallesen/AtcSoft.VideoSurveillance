@@ -51,7 +51,7 @@ public class SettingsMappingExtensionsTests
         api.ShowOverlayTitle.Should().BeTrue();
         api.SnapshotPath.Should().Be(@"C:\snapshots");
         api.DefaultPort.Should().Be(554);
-        api.VideoQuality.Should().Be(AppSettingsVideoQuality.Auto);
+        api.VideoQuality.Should().Be("Auto");
         api.MotionSensitivity.Should().Be(30);
         api.RecordingPath.Should().Be(@"C:\recordings");
         api.RecordingFormat.Should().Be(AppSettingsRecordingFormat.Mp4);
@@ -357,6 +357,7 @@ public class SettingsMappingExtensionsTests
             ShowOverlayDescription: true,
             ShowOverlayTime: false,
             ShowOverlayConnectionStatus: true,
+            ShowOverlayQuickActions: null,
             ShowOverlayConnectionTypeIcon: false,
             ConnectionTypeIconPlacement: null,
             OverlayOpacity: 0.7,
@@ -372,7 +373,7 @@ public class SettingsMappingExtensionsTests
             ShowNotificationOnDisconnect: true,
             ShowNotificationOnReconnect: true,
             PlayNotificationSound: false,
-            VideoQuality: AppSettingsVideoQuality.Auto,
+            VideoQuality: "Auto",
             HardwareAcceleration: true,
             LowLatencyMode: false,
             BufferDurationMs: 500,

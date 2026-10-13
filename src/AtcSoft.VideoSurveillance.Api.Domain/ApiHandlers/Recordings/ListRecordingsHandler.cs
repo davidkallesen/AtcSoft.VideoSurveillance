@@ -37,6 +37,7 @@ public sealed class ListRecordingsHandler(
                     Duration: System.Xml.XmlConvert.ToString(s.Duration),
                     FileSizeBytes: 0,
                     HasThumbnail: thumbnail is not null,
+                    InProgress: true,
                     ThumbnailPath: thumbnail);
             })
             .ToList();
@@ -102,6 +103,7 @@ public sealed class ListRecordingsHandler(
                     Duration: string.Empty,
                     FileSizeBytes: fileInfo.Length,
                     HasThumbnail: thumbnail is not null,
+                    InProgress: false,
                     ThumbnailPath: thumbnail));
             }
         }

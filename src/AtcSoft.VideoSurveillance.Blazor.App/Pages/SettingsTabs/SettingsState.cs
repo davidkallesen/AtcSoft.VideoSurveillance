@@ -50,7 +50,7 @@ public sealed class SettingsState
 
     public bool PlayNotificationSound { get; set; }
 
-    public AppSettingsVideoQuality VideoQuality { get; set; } = AppSettingsVideoQuality.Auto;
+    public string VideoQuality { get; set; } = "Auto";
 
     public bool HardwareAcceleration { get; set; } = true;
 
@@ -167,7 +167,7 @@ public sealed class SettingsState
         ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect;
         PlayNotificationSound = settings.PlayNotificationSound;
 
-        VideoQuality = settings.VideoQuality ?? AppSettingsVideoQuality.Auto;
+        VideoQuality = settings.VideoQuality ?? "Auto";
         HardwareAcceleration = settings.HardwareAcceleration;
         LowLatencyMode = settings.LowLatencyMode;
         BufferDurationMs = settings.BufferDurationMs;
@@ -226,6 +226,7 @@ public sealed class SettingsState
             ShowOverlayDescription: ShowOverlayDescription,
             ShowOverlayTime: ShowOverlayTime,
             ShowOverlayConnectionStatus: ShowOverlayConnectionStatus,
+            ShowOverlayQuickActions: null,
             ShowOverlayConnectionTypeIcon: ShowOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement: ConnectionTypeIconPlacement,
             OverlayOpacity: OverlayOpacity,
