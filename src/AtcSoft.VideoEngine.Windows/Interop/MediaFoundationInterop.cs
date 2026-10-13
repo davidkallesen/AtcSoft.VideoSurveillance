@@ -19,7 +19,7 @@ internal static class MediaFoundationInterop
     public const uint MF_E_ATTRIBUTENOTFOUND = 0xC00D36E6;
 
     public static readonly Guid MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE =
-        new("c60ac5fe-252a-478f-a0ef-bc8fa5f7ca93");
+        new("c60ac5fe-252a-478f-a0ef-bc8fa5f7cad3");
 
     public static readonly Guid MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID =
         new("8ac3587a-4ae7-42d8-99e0-0a6013eef90f");
