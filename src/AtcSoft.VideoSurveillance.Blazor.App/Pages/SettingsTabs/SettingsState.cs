@@ -1,14 +1,21 @@
 namespace AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
 
+/// <summary>
+/// The settings as they are edited on the settings page. The starting
+/// values are the server's defaults; a test keeps them equal.
+/// </summary>
 public sealed class SettingsState
 {
+    private bool loadedUseDailySubfolders = true;
+    private bool loadedSeparateThumbnailFolder = true;
+
     public AppSettingsThemeBase ThemeBase { get; set; } = AppSettingsThemeBase.Dark;
 
     public string ThemeAccent { get; set; } = "Blue";
 
     public string Language { get; set; } = "1033";
 
-    public bool ConnectOnStartup { get; set; }
+    public bool ConnectOnStartup { get; set; } = true;
 
     public bool StartMaximized { get; set; }
 
@@ -19,6 +26,8 @@ public sealed class SettingsState
     public bool ShowOverlayTime { get; set; }
 
     public bool ShowOverlayConnectionStatus { get; set; } = true;
+
+    public bool ShowOverlayQuickActions { get; set; } = true;
 
     public double OverlayOpacity { get; set; } = 0.7;
 
@@ -40,13 +49,13 @@ public sealed class SettingsState
 
     public int ConnectionTimeoutSeconds { get; set; } = 10;
 
-    public int ReconnectDelaySeconds { get; set; } = 5;
+    public int ReconnectDelaySeconds { get; set; } = 10;
 
     public bool AutoReconnectOnFailure { get; set; } = true;
 
     public bool ShowNotificationOnDisconnect { get; set; } = true;
 
-    public bool ShowNotificationOnReconnect { get; set; } = true;
+    public bool ShowNotificationOnReconnect { get; set; }
 
     public bool PlayNotificationSound { get; set; }
 
@@ -60,45 +69,66 @@ public sealed class SettingsState
 
     public AppSettingsRtspTransport RtspTransport { get; set; } = AppSettingsRtspTransport.Tcp;
 
-    public int MaxLatencyMs { get; set; } = 1000;
+    public int MaxLatencyMs { get; set; } = 500;
 
     public int MotionSensitivity { get; set; } = 30;
 
     public double MinimumChangePercent { get; set; } = 0.5;
 
-    public int AnalysisFrameRate { get; set; } = 5;
+    public int AnalysisFrameRate { get; set; } = 15;
 
-    public int AnalysisWidth { get; set; } = 320;
+    public int AnalysisWidth { get; set; } = 800;
 
-    public int AnalysisHeight { get; set; } = 240;
+    public int AnalysisHeight { get; set; } = 600;
 
-    public int PostMotionDurationSeconds { get; set; } = 5;
+    /// <summary>
+    /// Gets or sets the analysis size as one "width x height" choice.
+    /// </summary>
+    public string AnalysisResolution
+    {
+        get => string.Create(CultureInfo.InvariantCulture, $"{AnalysisWidth}x{AnalysisHeight}");
+        set
+        {
+            var parts = (value ?? string.Empty).Split('x');
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
+                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var height) &&
+                width > 0 &&
+                height > 0)
+            {
+                AnalysisWidth = width;
+                AnalysisHeight = height;
+            }
+        }
+    }
 
-    public int CooldownSeconds { get; set; } = 3;
+    public int PostMotionDurationSeconds { get; set; } = 10;
+
+    public int CooldownSeconds { get; set; } = 5;
 
     public bool BoundingBoxShowInGrid { get; set; }
 
-    public bool BoundingBoxShowInFullScreen { get; set; } = true;
+    public bool BoundingBoxShowInFullScreen { get; set; }
 
-    public string BoundingBoxColor { get; set; } = "#FF0000";
+    public string BoundingBoxColor { get; set; } = "Red";
 
     public int BoundingBoxThickness { get; set; } = 2;
 
-    public int BoundingBoxMinArea { get; set; } = 500;
+    public int BoundingBoxMinArea { get; set; } = 10;
 
-    public int BoundingBoxPadding { get; set; } = 10;
+    public int BoundingBoxPadding { get; set; } = 4;
 
     public double BoundingBoxSmoothing { get; set; } = 0.3;
 
     public string RecordingPath { get; set; } = string.Empty;
 
-    public AppSettingsRecordingFormat RecordingFormat { get; set; } = AppSettingsRecordingFormat.Mp4;
+    public AppSettingsRecordingFormat RecordingFormat { get; set; } = AppSettingsRecordingFormat.Mkv;
 
     public bool EnableRecordingOnMotion { get; set; }
 
     public bool EnableRecordingOnConnect { get; set; }
 
-    public bool EnableHourlySegmentation { get; set; }
+    public bool EnableHourlySegmentation { get; set; } = true;
 
     public bool UseDailySubfolders { get; set; } = true;
 
@@ -112,13 +142,13 @@ public sealed class SettingsState
 
     public string TimelapseInterval { get; set; } = "5m";
 
-    public AppSettingsCleanupSchedule CleanupSchedule { get; set; } = AppSettingsCleanupSchedule.Disabled;
+    public AppSettingsCleanupSchedule CleanupSchedule { get; set; } = AppSettingsCleanupSchedule.OnStartupAndPeriodically;
 
     public int RecordingRetentionDays { get; set; } = 30;
 
     public bool CleanupIncludeSnapshots { get; set; }
 
-    public int SnapshotRetentionDays { get; set; } = 30;
+    public int SnapshotRetentionDays { get; set; } = 7;
 
     public bool EnableDiskSpaceGuard { get; set; } = true;
 
@@ -126,15 +156,51 @@ public sealed class SettingsState
 
     public bool PlaybackShowFilename { get; set; } = true;
 
-    public string PlaybackFilenameColor { get; set; } = "#FFFFFF";
+    public string PlaybackFilenameColor { get; set; } = "White";
 
     public bool PlaybackShowTimestamp { get; set; } = true;
 
-    public string PlaybackTimestampColor { get; set; } = "#FFFFFF";
+    public string PlaybackTimestampColor { get; set; } = "White";
 
     public bool EnableDebugLogging { get; set; }
 
     public string LogPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether a folder layout switch differs from
+    /// what the server has. Saving then moves the existing recordings.
+    /// </summary>
+    public bool HasRecordingLayoutChanged
+        => UseDailySubfolders != loadedUseDailySubfolders ||
+           SeparateThumbnailFolder != loadedSeparateThumbnailFolder;
+
+    /// <summary>
+    /// Gets where a recording goes with the current folder layout, below the recording folder.
+    /// </summary>
+    public string RecordingPathExample
+        => RecordingLayoutExample.Build(RecordingFormat.ToString(), UseDailySubfolders, SeparateThumbnailFolder).Video;
+
+    /// <summary>
+    /// Gets where its thumbnail goes.
+    /// </summary>
+    public string ThumbnailPathExample
+        => RecordingLayoutExample.Build(RecordingFormat.ToString(), UseDailySubfolders, SeparateThumbnailFolder).Thumbnail;
+
+    /// <summary>
+    /// Gets the help of the "folder per day" switch: the recording path with the switch on and off.
+    /// </summary>
+    public string UseDailySubfoldersHint
+        => OnOffHint(
+            RecordingLayoutExample.Build(RecordingFormat.ToString(), useDailySubfolders: true, SeparateThumbnailFolder).Video,
+            RecordingLayoutExample.Build(RecordingFormat.ToString(), useDailySubfolders: false, SeparateThumbnailFolder).Video);
+
+    /// <summary>
+    /// Gets the help of the "separate thumbnail folder" switch: the thumbnail path with the switch on and off.
+    /// </summary>
+    public string SeparateThumbnailFolderHint
+        => OnOffHint(
+            RecordingLayoutExample.Build(RecordingFormat.ToString(), UseDailySubfolders, separateThumbnailFolder: true).Thumbnail,
+            RecordingLayoutExample.Build(RecordingFormat.ToString(), UseDailySubfolders, separateThumbnailFolder: false).Thumbnail);
 
     public void LoadFrom(AppSettings settings)
     {
@@ -150,6 +216,7 @@ public sealed class SettingsState
         ShowOverlayDescription = settings.ShowOverlayDescription;
         ShowOverlayTime = settings.ShowOverlayTime;
         ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+        ShowOverlayQuickActions = settings.ShowOverlayQuickActions ?? true;
         OverlayOpacity = settings.OverlayOpacity;
         OverlayPosition = settings.OverlayPosition ?? AppSettingsOverlayPosition.TopLeft;
         ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
@@ -167,7 +234,7 @@ public sealed class SettingsState
         ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect;
         PlayNotificationSound = settings.PlayNotificationSound;
 
-        VideoQuality = settings.VideoQuality ?? "Auto";
+        VideoQuality = string.IsNullOrEmpty(settings.VideoQuality) ? "Auto" : settings.VideoQuality;
         HardwareAcceleration = settings.HardwareAcceleration;
         LowLatencyMode = settings.LowLatencyMode;
         BufferDurationMs = settings.BufferDurationMs;
@@ -183,7 +250,7 @@ public sealed class SettingsState
         CooldownSeconds = settings.CooldownSeconds;
         BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid;
         BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen;
-        BoundingBoxColor = settings.BoundingBoxColor ?? "#FF0000";
+        BoundingBoxColor = ColorChoices.Normalize(settings.BoundingBoxColor, "Red");
         BoundingBoxThickness = settings.BoundingBoxThickness;
         BoundingBoxMinArea = settings.BoundingBoxMinArea;
         BoundingBoxPadding = settings.BoundingBoxPadding;
@@ -195,9 +262,13 @@ public sealed class SettingsState
         EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
         EnableHourlySegmentation = settings.EnableHourlySegmentation;
         MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes;
-        ThumbnailTileCount = settings.ThumbnailTileCount;
+
+        // The server makes a thumbnail of one tile or of four.
+        ThumbnailTileCount = settings.ThumbnailTileCount == 1 ? 1 : 4;
         UseDailySubfolders = settings.UseDailySubfolders ?? true;
         SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
+        loadedUseDailySubfolders = UseDailySubfolders;
+        loadedSeparateThumbnailFolder = SeparateThumbnailFolder;
         EnableTimelapse = settings.EnableTimelapse;
         TimelapseInterval = settings.TimelapseInterval ?? "5m";
         CleanupSchedule = settings.CleanupSchedule ?? AppSettingsCleanupSchedule.Disabled;
@@ -207,9 +278,9 @@ public sealed class SettingsState
         EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard ?? true;
         MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb : 2048;
         PlaybackShowFilename = settings.PlaybackShowFilename;
-        PlaybackFilenameColor = settings.PlaybackFilenameColor ?? "#FFFFFF";
+        PlaybackFilenameColor = ColorChoices.Normalize(settings.PlaybackFilenameColor, "White");
         PlaybackShowTimestamp = settings.PlaybackShowTimestamp;
-        PlaybackTimestampColor = settings.PlaybackTimestampColor ?? "#FFFFFF";
+        PlaybackTimestampColor = ColorChoices.Normalize(settings.PlaybackTimestampColor, "White");
 
         EnableDebugLogging = settings.EnableDebugLogging;
         LogPath = settings.LogPath ?? string.Empty;
@@ -226,7 +297,7 @@ public sealed class SettingsState
             ShowOverlayDescription: ShowOverlayDescription,
             ShowOverlayTime: ShowOverlayTime,
             ShowOverlayConnectionStatus: ShowOverlayConnectionStatus,
-            ShowOverlayQuickActions: null,
+            ShowOverlayQuickActions: ShowOverlayQuickActions,
             ShowOverlayConnectionTypeIcon: ShowOverlayConnectionTypeIcon,
             ConnectionTypeIconPlacement: ConnectionTypeIconPlacement,
             OverlayOpacity: OverlayOpacity,
@@ -285,6 +356,11 @@ public sealed class SettingsState
             PlaybackTimestampColor: PlaybackTimestampColor,
             EnableDebugLogging: EnableDebugLogging,
             LogPath: LogPath);
+
+    private static string OnOffHint(
+        string on,
+        string off)
+        => $"On: {on}{Environment.NewLine}Off: {off}";
 
     /// <summary>
     /// Gets the concrete corner a placement resolves to for the current

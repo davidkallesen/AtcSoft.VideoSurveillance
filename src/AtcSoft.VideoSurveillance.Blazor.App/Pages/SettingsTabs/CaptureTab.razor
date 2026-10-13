@@ -1,0 +1,54 @@
+<MudText Typo="Typo.subtitle1" Class="mb-1">Recording</MudText>
+<MudTextField @bind-Value="State.RecordingPath"
+              Label="Recording folder"
+              HelperText="A folder on the server."
+              Class="mt-2" />
+<MudSelect @bind-Value="State.RecordingFormat"
+           Label="Recording format"
+           HelperText="MP4 plays in a browser and in most players. MKV keeps more of an unfinished file after a crash, but a browser usually cannot play it."
+           Class="mt-2">
+    <MudSelectItem Value="AppSettingsRecordingFormat.Mp4">MP4</MudSelectItem>
+    <MudSelectItem Value="AppSettingsRecordingFormat.Mkv">MKV (Matroska)</MudSelectItem>
+    @if (State.RecordingFormat == AppSettingsRecordingFormat.Avi)
+    {
+        <MudSelectItem Value="AppSettingsRecordingFormat.Avi">AVI</MudSelectItem>
+    }
+</MudSelect>
+<MudSelect @bind-Value="State.ThumbnailTileCount" Label="Thumbnail tiles" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.ThumbnailTiles)
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+
+<SettingSwitch @bind-Value="State.EnableRecordingOnMotion" Label="Record when motion is detected" Class="mt-2" />
+<SettingSwitch @bind-Value="State.EnableRecordingOnConnect" Label="Record when a camera connects" />
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.subtitle1" Class="mb-1">Folder layout</MudText>
+<SettingSwitch @bind-Value="State.UseDailySubfolders"
+               Label="Use a folder per day"
+               Help="@State.UseDailySubfoldersHint"
+               Monospace="true" />
+<SettingSwitch @bind-Value="State.SeparateThumbnailFolder"
+               Label="Keep thumbnails in a separate folder"
+               Help="@State.SeparateThumbnailFolderHint"
+               Monospace="true" />
+
+<MudAlert Severity="@(State.HasRecordingLayoutChanged ? Severity.Warning : Severity.Info)" Dense="true" Class="mt-2">
+    <div style="font-family: Consolas, 'Courier New', monospace; white-space: pre-wrap; word-break: break-all;">Video:
+  @State.RecordingPathExample
+Thumbnail:
+  @State.ThumbnailPathExample</div>
+    <div class="mt-1">
+        @(State.HasRecordingLayoutChanged
+            ? "Existing recordings are moved to this layout when you save. That can take a while; recordings in progress start a new file."
+            : "Existing recordings are moved when you change the layout and save.")
+    </div>
+</MudAlert>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsState State { get; set; } = null!;
+}

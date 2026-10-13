@@ -1,15 +1,22 @@
+@* The look of the desktop apps is kept on the server; the web client follows the browser's light or dark mode. *@
+<MudText Typo="Typo.subtitle1" Class="mb-1">Appearance of the desktop apps</MudText>
 <MudSelect @bind-Value="State.ThemeBase" Label="Theme" Class="mt-2">
     <MudSelectItem Value="AppSettingsThemeBase.Dark">Dark</MudSelectItem>
     <MudSelectItem Value="AppSettingsThemeBase.Light">Light</MudSelectItem>
 </MudSelect>
-<MudTextField @bind-Value="State.ThemeAccent" Label="Theme Accent" Class="mt-2" />
+<MudTextField @bind-Value="State.ThemeAccent" Label="Accent colour" Class="mt-2" />
 <MudSelect @bind-Value="State.Language" Label="Language" Class="mt-2">
-    <MudSelectItem Value="@("1033")">English (en-US)</MudSelectItem>
-    <MudSelectItem Value="@("1030")">Danish (da-DK)</MudSelectItem>
-    <MudSelectItem Value="@("1031")">German (de-DE)</MudSelectItem>
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.Languages, State.Language, v => v))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
 </MudSelect>
-<MudCheckBox @bind-Value="State.ConnectOnStartup" Label="Connect cameras on startup" Class="mt-2" />
-<MudCheckBox @bind-Value="State.StartMaximized" Label="Start maximized" Class="mt-2" />
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.subtitle1" Class="mb-1">Start-up</MudText>
+<SettingSwitch @bind-Value="State.ConnectOnStartup" Label="Connect cameras on start-up" />
+<SettingSwitch @bind-Value="State.StartMaximized" Label="Start maximized" />
 
 @code {
     [Parameter, EditorRequired]

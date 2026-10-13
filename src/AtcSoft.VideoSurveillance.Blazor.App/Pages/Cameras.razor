@@ -52,30 +52,42 @@ else
                 }
             </MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                               Size="Size.Small"
-                               OnClick="@(() => Navigation.NavigateTo($"/cameras/{context.Id}/edit"))" />
-                <MudIconButton Icon="@Icons.Material.Filled.CameraAlt"
-                               Size="Size.Small"
-                               OnClick="@(() => CaptureSnapshotAsync(context))" />
+                <MudTooltip Text="Edit">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   OnClick="@(() => Navigation.NavigateTo($"/cameras/{context.Id}/edit"))" />
+                </MudTooltip>
+                <MudTooltip Text="Download a snapshot">
+                    <MudIconButton Icon="@Icons.Material.Filled.CameraAlt"
+                                   Size="Size.Small"
+                                   OnClick="@(() => CaptureSnapshotAsync(context))" />
+                </MudTooltip>
                 @if (context.IsRecording)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Stop"
-                                   Size="Size.Small"
-                                   Color="Color.Error"
-                                   OnClick="@(() => StopRecordingAsync(context.Id))" />
+                    <MudTooltip Text="Stop recording">
+                        <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       Disabled="@busy.Contains(context.Id)"
+                                       OnClick="@(() => StopRecordingAsync(context.Id))" />
+                    </MudTooltip>
                 }
                 else
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.FiberManualRecord"
+                    <MudTooltip Text="Start recording">
+                        <MudIconButton Icon="@Icons.Material.Filled.FiberManualRecord"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       Disabled="@busy.Contains(context.Id)"
+                                       OnClick="@(() => StartRecordingAsync(context.Id))" />
+                    </MudTooltip>
+                }
+                <MudTooltip Text="Delete">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    Size="Size.Small"
                                    Color="Color.Error"
-                                   OnClick="@(() => StartRecordingAsync(context.Id))" />
-                }
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               Size="Size.Small"
-                               Color="Color.Error"
-                               OnClick="@(() => DeleteCameraAsync(context))" />
+                                   OnClick="@(() => DeleteCameraAsync(context))" />
+                </MudTooltip>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -85,6 +97,9 @@ else
 }
 
 @code {
+    // Cameras with a start or stop under way: starting waits for the camera
+    // to connect, and a second click meanwhile would start it twice.
+    private readonly HashSet<Guid> busy = new();
     private Camera[]? cameras;
     private bool isLoading = true;
 
@@ -144,7 +159,7 @@ else
             {
                 if (cameras[i].Id == e.CameraId)
                 {
-                    var isRecording = string.Equals(e.NewState, "Recording", StringComparison.OrdinalIgnoreCase);
+                    var isRecording = CameraStatusBoard.IsRecordingState(e.NewState);
                     cameras[i] = cameras[i] with { IsRecording = isRecording };
                     break;
                 }
@@ -176,29 +191,53 @@ else
 
     private async Task StartRecordingAsync(Guid cameraId)
     {
-        var status = await Gateway.StartRecordingAsync(cameraId);
-        if (status is not null)
+        if (!busy.Add(cameraId))
         {
-            Snackbar.Add("Recording started.", Severity.Success);
-            await LoadCamerasAsync();
+            return;
         }
-        else
+
+        try
         {
-            Snackbar.Add("Failed to start recording.", Severity.Error);
+            var status = await Gateway.StartRecordingAsync(cameraId);
+            if (status is not null)
+            {
+                Snackbar.Add("Recording started.", Severity.Success);
+                await LoadCamerasAsync();
+            }
+            else
+            {
+                Snackbar.Add("The recording could not be started. The camera may not be reachable.", Severity.Error);
+            }
+        }
+        finally
+        {
+            busy.Remove(cameraId);
         }
     }
 
     private async Task StopRecordingAsync(Guid cameraId)
     {
-        var status = await Gateway.StopRecordingAsync(cameraId);
-        if (status is not null)
+        if (!busy.Add(cameraId))
         {
-            Snackbar.Add("Recording stopped.", Severity.Success);
-            await LoadCamerasAsync();
+            return;
         }
-        else
+
+        try
         {
-            Snackbar.Add("Failed to stop recording.", Severity.Error);
+            var status = await Gateway.StopRecordingAsync(cameraId);
+            if (status is not null)
+            {
+                Snackbar.Add("Recording stopped.", Severity.Success);
+                await LoadCamerasAsync();
+            }
+            else
+            {
+                Snackbar.Add("The recording could not be stopped.", Severity.Error);
+            }
+        }
+        finally
+        {
+            busy.Remove(cameraId);
         }
     }
 

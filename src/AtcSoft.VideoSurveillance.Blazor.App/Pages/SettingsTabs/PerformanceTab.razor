@@ -1,18 +1,25 @@
-<MudSelect @bind-Value="State.VideoQuality" Label="Video Quality" Class="mt-2">
-    <MudSelectItem Value="@("Auto")">Auto (source quality)</MudSelectItem>
-    <MudSelectItem Value="@("1080p")">1080p</MudSelectItem>
-    <MudSelectItem Value="@("720p")">720p</MudSelectItem>
-    <MudSelectItem Value="@("480p")">480p</MudSelectItem>
-    <MudSelectItem Value="@("360p")">360p</MudSelectItem>
+<MudText Typo="Typo.subtitle1" Class="mb-1">Video</MudText>
+<MudSelect @bind-Value="State.VideoQuality"
+           Label="Video quality"
+           HelperText="The highest resolution the desktop apps decode at."
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.VideoQualities, State.VideoQuality, v => v))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
 </MudSelect>
-<MudCheckBox @bind-Value="State.HardwareAcceleration" Label="Hardware acceleration" Class="mt-2" />
-<MudCheckBox @bind-Value="State.LowLatencyMode" Label="Low latency mode" Class="mt-2" />
-<MudNumericField @bind-Value="State.BufferDurationMs" Label="Buffer Duration (ms)" Min="100" Max="5000" Class="mt-2" />
-<MudSelect @bind-Value="State.RtspTransport" Label="RTSP Transport" Class="mt-2">
+<SettingSwitch @bind-Value="State.HardwareAcceleration" Label="Hardware acceleration" Class="mt-2" />
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.subtitle1" Class="mb-1">Streaming</MudText>
+<SettingSwitch @bind-Value="State.LowLatencyMode" Label="Low latency mode" />
+<MudNumericField @bind-Value="State.MaxLatencyMs" Label="Max latency (ms)" Min="100" Max="10000" Step="50" Class="mt-2" />
+<MudNumericField @bind-Value="State.BufferDurationMs" Label="Buffer duration (ms)" Min="100" Max="5000" Step="50" Class="mt-2" />
+<MudSelect @bind-Value="State.RtspTransport" Label="RTSP transport" Class="mt-2">
     <MudSelectItem Value="AppSettingsRtspTransport.Tcp">TCP</MudSelectItem>
     <MudSelectItem Value="AppSettingsRtspTransport.Udp">UDP</MudSelectItem>
 </MudSelect>
-<MudNumericField @bind-Value="State.MaxLatencyMs" Label="Max Latency (ms)" Min="100" Max="10000" Class="mt-2" />
 
 @code {
     [Parameter, EditorRequired]

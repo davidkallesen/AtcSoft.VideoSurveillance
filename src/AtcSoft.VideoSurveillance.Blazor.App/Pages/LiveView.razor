@@ -10,143 +10,212 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
+
+    /* A size container: a camera turned a quarter sizes its video from the tile. */
+    .live-tile {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #12121c;
+        border-radius: 4px;
+        container-type: size;
+    }
+
+    .live-tile-label {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: white;
+    }
 </style>
 
 <MudText Typo="Typo.h4" Class="mb-4">Live View</MudText>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
-    <MudSelect @bind-Value="selectedLayoutId"
-               Label="Layout"
-               Variant="Variant.Outlined"
-               Dense="true"
-               Style="max-width: 300px;"
-               ToStringFunc="@(id => layouts?.FirstOrDefault(l => l.Id == id) is { } l ? $"{l.Name} ({l.Rows}x{l.Columns})" : string.Empty)">
-        @if (layouts is not null)
-        {
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (layouts.Length == 0)
+{
+    <MudAlert Severity="Severity.Info" Style="max-width: 700px;">
+        There is no layout yet. A layout says which cameras are shown, and where.
+        <MudLink Href="/layouts" Class="ml-1">Create a layout</MudLink>
+    </MudAlert>
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
+        <MudSelect T="Guid"
+                   Value="selectedLayoutId"
+                   ValueChanged="OnLayoutChangedAsync"
+                   Label="Layout"
+                   Variant="Variant.Outlined"
+                   Dense="true"
+                   Style="min-width: 240px; max-width: 320px;">
             @foreach (var item in layouts)
             {
-                <MudSelectItem Value="@item.Id">@item.Name (@(item.Rows)x@(item.Columns))</MudSelectItem>
+                <MudSelectItem Value="@item.Id">@item.Name (@(item.Rows) x @(item.Columns))</MudSelectItem>
             }
-        }
-    </MudSelect>
-    <MudButton Variant="Variant.Filled"
-               Color="Color.Primary"
-               OnClick="ApplySelectedLayoutAsync"
-               Disabled="selectedLayoutId == Guid.Empty">
-        Apply
-    </MudButton>
-    <MudSpacer />
-    <MudChip T="string" Size="Size.Small" Color="@(Hub.IsConnected ? Color.Success : Color.Default)">
-        @Hub.ConnectionState
-    </MudChip>
-</MudStack>
+        </MudSelect>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PlayArrow"
+                   OnClick="StartAllAsync"
+                   Disabled="@(!Hub.IsConnected || !HasStoppedTiles)">
+            Start all
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Stop"
+                   OnClick="StopAllAsync"
+                   Disabled="@(streamUrls.Count == 0 && starting.Count == 0)">
+            Stop all
+        </MudButton>
+        <MudTooltip Text="Makes this the layout the server's clients start with">
+            <MudButton Variant="Variant.Text" OnClick="SetAsStartupLayoutAsync">Set as start-up layout</MudButton>
+        </MudTooltip>
+        <MudSpacer />
+        <MudChip T="string" Size="Size.Small" Color="@(Hub.IsConnected ? Color.Success : Color.Warning)">
+            @(Hub.IsConnected ? "Connected to the server" : $"Server: {Hub.ConnectionState}")
+        </MudChip>
+    </MudStack>
 
-@if (activeLayout is not null && cameras is not null)
-{
-    <div style="display: grid; grid-template-columns: repeat(@activeLayout.Columns, 1fr); gap: 4px;">
-        @for (var i = 0; i < activeLayout.Rows * activeLayout.Columns; i++)
-        {
-            var position = i;
-            var gridItem = activeLayout.Cameras?.FirstOrDefault(c => c.Position == position);
-            var camera = gridItem is not null
-                ? cameras.FirstOrDefault(c => c.Id == gridItem.CameraId)
-                : null;
+    @if (!Hub.IsConnected)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">
+            No live connection to the server, so streams cannot be started. The page reconnects by itself.
+        </MudAlert>
+    }
 
-            <MudPaper Class="pa-2" Elevation="1" Style="aspect-ratio: 16/9; position: relative; overflow: hidden; background: #1a1a2e;">
-                @if (camera is not null)
-                {
-                    @if (streamUrls.ContainsKey(camera.Id))
+    @if (activeLayout is not null)
+    {
+        <div style="display: grid; grid-template-columns: repeat(@activeLayout.Columns, 1fr); gap: 4px;">
+            @for (var i = 0; i < activeLayout.Rows * activeLayout.Columns; i++)
+            {
+                var position = i;
+                var gridItem = activeLayout.Cameras?.FirstOrDefault(c => c.Position == position);
+                var camera = gridItem is not null
+                    ? cameras.FirstOrDefault(c => c.Id == gridItem.CameraId)
+                    : null;
+
+                <div class="live-tile">
+                    @if (camera is not null)
                     {
-                        <video id="video-@camera.Id" autoplay muted playsinline controls
-                               style="width: 100%; height: 100%; object-fit: contain;"></video>
-                        <div style="position: absolute; bottom: 4px; right: 4px; display: flex; gap: 4px; align-items: center;">
-                            <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                        @if (streamUrls.ContainsKey(camera.Id))
+                        {
+                            @* The browser's own controls turn with a turned picture, so they are left out then. *@
+                            <video id="video-@camera.Id"
+                                   autoplay
+                                   muted
+                                   playsinline
+                                   controls="@(!VideoRotationStyle.IsRotated(camera.Rotation))"
+                                   style="@VideoRotationStyle.For(camera.Rotation)"></video>
+                            <div style="position: absolute; bottom: 4px; right: 4px;">
+                                <MudTooltip Text="Stop">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => StopStreamAsync(camera.Id))"
+                                                   Style="background: rgba(0,0,0,0.6); border-radius: 4px;" />
+                                </MudTooltip>
+                            </div>
+                        }
+                        else if (starting.Contains(camera.Id))
+                        {
+                            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%;" Spacing="2">
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                <MudText Typo="Typo.caption" Style="color: #bbb;">Starting the stream...</MudText>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%; padding: 8px;" Spacing="2">
+                                @if (errors.TryGetValue(camera.Id, out var error))
+                                {
+                                    <MudText Typo="Typo.caption" Align="Align.Center" Style="color: #ffb4a9; max-height: 60%; overflow: auto;">@error</MudText>
+                                }
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
                                            Size="Size.Small"
-                                           Color="Color.Error"
-                                           OnClick="@(() => StopStreamAsync(camera.Id))"
-                                           Style="background: rgba(0,0,0,0.6); border-radius: 4px;" />
-                            <span style="background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 4px;">
-                                <MudText Typo="Typo.caption" Style="color: lime;">Streaming</MudText>
-                            </span>
+                                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                                           Disabled="!Hub.IsConnected"
+                                           OnClick="@(() => StartStreamAsync(camera.Id))">
+                                    @(errors.ContainsKey(camera.Id) ? "Try again" : "Start")
+                                </MudButton>
+                            </MudStack>
+                        }
+                        <div class="live-tile-label" style="top: 4px; left: 4px;">
+                            <MudText Typo="Typo.caption">@camera.DisplayName</MudText>
                         </div>
+                        @if (motionStates.TryGetValue(camera.Id, out var motion) && motion.IsActive)
+                        {
+                            <svg viewBox="0 0 @motion.AnalysisWidth @motion.AnalysisHeight"
+                                 preserveAspectRatio="none"
+                                 style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;">
+                                @foreach (var box in motion.BoundingBoxes)
+                                {
+                                    <rect x="@box.X" y="@box.Y"
+                                          width="@box.Width" height="@box.Height"
+                                          fill="none" stroke="red" stroke-width="2" />
+                                }
+                            </svg>
+                            <div class="live-tile-label" style="top: 4px; right: 4px; background: rgba(220,20,20,0.85); animation: pulse-motion 1s ease-in-out infinite;">
+                                <MudText Typo="Typo.caption" Style="font-weight: bold;">MOTION</MudText>
+                            </div>
+                        }
                     }
                     else
                     {
                         <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%;">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="@(() => StartStreamAsync(camera.Id))">
-                                Start Stream
-                            </MudButton>
+                            <MudText Typo="Typo.caption" Style="color: #777;">Empty</MudText>
                         </MudStack>
                     }
-                    <div style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 4px;">
-                        <MudText Typo="Typo.caption" Style="color: white;">@camera.DisplayName</MudText>
-                    </div>
-                    @if (motionStates.TryGetValue(camera.Id, out var motion) && motion.IsActive)
-                    {
-                        <svg viewBox="0 0 @motion.AnalysisWidth @motion.AnalysisHeight"
-                             preserveAspectRatio="none"
-                             style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;">
-                            @foreach (var box in motion.BoundingBoxes)
-                            {
-                                <rect x="@box.X" y="@box.Y"
-                                      width="@box.Width" height="@box.Height"
-                                      fill="none" stroke="red" stroke-width="2" />
-                            }
-                        </svg>
-                        <div style="position: absolute; top: 4px; right: 4px; background: rgba(220,20,20,0.85); padding: 2px 8px; border-radius: 4px; animation: pulse-motion 1s ease-in-out infinite;">
-                            <MudText Typo="Typo.caption" Style="color: white; font-weight: bold;">MOTION</MudText>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%;">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Empty</MudText>
-                    </MudStack>
-                }
-            </MudPaper>
-        }
-    </div>
-}
-else if (isLoading)
-{
-    <MudProgressCircular Indeterminate="true" />
-}
-else
-{
-    <MudText Color="Color.Secondary">Select a layout and click Apply to view cameras.</MudText>
+                </div>
+            }
+        </div>
+    }
 }
 
 @code {
-    private Layout[]? layouts;
-    private Camera[]? cameras;
+    // The server stops a stream nobody has asked about for a minute.
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(20);
+
+    private Layout[] layouts = [];
+    private Camera[] cameras = [];
     private Layout? activeLayout;
     private Guid selectedLayoutId;
     private bool isLoading = true;
     private readonly Dictionary<Guid, string> streamUrls = new();
+    private readonly HashSet<Guid> starting = new();
+    private readonly Dictionary<Guid, string> errors = new();
     private readonly HashSet<Guid> pendingStreamInits = new();
     private readonly Dictionary<Guid, MotionState> motionStates = new();
+    private readonly CancellationTokenSource heartbeatCancellation = new();
+
+    private bool HasStoppedTiles
+        => LayoutCameraIds().Any(id => !streamUrls.ContainsKey(id) && !starting.Contains(id));
 
     protected override async Task OnInitializedAsync()
     {
         Hub.OnStreamStarted += OnStreamStarted;
         Hub.OnConnectionStateChanged += OnConnectionStateChanged;
         Hub.OnMotionDetected += OnMotionDetected;
+        Hub.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
 
         await Hub.ConnectAsync();
 
-        layouts = await Gateway.GetLayoutsAsync();
-        cameras = await Gateway.GetCamerasAsync();
+        layouts = await Gateway.GetLayoutsAsync() ?? [];
+        cameras = await Gateway.GetCamerasAsync() ?? [];
 
-        if (layouts?.Length > 0)
+        if (layouts.Length > 0)
         {
+            // The layout is shown straight away; its streams start on request.
             selectedLayoutId = layouts[0].Id;
+            activeLayout = layouts[0];
         }
 
         isLoading = false;
+        _ = RunHeartbeatAsync(heartbeatCancellation.Token);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -168,65 +237,125 @@ else
         }
     }
 
-    private async Task ApplySelectedLayoutAsync()
+    private IEnumerable<Guid> LayoutCameraIds()
+        => (activeLayout?.Cameras ?? [])
+            .Select(c => c.CameraId)
+            .Where(id => cameras.Any(c => c.Id == id))
+            .Distinct();
+
+    private async Task OnLayoutChangedAsync(Guid layoutId)
     {
-        if (selectedLayoutId == Guid.Empty)
+        selectedLayoutId = layoutId;
+        var next = layouts.FirstOrDefault(l => l.Id == layoutId);
+
+        // Streams of cameras that are not in the new layout are let go.
+        var keep = (next?.Cameras ?? []).Select(c => c.CameraId).ToHashSet();
+        foreach (var cameraId in streamUrls.Keys.Concat(starting).Where(id => !keep.Contains(id)).ToList())
         {
-            return;
+            await StopStreamAsync(cameraId);
         }
 
-        activeLayout = await Gateway.ApplyLayoutAsync(selectedLayoutId);
-        if (activeLayout is null)
+        activeLayout = next;
+    }
+
+    private async Task SetAsStartupLayoutAsync()
+    {
+        var applied = await Gateway.ApplyLayoutAsync(selectedLayoutId);
+        Snackbar.Add(
+            applied is null ? "The layout could not be set as the start-up layout." : $"'{applied.Name}' is now the start-up layout.",
+            applied is null ? Severity.Error : Severity.Success);
+    }
+
+    private Task StartAllAsync()
+        => Task.WhenAll(LayoutCameraIds()
+            .Where(id => !streamUrls.ContainsKey(id) && !starting.Contains(id))
+            .Select(StartStreamAsync)
+            .ToList());
+
+    private async Task StopAllAsync()
+    {
+        foreach (var cameraId in streamUrls.Keys.Concat(starting).Distinct().ToList())
         {
-            Snackbar.Add("Failed to apply layout.", Severity.Error);
-            return;
+            await StopStreamAsync(cameraId);
         }
-
-        if (activeLayout.Cameras is null || cameras is null || !Hub.IsConnected)
-        {
-            return;
-        }
-
-        var startTasks = activeLayout.Cameras
-            .Where(lc => !streamUrls.ContainsKey(lc.CameraId)
-                         && cameras.Any(c => c.Id == lc.CameraId))
-            .Select(lc => StartStreamAsync(lc.CameraId));
-
-        await Task.WhenAll(startTasks);
     }
 
     private async Task StartStreamAsync(Guid cameraId)
     {
-        if (!Hub.IsConnected)
+        if (!Hub.IsConnected || !starting.Add(cameraId))
         {
-            Snackbar.Add("Hub not connected. Cannot start stream.", Severity.Warning);
             return;
         }
 
+        errors.Remove(cameraId);
+        StateHasChanged();
+
         try
         {
+            // Returns when the stream is ready; OnStreamStarted shows it.
             await Hub.StartStreamAsync(cameraId);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to start stream: {ex.Message}", Severity.Error);
+            errors[cameraId] = ex.Message;
+        }
+        finally
+        {
+            starting.Remove(cameraId);
+            StateHasChanged();
         }
     }
 
     private async Task StopStreamAsync(Guid cameraId)
     {
+        starting.Remove(cameraId);
+        errors.Remove(cameraId);
+
         try
         {
             await Hub.StopStreamAsync(cameraId);
-            if (streamUrls.Remove(cameraId))
-            {
-                await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
-                StateHasChanged();
-            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to stop stream: {ex.Message}", Severity.Error);
+            Snackbar.Add($"The stream could not be stopped: {ex.Message}", Severity.Error);
+        }
+
+        if (streamUrls.Remove(cameraId))
+        {
+            await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Tells the server, for as long as the page is open, that the streams
+    /// are being watched. Without it the server takes a stream for abandoned
+    /// and stops it after a minute.
+    /// </summary>
+    private async Task RunHeartbeatAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(HeartbeatInterval);
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                foreach (var cameraId in streamUrls.Keys.ToList())
+                {
+                    try
+                    {
+                        await Hub.StreamHeartbeatAsync(cameraId);
+                    }
+                    catch (Exception)
+                    {
+                        // The connection dropped; the next tick tries again.
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The page was closed.
         }
     }
 
@@ -234,8 +363,8 @@ else
     {
         InvokeAsync(() =>
         {
-            var url = $"{Gateway.ApiBaseUrl}{e.PlaylistUrl}";
-            streamUrls[e.CameraId] = url;
+            streamUrls[e.CameraId] = $"{Gateway.ApiBaseUrl.TrimEnd('/')}{e.PlaylistUrl}";
+            errors.Remove(e.CameraId);
             pendingStreamInits.Add(e.CameraId);
             StateHasChanged();
         });
@@ -250,10 +379,14 @@ else
                 && streamUrls.Remove(e.CameraId))
             {
                 await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{e.CameraId}");
+                errors[e.CameraId] = "The camera disconnected.";
                 StateHasChanged();
             }
         });
     }
+
+    private void OnHubConnectionStateChanged(string state)
+        => InvokeAsync(StateHasChanged);
 
     private void OnMotionDetected(SurveillanceHubService.MotionDetectedEvent e)
     {
@@ -281,10 +414,23 @@ else
         Hub.OnStreamStarted -= OnStreamStarted;
         Hub.OnConnectionStateChanged -= OnConnectionStateChanged;
         Hub.OnMotionDetected -= OnMotionDetected;
+        Hub.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
 
-        foreach (var cameraId in streamUrls.Keys)
+        await heartbeatCancellation.CancelAsync();
+        heartbeatCancellation.Dispose();
+
+        // Leaving the page lets the server stop the transcoders right away.
+        foreach (var cameraId in streamUrls.Keys.ToList())
         {
-            await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
+            try
+            {
+                await Hub.StopStreamAsync(cameraId);
+                await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
+            }
+            catch (Exception)
+            {
+                // The connection or the page is already gone.
+            }
         }
     }
 

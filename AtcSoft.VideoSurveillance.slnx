@@ -50,6 +50,7 @@
     <Project Path="test/AtcSoft.VideoEngine.Tests/AtcSoft.VideoEngine.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoEngine.Windows.Tests/AtcSoft.VideoEngine.Windows.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Api.Tests/AtcSoft.VideoSurveillance.Api.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Blazor.App.Tests/AtcSoft.VideoSurveillance.Blazor.App.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Core.Tests/AtcSoft.VideoSurveillance.Core.Tests.csproj" />
     <Project Path="test/AtcSoft.CameraWall.Wpf.Tests/AtcSoft.CameraWall.Wpf.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Core.Tests/AtcSoft.VideoSurveillance.Wpf.Core.Tests.csproj" />

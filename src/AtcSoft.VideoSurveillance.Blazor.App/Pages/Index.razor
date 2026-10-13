@@ -5,131 +5,153 @@
 
 <MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
 
+@if (loadFailed)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        The server did not answer. Check that it is running, then reload the page.
+    </MudAlert>
+}
+
 <MudGrid>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="12" sm="6" md="3">
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.Videocam" Size="Size.Large" Color="Color.Primary" />
                 <MudStack Spacing="0">
-                    <MudText Typo="Typo.h5">@cameraCount</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Cameras</MudText>
+                    <MudText Typo="Typo.h5">@board.CameraCount</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Cameras</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="12" sm="6" md="3">
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Large" Color="Color.Success" />
                 <MudStack Spacing="0">
-                    <MudText Typo="Typo.h5">@connectedCount</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Connected</MudText>
+                    <MudText Typo="Typo.h5">@board.ConnectedCount</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Connected</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Elevation="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Large" Color="Color.Error" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h5">@board.RecordingCount</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Recording now</MudText>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Large" Color="Color.Info" />
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@layoutCount</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Layouts</MudText>
-                </MudStack>
-            </MudStack>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="3">
-        <MudPaper Class="pa-4" Elevation="2">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Large" Color="Color.Error" />
-                <MudStack Spacing="0">
-                    <MudText Typo="Typo.h5">@recordingCount</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Active Recordings</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Layouts</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
     </MudItem>
 </MudGrid>
 
-<MudGrid Class="mt-4">
-    <MudItem xs="12" sm="6">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/cameras" StartIcon="@Icons.Material.Filled.Videocam" FullWidth="true">
-            Manage Cameras
-        </MudButton>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Href="/live" StartIcon="@Icons.Material.Filled.LiveTv" FullWidth="true">
-            Live View
-        </MudButton>
-    </MudItem>
-</MudGrid>
+<MudStack Row="true" Spacing="2" Class="mt-4" Wrap="Wrap.Wrap">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/live" StartIcon="@Icons.Material.Filled.LiveTv">Live view</MudButton>
+    <MudButton Variant="Variant.Outlined" Href="/recordings" StartIcon="@Icons.Material.Filled.VideoLibrary">Recordings</MudButton>
+    <MudButton Variant="Variant.Outlined" Href="/cameras" StartIcon="@Icons.Material.Filled.Videocam">Cameras</MudButton>
+</MudStack>
 
-<MudText Typo="Typo.caption" Class="mt-4" Color="Color.Secondary">
-    Hub: @Hub.ConnectionState
+@if (cameras.Length > 0)
+{
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">Cameras</MudText>
+    <MudPaper Elevation="1">
+        <MudList T="string" Dense="true">
+            @foreach (var camera in cameras)
+            {
+                <MudListItem T="string" Href="@($"/cameras/{camera.Id}/edit")">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle"
+                                 Size="Size.Small"
+                                 Color="@(board.IsConnected(camera.Id) ? Color.Success : Color.Default)" />
+                        <MudText>@camera.DisplayName</MudText>
+                        <MudSpacer />
+                        @if (board.IsRecording(camera.Id))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error">Recording</MudChip>
+                        }
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                            @(board.IsConnected(camera.Id) ? "Connected" : "Not connected")
+                        </MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+}
+else if (!isLoading && !loadFailed)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-6" Style="max-width: 700px;">
+        No cameras yet.
+        <MudLink Href="/cameras/create" Class="ml-1">Add the first camera</MudLink>
+    </MudAlert>
+}
+
+<MudText Typo="Typo.caption" Class="mt-4 mud-text-secondary">
+    Live updates: @(Hub.IsConnected ? "on" : Hub.ConnectionState)
 </MudText>
 
 @code {
-    private int cameraCount;
-    private int connectedCount;
+    private readonly CameraStatusBoard board = new();
+    private Camera[] cameras = [];
     private int layoutCount;
-    private int recordingCount;
+    private bool isLoading = true;
+    private bool loadFailed;
 
     protected override async Task OnInitializedAsync()
     {
         Hub.OnConnectionStateChanged += OnConnectionStateChanged;
         Hub.OnRecordingStateChanged += OnRecordingStateChanged;
+        Hub.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
 
         await Hub.ConnectAsync();
 
-        var cameras = await Gateway.GetCamerasAsync();
-        cameraCount = cameras?.Length ?? 0;
+        var loaded = await Gateway.GetCamerasAsync();
+        loadFailed = loaded is null;
+        cameras = [.. (loaded ?? []).OrderBy(c => c.DisplayName, StringComparer.CurrentCultureIgnoreCase)];
 
-        var layouts = await Gateway.GetLayoutsAsync();
-        layoutCount = layouts?.Length ?? 0;
+        // The counts come from the cameras' own states, so they are right
+        // from the start and cannot drift as events arrive.
+        board.Load(cameras.Select(c => (c.Id, c.ConnectionState == CameraConnectionState.Connected, c.IsRecording)));
 
-        var recordings = await Gateway.GetRecordingsAsync();
-        recordingCount = recordings?.Length ?? 0;
+        layoutCount = (await Gateway.GetLayoutsAsync())?.Length ?? 0;
+        isLoading = false;
     }
 
     private void OnConnectionStateChanged(SurveillanceHubService.ConnectionStateEvent e)
-    {
-        InvokeAsync(() =>
+        => InvokeAsync(() =>
         {
-            if (string.Equals(e.NewState, "Connected", StringComparison.OrdinalIgnoreCase))
-            {
-                connectedCount++;
-            }
-            else if (string.Equals(e.NewState, "Disconnected", StringComparison.OrdinalIgnoreCase)
-                     || string.Equals(e.NewState, "Error", StringComparison.OrdinalIgnoreCase))
-            {
-                connectedCount = Math.Max(0, connectedCount - 1);
-            }
-
+            board.ApplyConnectionState(e.CameraId, e.NewState);
             StateHasChanged();
         });
-    }
 
     private void OnRecordingStateChanged(SurveillanceHubService.RecordingStateEvent e)
-    {
-        InvokeAsync(() =>
+        => InvokeAsync(() =>
         {
-            if (string.Equals(e.NewState, "Recording", StringComparison.OrdinalIgnoreCase))
-            {
-                recordingCount++;
-            }
-            else if (string.Equals(e.OldState, "Recording", StringComparison.OrdinalIgnoreCase))
-            {
-                recordingCount = Math.Max(0, recordingCount - 1);
-            }
-
+            board.ApplyRecordingState(e.CameraId, e.NewState);
             StateHasChanged();
         });
-    }
+
+    private void OnHubConnectionStateChanged(string state)
+        => InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
         Hub.OnConnectionStateChanged -= OnConnectionStateChanged;
         Hub.OnRecordingStateChanged -= OnRecordingStateChanged;
+        Hub.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
     }
 }

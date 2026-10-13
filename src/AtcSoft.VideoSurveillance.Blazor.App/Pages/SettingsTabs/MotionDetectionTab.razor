@@ -1,26 +1,72 @@
-<MudText Typo="Typo.subtitle1" Class="mb-2">Analysis</MudText>
-<MudNumericField @bind-Value="State.MotionSensitivity" Label="Sensitivity" Min="1" Max="100" Class="mt-2" />
-<MudNumericField @bind-Value="State.MinimumChangePercent" Label="Minimum Change (%)" Min="0.01" Max="100.0" Step="0.1" Class="mt-2" />
-<MudNumericField @bind-Value="State.AnalysisFrameRate" Label="Analysis Frame Rate" Min="1" Max="15" Class="mt-2" />
-<MudNumericField @bind-Value="State.AnalysisWidth" Label="Analysis Width" Min="80" Max="1920" Class="mt-2" />
-<MudNumericField @bind-Value="State.AnalysisHeight" Label="Analysis Height" Min="60" Max="1080" Class="mt-2" />
-<MudNumericField @bind-Value="State.PostMotionDurationSeconds" Label="Post Motion Duration (seconds)" Min="1" Max="60" Class="mt-2" />
-<MudNumericField @bind-Value="State.CooldownSeconds" Label="Cooldown (seconds)" Min="0" Max="60" Class="mt-2" />
+<MudText Typo="Typo.subtitle1" Class="mb-1">Analysis</MudText>
+<MudSelect @bind-Value="State.MotionSensitivity" Label="Sensitivity" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.MotionSensitivities, State.MotionSensitivity, v => v.ToString(CultureInfo.InvariantCulture)))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+<MudNumericField @bind-Value="State.MinimumChangePercent"
+                 Label="Minimum change (%)"
+                 HelperText="How much of the picture has to change before it counts as motion."
+                 Min="0.1" Max="100.0" Step="0.1"
+                 Class="mt-2" />
+<MudSelect @bind-Value="State.AnalysisResolution" Label="Analysis resolution" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.AnalysisResolutions, State.AnalysisResolution, v => v.Replace("x", " x ", StringComparison.Ordinal)))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+<MudNumericField @bind-Value="State.AnalysisFrameRate" Label="Analysis frame rate (per second)" Min="1" Max="30" Class="mt-2" />
+<MudSelect @bind-Value="State.PostMotionDurationSeconds"
+           Label="Keep recording after motion"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.PostMotionDurations, State.PostMotionDurationSeconds, v => $"{v} seconds"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+<MudNumericField @bind-Value="State.CooldownSeconds"
+                 Label="Cooldown (seconds)"
+                 HelperText="The pause before the same camera can report motion again."
+                 Min="1" Max="60"
+                 Class="mt-2" />
 
 <MudDivider Class="my-4" />
 
-<MudText Typo="Typo.subtitle1" Class="mb-2">Bounding Box</MudText>
-<MudCheckBox @bind-Value="State.BoundingBoxShowInGrid" Label="Show in grid view" Class="mt-2" />
-<MudCheckBox @bind-Value="State.BoundingBoxShowInFullScreen" Label="Show in full screen" Class="mt-2" />
-<MudTextField @bind-Value="State.BoundingBoxColor" Label="Color" Class="mt-2" />
-<MudNumericField @bind-Value="State.BoundingBoxThickness" Label="Thickness" Min="1" Max="10" Class="mt-2" />
-<MudNumericField @bind-Value="State.BoundingBoxMinArea" Label="Min Area (pixels)" Min="10" Max="10000" Class="mt-2" />
+<MudText Typo="Typo.subtitle1" Class="mb-1">Bounding box</MudText>
+<SettingSwitch @bind-Value="State.BoundingBoxShowInGrid" Label="Show in the camera grid" />
+<SettingSwitch @bind-Value="State.BoundingBoxShowInFullScreen" Label="Show in full screen" />
+<MudSelect @bind-Value="State.BoundingBoxColor" Label="Colour" Class="mt-2">
+    @foreach (var name in ColorOptions(State.BoundingBoxColor))
+    {
+        <MudSelectItem Value="@name">
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+        </MudSelectItem>
+    }
+</MudSelect>
+<MudSelect @bind-Value="State.BoundingBoxThickness" Label="Thickness" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.BoundingBoxThicknesses, State.BoundingBoxThickness, v => $"{v} px"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+<MudSelect @bind-Value="State.BoundingBoxMinArea" Label="Smallest area that gets a box" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.BoundingBoxMinAreas, State.BoundingBoxMinArea, v => $"{v} pixels"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
 <MudNumericField @bind-Value="State.BoundingBoxPadding" Label="Padding (pixels)" Min="0" Max="100" Class="mt-2" />
 
-<MudText Class="mt-4 mb-1">Smoothing: @State.BoundingBoxSmoothing.ToString("F2")</MudText>
+<MudText Class="mt-4 mb-1">Smoothing: @State.BoundingBoxSmoothing.ToString("F2", CultureInfo.InvariantCulture)</MudText>
 <MudSlider @bind-Value="State.BoundingBoxSmoothing" Min="0.0" Max="1.0" Step="0.05" />
 
 @code {
     [Parameter, EditorRequired]
     public SettingsState State { get; set; } = null!;
+
+    private static IEnumerable<string> ColorOptions(string current)
+        => ColorChoices.Names.Contains(current, StringComparer.Ordinal)
+            ? ColorChoices.Names
+            : [.. ColorChoices.Names, current];
 }

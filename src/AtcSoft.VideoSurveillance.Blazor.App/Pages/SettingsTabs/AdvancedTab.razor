@@ -1,5 +1,12 @@
-<MudCheckBox @bind-Value="State.EnableDebugLogging" Label="Enable debug logging" Class="mt-2" />
-<MudTextField @bind-Value="State.LogPath" Label="Log Path" Class="mt-2" />
+<MudText Typo="Typo.subtitle1" Class="mb-1">Logging</MudText>
+<SettingSwitch @bind-Value="State.EnableDebugLogging"
+               Label="Write a debug log"
+               Help="Takes effect the next time the server starts." />
+<MudTextField @bind-Value="State.LogPath"
+              Label="Log folder"
+              HelperText="A folder on the server."
+              Disabled="!State.EnableDebugLogging"
+              Class="mt-2" />
 
 @code {
     [Parameter, EditorRequired]

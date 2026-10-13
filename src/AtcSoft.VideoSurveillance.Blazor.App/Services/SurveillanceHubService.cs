@@ -154,6 +154,20 @@ public sealed class SurveillanceHubService : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Tells the server a stream is still being watched. The server stops a
+    /// stream it has not heard about for a minute.
+    /// </summary>
+    public async Task StreamHeartbeatAsync(Guid cameraId)
+    {
+        if (hubConnection?.State == HubConnectionState.Connected)
+        {
+            await hubConnection
+                .InvokeAsync("StreamHeartbeat", cameraId)
+                .ConfigureAwait(false);
+        }
+    }
+
     public async Task DisconnectAsync()
     {
         if (hubConnection is not null)

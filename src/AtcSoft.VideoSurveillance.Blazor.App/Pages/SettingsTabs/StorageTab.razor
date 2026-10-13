@@ -1,0 +1,92 @@
+<MudText Typo="Typo.subtitle1" Class="mb-1">Recording segments</MudText>
+<SettingSwitch @bind-Value="State.EnableHourlySegmentation"
+               Label="Split recordings into segments"
+               Help="A recording starts a new file on the clock, so no single file grows for days." />
+<MudSelect @bind-Value="State.MaxRecordingDurationMinutes"
+           Label="Longest segment"
+           Disabled="!State.EnableHourlySegmentation"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.MaxRecordingDurations, State.MaxRecordingDurationMinutes, v => $"{v} minutes"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.subtitle1" Class="mb-1">Clean-up</MudText>
+<MudSelect @bind-Value="State.CleanupSchedule" Label="Delete old media" Class="mt-2">
+    <MudSelectItem Value="AppSettingsCleanupSchedule.Disabled">Never</MudSelectItem>
+    <MudSelectItem Value="AppSettingsCleanupSchedule.OnStartup">When the server starts</MudSelectItem>
+    <MudSelectItem Value="AppSettingsCleanupSchedule.OnStartupAndPeriodically">When the server starts, and regularly</MudSelectItem>
+</MudSelect>
+<MudSelect @bind-Value="State.RecordingRetentionDays"
+           Label="Keep recordings for"
+           Disabled="@CleanupDisabled"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.RetentionPeriods, State.RecordingRetentionDays, v => $"{v} days"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+<SettingSwitch @bind-Value="State.CleanupIncludeSnapshots"
+               Label="Delete old snapshots too"
+               Disabled="@CleanupDisabled"
+               Class="mt-2" />
+<MudSelect @bind-Value="State.SnapshotRetentionDays"
+           Label="Keep snapshots for"
+           Disabled="@(CleanupDisabled || !State.CleanupIncludeSnapshots)"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.RetentionPeriods, State.SnapshotRetentionDays, v => $"{v} days"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+
+<SettingSwitch @bind-Value="State.EnableDiskSpaceGuard"
+               Label="Delete the oldest recordings when disk space runs low"
+               Help="Works whether or not old media is deleted on a schedule. When nothing is left to delete, recording stops instead of filling the disk."
+               Class="mt-4" />
+<MudSelect @bind-Value="State.MinFreeSpaceMb"
+           Label="Free space to keep"
+           Disabled="!State.EnableDiskSpaceGuard"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.MinFreeSpaces, State.MinFreeSpaceMb, v => $"{v} MB"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
+
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.subtitle1" Class="mb-1">Playback overlay in the desktop apps</MudText>
+<SettingSwitch @bind-Value="State.PlaybackShowFilename" Label="Show the file name" />
+<MudSelect @bind-Value="State.PlaybackFilenameColor" Label="File name colour" Disabled="!State.PlaybackShowFilename" Class="mt-2">
+    @foreach (var name in ColorOptions(State.PlaybackFilenameColor))
+    {
+        <MudSelectItem Value="@name">
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+        </MudSelectItem>
+    }
+</MudSelect>
+<SettingSwitch @bind-Value="State.PlaybackShowTimestamp" Label="Show the time" Class="mt-2" />
+<MudSelect @bind-Value="State.PlaybackTimestampColor" Label="Time colour" Disabled="!State.PlaybackShowTimestamp" Class="mt-2">
+    @foreach (var name in ColorOptions(State.PlaybackTimestampColor))
+    {
+        <MudSelectItem Value="@name">
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsState State { get; set; } = null!;
+
+    private bool CleanupDisabled => State.CleanupSchedule == AppSettingsCleanupSchedule.Disabled;
+
+    private static IEnumerable<string> ColorOptions(string current)
+        => ColorChoices.Names.Contains(current, StringComparer.Ordinal)
+            ? ColorChoices.Names
+            : [.. ColorChoices.Names, current];
+}

@@ -7,64 +7,134 @@
 
 <MudText Typo="Typo.h4" Class="mb-4">Recordings</MudText>
 
-<MudStack Row="true" AlignItems="AlignItems.End" Spacing="2" Class="mb-4">
-    <MudTextField @bind-Value="filterCameraIdText"
-                  Label="Filter by Camera ID"
-                  Placeholder="Leave empty for all"
-                  Style="max-width: 350px;" />
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadRecordingsAsync">
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
+    <MudSelect T="Guid?"
+               Value="filter.CameraId"
+               ValueChanged="OnCameraFilterChanged"
+               Label="Camera"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Style="min-width: 220px; max-width: 320px;">
+        <MudSelectItem T="Guid?" Value="@((Guid?)null)">All cameras</MudSelectItem>
+        @foreach (var (id, name) in cameraChoices)
+        {
+            <MudSelectItem T="Guid?" Value="@((Guid?)id)">@name</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="RecordingDayFilter"
+               Value="filter.Day"
+               ValueChanged="OnDayFilterChanged"
+               Label="Day"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Style="min-width: 160px; max-width: 220px;">
+        <MudSelectItem Value="RecordingDayFilter.All">All</MudSelectItem>
+        <MudSelectItem Value="RecordingDayFilter.Today">Today</MudSelectItem>
+        <MudSelectItem Value="RecordingDayFilter.Yesterday">Yesterday</MudSelectItem>
+        <MudSelectItem Value="RecordingDayFilter.Last7Days">Last 7 days</MudSelectItem>
+        <MudSelectItem Value="RecordingDayFilter.Last30Days">Last 30 days</MudSelectItem>
+    </MudSelect>
+    <MudSpacer />
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">@StatusText</MudText>
+    <MudButton Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="LoadRecordingsAsync"
+               Disabled="isLoading">
         Refresh
     </MudButton>
 </MudStack>
 
-@if (isLoading)
+@if (loadFailed)
 {
-    <MudProgressCircular Indeterminate="true" />
-}
-else
-{
-    <MudTable Items="@recordings" Hover="true" Striped="true" Dense="true">
-        <HeaderContent>
-            <MudTh>Camera</MudTh>
-            <MudTh>File Path</MudTh>
-            <MudTh>Started</MudTh>
-            <MudTh>Duration</MudTh>
-            <MudTh>Size</MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Camera">@(context.CameraName ?? context.CameraId.ToString()[..8])</MudTd>
-            <MudTd DataLabel="File Path">
-                <MudText Typo="Typo.body2" Style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    @context.FilePath
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Started">@context.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</MudTd>
-            <MudTd DataLabel="Duration">@(context.Duration ?? "-")</MudTd>
-            <MudTd DataLabel="Size">@FormatSize(context.FileSizeBytes)</MudTd>
-            <MudTd>
-                @if (!string.IsNullOrEmpty(context.FilePath))
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
-                                   Size="Size.Small"
-                                   Color="Color.Primary"
-                                   OnClick="@(() => PlayRecordingAsync(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Download"
-                                   Size="Size.Small"
-                                   OnClick="@(() => DownloadRecordingAsync(context))" />
-                }
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>No recordings found.</MudText>
-        </NoRecordsContent>
-    </MudTable>
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        The recordings could not be loaded. Check that the server is running, then refresh.
+    </MudAlert>
 }
 
+<MudTable Items="@visible"
+          Hover="true"
+          Dense="true"
+          Loading="isLoading"
+          RowsPerPage="25"
+          OnRowClick="@((TableRowClickEventArgs<Recording> e) => PlayRecordingAsync(e.Item))"
+          RowStyle="cursor: pointer;">
+    <HeaderContent>
+        <MudTh Style="width: 112px;">Thumbnail</MudTh>
+        <MudTh><MudTableSortLabel SortBy="@(new Func<Recording, object?>(r => r.CameraName))">Camera</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="@(new Func<Recording, object?>(r => r.StartedAt))">Started</MudTableSortLabel></MudTh>
+        <MudTh>Length</MudTh>
+        <MudTh><MudTableSortLabel SortBy="@(new Func<Recording, object?>(r => r.FileSizeBytes))">Size</MudTableSortLabel></MudTh>
+        <MudTh>File</MudTh>
+        <MudTh Style="width: 110px;"></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Thumbnail">
+            @if (RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, context.ThumbnailPath) is { } thumbnailUrl)
+            {
+                <img src="@thumbnailUrl"
+                     alt="Thumbnail of @context.CameraName"
+                     loading="lazy"
+                     style="width: 96px; height: 72px; object-fit: contain; background: #000; border-radius: 4px; display: block;" />
+            }
+            else
+            {
+                <div style="width: 96px; height: 72px; border-radius: 4px; background: rgba(128,128,128,0.15); display: flex; align-items: center; justify-content: center;">
+                    <MudIcon Icon="@Icons.Material.Outlined.HideImage" Color="Color.Default" />
+                </div>
+            }
+        </MudTd>
+        <MudTd DataLabel="Camera">
+            @(string.IsNullOrEmpty(context.CameraName) ? "Unknown camera" : context.CameraName)
+            @if (context.InProgress)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="ml-2">Recording</MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Started">@context.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</MudTd>
+        <MudTd DataLabel="Length">@RecordingDisplay.FormatDuration(context.Duration)</MudTd>
+        <MudTd DataLabel="Size">@RecordingDisplay.FormatSize(context.FileSizeBytes)</MudTd>
+        <MudTd DataLabel="File">
+            <MudText Typo="Typo.body2" Style="max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@context.FilePath">
+                @RecordingDisplay.FileName(context.FilePath)
+            </MudText>
+        </MudTd>
+        <MudTd>
+            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Play")">
+                <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               Disabled="context.InProgress"
+                               OnClick="@(() => PlayRecordingAsync(context))" />
+            </MudTooltip>
+            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Download")">
+                <MudIconButton Icon="@Icons.Material.Filled.Download"
+                               Size="Size.Small"
+                               Disabled="context.InProgress"
+                               OnClick="@(() => DownloadRecordingAsync(context))" />
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="pa-4">@(recordings.Length == 0 ? "No recordings yet." : "No recordings match the filters.")</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
 @code {
-    private Recording[]? recordings;
+    private readonly RecordingFilter filter = new();
+    private Recording[] recordings = [];
+    private List<Recording> visible = [];
+    private List<(Guid Id, string Name)> cameraChoices = [];
     private bool isLoading = true;
-    private string filterCameraIdText = string.Empty;
+    private bool loadFailed;
+    private bool reloadPending;
+
+    private string StatusText
+        => visible.Count == recordings.Length
+            ? $"{recordings.Length} recording(s)"
+            : $"{visible.Count} of {recordings.Length} recording(s)";
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,38 +148,75 @@ else
     {
         isLoading = true;
 
-        Guid? cameraId = Guid.TryParse(filterCameraIdText, out var parsed) ? parsed : null;
-        recordings = await Gateway.GetRecordingsAsync(cameraId);
+        // Everything is fetched once and filtered here, so changing a filter is instant.
+        var loaded = await Gateway.GetRecordingsAsync();
+        loadFailed = loaded is null;
+        recordings = loaded ?? [];
 
+        var cameras = await Gateway.GetCamerasAsync() ?? [];
+        cameraChoices =
+        [
+            .. cameras
+                .Select(c => (c.Id, Name: c.DisplayName ?? c.Id.ToString()))
+                .Concat(recordings
+                    .Where(r => r.CameraId != Guid.Empty && !string.IsNullOrEmpty(r.CameraName))
+                    .Select(r => (Id: r.CameraId, Name: r.CameraName!)))
+                .DistinctBy(c => c.Id)
+                .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase),
+        ];
+
+        ApplyFilter();
         isLoading = false;
     }
 
-    private void OnRecordingStateChanged(SurveillanceHubService.RecordingStateEvent e)
+    private void OnCameraFilterChanged(Guid? cameraId)
     {
-        if (string.Equals(e.NewState, "Stopped", StringComparison.OrdinalIgnoreCase))
-        {
-            InvokeAsync(async () =>
-            {
-                await LoadRecordingsAsync();
-                StateHasChanged();
-            });
-        }
+        filter.CameraId = cameraId;
+        ApplyFilter();
     }
 
-    private string GetRecordingFileUrl(Recording recording)
-        => Gateway.GetRecordingFileUrl(recording.FilePath);
-
-    private async Task PlayRecordingAsync(Recording recording)
+    private void OnDayFilterChanged(RecordingDayFilter day)
     {
-        var url = GetRecordingFileUrl(recording);
-        var title = !string.IsNullOrEmpty(recording.CameraName)
-            ? $"{recording.CameraName} - {recording.StartedAt.LocalDateTime:g}"
-            : $"Recording - {recording.StartedAt.LocalDateTime:g}";
+        filter.Day = day;
+        ApplyFilter();
+    }
 
+    private void ApplyFilter()
+        => visible = [.. filter.Apply(recordings, DateTimeOffset.Now)];
+
+    private void OnRecordingStateChanged(SurveillanceHubService.RecordingStateEvent e)
+    {
+        // A recording started, stopped or began a new file: the list changed.
+        // Several events arrive together at a segment switch; reload once.
+        if (reloadPending)
+        {
+            return;
+        }
+
+        reloadPending = true;
+        _ = InvokeAsync(async () =>
+        {
+            await Task.Delay(1000);
+            reloadPending = false;
+            await LoadRecordingsAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task PlayRecordingAsync(Recording? recording)
+    {
+        if (recording is null || recording.InProgress)
+        {
+            return;
+        }
+
+        var name = string.IsNullOrEmpty(recording.CameraName) ? "Recording" : recording.CameraName;
         var parameters = new DialogParameters<RecordingPlaybackDialog>
         {
-            { x => x.VideoUrl, url },
-            { x => x.Title, title },
+            { x => x.VideoUrl, RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, recording.FilePath) ?? string.Empty },
+            { x => x.Title, $"{name} - {recording.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}" },
+            { x => x.FileName, RecordingDisplay.FileName(recording.FilePath) },
+            { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(recording.FilePath) },
         };
 
         var options = new DialogOptions
@@ -117,6 +224,7 @@ else
             MaxWidth = MaxWidth.Large,
             FullWidth = true,
             CloseOnEscapeKey = true,
+            CloseButton = true,
         };
 
         await DialogService.ShowAsync<RecordingPlaybackDialog>("Playback", parameters, options);
@@ -124,35 +232,10 @@ else
 
     private async Task DownloadRecordingAsync(Recording recording)
     {
-        var url = GetRecordingFileUrl(recording);
-        var fileName = Path.GetFileName(recording.FilePath);
-        await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", url, fileName);
-    }
-
-    private static string FormatSize(long? bytes)
-    {
-        if (bytes is null or 0)
+        if (RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, recording.FilePath) is { } url)
         {
-            return "-";
+            await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", url, RecordingDisplay.FileName(recording.FilePath));
         }
-
-        var b = bytes.Value;
-        if (b >= 1024L * 1024 * 1024)
-        {
-            return $"{b / (1024.0 * 1024 * 1024):F2} GB";
-        }
-
-        if (b >= 1024 * 1024)
-        {
-            return $"{b / (1024.0 * 1024):F1} MB";
-        }
-
-        if (b >= 1024)
-        {
-            return $"{b / 1024.0:F1} KB";
-        }
-
-        return $"{b} B";
     }
 
     public void Dispose()
