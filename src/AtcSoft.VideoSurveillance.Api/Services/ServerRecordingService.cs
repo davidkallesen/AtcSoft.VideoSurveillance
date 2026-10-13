@@ -155,21 +155,27 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
             borrowedPipelines[camera.Id] = 0;
         }
 
-        // Forward subsequent pipeline connection-state changes onto the
-        // aggregated event so the broadcaster (and any other observer) sees
-        // disconnect/reconnect transitions without subscribing per-pipeline.
-        var capturedId = camera.Id;
-        EventHandler<ConnectionStateChangedEventArgs> handler = (_, e) =>
-            CameraConnectionStateChanged?.Invoke(capturedId, e.NewState);
-        pipeline.ConnectionStateChanged += handler;
-        connectionHandlers[camera.Id] = handler;
+        // A motion recording runs on a pipeline whose owner reports the
+        // camera's connection state already; a second report from here
+        // would tell clients the camera connected at every motion.
+        if (!startedByMotion)
+        {
+            // Forward subsequent pipeline connection-state changes onto the
+            // aggregated event so the broadcaster (and any other observer) sees
+            // disconnect/reconnect transitions without subscribing per-pipeline.
+            var capturedId = camera.Id;
+            EventHandler<ConnectionStateChangedEventArgs> handler = (_, e) =>
+                CameraConnectionStateChanged?.Invoke(capturedId, e.NewState);
+            pipeline.ConnectionStateChanged += handler;
+            connectionHandlers[camera.Id] = handler;
 
-        // Synthetic "Connected" so subscribers that join after the pipeline
-        // has already reached Connected (the typical case — StartRecording
-        // is called *after* the connection wait succeeds) still see the
-        // current state. Without this, the Blazor live view would show
-        // "Disconnected" until the next genuine state change.
-        CameraConnectionStateChanged?.Invoke(camera.Id, ConnectionState.Connected);
+            // Synthetic "Connected" so subscribers that join after the pipeline
+            // has already reached Connected (the typical case — StartRecording
+            // is called *after* the connection wait succeeds) still see the
+            // current state. Without this, the Blazor live view would show
+            // "Disconnected" until the next genuine state change.
+            CameraConnectionStateChanged?.Invoke(camera.Id, ConnectionState.Connected);
+        }
 
         StartThumbnail(camera, pipeline, filePath);
 

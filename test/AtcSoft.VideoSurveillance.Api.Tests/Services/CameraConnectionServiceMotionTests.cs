@@ -190,6 +190,7 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
 
         motionDetection.Received().StopDetection(camera.Id);
         recordingService.Received(1).StopRecording(camera.Id);
+        connectionStates.Received(1).Report(camera.Id, ConnectionState.Disconnected);
     }
 
     [Fact]

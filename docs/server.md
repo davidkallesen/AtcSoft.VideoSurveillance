@@ -61,6 +61,22 @@ The web client watches a camera through HLS. A client asks for a stream over the
 
 ---
 
+## 🏃 Motion detection
+
+A camera with *record on motion* on (the application's setting, or the camera's own override) is kept open by the server and watched.
+
+- **What counts as a motion:** from the first picture in which something moved until the scene has been quiet for the post-motion time. Something that pauses for a moment does not end it.
+- **Recording:** a motion starts a recording and its end stops it. After a motion recording, the next one waits for the cooldown. A camera that is *recorded on connect* as well is recording anyway; watching it only makes the motion events.
+- **Events:** clients get `MotionDetected` over SignalR for every analysed picture with movement (with the boxes, for overlays) and once when the motion is over. Webhooks get `motion.started` and `motion.stopped`, once each.
+- **How it looks:** up to four pictures a second, compared with the same analysis as the desktop app, at the analysis size from the settings. A higher analysis frame rate in the settings is capped at four.
+- **Cost:** each analysed picture is captured as a PNG and decoded again. Two USB cameras at 1280x720, both watched and recorded (which for a USB camera includes encoding), used about 1.4 processor cores.
+- **Windows only:** the pictures are decoded with GDI+. On another platform the server logs that motion detection is not available and runs without it.
+- **Settings are read when a camera starts being watched.** A change to the motion settings reaches a camera the next time it is opened; turning record-on-motion on or off takes effect within half a minute.
+- **USB cameras:** a watched USB camera is held by the server, so it cannot be streamed to the web client at the same time (the stream is refused with that reason).
+- **Starting a recording by hand** for a watched camera opens the camera a second time. That works for a network camera and fails for a USB camera.
+
+---
+
 ## 🔔 Webhooks
 
 The server can post what happens to other systems (Home Assistant, Slack, a script of your own). Every receiver under `Webhooks:Endpoints` gets an HTTP `POST` per event.

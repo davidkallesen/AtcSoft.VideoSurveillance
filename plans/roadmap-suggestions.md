@@ -53,7 +53,7 @@ Because `RecordingSession.CurrentFilePath` is get-only, `RecordingService.Segmen
 `MotionDetectionService.CaptureAndProcessAsync` / `ProcessCapturedFrame` catch blocks discard every exception with "Silently ignore." A corrupt JPEG, `System.Drawing` failure, or OOM produces "no motion ever detected" with **zero diagnostic trail**.
 **Fix:** Log at warning level with throttling; expose a consecutive-failure counter on the service.
 
-### 🟡 Server-side motion detection is a no-op stub
+### ✅ Server-side motion detection is a no-op stub *(Fixed 2026-10-13: the server watches cameras with record-on-motion, records while something moves and sends motion events and webhooks; see docs/server.md)*
 `ServerMotionDetectionService.RunDetectionLoopAsync` only `await Task.Delay(Timeout.Infinite)` and logs a warning; `MotionDetected` is never raised, no frames are analysed, and `GetAnalysisResolution` hard-returns `(320, 240)` ignoring settings. **Any server-hosted camera produces zero motion alerts and zero motion-triggered recordings.** This is a functional hole, not a tuning issue — it should be flagged prominently in docs until implemented.
 
 ### ✅ Low-severity cleanups *(Fixed — batch 1 & batch 2)*

@@ -588,6 +588,13 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             RecordFailure(camera);
             StopWatching(camera.Id);
             ScheduleDeferredDisposal(camera.Id);
+
+            // A recorded camera's state is reported by its recording. One
+            // that was only watched has nobody else to say it is gone.
+            if (!RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect))
+            {
+                connectionStates?.Report(camera.Id, ConnectionState.Disconnected);
+            }
         }
     }
 

@@ -58,6 +58,7 @@ public sealed class ServerRecordingServiceMotionTests : IDisposable
         sut.GetRecordingState(camera.Id).Should().Be(RecordingState.RecordingMotion);
         sut.GetSession(camera.Id)!.IsManualRecording.Should().BeFalse();
         stateChanges.Should().Equal((RecordingState.Idle, RecordingState.RecordingMotion));
+        connectionStates.Should().BeEmpty("the camera was connected already; whoever watches it has said so");
     }
 
     [Fact]

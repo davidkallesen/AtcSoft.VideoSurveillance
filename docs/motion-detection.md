@@ -222,6 +222,8 @@ Right-click a camera tile → **Edit** → navigate to the **Motion Detection** 
 
 ## 🌍 Setup: REST API Server
 
+The server watches every camera that has *record on motion* on, records while something moves, and sends motion events to its clients and webhooks. It analyses at most four pictures a second, and it needs Windows. See [server.md](server.md#-motion-detection) for how it behaves.
+
 ### 1. Configure Settings via API
 
 ```http
