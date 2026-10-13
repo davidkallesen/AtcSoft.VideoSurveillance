@@ -35,6 +35,25 @@ internal sealed unsafe class VideoDecoder : IDisposable
             ? codecCtx->pix_fmt
             : AVPixelFormat.None;
 
+    /// <summary>
+    /// Gets the layout the pictures have in memory: the decoder's own, or,
+    /// when the graphics card decodes, the one its pictures come back in.
+    /// </summary>
+    public AVPixelFormat MemoryPixelFormat
+    {
+        get
+        {
+            if (codecCtx is null)
+            {
+                return AVPixelFormat.None;
+            }
+
+            return hwAccelActive && codecCtx->sw_pix_fmt != AVPixelFormat.None
+                ? codecCtx->sw_pix_fmt
+                : codecCtx->pix_fmt;
+        }
+    }
+
     public string? CodecName => codec is not null
         ? Marshal.PtrToStringAnsi((IntPtr)codec->name)
         : null;

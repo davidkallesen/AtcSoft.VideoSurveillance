@@ -182,6 +182,71 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
         (await File.ReadAllTextAsync(playlist, cancellationToken)).Should().Contain("#EXT-X-ENDLIST", "a stream that was stopped says so");
     }
 
+    [Theory]
+    [InlineData(true, AVCodecID.H264)]
+    [InlineData(false, AVCodecID.Hevc)]
+    public async Task An_H265_Camera_Is_Recorded_As_H264_Only_When_That_Is_Asked_For(
+        bool transcodeToH264,
+        AVCodecID expectedCodec)
+    {
+        // H.265 halves the file, but not every player and no browser on
+        // Windows takes it. Recording it as H.264 is a choice.
+        TestEngine.Require();
+        var tool = FindFFmpegTool();
+        Assert.SkipWhen(tool is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var port = GetFreePort();
+        using var source = StartCompressedStream(tool!, port, "libx265");
+        var path = Path.Combine(directory, $"h265-{transcodeToH264}.mkv");
+
+        using (var player = new VideoPlayer(Microsoft.Extensions.Logging.Abstractions.NullLogger<VideoPlayer>.Instance))
+        {
+            try
+            {
+                player.Open(
+                    new Uri($"tcp://127.0.0.1:{port}"),
+                    new StreamOptions { HardwareAcceleration = false, TranscodeRecordingToH264 = transcodeToH264 });
+                await WaitUntilAsync(() => player.State == PlayerState.Playing && player.FramesDecoded > 0, cancellationToken);
+                player.StreamInfo!.CodecName.Should().Be("hevc");
+
+                player.StartRecording(path);
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                player.StopRecording();
+            }
+            finally
+            {
+                player.Close();
+                Stop(source);
+            }
+        }
+
+        var recorded = ReadBack(path);
+        recorded.Codec.Should().Be(expectedCodec);
+        recorded.Frames.Should().BeGreaterThan(15);
+        recorded.FirstIsKeyFrame.Should().BeTrue();
+    }
+
+    private static System.Diagnostics.Process StartCompressedStream(
+        string tool,
+        int port,
+        string encoder)
+    {
+        var start = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = tool,
+            Arguments =
+                "-hide_banner -loglevel error -re -f lavfi -i testsrc=size=320x240:rate=15 " +
+                $"-c:v {encoder} -preset ultrafast -tune zerolatency -g 15 -pix_fmt yuv420p -t 60 " +
+                $"-f mpegts \"tcp://127.0.0.1:{port}?listen=1\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        return System.Diagnostics.Process.Start(start)
+            ?? throw new InvalidOperationException("The test stream could not be started.");
+    }
+
     private static string? FindFFmpegTool()
     {
         var folder = VideoEngineBootstrap.FindFFmpegPath();

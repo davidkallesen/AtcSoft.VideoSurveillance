@@ -95,6 +95,15 @@ public sealed class StreamOptions
     public bool RecordAudio { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether recordings are made as
+    /// H.264 whatever the source sends. A source that sends anything else
+    /// (H.265, MJPEG) is then decoded and encoded again while it is
+    /// recorded, which costs processor time; H.264 is still copied as it
+    /// is. Off by default: the source's video is recorded untouched.
+    /// </summary>
+    public bool TranscodeRecordingToH264 { get; set; }
+
+    /// <summary>
     /// The FFmpeg input-format string corresponding to
     /// <see cref="InputFormat"/>, or <see langword="null"/> when set
     /// to <see cref="InputFormatKind.Auto"/> (let FFmpeg sniff).

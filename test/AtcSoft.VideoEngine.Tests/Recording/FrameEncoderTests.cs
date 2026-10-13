@@ -45,6 +45,38 @@ public sealed unsafe class FrameEncoderTests : IDisposable
         => FrameEncoder.IsNeededFor(codec).Should().Be(expected);
 
     [Theory]
+    [InlineData(AVCodecID.Hevc, true)]
+    [InlineData(AVCodecID.Mjpeg, true)]
+    [InlineData(AVCodecID.Rawvideo, true)]
+    [InlineData(AVCodecID.H264, false)]
+    public void When_Recordings_Are_Wanted_As_H264_Everything_Else_Is_Encoded(
+        AVCodecID codec,
+        bool expected)
+        => FrameEncoder.IsNeededFor(codec, transcodeToH264: true).Should().Be(expected, "H.264 is copied as it is: encoding it again would only cost time and quality");
+
+    [Fact]
+    public void A_Picture_In_Another_Layout_Than_The_Encoder_Was_Opened_For_Is_Still_Encoded()
+    {
+        // A camera decoded on the graphics card hands its pictures over in
+        // the card's layout, which is only known when the first one arrives.
+        TestEngine.Require();
+        var path = Path.Combine(directory, "other-layout.mkv");
+
+        using (var encoder = new FrameEncoder())
+        using (var remuxer = new Remuxer())
+        {
+            encoder.Open(Width, Height, AVPixelFormat.Yuv420p, FramesPerSecond);
+            remuxer.Open(path, encoder.CodecParameters, encoder.TimeBase);
+
+            EncodeFrames(encoder, remuxer, AVPixelFormat.Nv12, first: 0, count: 30);
+            encoder.Flush(packet => remuxer.WritePacket(packet, encoder.TimeBase));
+            remuxer.Close();
+        }
+
+        ReadBack(path).Frames.Should().Be(30);
+    }
+
+    [Theory]
     [InlineData("mp4", AVPixelFormat.Yuyv422)]
     [InlineData("mkv", AVPixelFormat.Yuyv422)]
     [InlineData("mp4", AVPixelFormat.Nv12)]

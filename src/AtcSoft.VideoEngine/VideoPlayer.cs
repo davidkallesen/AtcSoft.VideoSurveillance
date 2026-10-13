@@ -32,6 +32,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private FrameEncoder? frameEncoder;
     private AudioEncoder? audioEncoder;
     private volatile bool recordAudio;
+    private volatile bool transcodeToH264;
+
+    // Which of the two outputs takes the encoder's packets instead of the
+    // source's. A recording does when the source is uncompressed or
+    // recordings are wanted as H.264; a live stream only when the source is
+    // uncompressed. Both are guarded by encoderLock.
+    private bool recordingIsEncoded;
+    private bool liveIsEncoded;
+
+    // A picture decoded on the graphics card, copied back to memory for the encoder.
+    private AVFrame* memoryFrame;
     private FrameCapture? frameCapture;
 
     private AVFrame* latestFrame;
@@ -98,6 +109,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
         options ??= new StreamOptions();
         recordAudio = options.RecordAudio;
+        transcodeToH264 = options.TranscodeRecordingToH264;
         stopRequested = false;
         demuxCts = new CancellationTokenSource();
         var ct = demuxCts.Token;
@@ -155,7 +167,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         var sound = OpenAudioEncoder(source);
         try
         {
-            if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
+            if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id, transcodeToH264))
             {
                 StartEncodedRecording(outputFilePath, source, sourceDecoder, sound);
             }
@@ -191,11 +203,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
         lock (encoderLock)
         {
-            if (frameEncoder is not null && liveRemuxer is not { IsOpen: true })
+            if (frameEncoder is not null && recordingIsEncoded && !(liveIsEncoded && liveRemuxer is { IsOpen: true }))
             {
                 // What the encoder still holds belongs in this file. With a
-                // live stream running the encoder runs on, and holds nothing
-                // back anyway.
+                // live stream on the same encoder it runs on, and holds
+                // nothing back anyway.
                 frameEncoder.Flush(writeEncodedPacket);
                 frameEncoder.Dispose();
                 frameEncoder = null;
@@ -209,6 +221,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             }
 
             remuxer.Close();
+            recordingIsEncoded = false;
         }
 
         LogRecordingStopped();
@@ -240,7 +253,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             // The sound encoder runs on across the switch: the sound has no gap.
             var sound = audioEncoder is null ? null : audioEncoder.CodecParameters;
 
-            if (frameEncoder is not null)
+            if (frameEncoder is not null && recordingIsEncoded)
             {
                 // The recorder leaves out everything before a file's first
                 // key frame, so the new file is made to start with one.
@@ -307,6 +320,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                     (int)rotation,
                     sound is null ? null : sound.CodecParameters);
                 frameEncoder = encoder;
+                recordingIsEncoded = true;
                 audioEncoder = sound;
             }
             catch
@@ -335,7 +349,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         var encoder = new FrameEncoder();
         try
         {
-            encoder.Open(sourceDecoder.Width, sourceDecoder.Height, sourceDecoder.PixelFormat, framesPerSecond);
+            encoder.Open(sourceDecoder.Width, sourceDecoder.Height, sourceDecoder.MemoryPixelFormat, framesPerSecond);
             return encoder;
         }
         catch
@@ -349,8 +363,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private void ReleaseFrameEncoderIfUnused()
     {
         if (frameEncoder is null ||
-            remuxer is { IsOpen: true } ||
-            liveRemuxer is { IsOpen: true })
+            (recordingIsEncoded && remuxer is { IsOpen: true }) ||
+            (liveIsEncoded && liveRemuxer is { IsOpen: true }))
         {
             return;
         }
@@ -374,12 +388,12 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        if (remuxer is { IsOpen: true })
+        if (recordingIsEncoded && remuxer is { IsOpen: true })
         {
             remuxer.WritePacket(packet, frameEncoder.TimeBase);
         }
 
-        if (liveRemuxer is { IsOpen: true })
+        if (liveIsEncoded && liveRemuxer is { IsOpen: true })
         {
             liveRemuxer.WritePacket(packet, frameEncoder.TimeBase);
         }
@@ -415,10 +429,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                     frameEncoder = encoder;
                     encoder.RequestKeyFrame();
                     live.OpenLive(playlistPath, encoder.CodecParameters, encoder.TimeBase);
+                    liveIsEncoded = true;
                 }
                 else
                 {
+                    // A compressed source is passed on as it is, also while
+                    // its recording is being made as H.264.
                     live.OpenLive(playlistPath, source.VideoCodecParameters, source.VideoTimeBase);
+                    liveIsEncoded = false;
                 }
             }
             catch
@@ -445,6 +463,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
             liveRemuxer.Dispose();
             liveRemuxer = null;
+            liveIsEncoded = false;
             ReleaseFrameEncoderIfUnused();
         }
 
@@ -598,6 +617,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 audioEncoder = null;
                 liveRemuxer?.Dispose();
                 liveRemuxer = null;
+                liveIsEncoded = false;
+                recordingIsEncoded = false;
                 remuxer?.Dispose();
                 remuxer = null;
             }
@@ -619,6 +640,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 if (latestFrame is not null)
                 {
                     av_frame_free(ref latestFrame);
+                }
+            }
+
+            lock (encoderLock)
+            {
+                if (memoryFrame is not null)
+                {
+                    av_frame_free(ref memoryFrame);
                 }
             }
 
@@ -723,17 +752,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         // the encoder, and a raw packet would land in an H.264 file.
         lock (encoderLock)
         {
-            if (frameEncoder is null)
+            if (!recordingIsEncoded && remuxer is { IsOpen: true })
             {
-                if (remuxer is { IsOpen: true })
-                {
-                    remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
-                }
+                remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
+            }
 
-                if (liveRemuxer is { IsOpen: true })
-                {
-                    liveRemuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
-                }
+            if (!liveIsEncoded && liveRemuxer is { IsOpen: true })
+            {
+                liveRemuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
             }
         }
 
@@ -750,7 +776,10 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
             lock (encoderLock)
             {
-                frameEncoder?.Encode(decodedFrame, demuxer.VideoTimeBase, writeEncodedPacket);
+                if (frameEncoder is not null)
+                {
+                    frameEncoder.Encode(ToMemory(decodedFrame), demuxer.VideoTimeBase, writeEncodedPacket);
+                }
             }
 
             lock (frameLock)
@@ -762,6 +791,34 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             FramesDecoded++;
             UpdateFps();
         }
+    }
+
+    // A picture the graphics card decoded lives on the card. The encoder
+    // works in memory, so the picture is copied back; that copy is the cost
+    // of recording such a camera as H.264. Runs under encoderLock.
+    private AVFrame* ToMemory(AVFrame* frame)
+    {
+        if (frame->hw_frames_ctx is null)
+        {
+            return frame;
+        }
+
+        if (memoryFrame is null)
+        {
+            memoryFrame = av_frame_alloc();
+        }
+
+        av_frame_unref(memoryFrame);
+        if (av_hwframe_transfer_data(memoryFrame, frame, 0) < 0)
+        {
+            // Nothing the encoder can take: it leaves a picture without a size out.
+            av_frame_unref(memoryFrame);
+            return memoryFrame;
+        }
+
+        memoryFrame->pts = frame->pts;
+        memoryFrame->best_effort_timestamp = frame->best_effort_timestamp;
+        return memoryFrame;
     }
 
     private void UpdateFps()

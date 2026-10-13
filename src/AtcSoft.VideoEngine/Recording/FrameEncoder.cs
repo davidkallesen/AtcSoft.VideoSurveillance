@@ -35,6 +35,9 @@ internal sealed unsafe class FrameEncoder : IDisposable
     private int sourceWidth;
     private int sourceHeight;
     private AVPixelFormat sourceFormat;
+    private int encodedWidth;
+    private int encodedHeight;
+    private AVPixelFormat encodedFormat;
     private long frameDuration;
     private long lastPts = AV_NOPTS_VALUE;
     private long lastKeyFramePts = AV_NOPTS_VALUE;
@@ -62,6 +65,16 @@ internal sealed unsafe class FrameEncoder : IDisposable
     public static bool IsNeededFor(AVCodecID codec)
         => codec == AVCodecID.Rawvideo;
 
+    /// <summary>
+    /// Tells whether a stream has to be encoded for its recording.
+    /// </summary>
+    /// <param name="codec">What the source sends.</param>
+    /// <param name="transcodeToH264">Whether recordings are wanted as H.264 whatever the source sends.</param>
+    public static bool IsNeededFor(
+        AVCodecID codec,
+        bool transcodeToH264)
+        => IsNeededFor(codec) || (transcodeToH264 && codec != AVCodecID.H264);
+
     public void Open(
         int width,
         int height,
@@ -81,12 +94,12 @@ internal sealed unsafe class FrameEncoder : IDisposable
         }
 
         // H.264 with 4:2:0 colour needs even sides.
-        var encodedWidth = width & ~1;
-        var encodedHeight = height & ~1;
+        encodedWidth = width & ~1;
+        encodedHeight = height & ~1;
 
         try
         {
-            var encodedFormat = OpenFirstAvailable(encodedWidth, encodedHeight, framesPerSecond);
+            encodedFormat = OpenFirstAvailable(encodedWidth, encodedHeight, framesPerSecond);
 
             codecParameters = avcodec_parameters_alloc();
             var ret = avcodec_parameters_from_context(codecParameters, encoderCtx);
@@ -95,18 +108,7 @@ internal sealed unsafe class FrameEncoder : IDisposable
                 throw new FFmpegException(ret, "Failed to read the encoder's parameters");
             }
 
-            swsCtx = sws_getContext(
-                width,
-                height,
-                format,
-                encodedWidth,
-                encodedHeight,
-                encodedFormat,
-                SwsFlags.Bilinear,
-                null,
-                null,
-                null);
-            if (swsCtx is null)
+            if (!TryOpenConverter(width, height, format))
             {
                 throw new InvalidOperationException($"Pictures in {format} cannot be converted for the encoder.");
             }
@@ -122,10 +124,6 @@ internal sealed unsafe class FrameEncoder : IDisposable
             }
 
             packet = av_packet_alloc();
-
-            sourceWidth = width;
-            sourceHeight = height;
-            sourceFormat = format;
             frameDuration = TimeBase.Den / framesPerSecond;
         }
         catch
@@ -156,11 +154,20 @@ internal sealed unsafe class FrameEncoder : IDisposable
     {
         ArgumentNullException.ThrowIfNull(onPacket);
 
-        if (encoderCtx is null ||
-            frame is null ||
-            frame->width != sourceWidth ||
-            frame->height != sourceHeight ||
-            frame->format != (int)sourceFormat)
+        if (encoderCtx is null || frame is null || frame->width <= 0 || frame->height <= 0)
+        {
+            return;
+        }
+
+        // The pictures can arrive in another layout than the encoder was
+        // opened for: one decoded on the graphics card is handed over in
+        // the card's layout, which is only known when the first arrives.
+        // The encoder stays as it is; only the conversion in front of it
+        // is set up again.
+        if ((frame->width != sourceWidth ||
+             frame->height != sourceHeight ||
+             frame->format != (int)sourceFormat) &&
+            !TryOpenConverter(frame->width, frame->height, (AVPixelFormat)frame->format))
         {
             return;
         }
@@ -234,6 +241,42 @@ internal sealed unsafe class FrameEncoder : IDisposable
 
         disposed = true;
         Free();
+    }
+
+    private bool TryOpenConverter(
+        int width,
+        int height,
+        AVPixelFormat format)
+    {
+        if (swsCtx is not null)
+        {
+            sws_freeContext(swsCtx);
+            swsCtx = null;
+        }
+
+        swsCtx = sws_getContext(
+            width,
+            height,
+            format,
+            encodedWidth,
+            encodedHeight,
+            encodedFormat,
+            SwsFlags.Bilinear,
+            null,
+            null,
+            null);
+
+        if (swsCtx is null)
+        {
+            sourceWidth = 0;
+            sourceHeight = 0;
+            return false;
+        }
+
+        sourceWidth = width;
+        sourceHeight = height;
+        sourceFormat = format;
+        return true;
     }
 
     private AVPixelFormat OpenFirstAvailable(
