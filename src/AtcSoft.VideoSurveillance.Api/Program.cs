@@ -310,6 +310,21 @@ try
         RequestPath = "/recordings-files",
         ServeUnknownFileTypes = false,
         ContentTypeProvider = RecordingsFileProvider.ContentTypes,
+
+        // "?download=1" sends the file as an attachment. A web page on
+        // another address cannot make the browser save a file instead of
+        // showing it; the browser only takes that from the answer itself.
+        OnPrepareResponse = context =>
+        {
+            if (context.Context.Request.Query.ContainsKey("download"))
+            {
+                context.Context.Response.Headers.ContentDisposition =
+                    new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                    {
+                        FileNameStar = context.File.Name,
+                    }.ToString();
+            }
+        },
     });
 
     // Map SignalR hub for real-time surveillance events

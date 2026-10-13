@@ -49,6 +49,12 @@
     [Parameter]
     public string VideoUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The address that makes the browser save the file instead of showing it.
+    /// </summary>
+    [Parameter]
+    public string DownloadUrl { get; set; } = string.Empty;
+
     [Parameter]
     public string Title { get; set; } = "Recording Playback";
 
@@ -65,7 +71,7 @@
         => failed = true;
 
     private async Task DownloadAsync()
-        => await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", VideoUrl, FileName);
+        => await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", DownloadUrl, FileName);
 
     private void Close() => MudDialog.Cancel();
 }

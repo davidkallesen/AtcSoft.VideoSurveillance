@@ -102,6 +102,17 @@ public static class RecordingDisplay
         return $"{(apiBaseUrl ?? string.Empty).TrimEnd('/')}/{FilesPath}/{escaped}";
     }
 
+    /// <summary>
+    /// Gets the address that makes the browser save a recording instead of
+    /// showing it: the server sends the file as an attachment.
+    /// </summary>
+    public static string? DownloadUrl(
+        string apiBaseUrl,
+        string? relativePath)
+        => FileUrl(apiBaseUrl, relativePath) is { } url
+            ? url + "?download=1"
+            : null;
+
     private static bool TryParseDuration(
         string? duration,
         out TimeSpan value)

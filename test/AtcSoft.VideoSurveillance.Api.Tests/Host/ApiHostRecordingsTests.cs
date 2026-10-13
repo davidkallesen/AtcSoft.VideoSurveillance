@@ -36,6 +36,26 @@ public sealed class ApiHostRecordingsTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Recording_Asked_For_As_A_Download_Is_Sent_As_An_Attachment()
+    {
+        // A page on another address cannot tell the browser to save a file
+        // instead of showing it; only the server's answer can.
+        using var client = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(client);
+        var camera = "Save " + Guid.NewGuid().ToString("N")[..8];
+        Write(Path.Combine(recordingPath, camera, camera + "_20261012_101500_000.mp4"), [1, 2, 3, 4]);
+        var url = "/recordings-files/" + RecordingPathHelper.EscapePathSegments($"{camera}/{camera}_20261012_101500_000.mp4");
+
+        var played = await client.GetAsync(new Uri(url, UriKind.Relative), TestContext.Current.CancellationToken);
+        var downloaded = await client.GetAsync(new Uri(url + "?download=1", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        played.Content.Headers.ContentDisposition.Should().BeNull("a player shows the file");
+        downloaded.StatusCode.Should().Be(HttpStatusCode.OK);
+        downloaded.Content.Headers.ContentDisposition!.DispositionType.Should().Be("attachment");
+        downloaded.Content.Headers.ContentDisposition.FileNameStar.Should().Be($"{camera}_20261012_101500_000.mp4");
+    }
+
+    [Fact]
     public async Task Files_That_Are_Not_Recordings_Or_Thumbnails_Are_Not_Served()
     {
         using var client = host.CreateClient();

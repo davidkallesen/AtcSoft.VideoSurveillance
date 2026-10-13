@@ -65,6 +65,11 @@ public sealed class RecordingDisplayTests
         => RecordingDisplay.FileUrl("http://server:5000/", "a/b.png")
             .Should().Be("http://server:5000/recordings-files/a/b.png");
 
+    [Fact]
+    public void DownloadUrl_Asks_The_Server_To_Send_The_File_As_An_Attachment()
+        => RecordingDisplay.DownloadUrl("http://server:5000", "Cam #1/a.mp4")
+            .Should().Be("http://server:5000/recordings-files/Cam%20%231/a.mp4?download=1");
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
