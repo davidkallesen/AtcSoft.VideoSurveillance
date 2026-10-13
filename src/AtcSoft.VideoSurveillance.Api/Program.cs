@@ -184,6 +184,16 @@ try
     builder.Services.AddSingleton(new HlsStreamReaperServiceOptions());
     builder.Services.AddHostedService<HlsStreamReaperService>();
 
+    // Outbound webhooks: camera, recording and motion events are posted to
+    // the receivers under Webhooks:Endpoints. Without any, the worker idles.
+    var webhookOptions = builder.Configuration.GetSection(WebhookOptions.SectionName).Get<WebhookOptions>() ?? new WebhookOptions();
+    builder.Services.AddSingleton(webhookOptions);
+    builder.Services
+        .AddHttpClient(WebhookSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+    builder.Services.AddSingleton<IWebhookSender, WebhookSender>();
+    builder.Services.AddSingleton(new WebhookDispatcherServiceOptions());
+    builder.Services.AddHostedService<WebhookDispatcherService>();
+
     // Periodic liveness beacon so a 4-day soak log shows steady process /
     // recording-state metrics rather than going silent between disruptions.
     builder.Services.AddSingleton(new ServerHeartbeatServiceOptions());

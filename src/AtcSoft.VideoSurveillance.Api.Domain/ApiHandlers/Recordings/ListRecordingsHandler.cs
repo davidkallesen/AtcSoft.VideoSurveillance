@@ -98,6 +98,9 @@ public sealed class ListRecordingsHandler(
                     : new DateTimeOffset(fileInfo.CreationTimeUtc, TimeSpan.Zero);
 
                 var thumbnail = FindRelativeThumbnail(file, recordingPath);
+                var length = durationProvider?.GetDuration(file) is { } duration
+                    ? System.Xml.XmlConvert.ToString(duration)
+                    : string.Empty;
 
                 activeRecordings.Add(new Recording(
                     Id: RecordingMappingExtensions.CreateId(relativePath),
@@ -105,9 +108,7 @@ public sealed class ListRecordingsHandler(
                     CameraName: cameraName,
                     FilePath: relativePath,
                     StartedAt: startedAt,
-                    Duration: durationProvider?.GetDuration(file) is { } duration
-                        ? System.Xml.XmlConvert.ToString(duration)
-                        : string.Empty,
+                    Duration: length,
                     FileSizeBytes: fileInfo.Length,
                     HasThumbnail: thumbnail is not null,
                     InProgress: false,

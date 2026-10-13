@@ -7,6 +7,11 @@
 /// </summary>
 public sealed class ApiHostFixture : IDisposable
 {
+    /// <summary>
+    /// The secret the server signs its webhooks with in the host tests.
+    /// </summary>
+    public const string WebhookSecret = "host-test-secret";
+
     private readonly Lazy<WebApplicationFactory<Program>> factory;
 
     public ApiHostFixture()
@@ -18,6 +23,11 @@ public sealed class ApiHostFixture : IDisposable
         // again by its configuration.
         Environment.SetEnvironmentVariable("Storage__DataPath", DataPath);
 
+        // The server posts its camera events here.
+        Webhooks = new WebhookReceiver();
+        Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Url", Webhooks.Address);
+        Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Secret", WebhookSecret);
+
         factory = new Lazy<WebApplicationFactory<Program>>(() => new WebApplicationFactory<Program>());
     }
 
@@ -25,6 +35,11 @@ public sealed class ApiHostFixture : IDisposable
     /// Gets the folder the server keeps its settings, cameras and media in.
     /// </summary>
     public string DataPath { get; }
+
+    /// <summary>
+    /// Gets the receiver of the server's webhooks.
+    /// </summary>
+    public WebhookReceiver Webhooks { get; }
 
     /// <summary>
     /// Gets the folder recordings are stored in when the settings are untouched.
@@ -82,6 +97,9 @@ public sealed class ApiHostFixture : IDisposable
         }
 
         Environment.SetEnvironmentVariable("Storage__DataPath", null);
+        Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Url", null);
+        Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Secret", null);
+        Webhooks.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         try
         {

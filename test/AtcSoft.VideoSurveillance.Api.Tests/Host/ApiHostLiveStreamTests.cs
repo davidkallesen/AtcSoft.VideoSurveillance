@@ -20,7 +20,7 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
         using var client = host.CreateClient();
         var port = GetFreePort();
         using var stream = StartTestStream(ffmpeg!, port);
-        Guid? cameraId = null;
+        var cameraId = Guid.Empty;
 
         try
         {
@@ -61,10 +61,19 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
             afterStop.Value.GetProperty("fileSizeBytes").GetInt64().Should().BeGreaterThan(0);
             afterStop.Value.GetProperty("inProgress").GetBoolean().Should().BeFalse();
             afterStop.Value.GetProperty("duration").GetString().Should().StartWith("PT", "a finished recording has its length");
+
+            // The start and the stop were posted to the webhook receiver, signed
+            var startedHook = await WaitForWebhookAsync("recording.started", cameraId, cancellationToken);
+            var stoppedHook = await WaitForWebhookAsync("recording.stopped", cameraId, cancellationToken);
+            startedHook.Signature.Should().Be(AtcSoft.VideoSurveillance.Api.Webhooks.WebhookSignature.Compute(ApiHostFixture.WebhookSecret, System.Text.Encoding.UTF8.GetBytes(startedHook.Body)));
+            using var stoppedBody = JsonDocument.Parse(stoppedHook.Body);
+            stoppedBody.RootElement.GetProperty("cameraName").GetString().Should().Be(name);
+            stoppedBody.RootElement.GetProperty("data").GetProperty("filePath").GetString()
+                .Should().Be(afterStop.Value.GetProperty("filePath").GetString(), "a receiver can fetch the file by the path it was told");
         }
         finally
         {
-            if (cameraId is not null)
+            if (cameraId != Guid.Empty)
             {
                 await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), CancellationToken.None);
                 await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
@@ -135,6 +144,29 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
 
             Stop(stream);
         }
+    }
+
+    private async Task<ReceivedWebhook> WaitForWebhookAsync(
+        string eventType,
+        Guid cameraId,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+        while (DateTime.UtcNow < deadline)
+        {
+            var match = host.Webhooks.Received.FirstOrDefault(w =>
+                w.EventType == eventType &&
+                w.Body.Contains(cameraId.ToString(), StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+            {
+                return match;
+            }
+
+            await Task.Delay(250, cancellationToken);
+        }
+
+        Assert.Fail($"No '{eventType}' webhook arrived for camera {cameraId} within 15 seconds.");
+        return null!;
     }
 
     private static async Task<JsonElement> WaitForThumbnailAsync(
