@@ -11,6 +11,9 @@ public sealed partial class VideoPlayer
     [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "Recording switched atomically to: {Path}")]
     private partial void LogRecordingSwitched(string path);
 
+    [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "The camera delivers uncompressed video; recording it as H.264 with {Encoder}")]
+    private partial void LogRecordingEncoder(string encoder);
+
     [LoggerMessage(Level = Microsoft.Extensions.Logging.LogLevel.Information, Message = "[{Source}] Opening stream: {Uri}")]
     private partial void LogOpeningStream(string source, string uri);
 

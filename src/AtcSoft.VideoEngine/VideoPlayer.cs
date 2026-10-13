@@ -17,11 +17,17 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private readonly ILogger<VideoPlayer> logger;
     private readonly IGpuAccelerator? gpuAccelerator;
     private readonly Lock frameLock = new();
+
+    // Guards the encoder: a recording is started, switched and stopped from
+    // other threads than the one that reads the camera and feeds it.
+    private readonly Lock encoderLock = new();
+    private readonly EncodedPacketHandler writeEncodedPacket;
     private readonly Stopwatch fpsWatch = new();
 
     private Demuxer? demuxer;
     private VideoDecoder? decoder;
     private Remuxer? remuxer;
+    private FrameEncoder? frameEncoder;
     private FrameCapture? frameCapture;
 
     private AVFrame* latestFrame;
@@ -46,6 +52,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     {
         this.logger = logger;
         this.gpuAccelerator = gpuAccelerator;
+        writeEncodedPacket = WriteEncodedPacket;
     }
 
     public PlayerState State => state;
@@ -133,7 +140,15 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        remuxer.Open(outputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+        if (FrameEncoder.IsNeededFor(demuxer.VideoCodecParameters->codec_id))
+        {
+            StartEncodedRecording(outputFilePath);
+        }
+        else
+        {
+            remuxer.Open(outputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+        }
+
         LogRecordingStarted(outputFilePath);
     }
 
@@ -144,7 +159,19 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        remuxer.Close();
+        lock (encoderLock)
+        {
+            if (frameEncoder is not null)
+            {
+                // What the encoder still holds belongs in this file.
+                frameEncoder.Flush(writeEncodedPacket);
+                frameEncoder.Dispose();
+                frameEncoder = null;
+            }
+
+            remuxer.Close();
+        }
+
         LogRecordingStopped();
     }
 
@@ -169,8 +196,60 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        remuxer.SwitchTo(newOutputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+        lock (encoderLock)
+        {
+            if (frameEncoder is not null)
+            {
+                // The recorder leaves out everything before a file's first
+                // key frame, so the new file is made to start with one.
+                frameEncoder.RequestKeyFrame();
+                remuxer.SwitchTo(newOutputFilePath, frameEncoder.CodecParameters, frameEncoder.TimeBase, (int)rotation);
+            }
+            else
+            {
+                remuxer.SwitchTo(newOutputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+            }
+        }
+
         LogRecordingSwitched(newOutputFilePath);
+    }
+
+    // A camera that delivers uncompressed pictures (a webcam) cannot be
+    // recorded by copying its packets: no recording format takes them. Its
+    // decoded pictures are encoded to H.264 instead.
+    private void StartEncodedRecording(string outputFilePath)
+    {
+        var frameRate = demuxer!.VideoFrameRate;
+        var framesPerSecond = frameRate is { Num: > 0, Den: > 0 }
+            ? (int)Math.Round((double)frameRate.Num / frameRate.Den, MidpointRounding.AwayFromZero)
+            : 0;
+
+        var encoder = new FrameEncoder();
+        try
+        {
+            encoder.Open(decoder!.Width, decoder.Height, decoder.PixelFormat, framesPerSecond);
+
+            lock (encoderLock)
+            {
+                remuxer!.Open(outputFilePath, encoder.CodecParameters, encoder.TimeBase, (int)rotation);
+                frameEncoder = encoder;
+            }
+        }
+        catch
+        {
+            encoder.Dispose();
+            throw;
+        }
+
+        LogRecordingEncoder(encoder.EncoderName ?? string.Empty);
+    }
+
+    private void WriteEncodedPacket(AVPacket* packet)
+    {
+        if (remuxer is { IsOpen: true } && frameEncoder is not null)
+        {
+            remuxer.WritePacket(packet, frameEncoder.TimeBase);
+        }
     }
 
     public void SetRotation(VideoRotation rotation)
@@ -312,8 +391,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             // The demux thread owns cleanup of all pipeline resources it created.
             // This ensures the Demuxer's GCHandle is only freed after FFmpeg is done
             // using the interrupt callback — preventing use-after-free.
-            remuxer?.Dispose();
-            remuxer = null;
+            lock (encoderLock)
+            {
+                frameEncoder?.Dispose();
+                frameEncoder = null;
+                remuxer?.Dispose();
+                remuxer = null;
+            }
 
             localDecoder?.Dispose();
             if (ReferenceEquals(decoder, localDecoder))
@@ -422,7 +506,9 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
     private void ProcessVideoPacket()
     {
-        if (remuxer is { IsOpen: true })
+        // A stream that is being encoded is recorded picture by picture
+        // further down; its packets are not what goes into the file.
+        if (remuxer is { IsOpen: true } && frameEncoder is null)
         {
             remuxer.WritePacket(demuxer!.CurrentPacket, demuxer.VideoTimeBase);
         }
@@ -437,6 +523,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             var decodedFrame = decoder.CurrentFrame;
 
             gpuAccelerator?.OnFrameDecoded(decodedFrame);
+
+            lock (encoderLock)
+            {
+                frameEncoder?.Encode(decodedFrame, demuxer.VideoTimeBase, writeEncodedPacket);
+            }
 
             lock (frameLock)
             {
