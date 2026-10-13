@@ -13,6 +13,7 @@ global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Settings;

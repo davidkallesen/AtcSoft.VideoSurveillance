@@ -102,6 +102,10 @@ try
         // recording service simply gets no generator and records without them.
         AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
             .AddWindowsRecordingThumbnails(builder.Services);
+
+        // So are the pictures motion detection compares.
+        AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+            .AddWindowsMotionFrameReader(builder.Services);
     }
 
     // Lifecycle coordinator translates raw watcher events into

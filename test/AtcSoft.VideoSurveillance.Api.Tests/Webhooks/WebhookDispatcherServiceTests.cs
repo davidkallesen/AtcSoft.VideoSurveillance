@@ -6,6 +6,7 @@ public sealed class WebhookDispatcherServiceTests
     private static readonly WebhookEvent Recording = new(WebhookEventTypes.RecordingStopped, Guid.NewGuid(), "Garden", DateTimeOffset.UtcNow, new Dictionary<string, object?>(StringComparer.Ordinal));
 
     private readonly IWebhookSender sender = Substitute.For<IWebhookSender>();
+    private readonly IMotionDetectionService motionDetection = Substitute.For<IMotionDetectionService>();
 
     [Fact]
     public async Task Each_Queued_Event_Goes_To_Every_Endpoint_That_Wants_It()
@@ -76,6 +77,42 @@ public sealed class WebhookDispatcherServiceTests
     }
 
     [Fact]
+    public async Task A_Motion_Is_Sent_As_One_Start_And_One_Stop()
+    {
+        // While something moves, the detector reports every picture it
+        // moved in (for live overlays). A receiver wants to hear of the
+        // motion, not of each picture.
+        var endpoint = new WebhookEndpoint { Url = "https://all.test/hook" };
+        using var sut = CreateSut(endpoint);
+        await sut.StartAsync(TestContext.Current.CancellationToken);
+        var camera = Guid.NewGuid();
+        var otherCamera = Guid.NewGuid();
+
+        RaiseMotion(camera, active: true);
+        RaiseMotion(camera, active: true);
+        RaiseMotion(otherCamera, active: true);
+        RaiseMotion(camera, active: true);
+        RaiseMotion(camera, active: false);
+        RaiseMotion(camera, active: true);
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+        await sut.StopAsync(TestContext.Current.CancellationToken);
+
+        Received.InOrder(() =>
+        {
+            _ = sender.SendAsync(endpoint, Arg.Is<WebhookEvent>(e => e.Type == WebhookEventTypes.MotionStarted && e.CameraId == camera), Arg.Any<CancellationToken>());
+            _ = sender.SendAsync(endpoint, Arg.Is<WebhookEvent>(e => e.Type == WebhookEventTypes.MotionStarted && e.CameraId == otherCamera), Arg.Any<CancellationToken>());
+            _ = sender.SendAsync(endpoint, Arg.Is<WebhookEvent>(e => e.Type == WebhookEventTypes.MotionStopped && e.CameraId == camera), Arg.Any<CancellationToken>());
+            _ = sender.SendAsync(endpoint, Arg.Is<WebhookEvent>(e => e.Type == WebhookEventTypes.MotionStarted && e.CameraId == camera), Arg.Any<CancellationToken>());
+        });
+        await sender.ReceivedWithAnyArgs(4).SendAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    private void RaiseMotion(
+        Guid cameraId,
+        bool active)
+        => motionDetection.MotionDetected += Raise.EventWith(new MotionDetectedEventArgs(cameraId, 5, active));
+
+    [Fact]
     public void A_Full_Queue_Drops_The_Oldest_Event_Instead_Of_Growing()
     {
         using var sut = CreateSut(new WebhookEndpoint { Url = "https://all.test/hook" });
@@ -96,7 +133,7 @@ public sealed class WebhookDispatcherServiceTests
             new WebhookOptions { Endpoints = [.. endpoints] },
             sender,
             Substitute.For<IRecordingService>(),
-            Substitute.For<IMotionDetectionService>(),
+            motionDetection,
             Substitute.For<ICameraStorageService>(),
             Substitute.For<IApplicationSettingsService>());
 }

@@ -16,6 +16,7 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
 
     private readonly ConcurrentQueue<WebhookEvent> queue = new();
     private readonly List<WebhookEndpoint> endpoints;
+    private readonly ConcurrentDictionary<Guid, byte> camerasInMotion = new();
     private readonly IWebhookSender sender;
     private readonly IRecordingService recordingService;
     private readonly IMotionDetectionService motionDetectionService;
@@ -156,10 +157,22 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
         }
     }
 
+    // While something moves, the detector reports every picture it moved
+    // in (for live overlays). A receiver is told of the motion, once when
+    // it starts and once when it is over.
     private void OnMotionDetected(
         object? sender,
         MotionDetectedEventArgs e)
-        => Enqueue(WebhookEventFactory.FromMotion(e, GetCameraName(e.CameraId)));
+    {
+        var changed = e.IsMotionActive
+            ? camerasInMotion.TryAdd(e.CameraId, 0)
+            : camerasInMotion.TryRemove(e.CameraId, out _);
+
+        if (changed)
+        {
+            Enqueue(WebhookEventFactory.FromMotion(e, GetCameraName(e.CameraId)));
+        }
+    }
 
     private void OnCameraConnectionStateChanged(
         Guid cameraId,

@@ -40,4 +40,20 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Registers the reader that turns a captured picture into the
+    /// grayscale picture motion detection compares. It decodes with GDI+,
+    /// so a host on another platform skips this call and runs without
+    /// motion detection.
+    /// </summary>
+    public static IServiceCollection AddWindowsMotionFrameReader(
+        this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddSingleton<IMotionFrameReader, Motion.GdiMotionFrameReader>();
+
+        return services;
+    }
 }
