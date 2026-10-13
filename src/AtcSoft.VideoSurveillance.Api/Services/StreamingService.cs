@@ -1,8 +1,8 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// Manages per-camera FFmpeg transcoding processes that convert RTSP streams
-/// to HLS segments for browser consumption.
+/// Manages per-camera FFmpeg processes that turn a camera's stream, or a USB
+/// camera's pictures, into HLS segments for browser consumption.
 /// </summary>
 public sealed partial class StreamingService : IDisposable
 {
@@ -282,17 +282,6 @@ public sealed partial class StreamingService : IDisposable
     {
         var camera = storage.GetCameraById(cameraId)
             ?? throw new InvalidOperationException($"Camera {cameraId} not found.");
-
-        // HLS re-streaming for USB sources requires a different ffmpeg
-        // command line (-f dshow -i video=...). Tracked as a Phase 9+
-        // enhancement; for now USB cameras can still be recorded and
-        // snapshotted via the in-process pipeline, just not HLS-streamed
-        // to the Blazor browser.
-        if (camera.Connection.Source != CameraSource.Network)
-        {
-            throw new NotSupportedException(
-                $"HLS streaming is not yet implemented for {camera.Connection.Source} cameras (camera {cameraId}).");
-        }
 
         var outputDir = Path.Combine(hlsOutputRoot, cameraId.ToString("N"));
 

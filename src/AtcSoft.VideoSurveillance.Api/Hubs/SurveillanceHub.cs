@@ -130,6 +130,12 @@ public sealed partial class SurveillanceHub : Hub
         var connectionId = Context.ConnectionId;
         try
         {
+            if (storage.GetCameraById(cameraId) is { } camera &&
+                HlsStreamCommand.GetUnavailableReason(camera, recordingService.IsRecording(cameraId)) is { } reason)
+            {
+                throw new InvalidOperationException(reason);
+            }
+
             var playlistPath = streamingService.StartStream(cameraId, connectionId);
 
             // Wait for FFmpeg to create the playlist and first segment (up to 60 seconds).

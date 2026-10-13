@@ -125,6 +125,107 @@ public sealed class HlsStreamCommandTests
         HlsStreamCommand.FindTool(folder).Should().Be("ffmpeg");
     }
 
+    [Fact]
+    public void A_Usb_Camera_Is_Opened_As_A_Capture_Device_In_Its_Chosen_Format()
+    {
+        var camera = CreateUsbCamera("HP 5MP Camera");
+        camera.Connection.Usb!.Format = new UsbStreamFormat { Width = 1280, Height = 720, FrameRate = 15 };
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+
+        // The capture options belong to the input, so they stand before it.
+        arguments.Should().Contain("-f dshow -video_size 1280x720 -framerate 15 -i \"video=HP 5MP Camera\"");
+        arguments.Should().EndWith($"\"{Playlist}\"");
+    }
+
+    [Fact]
+    public void A_Usb_Camera_Without_A_Chosen_Format_Is_Opened_In_The_Device_Default()
+    {
+        var arguments = HlsStreamCommand.BuildArguments(CreateUsbCamera("HP Display Camera"), Playlist);
+
+        arguments.Should().Contain("-f dshow -i \"video=HP Display Camera\"");
+        arguments.Should().NotContain("-video_size").And.NotContain("-framerate");
+    }
+
+    [Fact]
+    public void A_Usb_Camera_Is_Encoded_Because_It_Sends_Uncompressed_Pictures()
+    {
+        // A webcam sends raw pictures, which cannot be copied into HLS, and
+        // browsers only play H.264 with 4:2:0 colour.
+        var camera = CreateUsbCamera("HP 5MP Camera");
+        camera.Connection.Usb!.Format = new UsbStreamFormat { Width = 640, Height = 480, FrameRate = 30 };
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+
+        arguments.Should().Contain("-c:v libx264").And.Contain("-pix_fmt yuv420p");
+        arguments.Should().NotContain("-c:v copy");
+
+        // A key frame every two seconds, so every HLS segment can start with one.
+        arguments.Should().Contain("-g 60 ");
+    }
+
+    [Fact]
+    public void A_Usb_Camera_Gets_No_Network_Options()
+    {
+        // FFmpeg refuses an option the input does not know.
+        var arguments = HlsStreamCommand.BuildArguments(CreateUsbCamera("HP 5MP Camera"), Playlist);
+
+        arguments.Should().NotContain("rtsp_transport").And.NotContain("-timeout");
+    }
+
+    [Fact]
+    public void A_Usb_Camera_With_Sound_Opens_Its_Microphone_Too()
+    {
+        var camera = CreateUsbCamera("HP 5MP Camera");
+        camera.Connection.Usb!.PreferAudio = true;
+        camera.Connection.Usb.AudioDeviceName = "Microphone (HP 534pm Audio)";
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+
+        arguments.Should().Contain("-i \"video=HP 5MP Camera:audio=Microphone (HP 534pm Audio)\"");
+    }
+
+    [Fact]
+    public void Text_About_A_Usb_Camera_Is_Left_As_It_Is()
+    {
+        // A USB camera has no address and no password; asking it for one throws.
+        var line = "Input #0, dshow, from 'video=HP 5MP Camera':";
+
+        HlsStreamCommand.Redact(line, CreateUsbCamera("HP 5MP Camera")).Should().Be(line);
+    }
+
+    [Fact]
+    public void A_Usb_Camera_The_Server_Is_Recording_Cannot_Be_Streamed_As_Well()
+    {
+        // Windows lets one program at a time open a USB camera. The second
+        // one gets no pictures and no clear error, so it is refused up front.
+        var reason = HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isRecording: true);
+
+        reason.Should().Contain("recording").And.Contain("USB");
+    }
+
+    [Fact]
+    public void A_Usb_Camera_That_Is_Not_Being_Recorded_Can_Be_Streamed()
+        => HlsStreamCommand.GetUnavailableReason(CreateUsbCamera("HP 5MP Camera"), isRecording: false)
+            .Should().BeNull();
+
+    [Fact]
+    public void A_Network_Camera_Can_Be_Streamed_While_It_Is_Recorded()
+        => HlsStreamCommand.GetUnavailableReason(CreateCamera(CoreCameraProtocol.Rtsp, 554), isRecording: true)
+            .Should().BeNull();
+
+    private static CameraConfiguration CreateUsbCamera(string friendlyName)
+    {
+        var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+        camera.Connection.Source = CoreCameraSource.Usb;
+        camera.Connection.Usb = new UsbConnectionSettings
+        {
+            DeviceId = @"\\?\usb#vid_0000&pid_0000#test",
+            FriendlyName = friendlyName,
+        };
+        return camera;
+    }
+
     private static CameraConfiguration CreateCamera(
         CoreCameraProtocol protocol,
         int port)

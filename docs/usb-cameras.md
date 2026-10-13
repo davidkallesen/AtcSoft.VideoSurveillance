@@ -7,7 +7,7 @@ Architectural overview, configuration model, and operator-facing behaviour for t
 ## 🎯 TL;DR
 
 - 💻 **Where it works.** Windows. The Linux V4L2 + macOS AVFoundation paths are scaffolded but deferred (Phase 10 in the roadmap).
-- ✅ **What you can do today.** Open a USB camera, record it (MP4/MKV via the in-process FFmpeg pipeline), capture snapshots, rotate, and recover gracefully from unplug/replug. HLS re-streaming to a browser is not yet implemented for USB sources.
+- ✅ **What you can do today.** Open a USB camera, capture snapshots, rotate, watch it in the web client, and recover gracefully from unplug/replug. Recording works only for a camera that delivers compressed video (MJPEG or H.264); see "What's not in scope" below.
 - ⏸️ **What's deferred.** UVC PTZ + property pages (brightness / focus / exposure) — Phase 11.
 - 🏠 **Hosts.** `AtcSoft.CameraWall.Wpf.App` (standalone) wires the Windows enumerator into DI directly. `AtcSoft.VideoSurveillance.Api` (server) does the same when running on Windows. `AtcSoft.VideoSurveillance.Wpf.App` (API client) talks to the server over `GET /devices/usb` instead of enumerating locally.
 
@@ -139,7 +139,8 @@ Group policy estates can enforce `LetAppsAccessCamera = Deny` system-wide. The e
 
 | Feature | Where it lives | Why deferred |
 |---------|----------------|--------------|
-| HLS re-streaming USB to browsers | `StreamingService` | Needs a different ffmpeg.exe argv (`-f dshow -i video=...`); the in-process pipeline still records & snapshots fine. The handler currently throws `NotSupportedException` for USB cameras with a clear message. |
+| Recording a camera that delivers uncompressed video | `Remuxer` | The recorder copies the camera's packets into the file and has no encoder. Most webcams deliver raw pictures (YUY2 / NV12), which no recording container takes: starting the recording fails with "Failed to write output header". Found on 2026-10-13 with two real cameras; needs an encoder in the engine. |
+| Watching and recording a USB camera at the same time | `StreamingService`, `CameraConnectionService` | Windows gives a USB camera to one program at a time, and the browser stream is made by a separate FFmpeg process. Whoever opens the camera first keeps it; the other is refused. Sharing needs one owner that feeds both. |
 | Capability discovery (resolution × FPS × pixfmt) | `MediaFoundationEnumerator` | Phase 3 first cut returns devices with empty `Capabilities`. The dialog will populate the capability picker by opening each device on demand once Phase 4.3 lands. |
 | Audio companion track | `Demuxer` + `Remuxer` | Phase 9. The toggle exists in `UsbConnectionSettings.PreferAudio` but the audio packet path isn't wired through the remuxer yet. |
 | UVC property pages (brightness, focus, …) | New `IUsbCameraPropertyService` | Phase 11. Blue-Iris-grade — pulls in `IAMCameraControl` / `IAMVideoProcAmp` interop. |

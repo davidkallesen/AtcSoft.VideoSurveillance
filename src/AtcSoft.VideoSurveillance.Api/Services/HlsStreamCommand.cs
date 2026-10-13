@@ -13,6 +13,13 @@ public static class HlsStreamCommand
     // line would ruin the line without hiding anything.
     private const int MinimumLengthToRemoveEverywhere = 6;
 
+    // What a USB camera delivers when no format was chosen for it.
+    private const double DefaultUsbFrameRate = 30;
+
+    // The length of an HLS segment. A USB camera gets a key frame this often,
+    // so every segment can start with one.
+    private const int SegmentSeconds = 2;
+
     /// <summary>
     /// Finds the FFmpeg command-line tool. It is taken from the folder the
     /// engine loads its libraries from, so it is the same version and needs
@@ -35,7 +42,7 @@ public static class HlsStreamCommand
     }
 
     /// <summary>
-    /// Builds the arguments that stream a network camera to an HLS playlist.
+    /// Builds the arguments that stream a camera to an HLS playlist.
     /// </summary>
     /// <param name="camera">The camera to stream.</param>
     /// <param name="playlistPath">The playlist file to write.</param>
@@ -47,6 +54,94 @@ public static class HlsStreamCommand
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentException.ThrowIfNullOrEmpty(playlistPath);
 
+        return camera.Connection.Source == CameraSource.Usb
+            ? BuildUsbArguments(camera, playlistPath)
+            : BuildNetworkArguments(camera, playlistPath);
+    }
+
+    /// <summary>
+    /// Tells why a camera cannot be streamed right now.
+    /// </summary>
+    /// <param name="camera">The camera to stream.</param>
+    /// <param name="isRecording">Whether the server is recording the camera.</param>
+    /// <returns>The reason, to show to the user, or <c>null</c> when the camera can be streamed.</returns>
+    public static string? GetUnavailableReason(
+        CameraConfiguration camera,
+        bool isRecording)
+    {
+        ArgumentNullException.ThrowIfNull(camera);
+
+        // Windows lets one program at a time open a USB camera. A second
+        // one gets no pictures and no clear error either.
+        return camera.Connection.Source == CameraSource.Usb && isRecording
+            ? "The server is recording this USB camera, and a USB camera can only be used by one program at a time. Stop the recording to watch it live."
+            : null;
+    }
+
+    private static string BuildUsbArguments(
+        CameraConfiguration camera,
+        string playlistPath)
+    {
+        var source = CameraUriHelper.BuildSourceLocator(camera);
+        var frameRate = camera.Connection.Usb?.Format is { FrameRate: > 0 } format
+            ? format.FrameRate
+            : DefaultUsbFrameRate;
+        var keyFrameInterval = (int)Math.Round(frameRate * SegmentSeconds, MidpointRounding.AwayFromZero);
+
+        var arguments = new List<string>
+        {
+            "-nostats",
+            "-v info",
+
+            // Room for the pictures that arrive while the encoder starts;
+            // the default is too small for anything above 720p.
+            "-rtbufsize 256M",
+            $"-f {source.InputFormat}",
+        };
+
+        // The capture options belong to the input, so they stand before it.
+        if (source.VideoSize is not null)
+        {
+            arguments.Add($"-video_size {source.VideoSize}");
+        }
+
+        if (source.FrameRate is not null)
+        {
+            arguments.Add($"-framerate {source.FrameRate}");
+        }
+
+        // A webcam sends uncompressed pictures, which cannot be copied into
+        // HLS: they are encoded here. Browsers only play H.264 with 4:2:0
+        // colour, and a webcam sends 4:2:2. The fastest preset keeps the
+        // processor load and the delay low.
+        arguments.AddRange(
+        [
+            $"-i \"{source.RawDeviceSpec}\"",
+            "-c:v libx264",
+            "-preset ultrafast",
+            "-tune zerolatency",
+            "-pix_fmt yuv420p",
+            string.Create(CultureInfo.InvariantCulture, $"-g {keyFrameInterval} -keyint_min {keyFrameInterval}"),
+            "-sc_threshold 0",
+
+            // By the clock as well: a webcam that drops pictures in poor
+            // light would otherwise stretch a segment to twice its length.
+            string.Create(CultureInfo.InvariantCulture, $"-force_key_frames \"expr:gte(t,n_forced*{SegmentSeconds})\""),
+            "-c:a aac -b:a 64k",
+            "-f hls",
+            string.Create(CultureInfo.InvariantCulture, $"-hls_time {SegmentSeconds}"),
+            "-hls_list_size 5",
+            "-hls_flags delete_segments",
+            $"\"{playlistPath}\"",
+        ]);
+
+        return string.Join(' ', arguments);
+    }
+
+    private static string BuildNetworkArguments(
+        CameraConfiguration camera,
+        string playlistPath)
+    {
         var streamUri = camera.BuildUri();
 
         var arguments = new List<string>
@@ -119,6 +214,12 @@ public static class HlsStreamCommand
         if (string.IsNullOrEmpty(text))
         {
             return text ?? string.Empty;
+        }
+
+        // A USB camera has no address and no credentials.
+        if (camera.Connection.Source != CameraSource.Network)
+        {
+            return text;
         }
 
         var userInfo = camera.BuildUri().UserInfo;

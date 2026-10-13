@@ -450,7 +450,9 @@ Bring the headless server up to parity. Touches `VideoSurveillance.yaml`, genera
 
 #### 6.5 SignalR `SurveillanceHub`
 
-- ✅ HLS streaming for USB sources is explicitly **not yet implemented** — `StreamingService.CreateSession` throws `NotSupportedException` with a clear message when `camera.Connection.Source != CameraSource.Network`, so the SignalR `StreamStarted` event for USB cameras surfaces as a clean error rather than a confused ffmpeg launch. Tracked as a Phase ≥9 enhancement.
+- ✅ HLS streaming for USB sources (2026-10-13): `HlsStreamCommand` opens the device with `-f dshow` in its chosen format and encodes to H.264, because a webcam sends uncompressed pictures. Seen running in the web client with two real cameras. A stream is refused while the server records the camera (Q3: first opener wins).
+- ✅ `GET /devices/usb` failed on every machine with `MF_E_ATTRIBUTENOTFOUND`: the `MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE` key had a wrong last byte. Fixed 2026-10-13; `MediaFoundationDeviceProbeTests` now runs the real probe.
+- ⬜ **Recording a webcam does not work.** Both test cameras deliver raw video only (YUY2 / NV12) and `Remuxer` can only copy packets, so `StartRecording` fails with "Failed to write output header". Needs an encoder in the engine; the `TranscodeVideoCodec` setting exists but nothing reads it.
 - ⏸️ `RecordingStateChanged` / `MotionDetected` re-validation for USB — these events ride downstream of the demuxer in design; empirical hardware verification deferred to a self-hosted runner.
 - ✅ SignalR `UsbCameraLifecycleChanged(cameraId, phase, deviceId, friendlyName, timestamp)` event shipped under Phase 7.2 (broadcaster + client adapter + tests). Supersedes the originally-planned `UsbDeviceUnplugged(cameraId)` — `phase` carries `Unplugged` / `Replugged` so the same event covers both lifecycle transitions.
 
