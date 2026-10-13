@@ -121,6 +121,71 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
         sut.CanDelete.Should().BeFalse();
     }
 
+    [Fact]
+    public void When_The_Recording_Ends_Its_Row_Becomes_An_Ordinary_Recording_By_Itself()
+    {
+        // The dialog asks every few seconds; nobody has to press Refresh.
+        var sut = CreateSut();
+        var entry = sut.Recordings.Single(r => r.FilePath == ongoing);
+        var other = sut.Recordings.Single(r => r.FilePath == finished);
+        sut.SelectedRecording = other;
+        var changedOnEntry = new List<string?>();
+        entry.PropertyChanged += (_, e) => changedOnEntry.Add(e.PropertyName);
+        var listRebuilt = false;
+        sut.PropertyChanged += (_, e) => listRebuilt |= e.PropertyName == nameof(RecordingsBrowserDialogViewModel.FilteredRecordings);
+
+        writer!.Write(new byte[2048]);
+        writer.Dispose();
+        writer = null;
+        sut.UpdateOngoingRecordings().Should().BeTrue();
+
+        sut.Recordings.Single(r => r.FilePath == ongoing).Should().BeSameAs(entry, "the row stays where it is");
+        entry.IsBeingRecorded.Should().BeFalse();
+        entry.FileSizeBytes.Should().Be(2049, "the size is that of the finished file");
+        entry.FormattedDuration.Should().NotBe(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.RecordingInProgress);
+        changedOnEntry.Should().Contain([nameof(entry.IsBeingRecorded), nameof(entry.FormattedDuration), nameof(entry.FormattedFileSize)]);
+        listRebuilt.Should().BeFalse("rebuilding the list would lose the scroll position");
+        sut.SelectedRecording.Should().BeSameAs(other);
+
+        sut.SelectedRecording = entry;
+        sut.CanPlay.Should().BeTrue();
+    }
+
+    [Fact]
+    public void While_Nothing_Changes_The_List_Is_Left_Alone()
+    {
+        var sut = CreateSut();
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.UpdateOngoingRecordings().Should().BeFalse();
+
+        changed.Should().BeEmpty();
+        sut.Recordings.Single(r => r.FilePath == ongoing).IsBeingRecorded.Should().BeTrue();
+    }
+
+    [Fact]
+    public void A_Recording_That_Starts_While_The_Browser_Is_Open_Appears_In_The_List()
+    {
+        var sut = CreateSut();
+        var selected = sut.Recordings.Single(r => r.FilePath == finished);
+        sut.SelectedRecording = selected;
+        var started = System.IO.Path.Combine(root, "Garden", "2026-10-13", "Garden_20261013_100000_000.mkv");
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(started)!);
+
+        using (new System.IO.FileStream(started, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.Read))
+        {
+            sut.UpdateOngoingRecordings().Should().BeTrue();
+        }
+
+        var entry = sut.Recordings.Single(r => r.FilePath == started);
+        entry.IsBeingRecorded.Should().BeTrue();
+        entry.CameraName.Should().Be("Garden");
+        sut.Recordings.Should().BeInDescendingOrder(r => r.RecordingTime);
+        sut.CameraFilters.Select(f => f.Key).Should().Contain("Garden");
+        sut.SelectedRecording.Should().BeSameAs(selected, "the selection is kept");
+    }
+
     private RecordingsBrowserDialogViewModel CreateSut()
     {
         var settingsService = Substitute.For<IWpfCoreSettingsService>();

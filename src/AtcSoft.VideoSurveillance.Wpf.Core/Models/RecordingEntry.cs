@@ -3,8 +3,11 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Models;
 /// <summary>
 /// Represents a recorded video file entry.
 /// </summary>
-public class RecordingEntry
+public class RecordingEntry : INotifyPropertyChanged
 {
+    /// <inheritdoc />
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     /// <summary>
     /// Gets the full file path of the recording.
     /// </summary>
@@ -28,7 +31,7 @@ public class RecordingEntry
     /// <summary>
     /// Gets the file size in bytes.
     /// </summary>
-    public long FileSizeBytes { get; init; }
+    public long FileSizeBytes { get; private set; }
 
     /// <summary>
     /// Gets or sets the duration of the recording.
@@ -36,11 +39,87 @@ public class RecordingEntry
     public TimeSpan Duration { get; set; }
 
     /// <summary>
-    /// Gets a value indicating whether the file was still being recorded
-    /// when the list was made. Such a file has no finished index: it has no
-    /// length to show and plays as a black picture.
+    /// Gets a value indicating whether the file is still being recorded,
+    /// as far as the list knows. Such a file has no finished index: it has
+    /// no length to show and plays as a black picture.
     /// </summary>
-    public bool IsBeingRecorded { get; init; }
+    public bool IsBeingRecorded { get; private set; }
+
+    /// <summary>
+    /// Creates the entry of a file that is still being recorded.
+    /// </summary>
+    /// <param name="filePath">The full file path.</param>
+    /// <param name="cameraName">The camera that makes the recording.</param>
+    /// <param name="recordingRoot">The recording root the file was found under.</param>
+    /// <param name="recordingTime">When the recording started.</param>
+    /// <param name="fileSizeBytes">The size of the file so far.</param>
+    /// <returns>The entry.</returns>
+    public static RecordingEntry Ongoing(
+        string filePath,
+        string cameraName,
+        string? recordingRoot,
+        DateTime recordingTime,
+        long fileSizeBytes)
+        => new()
+        {
+            FilePath = filePath,
+            CameraName = cameraName,
+            RecordingRoot = recordingRoot,
+            RecordingTime = recordingTime,
+            FileSizeBytes = fileSizeBytes,
+            IsBeingRecorded = true,
+        };
+
+    /// <summary>
+    /// Creates the entry of a finished recording.
+    /// </summary>
+    /// <param name="filePath">The full file path.</param>
+    /// <param name="cameraName">The camera that made the recording.</param>
+    /// <param name="recordingRoot">The recording root the file was found under.</param>
+    /// <param name="recordingTime">When the recording started.</param>
+    /// <param name="fileSizeBytes">The size of the file.</param>
+    /// <param name="duration">The length of the recording.</param>
+    /// <returns>The entry.</returns>
+    public static RecordingEntry Finished(
+        string filePath,
+        string cameraName,
+        string? recordingRoot,
+        DateTime recordingTime,
+        long fileSizeBytes,
+        TimeSpan duration)
+        => new()
+        {
+            FilePath = filePath,
+            CameraName = cameraName,
+            RecordingRoot = recordingRoot,
+            RecordingTime = recordingTime,
+            FileSizeBytes = fileSizeBytes,
+            Duration = duration,
+        };
+
+    /// <summary>
+    /// The recording has ended: the entry becomes that of an ordinary
+    /// recording, with the size and length the finished file has. Its
+    /// thumbnail was written when the recording stopped.
+    /// </summary>
+    /// <param name="fileSizeBytes">The size of the finished file.</param>
+    /// <param name="duration">The length of the recording.</param>
+    public void MarkFinished(
+        long fileSizeBytes,
+        TimeSpan duration)
+    {
+        FileSizeBytes = fileSizeBytes;
+        Duration = duration;
+        IsBeingRecorded = false;
+
+        foreach (var name in (string[])[
+            nameof(IsBeingRecorded), nameof(FileSizeBytes), nameof(Duration),
+            nameof(FormattedFileSize), nameof(FormattedDuration),
+            nameof(ThumbnailPath), nameof(HasThumbnail), nameof(ThumbnailImage)])
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+    }
 
     /// <summary>
     /// Gets the formatted file size string.

@@ -5,8 +5,12 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 /// </summary>
 public partial class RecordingsBrowserDialog : IDisposable
 {
+    // How often the open dialog looks whether a recording has ended or started.
+    private static readonly TimeSpan OngoingRecordingsInterval = TimeSpan.FromSeconds(2);
+
     private readonly RecordingsBrowserDialogViewModel viewModel;
     private readonly Action<RecordingEntry> playRecording;
+    private readonly DispatcherTimer ongoingRecordingsTimer;
     private bool disposed;
 
     /// <summary>
@@ -35,6 +39,11 @@ public partial class RecordingsBrowserDialog : IDisposable
         Closed += OnWindowClosed;
         ContentRendered += OnContentRendered;
         RecordingsGrid.PreviewKeyDown += OnRecordingsGridPreviewKeyDown;
+
+        // Runs only while the dialog is on screen.
+        ongoingRecordingsTimer = new DispatcherTimer { Interval = OngoingRecordingsInterval };
+        ongoingRecordingsTimer.Tick += OnOngoingRecordingsTimerTick;
+        Loaded += OnDialogLoaded;
     }
 
     /// <inheritdoc />
@@ -63,9 +72,36 @@ public partial class RecordingsBrowserDialog : IDisposable
             Closed -= OnWindowClosed;
             ContentRendered -= OnContentRendered;
             RecordingsGrid.PreviewKeyDown -= OnRecordingsGridPreviewKeyDown;
+            Loaded -= OnDialogLoaded;
+            ongoingRecordingsTimer.Stop();
+            ongoingRecordingsTimer.Tick -= OnOngoingRecordingsTimerTick;
         }
 
         disposed = true;
+    }
+
+    private void OnDialogLoaded(
+        object sender,
+        RoutedEventArgs e)
+        => ongoingRecordingsTimer.Start();
+
+    private void OnOngoingRecordingsTimerTick(
+        object? sender,
+        EventArgs e)
+    {
+        try
+        {
+            viewModel.UpdateOngoingRecordings();
+        }
+        catch (IOException)
+        {
+            // A folder that is being moved or a drive that went away: the
+            // next look, or Refresh, will see what is there then.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // As above.
+        }
     }
 
     private void OnCloseRequested(

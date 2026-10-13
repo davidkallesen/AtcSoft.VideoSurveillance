@@ -172,6 +172,71 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                 string.Equals(r.FilePath, state.SelectedFilePath, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// Brings the list up to date with what recorders have done since it
+    /// was loaded: a recording that has ended becomes an ordinary
+    /// recording, and one that has started appears. The open dialog calls
+    /// this every few seconds, so nobody has to press Refresh.
+    /// </summary>
+    /// <returns><see langword="true"/> when something in the list changed.</returns>
+    public bool UpdateOngoingRecordings()
+    {
+        var basePath = GetRecordingsBasePath();
+        if (!Directory.Exists(basePath))
+        {
+            return false;
+        }
+
+        // Ended: the row stays the same row, so the list keeps its place.
+        var ended = false;
+        foreach (var entry in Recordings.Where(r => r.IsBeingRecorded).ToList())
+        {
+            if (!File.Exists(entry.FilePath) || RecordingPathHelper.IsBeingWritten(entry.FilePath))
+            {
+                continue;
+            }
+
+            entry.MarkFinished(new FileInfo(entry.FilePath).Length, MediaProbe.GetDuration(entry.FilePath));
+            ended = true;
+        }
+
+        // Started: a file the list does not have yet.
+        var known = new HashSet<string>(Recordings.Select(r => r.FilePath), StringComparer.OrdinalIgnoreCase);
+        var started = EnumerateRecordingFiles(basePath)
+            .Where(f => !known.Contains(f.FilePath))
+            .Select(f => CreateEntry(f.FilePath, f.CameraName, basePath))
+            .ToList();
+
+        if (started.Count > 0)
+        {
+            var selected = SelectedRecording;
+
+            foreach (var entry in started)
+            {
+                var index = 0;
+                while (index < Recordings.Count && Recordings[index].RecordingTime >= entry.RecordingTime)
+                {
+                    index++;
+                }
+
+                Recordings.Insert(index, entry);
+            }
+
+            // The list is rebuilt for the new rows; the selection goes with it.
+            UpdateCameraFilters();
+            SelectedRecording = selected;
+            UpdateStatusMessage();
+        }
+
+        if (!ended && started.Count == 0)
+        {
+            return false;
+        }
+
+        OnSelectedRecordingChanged();
+        return true;
+    }
+
     [RelayCommand]
     private void Refresh()
     {
@@ -301,40 +366,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                 return;
             }
 
-            var entries = new List<RecordingEntry>();
-
-            // Each folder below the root is a camera. Its recordings may sit
-            // directly in it or in a folder per day, so search the whole
-            // camera folder. The thumbnails folder holds no recordings.
-            foreach (var cameraFolder in Directory.GetDirectories(basePath))
-            {
-                var cameraName = Path.GetFileName(cameraFolder);
-                if (cameraName.Equals(RecordingPathHelper.ThumbnailsFolderName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                foreach (var file in Directory.EnumerateFiles(cameraFolder, "*.*", SearchOption.AllDirectories)
-                    .Where(IsVideoFile))
-                {
-                    var info = new FileInfo(file);
-                    var isBeingRecorded = RecordingPathHelper.IsBeingWritten(file);
-                    var duration = isBeingRecorded ? TimeSpan.Zero : MediaProbe.GetDuration(file);
-
-                    entries.Add(new RecordingEntry
-                    {
-                        FilePath = file,
-                        CameraName = cameraName,
-                        RecordingRoot = basePath,
-                        RecordingTime = RecordingPathHelper.TryParseTimestamp(info.Name, out var timestamp)
-                            ? timestamp
-                            : info.CreationTime,
-                        FileSizeBytes = info.Length,
-                        Duration = duration,
-                        IsBeingRecorded = isBeingRecorded,
-                    });
-                }
-            }
+            var entries = EnumerateRecordingFiles(basePath)
+                .Select(f => CreateEntry(f.FilePath, f.CameraName, basePath))
+                .ToList();
 
             // Sort by date descending (newest first)
             Recordings = new ObservableCollection<RecordingEntry>(
@@ -347,6 +381,44 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         {
             IsLoading = false;
         }
+    }
+
+    // Each folder below the root is a camera. Its recordings may sit
+    // directly in it or in a folder per day, so the whole camera folder is
+    // searched. The thumbnails folder holds no recordings.
+    private static IEnumerable<(string FilePath, string CameraName)> EnumerateRecordingFiles(string basePath)
+    {
+        foreach (var cameraFolder in Directory.GetDirectories(basePath))
+        {
+            var cameraName = Path.GetFileName(cameraFolder);
+            if (cameraName.Equals(RecordingPathHelper.ThumbnailsFolderName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(cameraFolder, "*.*", SearchOption.AllDirectories)
+                .Where(IsVideoFile))
+            {
+                yield return (file, cameraName);
+            }
+        }
+    }
+
+    // A recording that is still being made has no length yet, and probing
+    // it only makes FFmpeg report a broken file.
+    private static RecordingEntry CreateEntry(
+        string filePath,
+        string cameraName,
+        string basePath)
+    {
+        var info = new FileInfo(filePath);
+        var recordingTime = RecordingPathHelper.TryParseTimestamp(info.Name, out var timestamp)
+            ? timestamp
+            : info.CreationTime;
+
+        return RecordingPathHelper.IsBeingWritten(filePath)
+            ? RecordingEntry.Ongoing(filePath, cameraName, basePath, recordingTime, info.Length)
+            : RecordingEntry.Finished(filePath, cameraName, basePath, recordingTime, info.Length, MediaProbe.GetDuration(filePath));
     }
 
     private string GetRecordingsBasePath()
@@ -406,11 +478,6 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         return ext is ".MP4" or ".MKV" or ".AVI";
     }
 
-    /// <summary>
-    /// Gets the length of a recording. A recording that is still being made
-    /// has no length yet, and probing it only makes FFmpeg report a broken
-    /// file, so it is left at zero.
-    /// </summary>
     // The list is as old as its last refresh, so the file itself is asked:
     // a recording may have started, or ended, since.
     private static bool IsFinished(RecordingEntry? recording)
