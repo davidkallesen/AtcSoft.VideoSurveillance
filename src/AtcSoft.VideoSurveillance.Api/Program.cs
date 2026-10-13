@@ -207,6 +207,15 @@ try
     builder.Services
         .AddHttpClient(WebhookSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
     builder.Services.AddSingleton<IWebhookSender, WebhookSender>();
+
+    // The receivers: those configured above, and those added through the
+    // API, which are kept in webhooks.json in the data folder.
+    builder.Services.AddSingleton(sp => new WebhookRegistry(
+        sp.GetRequiredService<ServerDataPaths>().WebhooksPath,
+        sp.GetRequiredService<WebhookOptions>(),
+        sp.GetRequiredService<IWebhookSender>(),
+        sp.GetRequiredService<ILogger<WebhookRegistry>>()));
+    builder.Services.AddSingleton<IWebhookRegistry>(sp => sp.GetRequiredService<WebhookRegistry>());
     builder.Services.AddSingleton(new WebhookDispatcherServiceOptions());
     builder.Services.AddHostedService<WebhookDispatcherService>();
 

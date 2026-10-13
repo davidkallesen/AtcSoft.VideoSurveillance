@@ -15,7 +15,7 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
     public const int QueueCapacity = 500;
 
     private readonly ConcurrentQueue<WebhookEvent> queue = new();
-    private readonly List<WebhookEndpoint> endpoints;
+    private readonly WebhookRegistry registry;
     private readonly ConcurrentDictionary<Guid, byte> camerasInMotion = new();
     private readonly IWebhookSender sender;
     private readonly IRecordingService recordingService;
@@ -27,7 +27,7 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
     public WebhookDispatcherService(
         ILogger<WebhookDispatcherService> logger,
         WebhookDispatcherServiceOptions options,
-        WebhookOptions webhookOptions,
+        WebhookRegistry registry,
         IWebhookSender sender,
         IRecordingService recordingService,
         IMotionDetectionService motionDetectionService,
@@ -36,14 +36,9 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
         ServerRecordingService? serverRecordingService = null)
         : base(logger, options)
     {
-        ArgumentNullException.ThrowIfNull(webhookOptions);
+        ArgumentNullException.ThrowIfNull(registry);
 
-        endpoints = [.. webhookOptions.Endpoints.Where(e => e.IsValid)];
-        foreach (var invalid in webhookOptions.Endpoints.Where(e => !e.IsValid))
-        {
-            LogInvalidEndpoint(invalid.LogName);
-        }
-
+        this.registry = registry;
         this.sender = sender;
         this.recordingService = recordingService;
         this.motionDetectionService = motionDetectionService;
@@ -60,17 +55,15 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
     /// <inheritdoc />
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        if (endpoints.Count > 0)
+        // Always, also without receivers: one can be added while the server runs.
+        recordingService.RecordingStateChanged += OnRecordingStateChanged;
+        motionDetectionService.MotionDetected += OnMotionDetected;
+        if (serverRecordingService is not null)
         {
-            recordingService.RecordingStateChanged += OnRecordingStateChanged;
-            motionDetectionService.MotionDetected += OnMotionDetected;
-            if (serverRecordingService is not null)
-            {
-                serverRecordingService.CameraConnectionStateChanged += OnCameraConnectionStateChanged;
-            }
+            serverRecordingService.CameraConnectionStateChanged += OnCameraConnectionStateChanged;
         }
 
-        LogStarted(endpoints.Count);
+        LogStarted(registry.ActiveEndpoints.Count);
 
         return base.StartAsync(cancellationToken);
     }
@@ -97,7 +90,7 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
     {
         ArgumentNullException.ThrowIfNull(webhookEvent);
 
-        if (endpoints.Count == 0)
+        if (registry.ActiveEndpoints.Count == 0)
         {
             return false;
         }
@@ -123,7 +116,9 @@ public sealed partial class WebhookDispatcherService : BackgroundServiceBase<Web
     {
         while (!stoppingToken.IsCancellationRequested && queue.TryDequeue(out var webhookEvent))
         {
-            foreach (var endpoint in endpoints)
+            // Asked for each event: a receiver added or changed through the
+            // API gets the next one.
+            foreach (var endpoint in registry.ActiveEndpoints)
             {
                 if (!endpoint.Wants(webhookEvent.Type))
                 {

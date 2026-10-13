@@ -29,6 +29,8 @@ public sealed class ServerDataPaths
         CameraDataPath = DataPath is null
             ? ApplicationPaths.DefaultCameraDataPath
             : Path.Combine(DataPath, Path.GetFileName(ApplicationPaths.DefaultCameraDataPath));
+
+        WebhooksPath = Path.Combine(Path.GetDirectoryName(SettingsPath)!, "webhooks.json");
     }
 
     /// <summary>
@@ -45,6 +47,12 @@ public sealed class ServerDataPaths
     /// Gets the path of the cameras and layouts file.
     /// </summary>
     public string CameraDataPath { get; }
+
+    /// <summary>
+    /// Gets the path of the file with the webhook receivers added through
+    /// the API. It lies next to the settings file.
+    /// </summary>
+    public string WebhooksPath { get; }
 
     /// <summary>
     /// Moves the recording, snapshot and log folders into the data folder

@@ -7,6 +7,7 @@ public sealed class WebhookDispatcherServiceTests
 
     private readonly IWebhookSender sender = Substitute.For<IWebhookSender>();
     private readonly IMotionDetectionService motionDetection = Substitute.For<IMotionDetectionService>();
+    private WebhookRegistry? registry;
 
     [Fact]
     public async Task Each_Queued_Event_Goes_To_Every_Endpoint_That_Wants_It()
@@ -125,15 +126,39 @@ public sealed class WebhookDispatcherServiceTests
         sut.QueuedCount.Should().Be(WebhookDispatcherService.QueueCapacity);
     }
 
+    [Fact]
+    public async Task A_Receiver_Added_While_The_Server_Runs_Gets_The_Next_Event()
+    {
+        using var sut = CreateSut();
+        sut.Enqueue(Motion).Should().BeFalse("there is nobody to send it to yet");
+
+        registry!.Add("https://added.test/hook", secret: null, events: null);
+        sut.Enqueue(Motion).Should().BeTrue();
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+
+        await sender.Received(1).SendAsync(
+            Arg.Is<WebhookEndpoint>(e => e.Url == "https://added.test/hook"),
+            Motion,
+            Arg.Any<CancellationToken>());
+    }
+
     private WebhookDispatcherService CreateSut(
         params WebhookEndpoint[] endpoints)
-        => new(
+    {
+        registry = new WebhookRegistry(
+            Path.Combine(Path.GetTempPath(), "atcsoft-webhooks-" + Guid.NewGuid().ToString("N"), "webhooks.json"),
+            new WebhookOptions { Endpoints = [.. endpoints] },
+            sender,
+            NullLogger<WebhookRegistry>.Instance);
+
+        return new(
             NullLogger<WebhookDispatcherService>.Instance,
             new WebhookDispatcherServiceOptions(),
-            new WebhookOptions { Endpoints = [.. endpoints] },
+            registry,
             sender,
             Substitute.For<IRecordingService>(),
             motionDetection,
             Substitute.For<ICameraStorageService>(),
             Substitute.For<IApplicationSettingsService>());
+    }
 }

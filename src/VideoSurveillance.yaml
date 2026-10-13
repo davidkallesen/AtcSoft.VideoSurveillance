@@ -467,6 +467,145 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /webhooks:
+    get:
+      summary: List the receivers the server posts its events to
+      operationId: listWebhooks
+      tags:
+        - webhooks
+      responses:
+        '200':
+          description: The receivers, those from the server's configuration first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Webhook"
+    post:
+      summary: Add a receiver
+      operationId: createWebhook
+      tags:
+        - webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookRequest"
+      responses:
+        '201':
+          description: Receiver added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        '400':
+          description: The address is not an http or https address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /webhooks/{webhookId}:
+    put:
+      summary: Change a receiver
+      operationId: updateWebhook
+      tags:
+        - webhooks
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWebhookRequest"
+      responses:
+        '200':
+          description: Receiver changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        '400':
+          description: The address is not an http or https address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: Receiver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '409':
+          description: The receiver comes from the server's configuration and cannot be changed here
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Remove a receiver
+      operationId: deleteWebhook
+      tags:
+        - webhooks
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Receiver removed
+        '404':
+          description: Receiver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '409':
+          description: The receiver comes from the server's configuration and cannot be removed here
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /webhooks/{webhookId}/test:
+    post:
+      summary: Send a test event to a receiver
+      operationId: testWebhook
+      tags:
+        - webhooks
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The test event was sent; the result says whether the receiver took it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookTestResult"
+        '404':
+          description: Receiver not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
     Camera:
@@ -1056,3 +1195,68 @@ components:
           format: int32
         message:
           type: string
+
+    Webhook:
+      type: object
+      required:
+        - id
+        - url
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          description: The http or https address events are posted to.
+        events:
+          type: array
+          description: The events the receiver gets, by name ("motion.started") or by group ("motion.*"). Empty means all events.
+          items:
+            type: string
+        hasSecret:
+          type: boolean
+          description: Whether requests to the receiver are signed. The secret itself is never sent out.
+        isEditable:
+          type: boolean
+          description: False for a receiver that comes from the server's configuration.
+
+    CreateWebhookRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+        secret:
+          type: string
+          nullable: true
+          description: Signs each request (X-AtcSoft-Signature). Leave out for unsigned requests.
+        events:
+          type: array
+          items:
+            type: string
+
+    UpdateWebhookRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+        secret:
+          type: string
+          nullable: true
+          description: Leave out to keep the secret as it is; send an empty text to remove it.
+        events:
+          type: array
+          items:
+            type: string
+
+    WebhookTestResult:
+      type: object
+      required:
+        - delivered
+      properties:
+        delivered:
+          type: boolean
+          description: Whether the receiver answered the test event with a success status.
