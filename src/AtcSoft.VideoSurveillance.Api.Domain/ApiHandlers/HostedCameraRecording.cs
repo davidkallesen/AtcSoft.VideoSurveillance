@@ -8,8 +8,6 @@
 /// </summary>
 public static class HostedCameraRecording
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
-
     /// <summary>
     /// Gets the text that tells a user why the camera could not be recorded.
     /// </summary>
@@ -62,7 +60,7 @@ public static class HostedCameraRecording
         var started = false;
         try
         {
-            if (!await WaitForPicturesAsync(pipeline, timeout, cancellationToken).ConfigureAwait(false))
+            if (!await PipelineConnectionWaiter.WaitForPicturesAsync(pipeline, timeout, cancellationToken).ConfigureAwait(false))
             {
                 return HostedCameraRecordingOutcome.NotConnected;
             }
@@ -78,55 +76,6 @@ public static class HostedCameraRecording
             {
                 host.Release(camera.Id, AtcSoft.VideoSurveillance.Enums.CameraPipelineUse.Recording);
             }
-        }
-    }
-
-    // The pipeline may have been playing for hours, so its "connected"
-    // event may be long past: it is asked whether it delivers pictures.
-    private static async Task<bool> WaitForPicturesAsync(
-        IMediaPipeline pipeline,
-        TimeSpan timeout,
-        CancellationToken cancellationToken)
-    {
-        var failed = false;
-
-        void OnStateChanged(
-            object? sender,
-            AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs e)
-        {
-            if (e.NewState == AtcSoft.VideoSurveillance.Enums.ConnectionState.Error)
-            {
-                Volatile.Write(ref failed, true);
-            }
-        }
-
-        pipeline.ConnectionStateChanged += OnStateChanged;
-        try
-        {
-            var deadline = DateTime.UtcNow + timeout;
-            while (true)
-            {
-                if (pipeline.FramesDecoded > 0)
-                {
-                    return true;
-                }
-
-                if (Volatile.Read(ref failed) || DateTime.UtcNow >= deadline || cancellationToken.IsCancellationRequested)
-                {
-                    return false;
-                }
-
-                await Task.Delay(PollInterval, CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-        catch (ObjectDisposedException)
-        {
-            // Its host closed it meanwhile.
-            return false;
-        }
-        finally
-        {
-            pipeline.ConnectionStateChanged -= OnStateChanged;
         }
     }
 }

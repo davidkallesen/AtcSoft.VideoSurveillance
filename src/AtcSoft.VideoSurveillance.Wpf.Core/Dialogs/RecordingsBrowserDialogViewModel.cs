@@ -386,7 +386,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     // Each folder below the root is a camera. Its recordings may sit
     // directly in it or in a folder per day, so the whole camera folder is
     // searched. The thumbnails folder holds no recordings.
-    private static IEnumerable<(string FilePath, string CameraName)> EnumerateRecordingFiles(string basePath)
+    private static IEnumerable<(string FilePath, string CameraName)> EnumerateRecordingFiles(
+        string basePath)
     {
         foreach (var cameraFolder in Directory.GetDirectories(basePath))
         {

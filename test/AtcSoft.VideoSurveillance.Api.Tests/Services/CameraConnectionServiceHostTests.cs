@@ -178,6 +178,22 @@ public sealed class CameraConnectionServiceHostTests : IDisposable
     }
 
     [Fact]
+    public async Task Two_Snapshots_At_Once_Keep_The_Camera_Until_The_Second_Is_Done()
+    {
+        // The same use twice is two uses: the first to finish must not
+        // close the camera under the other.
+        sut.Acquire(camera, CameraPipelineUse.Snapshot);
+        sut.Acquire(camera, CameraPipelineUse.Snapshot);
+
+        sut.Release(camera.Id, CameraPipelineUse.Snapshot);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        pipeline.DidNotReceive().Dispose();
+
+        sut.Release(camera.Id, CameraPipelineUse.Snapshot);
+        await WaitForAsync(() => pipeline.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(IDisposable.Dispose)));
+    }
+
+    [Fact]
     public void An_Unplugged_Camera_Cannot_Be_Opened()
     {
         usbLifecycle.IsUnplugged(camera.Id).Returns(true);

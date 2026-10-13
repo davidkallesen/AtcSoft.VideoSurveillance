@@ -2,12 +2,17 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 
 /// <summary>
 /// Handler business logic for the CaptureSnapshot operation.
-/// Creates a transient media pipeline to capture a single frame from the camera stream.
+/// Creates a transient media pipeline to capture a single frame from the
+/// camera stream. A camera that can only be opened once (a USB camera) is
+/// not opened here: the picture is taken from the one pipeline its
+/// <see cref="ICameraPipelineHost"/> keeps, which someone may be watching
+/// or recording on.
 /// </summary>
 public sealed class CaptureSnapshotHandler(
     ICameraStorageService storage,
     IMediaPipelineFactory pipelineFactory,
-    IApplicationSettingsService settingsService) : ICaptureSnapshotHandler
+    IApplicationSettingsService settingsService,
+    ICameraPipelineHost? pipelineHost = null) : ICaptureSnapshotHandler
 {
     // Same envelope as StartRecording — long enough for a typical RTSP open
     // (1-3s), short enough that a stuck client gets a definite answer.
@@ -25,6 +30,11 @@ public sealed class CaptureSnapshotHandler(
             return CaptureSnapshotResult.NotFound($"Camera {parameters.CameraId} not found.");
         }
 
+        if (pipelineHost?.Hosts(camera) == true)
+        {
+            return await CaptureFromSharedPipelineAsync(pipelineHost, camera, cancellationToken).ConfigureAwait(false);
+        }
+
         using var pipeline = pipelineFactory.Create(camera);
 
         // pipelineFactory.Create returns before RTSP open completes; the
@@ -40,6 +50,46 @@ public sealed class CaptureSnapshotHandler(
                 $"Camera {parameters.CameraId} did not reach Connected within {ConnectionTimeout.TotalSeconds:N0}s.");
         }
 
+        return await CaptureAndSaveAsync(pipeline, camera, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<CaptureSnapshotResult> CaptureFromSharedPipelineAsync(
+        ICameraPipelineHost host,
+        AtcSoft.VideoSurveillance.Models.CameraConfiguration camera,
+        CancellationToken cancellationToken)
+    {
+        var pipeline = host.Acquire(camera, AtcSoft.VideoSurveillance.Enums.CameraPipelineUse.Snapshot);
+        if (pipeline is null)
+        {
+            return CaptureSnapshotResult.NotFound(
+                "This USB camera cannot be opened right now: it is unplugged, or the server is still connecting to it. Try again in a moment.");
+        }
+
+        // The pipeline is given back, never closed.
+        try
+        {
+            var playing = await PipelineConnectionWaiter
+                .WaitForPicturesAsync(pipeline, ConnectionTimeout, cancellationToken)
+                .ConfigureAwait(false);
+            if (!playing)
+            {
+                return CaptureSnapshotResult.NotFound(
+                    $"Camera {camera.Id} delivered no picture within {ConnectionTimeout.TotalSeconds:N0}s.");
+            }
+
+            return await CaptureAndSaveAsync(pipeline, camera, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            host.Release(camera.Id, AtcSoft.VideoSurveillance.Enums.CameraPipelineUse.Snapshot);
+        }
+    }
+
+    private async Task<CaptureSnapshotResult> CaptureAndSaveAsync(
+        IMediaPipeline pipeline,
+        AtcSoft.VideoSurveillance.Models.CameraConfiguration camera,
+        CancellationToken cancellationToken)
+    {
         var frame = await pipeline.CaptureFrameAsync(cancellationToken);
         if (frame is null)
         {

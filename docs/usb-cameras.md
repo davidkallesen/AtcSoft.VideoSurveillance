@@ -152,7 +152,7 @@ A USB camera whose *Capture audio* is on, with a microphone named, is opened tog
 - Sound and picture come from the same clock and keep their place against each other; sound from before a file's first picture is left out.
 - A camera whose sound cannot be encoded is recorded without it, with a warning in the log.
 - No live picture has sound, in the apps or in the web client: a USB camera's browser stream is written by the server's own pipeline, picture only.
-- A camera whose microphone is named but not there (it sat in a monitor or dock that is not connected) does not open at all. Turn *Capture audio* off, or name a microphone that is there.
+- A camera whose microphone is named but not there (it sat in a monitor or dock that is not connected) is opened for its picture alone, with a warning in the log that names the microphone. Its recordings then have no sound. The microphone is tried again every time the camera is opened.
 - The engine switch is `StreamOptions.RecordAudio`, off by default. Network cameras do not use it yet.
 
 ## ⏸️ What's not in scope (yet)

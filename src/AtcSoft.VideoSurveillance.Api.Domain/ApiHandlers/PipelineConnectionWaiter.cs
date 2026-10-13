@@ -10,6 +10,67 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers;
 /// </summary>
 internal static class PipelineConnectionWaiter
 {
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    /// Waits for a pipeline that may be playing already to deliver
+    /// pictures. A shared pipeline may have been playing for hours, so its
+    /// "connected" event may be long past: it is asked, not listened to.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> when the pipeline delivers pictures;
+    /// <see langword="false"/> on an error, when it was closed, on timeout
+    /// or on cancellation.
+    /// </returns>
+    public static async Task<bool> WaitForPicturesAsync(
+        IMediaPipeline pipeline,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pipeline);
+
+        var failed = false;
+
+        void OnStateChanged(
+            object? sender,
+            AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs e)
+        {
+            if (e.NewState == AtcSoft.VideoSurveillance.Enums.ConnectionState.Error)
+            {
+                Volatile.Write(ref failed, true);
+            }
+        }
+
+        pipeline.ConnectionStateChanged += OnStateChanged;
+        try
+        {
+            var deadline = DateTime.UtcNow + timeout;
+            while (true)
+            {
+                if (pipeline.FramesDecoded > 0)
+                {
+                    return true;
+                }
+
+                if (Volatile.Read(ref failed) || DateTime.UtcNow >= deadline || cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
+                await Task.Delay(PollInterval, CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // Its host closed it meanwhile.
+            return false;
+        }
+        finally
+        {
+            pipeline.ConnectionStateChanged -= OnStateChanged;
+        }
+    }
+
     /// <summary>
     /// Returns true when the pipeline reaches Connected, false on Error,
     /// timeout, or external cancellation.

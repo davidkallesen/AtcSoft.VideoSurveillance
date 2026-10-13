@@ -14,4 +14,9 @@ public enum CameraPipelineUse
     /// The camera is being recorded because someone asked for it.
     /// </summary>
     Recording = 1,
+
+    /// <summary>
+    /// A single picture is being taken from the camera.
+    /// </summary>
+    Snapshot = 2,
 }

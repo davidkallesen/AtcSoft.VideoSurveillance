@@ -34,7 +34,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | Area | What |
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
-| [USB cameras](roadmap-usb-cameras.md) | Sound in a USB camera's live view in the web client; a snapshot of a USB camera that is in use; a look at the USB paths in the server's desktop client |
+| [USB cameras](roadmap-usb-cameras.md) | Sound in a USB camera's live view in the web client; a look at the USB paths in the server's desktop client |
 | [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen; so is the per-camera *Recording video* row in CameraWall's camera dialog |
 
 ### Later
@@ -55,7 +55,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | 🟨 | Phases 2, 5, 7; phases 1, 3, 4, 6 built; the web client's live view rotates | Hands-on checks; the 180° box report is not explained |
 | 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built; move-on-save; server thumbnails and a corrected recordings listing | Hands-on checks in each layout |
 | 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
-| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | Live-view sound, snapshot while in use; ⏸️ phases 10–11 |
+| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | Live-view sound; ⏸️ phases 10–11 |
 | 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
 | 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities); auto-reconnect on network recovery |
 | 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |

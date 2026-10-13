@@ -39,9 +39,11 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     private readonly ConcurrentDictionary<Guid, byte> recordingOnConnect = new();
 
     // What each hosted camera's pipeline is in use for, beyond what the
-    // server wants with the camera itself. Guarded by pipelineGate, as is
-    // every decision to close a pipeline that might be in use.
-    private readonly Dictionary<Guid, HashSet<CameraPipelineUse>> pipelineUses = [];
+    // server wants with the camera itself. One entry per Acquire: the same
+    // use can be held more than once (two snapshots at the same time).
+    // Guarded by pipelineGate, as is every decision to close a pipeline
+    // that might be in use.
+    private readonly Dictionary<Guid, List<CameraPipelineUse>> pipelineUses = [];
     private readonly Lock pipelineGate = new();
 
     public CameraConnectionService(
