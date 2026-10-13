@@ -271,15 +271,29 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                         // from outside) and only the reference here lingers.
                         if (!existingPipeline.IsRecordingActive)
                         {
-                            LogDeadPipelineDetected(camera.Id, camera.Display.DisplayName);
-
                             if (recordingService.IsRecording(camera.Id))
                             {
                                 recordingService.StopRecording(camera.Id);
                             }
 
-                            managedPipelines.TryRemove(camera.Id, out _);
                             recordingOnConnect.TryRemove(camera.Id, out _);
+
+                            if (!Hosts(camera))
+                            {
+                                // The recording owned the pipeline and closed it.
+                                LogDeadPipelineDetected(camera.Id, camera.Display.DisplayName);
+                                managedPipelines.TryRemove(camera.Id, out _);
+                            }
+                            else if (HasStoppedPlaying(existingPipeline))
+                            {
+                                LogDeadPipelineDetected(camera.Id, camera.Display.DisplayName);
+                                ScheduleDeferredDisposal(camera.Id);
+                                connectionStates?.Report(camera.Id, ConnectionState.Disconnected);
+                            }
+
+                            // Otherwise the recording of a hosted camera was
+                            // only stopped: its pipeline plays on (someone
+                            // may be watching), and is recorded again below.
                         }
                     }
                     else if (existingPipeline.FramesDecoded <= 0 && !recordingService.IsRecording(camera.Id))
@@ -366,6 +380,22 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     private bool ServerKeepsOpen(CameraConfiguration camera)
         => ShouldWatchForMotion(camera) ||
            RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect);
+
+    // A hosted camera's pipeline stays here whoever records on it, so that
+    // stopping the recording does not close it under a viewer.
+    private bool StartRecordingOnConnect(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline)
+        => Hosts(camera)
+            ? recordingService.StartRecordingOnSharedPipeline(camera, pipeline)
+            : recordingService.StartRecording(camera, pipeline);
+
+    private static bool HasStoppedPlaying(IMediaPipeline pipeline)
+    {
+        var lastPacket = pipeline.LastPacketUtc;
+        return pipeline.FramesDecoded <= 0 ||
+               (lastPacket != DateTime.MinValue && DateTime.UtcNow - lastPacket > WatchedCameraSilenceLimit);
+    }
 
     private IMediaPipeline OpenManagedPipeline(CameraConfiguration camera)
     {
@@ -665,7 +695,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
 
         try
         {
-            if (recordingService.StartRecording(camera, pipeline))
+            if (StartRecordingOnConnect(camera, pipeline))
             {
                 recordingOnConnect[camera.Id] = 0;
                 LogRecordingOnConnectStartedFallback(camera.Id, camera.Display.DisplayName);
@@ -674,8 +704,12 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
 
             // Another path (REST/SignalR) won the race and is already
             // recording. Our pipeline isn't owned by the recording service
-            // — drop it so we don't leak two demuxers per camera.
-            ScheduleDeferredDisposal(camera.Id);
+            // — drop it so we don't leak two demuxers per camera. A hosted
+            // camera has only this pipeline, whoever records on it.
+            if (!Hosts(camera))
+            {
+                ScheduleDeferredDisposal(camera.Id);
+            }
         }
         catch (Exception ex)
         {
@@ -725,6 +759,13 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                 return;
             }
 
+            // A recording on a hosted camera's pipeline does not report the
+            // camera's connection: the pipeline is not its own.
+            if (Hosts(camera))
+            {
+                connectionStates?.Report(camera.Id, ConnectionState.Connected);
+            }
+
             if (recordingService.IsRecording(camera.Id))
             {
                 return;
@@ -732,7 +773,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
 
             try
             {
-                if (recordingService.StartRecording(camera, pipeline))
+                if (StartRecordingOnConnect(camera, pipeline))
                 {
                     recordingOnConnect[camera.Id] = 0;
                     LogRecordingOnConnectStarted(camera.Id, camera.Display.DisplayName);
@@ -742,8 +783,12 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                 // Race lost: another caller started this camera between the
                 // IsRecording check above and here. Our pipeline isn't owned
                 // by the recording service — schedule disposal (deferred to
-                // the ThreadPool because we're on the demux thread).
-                ScheduleDeferredDisposal(camera.Id);
+                // the ThreadPool because we're on the demux thread). A
+                // hosted camera has only this pipeline, whoever records on it.
+                if (!Hosts(camera))
+                {
+                    ScheduleDeferredDisposal(camera.Id);
+                }
             }
             catch (Exception ex)
             {
@@ -763,11 +808,28 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             LogPipelineConnectionFailed(camera.Id, camera.Display.DisplayName);
             RecordFailure(camera);
             StopWatching(camera.Id);
+
+            // A recording on a hosted camera's pipeline does not own it and
+            // would be left recording on a closed pipeline.
+            if (Hosts(camera) && recordingService.IsRecording(camera.Id))
+            {
+                try
+                {
+                    recordingService.StopRecording(camera.Id);
+                }
+                catch (Exception ex)
+                {
+                    LogStopRecordingShutdownError(ex, camera.Id);
+                }
+            }
+
             ScheduleDeferredDisposal(camera.Id);
 
             // A recorded camera's state is reported by its recording. One
-            // that was only watched has nobody else to say it is gone.
-            if (!RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect))
+            // that was only watched, or is hosted, has nobody else to say
+            // it is gone.
+            if (Hosts(camera) ||
+                !RecordingPolicyHelper.ShouldRecordOnConnect(camera, settingsService.Recording.EnableRecordingOnConnect))
             {
                 connectionStates?.Report(camera.Id, ConnectionState.Disconnected);
             }

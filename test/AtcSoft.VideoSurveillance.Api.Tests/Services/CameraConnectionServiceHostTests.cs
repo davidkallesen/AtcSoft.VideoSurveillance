@@ -231,14 +231,73 @@ public sealed class CameraConnectionServiceHostTests : IDisposable
         // two openers of a camera that only takes one.
         sut.Acquire(camera, CameraPipelineUse.Viewing);
         pipeline.FramesDecoded.Returns(10);
-        recordingService.StartRecording(camera, pipeline).Returns(true);
+        recordingService.StartRecordingOnSharedPipeline(camera, pipeline).Returns(true);
         recordingSettings.EnableRecordingOnConnect = true;
 
         await sut.DoWorkAsync(TestContext.Current.CancellationToken);
 
-        recordingService.Received(1).StartRecording(camera, pipeline);
+        recordingService.Received(1).StartRecordingOnSharedPipeline(camera, pipeline);
         pipelineFactory.Received(1).Create(camera);
         pipeline.DidNotReceive().Dispose();
+    }
+
+    [Fact]
+    public async Task A_Usb_Camera_Recorded_On_Connect_Is_Recorded_On_Its_Shared_Pipeline_Too()
+    {
+        // A recording that owned the pipeline would close it when it is
+        // stopped, under the eyes of whoever is watching the camera.
+        recordingSettings.EnableRecordingOnConnect = true;
+        recordingService.StartRecordingOnSharedPipeline(camera, pipeline).Returns(true);
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+
+        RaiseConnected();
+
+        recordingService.Received(1).StartRecordingOnSharedPipeline(camera, pipeline);
+        recordingService.DidNotReceiveWithAnyArgs().StartRecording(default!, default!);
+        connectionStates.Received(1).Report(camera.Id, ConnectionState.Connected);
+    }
+
+    [Fact]
+    public async Task Stopping_The_Recording_Of_A_Usb_Camera_Recorded_On_Connect_Leaves_The_Viewer_Their_Picture()
+    {
+        recordingSettings.EnableRecordingOnConnect = true;
+        recordingService.StartRecordingOnSharedPipeline(camera, pipeline).Returns(true);
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+        RaiseConnected();
+        sut.Acquire(camera, CameraPipelineUse.Viewing).Should().BeSameAs(pipeline);
+
+        // Someone stops the recording; the camera goes on playing.
+        pipeline.IsRecordingActive.Returns(false);
+        pipeline.FramesDecoded.Returns(500);
+        pipeline.LastPacketUtc.Returns(_ => DateTime.UtcNow);
+        RaiseRecordingStopped();
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        pipeline.DidNotReceive().Dispose();
+        pipelineFactory.Received(1).Create(camera);
+        recordingService.Received(2).StartRecordingOnSharedPipeline(camera, pipeline);
+    }
+
+    [Fact]
+    public async Task A_Usb_Camera_Recorded_On_Connect_That_Went_Silent_Is_Closed_And_Opened_Again()
+    {
+        recordingSettings.EnableRecordingOnConnect = true;
+        var second = Substitute.For<IMediaPipeline>();
+        pipelineFactory.Create(camera).Returns(pipeline, second);
+        recordingService.StartRecordingOnSharedPipeline(camera, pipeline).Returns(true);
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+        RaiseConnected();
+
+        // The recording service has given the recording up already.
+        pipeline.IsRecordingActive.Returns(false);
+        pipeline.FramesDecoded.Returns(500);
+        pipeline.LastPacketUtc.Returns(DateTime.UtcNow.AddMinutes(-2));
+        await sut.DoWorkAsync(TestContext.Current.CancellationToken);
+
+        await WaitForAsync(() => pipeline.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(IDisposable.Dispose)));
+        pipelineFactory.Received(2).Create(camera);
+        second.Dispose();
     }
 
     [Fact]
@@ -258,8 +317,11 @@ public sealed class CameraConnectionServiceHostTests : IDisposable
     }
 
     [Fact]
-    public async Task A_Recorded_Camera_Whose_Recording_Died_Is_Opened_Again()
+    public async Task A_Recorded_Network_Camera_Whose_Recording_Died_Is_Opened_Again()
     {
+        // Its recording owns the pipeline and closes it when it stops.
+        camera.Connection.Source = CoreCameraSource.Network;
+        camera.Connection.IpAddress = "10.0.0.1";
         recordingSettings.EnableRecordingOnConnect = true;
         var second = Substitute.For<IMediaPipeline>();
         pipelineFactory.Create(camera).Returns(pipeline, second);
