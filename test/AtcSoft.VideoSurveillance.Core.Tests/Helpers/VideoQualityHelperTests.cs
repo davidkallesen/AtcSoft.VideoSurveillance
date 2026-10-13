@@ -30,8 +30,7 @@ public sealed class VideoQualityHelperTests
     [InlineData("  ")]
     [InlineData("4k")]
     [InlineData("best")]
-    public void Normalize_Returns_Null_For_Anything_Else(
-        string? value)
+    public void Normalize_Returns_Null_For_Anything_Else(string? value)
         => VideoQualityHelper.Normalize(value).Should().BeNull();
 
     [Fact]

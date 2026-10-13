@@ -290,6 +290,40 @@ public class ListRecordingsHandlerTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_AFinishedRecordingHasItsLength()
+    {
+        // Arrange
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+            var video = Touch(Path.Combine(root, "Front Door", "Front Door_20261011_101500_000.mp4"));
+            var unreadable = Touch(Path.Combine(root, "Front Door", "Front Door_20261011_111500_000.mp4"));
+
+            var durations = Substitute.For<IRecordingDurationProvider>();
+            durations.GetDuration(video).Returns(TimeSpan.FromSeconds(65));
+            durations.GetDuration(unreadable).Returns((TimeSpan?)null);
+
+            var handler = CreateHandlerFor(root, durations, camera);
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert — ISO 8601, as the contract says; empty when the length is not known
+            var recordings = result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!;
+            recordings.Single(r => r.FilePath.Contains("101500", StringComparison.Ordinal)).Duration.Should().Be("PT1M5S");
+            recordings.Single(r => r.FilePath.Contains("111500", StringComparison.Ordinal)).Duration.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ExecuteAsync_TwoCamerasWithTheSameName_DoesNotFail()
     {
         // Arrange
@@ -322,6 +356,12 @@ public class ListRecordingsHandlerTests
     private static ListRecordingsHandler CreateHandlerFor(
         string recordingPath,
         params CameraConfiguration[] cameras)
+        => CreateHandlerFor(recordingPath, durationProvider: null, cameras);
+
+    private static ListRecordingsHandler CreateHandlerFor(
+        string recordingPath,
+        IRecordingDurationProvider? durationProvider,
+        params CameraConfiguration[] cameras)
     {
         var recordingService = Substitute.For<IRecordingService>();
         recordingService.GetActiveSessions().Returns([]);
@@ -332,7 +372,7 @@ public class ListRecordingsHandlerTests
         var cameraStorageService = Substitute.For<ICameraStorageService>();
         cameraStorageService.GetAllCameras().Returns([.. cameras]);
 
-        return new ListRecordingsHandler(recordingService, settingsService, cameraStorageService);
+        return new ListRecordingsHandler(recordingService, settingsService, cameraStorageService, durationProvider);
     }
 
     private static string Touch(string path)

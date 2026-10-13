@@ -35,6 +35,16 @@ public sealed class HlsStreamCommandTests
     }
 
     [Fact]
+    public void FFmpeg_Is_Told_Not_To_Print_Its_Progress()
+    {
+        // The progress line comes twice a second per stream, and every line
+        // FFmpeg prints goes into the server's log.
+        var arguments = HlsStreamCommand.BuildArguments(CreateCamera(CoreCameraProtocol.Rtsp, 554), Playlist);
+
+        arguments.Should().StartWith("-nostats ");
+    }
+
+    [Fact]
     public void The_Password_Is_Not_In_What_Gets_Logged()
     {
         var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);

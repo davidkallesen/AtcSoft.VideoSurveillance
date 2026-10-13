@@ -3,10 +3,15 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 /// <summary>
 /// Handler business logic for the ListRecordings operation.
 /// </summary>
+/// <param name="recordingService">The recordings in progress.</param>
+/// <param name="settingsService">The application settings.</param>
+/// <param name="cameraStorageService">The cameras.</param>
+/// <param name="durationProvider">Reads how long a finished recording is. Optional: without it the length is left out.</param>
 public sealed class ListRecordingsHandler(
     IRecordingService recordingService,
     IApplicationSettingsService settingsService,
-    ICameraStorageService cameraStorageService) : IListRecordingsHandler
+    ICameraStorageService cameraStorageService,
+    IRecordingDurationProvider? durationProvider = null) : IListRecordingsHandler
 {
     private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi"];
 
@@ -100,7 +105,9 @@ public sealed class ListRecordingsHandler(
                     CameraName: cameraName,
                     FilePath: relativePath,
                     StartedAt: startedAt,
-                    Duration: string.Empty,
+                    Duration: durationProvider?.GetDuration(file) is { } duration
+                        ? System.Xml.XmlConvert.ToString(duration)
+                        : string.Empty,
                     FileSizeBytes: fileInfo.Length,
                     HasThumbnail: thumbnail is not null,
                     InProgress: false,

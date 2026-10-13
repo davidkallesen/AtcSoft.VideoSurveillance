@@ -65,6 +65,7 @@ try
         return settingsService;
     });
     builder.Services.AddSingleton<RecordingsFileProvider>();
+    builder.Services.AddSingleton<IRecordingDurationProvider, CachedRecordingDurationProvider>();
 
     // Register both the concrete type and the interface to share one
     // instance — the broadcaster subscribes to ServerRecordingService's

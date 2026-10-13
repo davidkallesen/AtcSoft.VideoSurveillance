@@ -46,6 +46,9 @@ public static class HlsStreamCommand
 
         var arguments = new List<string>
         {
+            // Everything FFmpeg prints is logged; its progress line comes
+            // twice a second for every stream.
+            "-nostats",
             "-v info",
             "-fflags nobuffer",
             "-flags low_delay",

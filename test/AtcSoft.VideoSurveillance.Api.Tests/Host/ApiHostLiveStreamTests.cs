@@ -59,6 +59,8 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
             var afterStop = await FindRecordingAsync(client, name, cancellationToken);
             afterStop!.Value.GetProperty("thumbnailPath").GetString().Should().Be(thumbnailPath);
             afterStop.Value.GetProperty("fileSizeBytes").GetInt64().Should().BeGreaterThan(0);
+            afterStop.Value.GetProperty("inProgress").GetBoolean().Should().BeFalse();
+            afterStop.Value.GetProperty("duration").GetString().Should().StartWith("PT", "a finished recording has its length");
         }
         finally
         {
