@@ -66,9 +66,24 @@
                 CanUserDeleteRows="False"
                 IsReadOnly="True"
                 ItemsSource="{Binding Path=FilteredRecordings}"
+                RowHeight="68"
                 SelectedItem="{Binding Path=SelectedRecording}"
                 SelectionMode="Single">
                 <DataGrid.Columns>
+                    <!--  Fetched from the server; empty for a recording without a thumbnail  -->
+                    <DataGridTemplateColumn Width="90" Header="Thumbnail">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Image
+                                    Width="80"
+                                    Height="60"
+                                    Margin="2"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Source="{Binding Path=ThumbnailUrl, TargetNullValue={x:Null}}"
+                                    Stretch="Uniform" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn
                         Width="150"
                         Binding="{Binding Path=CameraName}"

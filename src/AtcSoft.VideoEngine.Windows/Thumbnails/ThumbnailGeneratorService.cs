@@ -1,4 +1,4 @@
-namespace AtcSoft.CameraWall.Wpf.Services;
+namespace AtcSoft.VideoEngine.Windows.Thumbnails;
 
 using Drawing = System.Drawing;
 using Drawing2D = System.Drawing.Drawing2D;
@@ -6,8 +6,8 @@ using DrawingImaging = System.Drawing.Imaging;
 
 /// <summary>
 /// Service for generating recording thumbnails by capturing frames and creating a grid layout.
+/// Shared by the standalone app and the server; it draws with GDI+, so it is Windows-only.
 /// </summary>
-[Registration(Lifetime.Singleton)]
 public partial class ThumbnailGeneratorService : IThumbnailGeneratorService
 {
     private const int FrameWidth = 320;

@@ -14,6 +14,7 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     private readonly IApplicationSettingsService settingsService;
     private readonly ICameraStorageService cameraStorageService;
     private readonly ILogger<ServerRecordingService> logger;
+    private readonly IThumbnailGeneratorService? thumbnailService;
     private readonly ConcurrentDictionary<Guid, RecordingSession> sessions = new();
     private readonly ConcurrentDictionary<Guid, IMediaPipeline> pipelines = new();
 
@@ -23,14 +24,26 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     // subscribing per-pipeline at every creation site).
     private readonly ConcurrentDictionary<Guid, EventHandler<ConnectionStateChangedEventArgs>> connectionHandlers = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServerRecordingService"/> class.
+    /// </summary>
+    /// <param name="settingsService">The application settings.</param>
+    /// <param name="cameraStorageService">The camera storage.</param>
+    /// <param name="logger">The logger.</param>
+    /// <param name="thumbnailService">
+    /// Makes a thumbnail for each recording segment. Optional: a host that
+    /// cannot draw thumbnails (not Windows) records without them.
+    /// </param>
     public ServerRecordingService(
         IApplicationSettingsService settingsService,
         ICameraStorageService cameraStorageService,
-        ILogger<ServerRecordingService> logger)
+        ILogger<ServerRecordingService> logger,
+        IThumbnailGeneratorService? thumbnailService = null)
     {
         this.settingsService = settingsService;
         this.cameraStorageService = cameraStorageService;
         this.logger = logger;
+        this.thumbnailService = thumbnailService;
     }
 
     /// <inheritdoc/>
@@ -126,6 +139,8 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
         // "Disconnected" until the next genuine state change.
         CameraConnectionStateChanged?.Invoke(camera.Id, ConnectionState.Connected);
 
+        StartThumbnail(camera, pipeline, filePath);
+
         RaiseStateChanged(camera.Id, RecordingState.Idle, RecordingState.Recording, filePath);
         LogRecordingStarted(camera.Display.DisplayName, camera.Id, filePath);
 
@@ -151,6 +166,10 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
         // Start/Stop cycle leaks an entire pipeline.
         if (pipelines.TryRemove(cameraId, out var pipeline))
         {
+            // Write the thumbnail from the frames captured so far while the
+            // pipeline can still be asked for them.
+            StopThumbnail(cameraId);
+
             // Unsubscribe BEFORE Dispose so we don't surface a tear-down
             // Disconnected event onto the aggregate (the synthetic
             // Disconnected below covers the recording-ended case).
@@ -336,6 +355,9 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
 
         ReclaimDiskSpaceIfNeeded();
 
+        // The old segment's thumbnail is complete; the new one starts below.
+        StopThumbnail(cameraId);
+
         try
         {
             // Atomic switch: packets arriving from the demux thread mid-switch
@@ -363,6 +385,8 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
                 cameraId);
             return false;
         }
+
+        StartThumbnail(camera, pipeline, newFilePath);
 
         RaiseStateChanged(cameraId, session.State, RecordingState.Idle, oldFilePath);
         RaiseStateChanged(cameraId, RecordingState.Idle, newSession.State, newFilePath);
@@ -524,6 +548,56 @@ public sealed partial class ServerRecordingService : IRecordingService, IDisposa
     public void Dispose()
     {
         StopAllRecordings();
+    }
+
+    /// <summary>
+    /// Starts capturing the thumbnail of a recording segment. A thumbnail is
+    /// a nicety: failing to make one never stops or fails the recording.
+    /// </summary>
+    private void StartThumbnail(
+        CameraConfiguration camera,
+        IMediaPipeline pipeline,
+        string videoFilePath)
+    {
+        if (thumbnailService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            thumbnailService.StartCapture(
+                camera.Id,
+                camera.Display.DisplayName,
+                pipeline,
+                videoFilePath,
+                camera.Overrides?.Recording.ThumbnailTileCount ?? settingsService.Recording.ThumbnailTileCount,
+                RecordingPathHelper.BuildThumbnailPath(
+                    videoFilePath,
+                    GetEffectiveRecordingPath(camera),
+                    RecordingLayoutOptions.From(settingsService.Recording)));
+        }
+        catch (Exception ex)
+        {
+            LogThumbnailFailed(ex, camera.Id);
+        }
+    }
+
+    private void StopThumbnail(Guid cameraId)
+    {
+        if (thumbnailService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            thumbnailService.StopCapture(cameraId);
+        }
+        catch (Exception ex)
+        {
+            LogThumbnailFailed(ex, cameraId);
+        }
     }
 
     private string GetEffectiveRecordingPath(CameraConfiguration camera)

@@ -16,6 +16,9 @@ global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Services;
 
 global using Microsoft.AspNetCore.SignalR;
+global using Microsoft.AspNetCore.StaticFiles;
+global using Microsoft.Extensions.FileProviders;
+global using Microsoft.Extensions.Primitives;
 global using Scalar.AspNetCore;
 global using Serilog;
 global using VideoSurveillance;

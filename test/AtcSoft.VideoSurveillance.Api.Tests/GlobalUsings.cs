@@ -1,3 +1,9 @@
+global using System.Diagnostics;
+global using System.Net;
+global using System.Net.Http.Json;
+global using System.Text.Json;
+global using System.Text.Json.Nodes;
+
 global using Atc.Hosting;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Devices;
@@ -6,10 +12,12 @@ global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Services;
 global using Microsoft.AspNetCore.Http.HttpResults;
+global using Microsoft.AspNetCore.Mvc.Testing;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Cameras.Parameters;

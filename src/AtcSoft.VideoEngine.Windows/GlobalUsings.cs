@@ -1,3 +1,4 @@
+global using System.Collections.Concurrent;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Management;
 global using System.Runtime.ExceptionServices;
@@ -10,3 +11,4 @@ global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Services;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Logging;

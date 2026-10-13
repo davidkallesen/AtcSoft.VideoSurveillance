@@ -32,7 +32,28 @@ public class RecordingEntryViewModelTests
         vm.PlaybackUrl.AbsolutePath.Should().Be(expectedPath);
     }
 
-    private static RecordingEntryViewModel Build(string filePath)
+    [Fact]
+    public void ThumbnailUrl_Points_At_The_Thumbnail_The_Server_Reported()
+    {
+        var vm = Build(
+            "Front Door/2026-10-12/Front Door_20261012_101500_000.mkv",
+            "thumbnails/Front Door/2026-10-12/Front Door_20261012_101500_000.png");
+
+        vm.ThumbnailUrl!.AbsoluteUri.Should().Be(
+            "http://server:5000/recordings-files/thumbnails/Front%20Door/2026-10-12/Front%20Door_20261012_101500_000.png");
+    }
+
+    [Fact]
+    public void ThumbnailUrl_Is_Null_For_A_Recording_Without_A_Thumbnail()
+    {
+        var vm = Build("Front Door/a.mkv");
+
+        vm.ThumbnailUrl.Should().BeNull();
+    }
+
+    private static RecordingEntryViewModel Build(
+        string filePath,
+        string? thumbnailPath = null)
         => new(
             new ApiRecording(
                 Id: Guid.NewGuid(),
@@ -42,6 +63,7 @@ public class RecordingEntryViewModelTests
                 StartedAt: DateTimeOffset.UnixEpoch,
                 Duration: string.Empty,
                 FileSizeBytes: 0,
-                HasThumbnail: false),
+                HasThumbnail: thumbnailPath is not null,
+                ThumbnailPath: thumbnailPath),
             ApiBaseUrl);
 }

@@ -131,6 +131,165 @@ public class ListRecordingsHandlerTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ReturnsWhereEachThumbnailIs()
+    {
+        // Arrange — one thumbnail next to its video, one in the thumbnails folder, one missing
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+
+            var flat = Touch(Path.Combine(root, "Front Door", "Front Door_20261011_101500_000.mkv"));
+            Touch(Path.ChangeExtension(flat, ".png"));
+            Touch(Path.Combine(root, "Front Door", "2026-10-12", "Front Door_20261012_101500_000.mkv"));
+            Touch(Path.Combine(root, "thumbnails", "Front Door", "2026-10-12", "Front Door_20261012_101500_000.png"));
+            Touch(Path.Combine(root, "Front Door", "2026-10-13", "Front Door_20261013_101500_000.mkv"));
+
+            var handler = CreateHandlerFor(root, camera);
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert
+            var recordings = result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!;
+            recordings.Single(r => r.FilePath.Contains("20261011", StringComparison.Ordinal)).ThumbnailPath
+                .Should().Be("Front Door/Front Door_20261011_101500_000.png");
+            recordings.Single(r => r.FilePath.Contains("20261012", StringComparison.Ordinal)).ThumbnailPath
+                .Should().Be("thumbnails/Front Door/2026-10-12/Front Door_20261012_101500_000.png");
+            recordings.Single(r => r.FilePath.Contains("20261013", StringComparison.Ordinal)).ThumbnailPath
+                .Should().BeNull();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TakesTheStartTimeFromTheFileName()
+    {
+        // Arrange — the file's creation time changes when it is moved or copied; its name does not
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+            Touch(Path.Combine(root, "Front Door", "Front Door_20261011_101500_250.mkv"));
+
+            var handler = CreateHandlerFor(root, camera);
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert — server file names are in UTC
+            var recording = result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!.Single();
+            recording.StartedAt.Should().Be(new DateTimeOffset(2026, 10, 11, 10, 15, 0, 250, TimeSpan.Zero));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ARecordingKeepsItsIdBetweenListings()
+    {
+        // Arrange
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+            Touch(Path.Combine(root, "Front Door", "Front Door_20261011_101500_000.mkv"));
+            Touch(Path.Combine(root, "Front Door", "Front Door_20261012_101500_000.mkv"));
+
+            var handler = CreateHandlerFor(root, camera);
+
+            // Act
+            var first = (await handler.ExecuteAsync(new ListRecordingsParameters(CameraId: null), CancellationToken.None))
+                .Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!;
+            var second = (await handler.ExecuteAsync(new ListRecordingsParameters(CameraId: null), CancellationToken.None))
+                .Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!;
+
+            // Assert
+            second.Select(r => r.Id).Should().Equal(first.Select(r => r.Id));
+            first.Select(r => r.Id).Should().OnlyHaveUniqueItems();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListsAviRecordings()
+    {
+        // Arrange — AVI is one of the formats the settings offer
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+            Touch(Path.Combine(root, "Front Door", "Front Door_20261011_101500_000.avi"));
+
+            var handler = CreateHandlerFor(root, camera);
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert
+            result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!
+                .Should().ContainSingle().Which.FilePath.Should().EndWith(".avi");
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ARecordingInProgressIsListedByItsRelativePath()
+    {
+        // Arrange — clients build the playback address from the path, so it
+        // has to be relative to the recording root like the finished ones
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Front Door";
+            var running = Touch(Path.Combine(root, "Front Door", "2026-10-13", "Front Door_20261013_101500_000.mkv"));
+
+            var recordingService = Substitute.For<IRecordingService>();
+            recordingService.GetActiveSessions().Returns([new RecordingSession(camera.Id, "Front Door", running, isManualRecording: true)]);
+            var settingsService = Substitute.For<IApplicationSettingsService>();
+            settingsService.Recording.Returns(new RecordingSettings { RecordingPath = root });
+            var cameraStorageService = Substitute.For<ICameraStorageService>();
+            cameraStorageService.GetAllCameras().Returns([camera]);
+            var handler = new ListRecordingsHandler(recordingService, settingsService, cameraStorageService);
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert
+            result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!
+                .Should().ContainSingle().Which.FilePath.Should().Be("Front Door/2026-10-13/Front Door_20261013_101500_000.mkv");
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ExecuteAsync_TwoCamerasWithTheSameName_DoesNotFail()
     {
         // Arrange

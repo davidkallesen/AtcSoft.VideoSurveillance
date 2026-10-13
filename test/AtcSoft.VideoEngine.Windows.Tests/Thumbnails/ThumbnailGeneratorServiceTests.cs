@@ -1,4 +1,4 @@
-namespace AtcSoft.CameraWall.Wpf.Services;
+namespace AtcSoft.VideoEngine.Windows.Thumbnails;
 
 using Drawing = System.Drawing;
 using IMediaPipeline = AtcSoft.VideoSurveillance.Services.IMediaPipeline;

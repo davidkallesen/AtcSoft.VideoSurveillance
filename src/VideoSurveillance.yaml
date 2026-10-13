@@ -849,6 +849,10 @@ components:
           format: int64
         hasThumbnail:
           type: boolean
+        thumbnailPath:
+          type: string
+          nullable: true
+          description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
 
     AppSettings:
       type: object

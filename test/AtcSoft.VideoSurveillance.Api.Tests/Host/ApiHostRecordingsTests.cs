@@ -1,0 +1,101 @@
+﻿namespace AtcSoft.VideoSurveillance.Api.Host;
+
+[Collection(ApiHostTestGroup.Name)]
+public sealed class ApiHostRecordingsTests(ApiHostFixture host)
+{
+    // The smallest valid PNG: one transparent pixel.
+    private static readonly byte[] Png = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+
+    [Fact]
+    public async Task A_Listed_Recording_And_Its_Thumbnail_Can_Be_Fetched_By_The_Paths_Returned()
+    {
+        using var client = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(client);
+        var camera = "Fetch " + Guid.NewGuid().ToString("N")[..8];
+        var video = Path.Combine(recordingPath, camera, "2026-10-12", camera + "_20261012_101500_000.mp4");
+        var thumbnail = Path.Combine(recordingPath, "thumbnails", camera, "2026-10-12", camera + "_20261012_101500_000.png");
+        Write(video, [1, 2, 3, 4]);
+        Write(thumbnail, Png);
+
+        var recordings = await client.GetFromJsonAsync<JsonElement>("/recordings", TestContext.Current.CancellationToken);
+
+        var listed = recordings.EnumerateArray().Single(r => r.GetProperty("filePath").GetString()!.Contains(camera, StringComparison.Ordinal));
+        listed.GetProperty("hasThumbnail").GetBoolean().Should().BeTrue();
+        var thumbnailPath = listed.GetProperty("thumbnailPath").GetString();
+        thumbnailPath.Should().Be($"thumbnails/{camera}/2026-10-12/{camera}_20261012_101500_000.png");
+
+        var thumbnailResponse = await client.GetAsync(FileUrl(thumbnailPath!), TestContext.Current.CancellationToken);
+        thumbnailResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        thumbnailResponse.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
+        (await thumbnailResponse.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken)).Should().Equal(Png);
+
+        var videoResponse = await client.GetAsync(FileUrl(listed.GetProperty("filePath").GetString()!), TestContext.Current.CancellationToken);
+        videoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        videoResponse.Content.Headers.ContentType!.MediaType.Should().Be("video/mp4");
+    }
+
+    [Fact]
+    public async Task Files_That_Are_Not_Recordings_Or_Thumbnails_Are_Not_Served()
+    {
+        using var client = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(client);
+        Write(Path.Combine(recordingPath, "notes.txt"), [1]);
+        Write(Path.Combine(recordingPath, "tool.exe"), [1]);
+
+        (await client.GetAsync(FileUrl("notes.txt"), TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await client.GetAsync(FileUrl("tool.exe"), TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await client.GetAsync(FileUrl("../settings.json"), TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Recordings_Are_Served_From_The_New_Folder_After_The_Recording_Path_Changes()
+    {
+        using var client = host.CreateClient();
+        var original = await GetRecordingPathAsync(client);
+        var moved = Path.Combine(host.DataPath, "moved-" + Guid.NewGuid().ToString("N")[..8]);
+        var camera = "Moved " + Guid.NewGuid().ToString("N")[..8];
+        Write(Path.Combine(moved, camera, camera + "_20261012_101500_000.mp4"), [9, 9]);
+
+        try
+        {
+            (await PutRecordingPathAsync(client, moved)).IsSuccessStatusCode.Should().BeTrue();
+
+            var recordings = await client.GetFromJsonAsync<JsonElement>("/recordings", TestContext.Current.CancellationToken);
+            var listed = recordings.EnumerateArray().Single(r => r.GetProperty("filePath").GetString()!.Contains(camera, StringComparison.Ordinal));
+
+            var response = await client.GetAsync(FileUrl(listed.GetProperty("filePath").GetString()!), TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(HttpStatusCode.OK, "the server serves the folder it records to, without a restart");
+        }
+        finally
+        {
+            await PutRecordingPathAsync(client, original);
+        }
+    }
+
+    private static async Task<string> GetRecordingPathAsync(HttpClient client)
+    {
+        var settings = await client.GetFromJsonAsync<JsonElement>("/settings", TestContext.Current.CancellationToken);
+        return settings.GetProperty("recordingPath").GetString()!;
+    }
+
+    private static async Task<HttpResponseMessage> PutRecordingPathAsync(
+        HttpClient client,
+        string recordingPath)
+    {
+        var settings = await client.GetFromJsonAsync<JsonObject>("/settings", TestContext.Current.CancellationToken);
+        settings!["recordingPath"] = recordingPath;
+        return await client.PutAsJsonAsync("/settings", settings, TestContext.Current.CancellationToken);
+    }
+
+    private static Uri FileUrl(string relativePath)
+        => new("/recordings-files/" + RecordingPathHelper.EscapePathSegments(relativePath), UriKind.Relative);
+
+    private static void Write(
+        string path,
+        byte[] content)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, content);
+    }
+}

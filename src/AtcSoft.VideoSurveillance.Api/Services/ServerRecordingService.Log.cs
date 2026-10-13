@@ -47,6 +47,9 @@ public sealed partial class ServerRecordingService
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk space still below threshold after reclaim — recording aborted for camera '{CameraName}'")]
     private partial void LogDiskSpaceGateFailed(string cameraName);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Thumbnail capture failed for camera {CameraId}; the recording is not affected")]
+    private partial void LogThumbnailFailed(Exception ex, Guid cameraId);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below threshold mid-recording — stopping {Count} active recording(s) to prevent disk exhaustion")]
     private partial void LogDiskSpaceGuardStoppingAllRecordings(int count);
 }

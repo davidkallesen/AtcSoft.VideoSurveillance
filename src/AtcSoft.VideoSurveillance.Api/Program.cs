@@ -1,6 +1,13 @@
 // Load advanced settings early to configure logging before Host is built
 // ReSharper disable SeparateLocalFunctionsWithJumpStatement
-var advancedSettings = LoadAdvancedSettingsForLogging();
+// The data folder is read from the environment and the command line here:
+// logging is set up before the host, and its configuration, exist.
+var earlyConfiguration = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
+    .AddCommandLine(args)
+    .Build();
+var advancedSettings = LoadAdvancedSettingsForLogging(
+    new ServerDataPaths(earlyConfiguration[ServerDataPaths.ConfigurationKey]).SettingsPath);
 
 // Drop framework Debug noise (Kestrel connection lifecycle, SignalR protocol
 // negotiation, request matching, static file middleware) but keep AtcSoft.*
@@ -40,9 +47,24 @@ try
     // Register API handlers from the Domain project (source-generated)
     builder.Services.AddApiHandlersFromDomain();
 
-    // Register Core service implementations for the server
-    builder.Services.AddSingleton<ICameraStorageService, JsonCameraStorageService>();
-    builder.Services.AddSingleton<IApplicationSettingsService, JsonApplicationSettingsService>();
+    // Register Core service implementations for the server. Storage:DataPath
+    // moves the server's files out of the shared application data folder, so
+    // a second server (or a test) can run with data of its own.
+    var dataPaths = new ServerDataPaths(builder.Configuration[ServerDataPaths.ConfigurationKey]);
+    builder.Services.AddSingleton(dataPaths);
+    builder.Services.AddSingleton<ICameraStorageService>(sp =>
+        new JsonCameraStorageService(
+            dataPaths.CameraDataPath,
+            sp.GetRequiredService<ILogger<JsonCameraStorageService>>()));
+    builder.Services.AddSingleton<IApplicationSettingsService>(sp =>
+    {
+        var settingsService = new JsonApplicationSettingsService(
+            dataPaths.SettingsPath,
+            sp.GetRequiredService<ILogger<JsonApplicationSettingsService>>());
+        dataPaths.RelocateDefaults(settingsService);
+        return settingsService;
+    });
+    builder.Services.AddSingleton<RecordingsFileProvider>();
 
     // Register both the concrete type and the interface to share one
     // instance — the broadcaster subscribes to ServerRecordingService's
@@ -73,6 +95,11 @@ try
     {
         AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
             .AddWindowsUsbCameraSupport(builder.Services);
+
+        // Recording thumbnails are drawn with GDI+. On another platform the
+        // recording service simply gets no generator and records without them.
+        AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+            .AddWindowsRecordingThumbnails(builder.Services);
     }
 
     // Lifecycle coordinator translates raw watcher events into
@@ -261,27 +288,17 @@ try
         ContentTypeProvider = hlsContentTypes,
     });
 
-    // Serve recorded video files as static files
-    var recordingPath = app.Services.GetRequiredService<IApplicationSettingsService>()
-        .Recording.RecordingPath;
-
-    Directory.CreateDirectory(recordingPath);
-
-    var recordingContentTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider
-    {
-        Mappings =
-        {
-            [".mp4"] = "video/mp4",
-            [".mkv"] = "video/x-matroska",
-        },
-    };
+    // Serve recordings and their thumbnails as static files, from the
+    // recording folder that is configured at the time of the request.
+    Directory.CreateDirectory(
+        app.Services.GetRequiredService<IApplicationSettingsService>().Recording.RecordingPath);
 
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(recordingPath),
+        FileProvider = app.Services.GetRequiredService<RecordingsFileProvider>(),
         RequestPath = "/recordings-files",
         ServeUnknownFileTypes = false,
-        ContentTypeProvider = recordingContentTypes,
+        ContentTypeProvider = RecordingsFileProvider.ContentTypes,
     });
 
     // Map SignalR hub for real-time surveillance events
@@ -338,10 +355,8 @@ finally
     await Log.CloseAndFlushAsync().ConfigureAwait(false);
 }
 
-static AdvancedSettings LoadAdvancedSettingsForLogging()
+static AdvancedSettings LoadAdvancedSettingsForLogging(string settingsPath)
 {
-    var settingsPath = ApplicationPaths.DefaultSettingsPath;
-
     if (!File.Exists(settingsPath))
     {
         return new AdvancedSettings();

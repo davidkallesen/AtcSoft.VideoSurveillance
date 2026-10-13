@@ -36,7 +36,16 @@ public sealed class RecordingEntryViewModel
     public bool HasThumbnail => recording.HasThumbnail;
 
     public Uri PlaybackUrl
-        => new($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(recording.FilePath)}");
+        => BuildFileUrl(recording.FilePath);
+
+    /// <summary>
+    /// Gets where the thumbnail is fetched from, or <c>null</c> when the
+    /// recording has none.
+    /// </summary>
+    public Uri? ThumbnailUrl
+        => string.IsNullOrEmpty(recording.ThumbnailPath)
+            ? null
+            : BuildFileUrl(recording.ThumbnailPath);
 
     public string FormattedFileSize => FormatFileSize(FileSizeBytes);
 
@@ -44,6 +53,9 @@ public sealed class RecordingEntryViewModel
 
     public string FormattedRecordingTime
         => RecordingTime.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
+
+    private Uri BuildFileUrl(string relativePath)
+        => new($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(relativePath)}");
 
     private static TimeSpan ParseIsoDuration(string? duration)
     {

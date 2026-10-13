@@ -25,4 +25,19 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Registers the recording thumbnail generator. It draws with GDI+, so
+    /// a host on another platform skips this call and records without
+    /// thumbnails.
+    /// </summary>
+    public static IServiceCollection AddWindowsRecordingThumbnails(
+        this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddSingleton<IThumbnailGeneratorService, Thumbnails.ThumbnailGeneratorService>();
+
+        return services;
+    }
 }

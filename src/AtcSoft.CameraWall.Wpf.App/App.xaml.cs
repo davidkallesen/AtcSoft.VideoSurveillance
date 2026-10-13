@@ -51,6 +51,10 @@ public partial class CameraWallApp
                 AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
                     .AddWindowsUsbCameraSupport(services);
 
+                // Recording thumbnails (shared with the server)
+                AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+                    .AddWindowsRecordingThumbnails(services);
+
                 // Library services (auto-registered via [Registration] attribute)
                 services.AddDependencyRegistrationsFromWpf(includeReferencedAssemblies: true);
 
