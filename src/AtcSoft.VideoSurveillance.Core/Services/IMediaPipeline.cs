@@ -69,6 +69,28 @@ public interface IMediaPipeline : IDisposable
     bool IsRecordingActive { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the pipeline is writing a live
+    /// stream for browsers.
+    /// </summary>
+    bool IsLiveStreamActive => false;
+
+    /// <summary>
+    /// Starts writing a live stream for browsers (an HLS playlist with its
+    /// segments next to it) from the source the pipeline has open, next to
+    /// any recording.
+    /// </summary>
+    /// <param name="playlistPath">The playlist file (.m3u8) to write, in a folder of its own.</param>
+    void StartLiveStream(string playlistPath)
+        => throw new NotSupportedException("This pipeline cannot write a live stream.");
+
+    /// <summary>
+    /// Stops the live stream.
+    /// </summary>
+    void StopLiveStream()
+    {
+    }
+
+    /// <summary>
     /// Captures a single frame from the stream as PNG image bytes.
     /// </summary>
     Task<byte[]?> CaptureFrameAsync(CancellationToken ct = default);

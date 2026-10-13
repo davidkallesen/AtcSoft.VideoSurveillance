@@ -83,7 +83,13 @@ try
     builder.Services.AddSingleton<IVideoPlayerFactory>(sp =>
         new VideoPlayerFactory(sp.GetRequiredService<ILoggerFactory>()));
     builder.Services.AddSingleton<IMediaPipelineFactory, VideoEngineMediaPipelineFactory>();
-    builder.Services.AddSingleton<StreamingService>();
+
+    // The streaming service finds the cameras the server has open when it
+    // first needs them: the service that keeps them open needs this one.
+    builder.Services.AddSingleton(sp => new StreamingService(
+        sp.GetRequiredService<ICameraStorageService>(),
+        sp.GetRequiredService<ILogger<StreamingService>>(),
+        sp));
     builder.Services.AddSingleton<ILiveStreamStatus>(sp => sp.GetRequiredService<StreamingService>());
     builder.Services.AddSingleton<ICameraConnectionStateSink>(sp => sp.GetRequiredService<ServerRecordingService>());
 
@@ -172,7 +178,11 @@ try
     // Camera connection manager: auto-records cameras on connect and reaps
     // dead sessions every 30s.
     builder.Services.AddSingleton(new CameraConnectionServiceOptions());
-    builder.Services.AddHostedService<CameraConnectionService>();
+
+    // One instance, as the hosted worker and for whoever asks which cameras it has open.
+    builder.Services.AddSingleton<CameraConnectionService>();
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<CameraConnectionService>());
+    builder.Services.AddSingleton<ICameraPipelineLookup, OpenCameraPipelines>();
 
     // Periodic disk-retention enforcement; without this, continuous server
     // recording fills the disk and crashes the host.

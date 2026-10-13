@@ -81,7 +81,7 @@ public sealed partial class SurveillanceHub : Hub
             return;
         }
 
-        if (camera.Connection.Source == CameraSource.Usb && streamingService.IsStreaming(cameraId))
+        if (camera.Connection.Source == CameraSource.Usb && ((ILiveStreamStatus)streamingService).IsStreaming(cameraId))
         {
             await Clients.Caller
                 .SendAsync("Error", $"Camera {cameraId} is a USB camera that is being watched live; it can only be used by one program at a time.")
@@ -141,7 +141,10 @@ public sealed partial class SurveillanceHub : Hub
         var connectionId = Context.ConnectionId;
         try
         {
+            // A USB camera the server has open is streamed from that open
+            // pipeline. Only when that cannot be done is it refused.
             if (storage.GetCameraById(cameraId) is { } camera &&
+                !streamingService.CanStreamFromServerPipeline(camera) &&
                 HlsStreamCommand.GetUnavailableReason(
                     camera,
                     recordingService.IsRecording(cameraId) || motionDetectionService.IsDetectionActive(cameraId)) is { } reason)

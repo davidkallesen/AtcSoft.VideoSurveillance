@@ -54,8 +54,9 @@ The web client watches a camera through HLS. A client asks for a stream over the
 
 - The stream is made by the FFmpeg command-line tool. It is taken from the folder the video engine loads its FFmpeg libraries from, so it needs no entry in the `PATH`; without it there, the `PATH` is searched.
 - A network camera's video is passed on as it is (no re-encoding), so a rotated camera is **not** rotated in the stream. A client turns the picture itself, from the camera's `rotation`.
-- A USB camera sends uncompressed pictures, so its stream is encoded to H.264 (`libx264`, which the FFmpeg tool has to include). That costs processor time for every USB camera being watched.
-- Windows lets one program at a time open a USB camera. Whoever has it first keeps it: while the server records a USB camera, a stream of it is refused, and while it is being streamed, starting a recording answers `409 Conflict`. Both say why. Record-on-connect for such a camera fails quietly while it is watched and is tried again later.
+- A USB camera sends uncompressed pictures, so its stream is encoded to H.264. That costs processor time for every USB camera being watched.
+- **A USB camera the server has open itself** (it is recording it, or watching it for motion) is streamed from that open pipeline, not by the FFmpeg tool: the server's video engine writes the playlist and segments next to the recording, from one encoder. Such a stream has no sound.
+- Windows lets one program at a time open a USB camera. A USB camera the server does **not** have open is streamed by the FFmpeg tool, which then holds it: starting a recording of it answers `409 Conflict` with the reason, and record-on-connect or motion watching waits until the viewers are gone. Close the live view, start the recording, and open the live view again; it is then served from the server's pipeline.
 - A stream nobody asks about is stopped after a minute. A client that is watching calls `StreamHeartbeat` regularly (the web client does so every 20 seconds).
 - A camera's user name and password are removed from everything the server logs or sends back about a stream.
 
@@ -72,7 +73,7 @@ A camera with *record on motion* on (the application's setting, or the camera's 
 - **Cost:** each analysed picture is captured as a PNG and decoded again. Two USB cameras at 1280x720, both watched and recorded (which for a USB camera includes encoding), used about 1.4 processor cores.
 - **Windows only:** the pictures are decoded with GDI+. On another platform the server logs that motion detection is not available and runs without it.
 - **Settings are read when a camera starts being watched.** A change to the motion settings reaches a camera the next time it is opened; turning record-on-motion on or off takes effect within half a minute.
-- **USB cameras:** a watched USB camera is held by the server, so it cannot be streamed to the web client at the same time (the stream is refused with that reason).
+- **USB cameras:** a watched USB camera is held by the server; the web client's live view of it is served from the same open pipeline.
 - **Starting a recording by hand** for a watched camera opens the camera a second time. That works for a network camera and fails for a USB camera.
 
 ---

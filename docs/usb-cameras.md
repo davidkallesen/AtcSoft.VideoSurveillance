@@ -158,7 +158,7 @@ A USB camera whose *Capture audio* is on, with a microphone named, is opened tog
 
 | Feature | Where it lives | Why deferred |
 |---------|----------------|--------------|
-| Watching and recording a USB camera at the same time | `StreamingService`, `CameraConnectionService` | Windows gives a USB camera to one program at a time, and the browser stream is made by a separate FFmpeg process. Whoever opens the camera first keeps it; the other is refused. Sharing needs one owner that feeds both. |
+| Starting a recording of a USB camera that is already being watched live | `StreamingService`, `StartRecordingHandler` | A USB camera the server has open is streamed to browsers from that pipeline, so watching one that is recorded works. The other order does not: a camera nobody recorded is streamed by a separate FFmpeg process, which then holds it, and a recording is refused until the viewers are gone. Needs every use of a USB camera to go through one owner. |
 | Capability discovery (resolution × FPS × pixfmt) | `MediaFoundationEnumerator` | Phase 3 first cut returns devices with empty `Capabilities`. The dialog will populate the capability picker by opening each device on demand once Phase 4.3 lands. |
 | UVC property pages (brightness, focus, …) | New `IUsbCameraPropertyService` | Phase 11. Blue-Iris-grade — pulls in `IAMCameraControl` / `IAMVideoProcAmp` interop. |
 | V4L2 + AVFoundation enumerators | `AtcSoft.VideoEngine.Linux` (future), `AtcSoft.VideoEngine.macOS` | Phase 10. The demuxer already accepts `InputFormatKind.V4l2` / `AVFoundation` and translates the option dict correctly — only the enumerator + DI binding are missing. |

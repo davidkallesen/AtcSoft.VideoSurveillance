@@ -65,6 +65,14 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             BackgroundServiceHealthHelper.StalenessFor(options));
     }
 
+    /// <summary>
+    /// Gets the pipeline this service keeps open for a camera.
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    /// <returns>The pipeline, or <see langword="null"/> when the camera is not kept open.</returns>
+    public IMediaPipeline? FindPipeline(Guid cameraId)
+        => managedPipelines.GetValueOrDefault(cameraId);
+
     /// <inheritdoc />
     public override Task DoWorkAsync(CancellationToken stoppingToken)
     {

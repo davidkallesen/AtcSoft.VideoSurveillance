@@ -14,6 +14,9 @@ public sealed partial class StreamingService
     [LoggerMessage(Level = LogLevel.Information, Message = "HLS stream started for camera {CameraId} -> {PlaylistPath}")]
     private partial void LogHlsStreamStarted(Guid cameraId, string playlistPath);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "HLS stream started for camera {CameraId} from the pipeline the server has open -> {PlaylistPath}")]
+    private partial void LogHlsStreamStartedFromPipeline(Guid cameraId, string playlistPath);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "HLS stream reaped for camera {CameraId} (idle past inactivity timeout)")]
     private partial void LogHlsStreamReaped(Guid cameraId);
 

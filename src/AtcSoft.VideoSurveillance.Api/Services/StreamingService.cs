@@ -1,8 +1,10 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// Manages per-camera FFmpeg processes that turn a camera's stream, or a USB
-/// camera's pictures, into HLS segments for browser consumption.
+/// Manages the HLS streams browsers watch. A camera gets an FFmpeg process of
+/// its own that turns its stream into segments; a USB camera the server
+/// already has open is streamed from that open pipeline instead, because
+/// Windows gives a USB camera to one program at a time.
 /// </summary>
 public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 {
@@ -19,6 +21,7 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
     private readonly ICameraStorageService storage;
     private readonly ILogger<StreamingService> logger;
+    private readonly IServiceProvider? services;
     private readonly ConcurrentDictionary<Guid, StreamSession> sessions = new();
 
     // connectionId → set of cameraIds that connection started. Used by the
@@ -29,9 +32,29 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
     private readonly Lock ownershipLock = new();
     private readonly string hlsOutputRoot;
+    private ICameraPipelineLookup? pipelineLookup;
     private bool disposed;
 
     public StreamingService(
+        ICameraStorageService storage,
+        ILogger<StreamingService> logger,
+        ICameraPipelineLookup pipelineLookup)
+        : this(storage, logger)
+        => this.pipelineLookup = pipelineLookup;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StreamingService"/> class
+    /// that looks the open pipelines up when it first needs them: the
+    /// service that keeps cameras open needs this one in turn.
+    /// </summary>
+    public StreamingService(
+        ICameraStorageService storage,
+        ILogger<StreamingService> logger,
+        IServiceProvider services)
+        : this(storage, logger)
+        => this.services = services;
+
+    private StreamingService(
         ICameraStorageService storage,
         ILogger<StreamingService> logger)
     {
@@ -179,9 +202,30 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets whether a camera is currently streaming.
+    /// </summary>
     public bool IsStreaming(Guid cameraId)
         => sessions.ContainsKey(cameraId);
+
+    /// <summary>
+    /// Gets whether a stream has the camera open with a process of its own.
+    /// A stream from the server's own pipeline does not.
+    /// </summary>
+    bool ILiveStreamStatus.IsStreaming(Guid cameraId)
+        => sessions.TryGetValue(cameraId, out var session) && session.HoldsCamera;
+
+    /// <summary>
+    /// Gets whether a camera would be streamed from a pipeline the server
+    /// already has open, instead of by a process of its own.
+    /// </summary>
+    /// <param name="camera">The camera.</param>
+    /// <returns><see langword="true"/> for a USB camera the server has open.</returns>
+    public bool CanStreamFromServerPipeline(CameraConfiguration camera)
+    {
+        ArgumentNullException.ThrowIfNull(camera);
+        return FindServerPipeline(camera) is not null;
+    }
 
     /// <summary>
     /// Gets the current viewer count for a camera stream.
@@ -292,6 +336,14 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
         Directory.CreateDirectory(outputDir);
 
         var playlistPath = Path.Combine(outputDir, "stream.m3u8");
+
+        if (FindServerPipeline(camera) is { } pipeline)
+        {
+            pipeline.StartLiveStream(playlistPath);
+            LogHlsStreamStartedFromPipeline(cameraId, playlistPath);
+            return new StreamSession(pipeline, playlistPath, outputDir);
+        }
+
         var args = HlsStreamCommand.BuildArguments(camera, playlistPath);
 
         var psi = new ProcessStartInfo
@@ -330,13 +382,28 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
         return session;
     }
 
+    // Only a USB camera is streamed from the server's pipeline: it cannot be
+    // opened a second time. A network camera can, and the stream of its own
+    // carries its sound.
+    private IMediaPipeline? FindServerPipeline(CameraConfiguration camera)
+    {
+        if (camera.Connection.Source != CameraSource.Usb)
+        {
+            return null;
+        }
+
+        pipelineLookup ??= services?.GetService<ICameraPipelineLookup>();
+        return pipelineLookup?.Find(camera.Id);
+    }
+
     private sealed class StreamSession : IDisposable
     {
         // Only the last lines are ever asked for; FFmpeg writes several a
         // second for as long as the stream runs.
         private const int MaxErrorLines = 50;
 
-        private readonly Process process;
+        private readonly Process? process;
+        private readonly IMediaPipeline? pipeline;
         private readonly string outputDir;
         private readonly Queue<string> errorLines = new();
         private int viewerCount;
@@ -353,13 +420,35 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
             lastActivityUtcTicks = DateTime.UtcNow.Ticks;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamSession"/> class
+        /// for a stream written by a pipeline the server has open. The
+        /// pipeline is its owner's: it is told to stop the stream, never closed.
+        /// </summary>
+        public StreamSession(
+            IMediaPipeline pipeline,
+            string playlistPath,
+            string outputDir)
+        {
+            this.pipeline = pipeline;
+            this.outputDir = outputDir;
+            PlaylistPath = playlistPath;
+            lastActivityUtcTicks = DateTime.UtcNow.Ticks;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the stream has the camera open itself.
+        /// </summary>
+        public bool HoldsCamera => process is not null;
+
         public string PlaylistPath { get; }
 
         public int ViewerCount => Volatile.Read(ref viewerCount);
 
-        public bool HasExited => process.HasExited;
-
-        public int ExitCode => process.HasExited ? process.ExitCode : -1;
+        public bool HasExited
+            => process is not null
+                ? process.HasExited
+                : pipeline is null || !IsPipelineStreaming(pipeline);
 
         public DateTime LastActivityUtc
             => new(Interlocked.Read(ref lastActivityUtcTicks), DateTimeKind.Utc);
@@ -395,6 +484,59 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 
         public void Dispose()
         {
+            StopPipelineStream();
+            StopProcess();
+
+            try
+            {
+                if (Directory.Exists(outputDir))
+                {
+                    Directory.Delete(outputDir, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+                // Best effort cleanup
+            }
+        }
+
+        // A pipeline its owner has closed meanwhile no longer streams.
+        private static bool IsPipelineStreaming(IMediaPipeline pipeline)
+        {
+            try
+            {
+                return pipeline.IsLiveStreamActive;
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+        }
+
+        private void StopPipelineStream()
+        {
+            if (pipeline is null)
+            {
+                return;
+            }
+
+            try
+            {
+                pipeline.StopLiveStream();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Its owner closed it; the stream ended with it.
+            }
+        }
+
+        private void StopProcess()
+        {
+            if (process is null)
+            {
+                return;
+            }
+
             try
             {
                 if (!process.HasExited)
@@ -415,18 +557,6 @@ public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
             finally
             {
                 process.Dispose();
-            }
-
-            try
-            {
-                if (Directory.Exists(outputDir))
-                {
-                    Directory.Delete(outputDir, recursive: true);
-                }
-            }
-            catch (IOException)
-            {
-                // Best effort cleanup
             }
         }
     }

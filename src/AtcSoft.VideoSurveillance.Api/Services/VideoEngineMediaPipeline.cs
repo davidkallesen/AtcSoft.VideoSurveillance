@@ -33,6 +33,9 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
     public bool IsRecordingActive => player.IsRecording;
 
     /// <inheritdoc />
+    public bool IsLiveStreamActive => player.IsStreaming;
+
+    /// <inheritdoc />
     public double CurrentFps => player.CurrentFps;
 
     /// <inheritdoc />
@@ -101,6 +104,14 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
         ArgumentException.ThrowIfNullOrWhiteSpace(newOutputFilePath);
         player.SwitchRecording(newOutputFilePath);
     }
+
+    /// <inheritdoc />
+    public void StartLiveStream(string playlistPath)
+        => player.StartStreaming(playlistPath);
+
+    /// <inheritdoc />
+    public void StopLiveStream()
+        => player.StopStreaming();
 
     /// <inheritdoc />
     public Task<byte[]?> CaptureFrameAsync(CancellationToken ct = default)
