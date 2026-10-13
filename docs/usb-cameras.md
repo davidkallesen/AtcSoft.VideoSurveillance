@@ -7,7 +7,7 @@ Architectural overview, configuration model, and operator-facing behaviour for t
 ## 🎯 TL;DR
 
 - 💻 **Where it works.** Windows. The Linux V4L2 + macOS AVFoundation paths are scaffolded but deferred (Phase 10 in the roadmap).
-- ✅ **What you can do today.** Open a USB camera, capture snapshots, rotate, watch it in the web client, and recover gracefully from unplug/replug. Recording works only for a camera that delivers compressed video (MJPEG or H.264); see "What's not in scope" below.
+- ✅ **What you can do today.** Open a USB camera, record it, capture snapshots, rotate, watch it in the web client, and recover gracefully from unplug/replug. A camera that delivers uncompressed video (most webcams: YUY2 / NV12) is encoded to H.264 while it is recorded; see "Recording a webcam" below.
 - ⏸️ **What's deferred.** UVC PTZ + property pages (brightness / focus / exposure) — Phase 11.
 - 🏠 **Hosts.** `AtcSoft.CameraWall.Wpf.App` (standalone) wires the Windows enumerator into DI directly. `AtcSoft.VideoSurveillance.Api` (server) does the same when running on Windows. `AtcSoft.VideoSurveillance.Wpf.App` (API client) talks to the server over `GET /devices/usb` instead of enumerating locally.
 
@@ -135,11 +135,19 @@ Group policy estates can enforce `LetAppsAccessCamera = Deny` system-wide. The e
 
 ---
 
+## 🎞️ Recording a webcam
+
+The recorder normally copies a camera's packets into the file. A webcam delivers uncompressed pictures, which no recording format takes, so the engine encodes them (`FrameEncoder`, used by `VideoPlayer` whenever the source codec is raw video):
+
+- **Encoder:** `libx264` where the FFmpeg libraries have it, then Windows' own `h264_mf`, then `libopenh264`. Without any of them the recording does not start, and the error says so. Only `libx264` has been run against real cameras.
+- **Cost:** encoding runs on the thread that reads the camera. Two cameras at 1280x720 and 30 pictures a second gave about 1.9 Mbit/s each (some 850 MB an hour) with `libx264`.
+- **Result:** H.264 with 4:2:0 colour in the chosen container; it plays in the apps and in a browser. Rotation is flagged in the file as for any other camera.
+- **Compressed sources** (MJPEG, H.264 webcams, every network camera) are still copied without re-encoding.
+
 ## ⏸️ What's not in scope (yet)
 
 | Feature | Where it lives | Why deferred |
 |---------|----------------|--------------|
-| Recording a camera that delivers uncompressed video | `Remuxer` | The recorder copies the camera's packets into the file and has no encoder. Most webcams deliver raw pictures (YUY2 / NV12), which no recording container takes: starting the recording fails with "Failed to write output header". Found on 2026-10-13 with two real cameras; needs an encoder in the engine. |
 | Watching and recording a USB camera at the same time | `StreamingService`, `CameraConnectionService` | Windows gives a USB camera to one program at a time, and the browser stream is made by a separate FFmpeg process. Whoever opens the camera first keeps it; the other is refused. Sharing needs one owner that feeds both. |
 | Capability discovery (resolution × FPS × pixfmt) | `MediaFoundationEnumerator` | Phase 3 first cut returns devices with empty `Capabilities`. The dialog will populate the capability picker by opening each device on demand once Phase 4.3 lands. |
 | Audio companion track | `Demuxer` + `Remuxer` | Phase 9. The toggle exists in `UsbConnectionSettings.PreferAudio` but the audio packet path isn't wired through the remuxer yet. |
