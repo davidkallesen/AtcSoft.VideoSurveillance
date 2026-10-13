@@ -128,7 +128,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        if (state != PlayerState.Playing || demuxer is null)
+        // The thread that reads the camera clears these when the stream
+        // ends, which it may do at any moment: work on what is there now.
+        var source = demuxer;
+        var sourceDecoder = decoder;
+        if (state != PlayerState.Playing || source is null || sourceDecoder is null)
         {
             throw new InvalidOperationException("Cannot record: player is not playing.");
         }
@@ -140,13 +144,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        if (FrameEncoder.IsNeededFor(demuxer.VideoCodecParameters->codec_id))
+        if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
         {
-            StartEncodedRecording(outputFilePath);
+            StartEncodedRecording(outputFilePath, source, sourceDecoder);
         }
         else
         {
-            remuxer.Open(outputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+            remuxer.Open(outputFilePath, source.VideoCodecParameters, source.VideoTimeBase, (int)rotation);
         }
 
         LogRecordingStarted(outputFilePath);
@@ -217,9 +221,12 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     // A camera that delivers uncompressed pictures (a webcam) cannot be
     // recorded by copying its packets: no recording format takes them. Its
     // decoded pictures are encoded to H.264 instead.
-    private void StartEncodedRecording(string outputFilePath)
+    private void StartEncodedRecording(
+        string outputFilePath,
+        Demuxer source,
+        VideoDecoder sourceDecoder)
     {
-        var frameRate = demuxer!.VideoFrameRate;
+        var frameRate = source.VideoFrameRate;
         var framesPerSecond = frameRate is { Num: > 0, Den: > 0 }
             ? (int)Math.Round((double)frameRate.Num / frameRate.Den, MidpointRounding.AwayFromZero)
             : 0;
@@ -227,11 +234,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         var encoder = new FrameEncoder();
         try
         {
-            encoder.Open(decoder!.Width, decoder.Height, decoder.PixelFormat, framesPerSecond);
+            encoder.Open(sourceDecoder.Width, sourceDecoder.Height, sourceDecoder.PixelFormat, framesPerSecond);
 
             lock (encoderLock)
             {
-                remuxer!.Open(outputFilePath, encoder.CodecParameters, encoder.TimeBase, (int)rotation);
+                var recorder = remuxer
+                    ?? throw new InvalidOperationException("Cannot record: player is not playing.");
+                recorder.Open(outputFilePath, encoder.CodecParameters, encoder.TimeBase, (int)rotation);
                 frameEncoder = encoder;
             }
         }

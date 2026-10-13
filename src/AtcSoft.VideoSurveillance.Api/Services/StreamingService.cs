@@ -4,7 +4,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// Manages per-camera FFmpeg processes that turn a camera's stream, or a USB
 /// camera's pictures, into HLS segments for browser consumption.
 /// </summary>
-public sealed partial class StreamingService : IDisposable
+public sealed partial class StreamingService : ILiveStreamStatus, IDisposable
 {
     // A client that drops its socket without calling StopStream leaves the
     // viewer count > 0 and the FFmpeg transcoder running. With CPU-heavy
@@ -179,9 +179,7 @@ public sealed partial class StreamingService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets whether a camera is currently streaming.
-    /// </summary>
+    /// <inheritdoc />
     public bool IsStreaming(Guid cameraId)
         => sessions.ContainsKey(cameraId);
 

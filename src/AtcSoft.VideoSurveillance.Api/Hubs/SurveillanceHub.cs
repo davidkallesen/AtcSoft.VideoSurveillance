@@ -78,6 +78,14 @@ public sealed partial class SurveillanceHub : Hub
             return;
         }
 
+        if (camera.Connection.Source == CameraSource.Usb && streamingService.IsStreaming(cameraId))
+        {
+            await Clients.Caller
+                .SendAsync("Error", $"Camera {cameraId} is a USB camera that is being watched live; it can only be used by one program at a time.")
+                .ConfigureAwait(false);
+            return;
+        }
+
         var pipeline = pipelineFactory.Create(camera);
         var started = recordingService.StartRecording(camera, pipeline);
 

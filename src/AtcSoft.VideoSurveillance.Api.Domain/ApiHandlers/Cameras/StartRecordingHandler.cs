@@ -7,7 +7,8 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 public sealed class StartRecordingHandler(
     ICameraStorageService storage,
     IRecordingService recordingService,
-    IMediaPipelineFactory pipelineFactory) : IStartRecordingHandler
+    IMediaPipelineFactory pipelineFactory,
+    ILiveStreamStatus? liveStreams = null) : IStartRecordingHandler
 {
     // Wait at most this long for the camera to reach the Connected state
     // before reporting failure. Longer than the typical RTSP open (1-3 s)
@@ -24,6 +25,16 @@ public sealed class StartRecordingHandler(
         if (camera is null)
         {
             return StartRecordingResult.NotFound($"Camera {parameters.CameraId} not found.");
+        }
+
+        // Windows gives a USB camera to one program at a time. A second
+        // opener connects and then gets no pictures, so it is refused here.
+        if (camera.Connection.Source == AtcSoft.VideoSurveillance.Enums.CameraSource.Usb &&
+            liveStreams?.IsStreaming(parameters.CameraId) == true)
+        {
+            return StartRecordingResult.Conflict(
+                "This USB camera is being watched live, and a USB camera can only be used by one program at a time. " +
+                "Close the live view to record it.");
         }
 
         if (recordingService.IsRecording(parameters.CameraId))

@@ -84,6 +84,7 @@ try
         new VideoPlayerFactory(sp.GetRequiredService<ILoggerFactory>()));
     builder.Services.AddSingleton<IMediaPipelineFactory, VideoEngineMediaPipelineFactory>();
     builder.Services.AddSingleton<StreamingService>();
+    builder.Services.AddSingleton<ILiveStreamStatus>(sp => sp.GetRequiredService<StreamingService>());
 
     // USB-camera support — Null fallback first so non-Windows hosts
     // still compose; Windows then replaces the binding via

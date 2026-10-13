@@ -55,7 +55,7 @@ The web client watches a camera through HLS. A client asks for a stream over the
 - The stream is made by the FFmpeg command-line tool. It is taken from the folder the video engine loads its FFmpeg libraries from, so it needs no entry in the `PATH`; without it there, the `PATH` is searched.
 - A network camera's video is passed on as it is (no re-encoding), so a rotated camera is **not** rotated in the stream. A client turns the picture itself, from the camera's `rotation`.
 - A USB camera sends uncompressed pictures, so its stream is encoded to H.264 (`libx264`, which the FFmpeg tool has to include). That costs processor time for every USB camera being watched.
-- Windows lets one program at a time open a USB camera. While the server records a USB camera, a stream of it is refused with a message that says so; and while it is being streamed, the server cannot record it.
+- Windows lets one program at a time open a USB camera. Whoever has it first keeps it: while the server records a USB camera, a stream of it is refused, and while it is being streamed, starting a recording answers `409 Conflict`. Both say why. Record-on-connect for such a camera fails quietly while it is watched and is tried again later.
 - A stream nobody asks about is stopped after a minute. A client that is watching calls `StreamHeartbeat` regularly (the web client does so every 20 seconds).
 - A camera's user name and password are removed from everything the server logs or sends back about a stream.
 
