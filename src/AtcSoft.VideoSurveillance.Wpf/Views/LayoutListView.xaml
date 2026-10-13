@@ -31,7 +31,7 @@
 
         <!--  Toolbar  -->
         <ToolBar Grid.Row="1" Margin="0,0,0,8">
-            <Button Command="{Binding AddLayoutCommand}" ToolTip="Add Layout">
+            <Button AutomationProperties.Name="Add Layout" Command="{Binding AddLayoutCommand}" ToolTip="Add Layout">
                 <StackPanel Orientation="Horizontal">
                     <fontIcons:ImageAwesomeSolid
                         Width="16"
@@ -42,7 +42,7 @@
                 </StackPanel>
             </Button>
             <Separator />
-            <Button Command="{Binding LoadCommand}" ToolTip="Refresh">
+            <Button AutomationProperties.Name="Refresh" Command="{Binding LoadCommand}" ToolTip="Refresh">
                 <StackPanel Orientation="Horizontal">
                     <fontIcons:ImageAwesomeSolid
                         Width="16"
@@ -83,6 +83,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button
+                                    AutomationProperties.Name="Edit"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.EditLayoutCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -95,6 +96,7 @@
                                         Icon="Edit" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Apply"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.ApplyLayoutCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -107,6 +109,7 @@
                                         Icon="Check" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Delete"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.DeleteLayoutCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

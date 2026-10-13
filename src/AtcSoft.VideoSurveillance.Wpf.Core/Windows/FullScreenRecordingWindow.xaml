@@ -66,6 +66,7 @@
 
             <!--  Close Button (Top-Right)  -->
             <Button
+                AutomationProperties.Name="Close"
                 Width="40"
                 Height="40"
                 Margin="20"
@@ -174,6 +175,7 @@
 
                     <!--  Speed Button  -->
                     <Button
+                        AutomationProperties.Name="Click to change playback speed"
                         Width="50"
                         Height="40"
                         Margin="0,0,12,0"

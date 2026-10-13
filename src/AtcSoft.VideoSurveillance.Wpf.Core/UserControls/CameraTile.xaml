@@ -110,6 +110,8 @@
                         Orientation="Vertical">
 
                         <Button
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                          Key=ShowInFullScreen}"
                             x:Name="FullScreenQuickButton"
                             Margin="0,0,0,4"
                             HorizontalAlignment="{Binding QuickActionsHorizontalAlignment, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -127,6 +129,8 @@
                         </Button>
 
                         <Button
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                          Key=ResetZoom}"
                             x:Name="ZoomResetQuickButton"
                             Margin="0,0,0,4"
                             HorizontalAlignment="{Binding QuickActionsHorizontalAlignment, RelativeSource={RelativeSource AncestorType=UserControl}}"

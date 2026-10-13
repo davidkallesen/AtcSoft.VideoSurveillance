@@ -29,7 +29,7 @@
 
         <!--  Toolbar  -->
         <ToolBar Grid.Row="1" Margin="0,0,0,8">
-            <Button Command="{Binding AddCameraCommand}" ToolTip="Add Camera">
+            <Button AutomationProperties.Name="Add Camera" Command="{Binding AddCameraCommand}" ToolTip="Add Camera">
                 <StackPanel Orientation="Horizontal">
                     <fontIcons:ImageAwesomeSolid
                         Width="16"
@@ -40,7 +40,7 @@
                 </StackPanel>
             </Button>
             <Separator />
-            <Button Command="{Binding LoadCommand}" ToolTip="Refresh">
+            <Button AutomationProperties.Name="Refresh" Command="{Binding LoadCommand}" ToolTip="Refresh">
                 <StackPanel Orientation="Horizontal">
                     <fontIcons:ImageAwesomeSolid
                         Width="16"
@@ -61,7 +61,7 @@
                 VerticalAlignment="Center"
                 Text="{Binding Path=FilterText, UpdateSourceTrigger=PropertyChanged}"
                 ToolTip="Show the cameras that contain this text" />
-            <Button Command="{Binding ClearFilterCommand}" ToolTip="Clear the filter">
+            <Button AutomationProperties.Name="Clear the filter" Command="{Binding ClearFilterCommand}" ToolTip="Clear the filter">
                 <fontIcons:ImageAwesomeSolid
                     Width="12"
                     Height="12"
@@ -138,6 +138,7 @@
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                                 <Button
+                                    AutomationProperties.Name="Edit"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.EditCameraCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -150,6 +151,7 @@
                                         Icon="Edit" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Capture Snapshot"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.CaptureSnapshotCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -162,6 +164,7 @@
                                         Icon="Camera" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Start Recording"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.StartRecordingCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -174,6 +177,7 @@
                                         Icon="Circle" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Stop Recording"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.StopRecordingCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -186,6 +190,7 @@
                                         Icon="Stop" />
                                 </Button>
                                 <Button
+                                    AutomationProperties.Name="Delete"
                                     Margin="2"
                                     Padding="4,2"
                                     Command="{Binding DataContext.DeleteCameraCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

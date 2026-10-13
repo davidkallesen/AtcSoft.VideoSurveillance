@@ -126,6 +126,7 @@
 
                 <!--  Close Button (Top-Right)  -->
                 <Button
+                    AutomationProperties.Name="Close"
                     Width="40"
                     Height="40"
                     Margin="20"
