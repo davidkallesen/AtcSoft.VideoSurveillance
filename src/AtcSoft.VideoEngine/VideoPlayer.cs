@@ -22,12 +22,15 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     // other threads than the one that reads the camera and feeds it.
     private readonly Lock encoderLock = new();
     private readonly EncodedPacketHandler writeEncodedPacket;
+    private readonly EncodedPacketHandler writeEncodedAudioPacket;
     private readonly Stopwatch fpsWatch = new();
 
     private Demuxer? demuxer;
     private VideoDecoder? decoder;
     private Remuxer? remuxer;
     private FrameEncoder? frameEncoder;
+    private AudioEncoder? audioEncoder;
+    private volatile bool recordAudio;
     private FrameCapture? frameCapture;
 
     private AVFrame* latestFrame;
@@ -53,6 +56,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         this.logger = logger;
         this.gpuAccelerator = gpuAccelerator;
         writeEncodedPacket = WriteEncodedPacket;
+        writeEncodedAudioPacket = WriteEncodedAudioPacket;
     }
 
     public PlayerState State => state;
@@ -90,6 +94,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         demuxThread = null;
 
         options ??= new StreamOptions();
+        recordAudio = options.RecordAudio;
         stopRequested = false;
         demuxCts = new CancellationTokenSource();
         var ct = demuxCts.Token;
@@ -144,13 +149,31 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             return;
         }
 
-        if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
+        var sound = OpenAudioEncoder(source);
+        try
         {
-            StartEncodedRecording(outputFilePath, source, sourceDecoder);
+            if (FrameEncoder.IsNeededFor(source.VideoCodecParameters->codec_id))
+            {
+                StartEncodedRecording(outputFilePath, source, sourceDecoder, sound);
+            }
+            else
+            {
+                lock (encoderLock)
+                {
+                    remuxer.Open(
+                        outputFilePath,
+                        source.VideoCodecParameters,
+                        source.VideoTimeBase,
+                        (int)rotation,
+                        sound is null ? null : sound.CodecParameters);
+                    audioEncoder = sound;
+                }
+            }
         }
-        else
+        catch
         {
-            remuxer.Open(outputFilePath, source.VideoCodecParameters, source.VideoTimeBase, (int)rotation);
+            sound?.Dispose();
+            throw;
         }
 
         LogRecordingStarted(outputFilePath);
@@ -171,6 +194,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                 frameEncoder.Flush(writeEncodedPacket);
                 frameEncoder.Dispose();
                 frameEncoder = null;
+            }
+
+            if (audioEncoder is not null)
+            {
+                audioEncoder.Flush(writeEncodedAudioPacket);
+                audioEncoder.Dispose();
+                audioEncoder = null;
             }
 
             remuxer.Close();
@@ -202,16 +232,19 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
         lock (encoderLock)
         {
+            // The sound encoder runs on across the switch: the sound has no gap.
+            var sound = audioEncoder is null ? null : audioEncoder.CodecParameters;
+
             if (frameEncoder is not null)
             {
                 // The recorder leaves out everything before a file's first
                 // key frame, so the new file is made to start with one.
                 frameEncoder.RequestKeyFrame();
-                remuxer.SwitchTo(newOutputFilePath, frameEncoder.CodecParameters, frameEncoder.TimeBase, (int)rotation);
+                remuxer.SwitchTo(newOutputFilePath, frameEncoder.CodecParameters, frameEncoder.TimeBase, (int)rotation, sound);
             }
             else
             {
-                remuxer.SwitchTo(newOutputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation);
+                remuxer.SwitchTo(newOutputFilePath, demuxer.VideoCodecParameters, demuxer.VideoTimeBase, (int)rotation, sound);
             }
         }
 
@@ -221,10 +254,35 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     // A camera that delivers uncompressed pictures (a webcam) cannot be
     // recorded by copying its packets: no recording format takes them. Its
     // decoded pictures are encoded to H.264 instead.
+    // Sound is recorded only when it was asked for and the source has it.
+    // A source whose sound cannot be encoded is recorded without it: the
+    // picture is what the recording is for.
+    private AudioEncoder? OpenAudioEncoder(Demuxer source)
+    {
+        if (!recordAudio || !source.HasAudio)
+        {
+            return null;
+        }
+
+        var encoder = new AudioEncoder();
+        try
+        {
+            encoder.Open(source.AudioCodecParameters);
+            return encoder;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FFmpegException)
+        {
+            encoder.Dispose();
+            LogRecordingWithoutSound(ex.Message);
+            return null;
+        }
+    }
+
     private void StartEncodedRecording(
         string outputFilePath,
         Demuxer source,
-        VideoDecoder sourceDecoder)
+        VideoDecoder sourceDecoder,
+        AudioEncoder? sound)
     {
         var frameRate = source.VideoFrameRate;
         var framesPerSecond = frameRate is { Num: > 0, Den: > 0 }
@@ -240,8 +298,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             {
                 var recorder = remuxer
                     ?? throw new InvalidOperationException("Cannot record: player is not playing.");
-                recorder.Open(outputFilePath, encoder.CodecParameters, encoder.TimeBase, (int)rotation);
+                recorder.Open(
+                    outputFilePath,
+                    encoder.CodecParameters,
+                    encoder.TimeBase,
+                    (int)rotation,
+                    sound is null ? null : sound.CodecParameters);
                 frameEncoder = encoder;
+                audioEncoder = sound;
             }
         }
         catch
@@ -251,6 +315,14 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         }
 
         LogRecordingEncoder(encoder.EncoderName ?? string.Empty);
+    }
+
+    private void WriteEncodedAudioPacket(AVPacket* packet)
+    {
+        if (remuxer is { IsOpen: true } && audioEncoder is not null)
+        {
+            remuxer.WriteAudioPacket(packet, audioEncoder.TimeBase);
+        }
     }
 
     private void WriteEncodedPacket(AVPacket* packet)
@@ -404,6 +476,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             {
                 frameEncoder?.Dispose();
                 frameEncoder = null;
+                audioEncoder?.Dispose();
+                audioEncoder = null;
                 remuxer?.Dispose();
                 remuxer = null;
             }
@@ -507,6 +581,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             if (demuxer.IsVideoPacket)
             {
                 ProcessVideoPacket();
+            }
+            else if (demuxer.IsAudioPacket)
+            {
+                lock (encoderLock)
+                {
+                    audioEncoder?.Encode(demuxer.CurrentPacket, demuxer.AudioTimeBase, writeEncodedAudioPacket);
+                }
             }
 
             demuxer.UnrefPacket();

@@ -193,7 +193,7 @@ public sealed unsafe class FrameEncoderTests : IDisposable
         var packet = av_packet_alloc();
         try
         {
-            avformat_find_stream_info(context, ref options).Should().BeGreaterThanOrEqualTo(0);
+            avformat_find_stream_info(context, (AVDictionary**)null).Should().BeGreaterThanOrEqualTo(0);
             context->nb_streams.Should().Be(1);
             var parameters = context->streams[0]->codecpar;
 

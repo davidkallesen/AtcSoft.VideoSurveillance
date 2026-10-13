@@ -20,6 +20,9 @@ internal sealed unsafe partial class Demuxer : IDisposable
     private AVCodecParameters* videoCodecParameters;
     private AVRational videoTimeBase;
     private AVRational videoFrameRate;
+    private int audioStreamIndex = -1;
+    private AVCodecParameters* audioCodecParameters;
+    private AVRational audioTimeBase;
     private bool disposed;
 
     private int timeoutSeconds = OpenTimeoutSeconds;
@@ -51,6 +54,18 @@ internal sealed unsafe partial class Demuxer : IDisposable
     public AVPacket* CurrentPacket => packet;
 
     public bool IsVideoPacket => packet->stream_index == videoStreamIndex;
+
+    /// <summary>
+    /// Gets a value indicating whether the source has sound.
+    /// </summary>
+    public bool HasAudio => audioStreamIndex >= 0;
+
+    public AVCodecParameters* AudioCodecParameters => audioCodecParameters;
+
+    public AVRational AudioTimeBase => audioTimeBase;
+
+    public bool IsAudioPacket
+        => audioStreamIndex >= 0 && packet->stream_index == audioStreamIndex;
 
     /// <summary>
     /// Signals the interrupt callback to abort any blocking FFmpeg call immediately.
@@ -152,6 +167,7 @@ internal sealed unsafe partial class Demuxer : IDisposable
             }
 
             FindVideoStream();
+            FindAudioStream();
 
             timeoutSeconds = ReadTimeoutSeconds;
             timeoutWatch.Restart();
@@ -257,6 +273,25 @@ internal sealed unsafe partial class Demuxer : IDisposable
         }
 
         throw new InvalidOperationException("No video stream found in input.");
+    }
+
+    // The first stream with sound, if any. A source without sound is the
+    // usual case and no error.
+    private void FindAudioStream()
+    {
+        for (uint i = 0; i < fmtCtx->nb_streams; i++)
+        {
+            var stream = fmtCtx->streams[i];
+            if (stream->codecpar->codec_type != AVMediaType.Audio)
+            {
+                continue;
+            }
+
+            audioStreamIndex = (int)i;
+            audioCodecParameters = stream->codecpar;
+            audioTimeBase = stream->time_base;
+            return;
+        }
     }
 
     private static void SetFormatOptions(

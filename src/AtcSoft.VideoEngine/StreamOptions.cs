@@ -87,6 +87,14 @@ public sealed class StreamOptions
     public string? PixelFormat { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the source's sound is
+    /// recorded next to the picture, when the source has sound. It is
+    /// encoded to AAC. Off by default: recordings are then video only,
+    /// as they always were.
+    /// </summary>
+    public bool RecordAudio { get; set; }
+
+    /// <summary>
     /// The FFmpeg input-format string corresponding to
     /// <see cref="InputFormat"/>, or <see langword="null"/> when set
     /// to <see cref="InputFormatKind.Auto"/> (let FFmpeg sniff).

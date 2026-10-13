@@ -82,6 +82,53 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData(true, 2)]
+    [InlineData(false, 1)]
+    public async Task A_Source_With_Sound_Is_Recorded_With_It_Only_When_Asked_For(
+        bool recordAudio,
+        int expectedStreams)
+    {
+        TestEngine.Require();
+        var tool = FindFFmpegTool();
+        Assert.SkipWhen(tool is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var port = GetFreePort();
+        using var source = StartRawVideoStream(tool!, port, withSound: true);
+        var path = Path.Combine(directory, $"sound-{recordAudio}.mp4");
+
+        using (var player = new VideoPlayer(Microsoft.Extensions.Logging.Abstractions.NullLogger<VideoPlayer>.Instance))
+        {
+            try
+            {
+                player.Open(
+                    new Uri($"tcp://127.0.0.1:{port}"),
+                    new StreamOptions { HardwareAcceleration = false, RecordAudio = recordAudio });
+                await WaitUntilAsync(() => player.State == PlayerState.Playing && player.FramesDecoded > 0, cancellationToken);
+
+                player.StartRecording(path);
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                player.StopRecording();
+            }
+            finally
+            {
+                player.Close();
+                Stop(source);
+            }
+        }
+
+        var streams = ReadStreams(path);
+        streams.Should().HaveCount(expectedStreams);
+        streams[0].Codec.Should().Be(AVCodecID.H264);
+        if (recordAudio)
+        {
+            streams[1].Codec.Should().Be(AVCodecID.Aac);
+            streams[1].Seconds.Should().BeInRange(2.3, 3.5, "the sound runs as long as the picture");
+            streams[0].Seconds.Should().BeInRange(2.3, 3.5);
+        }
+    }
+
     private static string? FindFFmpegTool()
     {
         var folder = VideoEngineBootstrap.FindFFmpegPath();
@@ -104,13 +151,16 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
     // Paced like a camera (-re): a file would be read to its end at once.
     private static System.Diagnostics.Process StartRawVideoStream(
         string tool,
-        int port)
+        int port,
+        bool withSound = false)
     {
+        var sound = withSound ? "-re -f lavfi -i sine=frequency=440:sample_rate=44100 -c:a pcm_s16le -ac 2 " : string.Empty;
+
         var start = new System.Diagnostics.ProcessStartInfo
         {
             FileName = tool,
             Arguments =
-                "-hide_banner -loglevel error -re -f lavfi -i testsrc=size=320x240:rate=15 " +
+                "-hide_banner -loglevel error -re -f lavfi -i testsrc=size=320x240:rate=15 " + sound +
                 $"-c:v rawvideo -pix_fmt yuyv422 -t 60 -f nut \"tcp://127.0.0.1:{port}?listen=1\"",
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -160,7 +210,7 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
         var packet = av_packet_alloc();
         try
         {
-            avformat_find_stream_info(context, ref options).Should().BeGreaterThanOrEqualTo(0);
+            avformat_find_stream_info(context, (AVDictionary**)null).Should().BeGreaterThanOrEqualTo(0);
             var codec = context->streams[0]->codecpar->codec_id;
 
             var frames = 0;
@@ -184,6 +234,42 @@ public sealed class VideoPlayerRawVideoRecordingTests : IDisposable
             avformat_close_input(ref context);
         }
     }
+
+    private static unsafe List<RecordedStream> ReadStreams(string path)
+    {
+        AVFormatContext* context = null;
+        AVDictionary* options = null;
+        avformat_open_input(ref context, path, null, ref options).Should().Be(0, $"'{path}' has to be a readable recording");
+        var packet = av_packet_alloc();
+        try
+        {
+            avformat_find_stream_info(context, (AVDictionary**)null).Should().BeGreaterThanOrEqualTo(0);
+            var last = new double[context->nb_streams];
+            while (av_read_frame(context, packet) >= 0)
+            {
+                var stream = context->streams[packet->stream_index];
+                last[packet->stream_index] = (packet->pts + packet->duration) * av_q2d(stream->time_base);
+                av_packet_unref(packet);
+            }
+
+            var streams = new List<RecordedStream>();
+            for (var i = 0; i < last.Length; i++)
+            {
+                streams.Add(new RecordedStream(context->streams[i]->codecpar->codec_id, last[i]));
+            }
+
+            return streams;
+        }
+        finally
+        {
+            av_packet_free(ref packet);
+            avformat_close_input(ref context);
+        }
+    }
+
+    private sealed record RecordedStream(
+        AVCodecID Codec,
+        double Seconds);
 
     private sealed record Recorded(
         AVCodecID Codec,

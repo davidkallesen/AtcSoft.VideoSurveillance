@@ -316,6 +316,7 @@ public class CameraUriHelperTests
         var locator = CameraUriHelper.BuildSourceLocator(camera);
 
         locator.RawDeviceSpec.Should().Be("video=Logitech BRIO:audio=Microphone (Logitech BRIO)");
+        locator.IncludesAudio.Should().BeTrue("the recording is then made with sound");
     }
 
     [Fact]

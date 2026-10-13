@@ -26,10 +26,17 @@ internal sealed unsafe class Remuxer : IDisposable
     // Wakes the writer when a packet was queued, and when it has to stop.
     private readonly AutoResetEvent packetQueued = new(initialState: false);
 
+    // Where a file's clock starts is kept in a unit both streams share, so
+    // sound keeps its place against the picture.
+    private static readonly AVRational Microseconds = new() { Num = 1, Den = 1_000_000 };
+
     private AVFormatContext* outputCtx;
     private AVRational outputTimeBase;
-    private long firstDts = AV_NOPTS_VALUE;
+    private AVRational audioOutputTimeBase;
+    private bool hasAudio;
+    private long originMicroseconds = AV_NOPTS_VALUE;
     private long lastDts = AV_NOPTS_VALUE;
+    private long lastAudioDts = AV_NOPTS_VALUE;
     private bool receivedKeyframe;
     private string? outputPath;
     private bool disposed;
@@ -44,11 +51,12 @@ internal sealed unsafe class Remuxer : IDisposable
         string outputPath,
         AVCodecParameters* codecpar,
         AVRational inputTimeBase,
-        int rotationDegrees = 0)
+        int rotationDegrees = 0,
+        AVCodecParameters* audioCodecpar = null)
     {
         lock (syncLock)
         {
-            OpenLocked(outputPath, codecpar, inputTimeBase, rotationDegrees);
+            OpenLocked(outputPath, codecpar, inputTimeBase, rotationDegrees, audioCodecpar);
             EnsureWriterRunning();
         }
     }
@@ -64,12 +72,13 @@ internal sealed unsafe class Remuxer : IDisposable
         string newOutputPath,
         AVCodecParameters* codecpar,
         AVRational inputTimeBase,
-        int rotationDegrees = 0)
+        int rotationDegrees = 0,
+        AVCodecParameters* audioCodecpar = null)
     {
         lock (syncLock)
         {
             CloseLocked();
-            OpenLocked(newOutputPath, codecpar, inputTimeBase, rotationDegrees);
+            OpenLocked(newOutputPath, codecpar, inputTimeBase, rotationDegrees, audioCodecpar);
         }
     }
 
@@ -77,11 +86,12 @@ internal sealed unsafe class Remuxer : IDisposable
         string outputPath,
         AVCodecParameters* codecpar,
         AVRational inputTimeBase,
-        int rotationDegrees)
+        int rotationDegrees,
+        AVCodecParameters* audioCodecpar)
     {
         try
         {
-            OpenOutputLocked(outputPath, codecpar, rotationDegrees);
+            OpenOutputLocked(outputPath, codecpar, rotationDegrees, audioCodecpar);
             this.outputPath = outputPath;
         }
         catch
@@ -124,7 +134,8 @@ internal sealed unsafe class Remuxer : IDisposable
     private void OpenOutputLocked(
         string outputPath,
         AVCodecParameters* codecpar,
-        int rotationDegrees)
+        int rotationDegrees,
+        AVCodecParameters* audioCodecpar)
     {
         AVFormatContext* ctx = null;
 
@@ -154,6 +165,24 @@ internal sealed unsafe class Remuxer : IDisposable
         // Flag the rotation so players turn the picture at playback. The
         // packets are copied untouched, so the pixels stay unrotated.
         DisplayMatrix.Write(outStream->codecpar, rotationDegrees);
+
+        AVStream* audioStream = null;
+        if (audioCodecpar is not null)
+        {
+            audioStream = avformat_new_stream(outputCtx, null);
+            if (audioStream is null)
+            {
+                throw new InvalidOperationException("Failed to create the output stream for sound.");
+            }
+
+            ret = avcodec_parameters_copy(audioStream->codecpar, audioCodecpar);
+            if (ret < 0)
+            {
+                throw new FFmpegException(ret, "Failed to copy the sound's codec parameters to output");
+            }
+
+            audioStream->codecpar->codec_tag = 0;
+        }
 
         ret = avio_open(ref outputCtx->pb, outputPath, IOFlags.Write);
         if (ret < 0)
@@ -188,8 +217,11 @@ internal sealed unsafe class Remuxer : IDisposable
         }
 
         outputTimeBase = outStream->time_base;
-        firstDts = AV_NOPTS_VALUE;
+        hasAudio = audioStream is not null;
+        audioOutputTimeBase = hasAudio ? audioStream->time_base : default;
+        originMicroseconds = AV_NOPTS_VALUE;
         lastDts = AV_NOPTS_VALUE;
+        lastAudioDts = AV_NOPTS_VALUE;
         receivedKeyframe = false;
     }
 
@@ -226,11 +258,14 @@ internal sealed unsafe class Remuxer : IDisposable
 
             try
             {
-                if (firstDts == AV_NOPTS_VALUE)
+                if (originMicroseconds == AV_NOPTS_VALUE)
                 {
-                    firstDts = clonedPkt->dts != AV_NOPTS_VALUE ? clonedPkt->dts : 0;
+                    originMicroseconds = clonedPkt->dts != AV_NOPTS_VALUE
+                        ? av_rescale_q(clonedPkt->dts, srcTimeBase, Microseconds)
+                        : 0;
                 }
 
+                var firstDts = av_rescale_q(originMicroseconds, Microseconds, srcTimeBase);
                 var dtsOffset = clonedPkt->dts != AV_NOPTS_VALUE ? clonedPkt->dts - firstDts : 0;
                 var ptsOffset = clonedPkt->pts != AV_NOPTS_VALUE ? clonedPkt->pts - firstDts : dtsOffset;
 
@@ -271,6 +306,58 @@ internal sealed unsafe class Remuxer : IDisposable
                 {
                     av_packet_free(ref clonedPkt);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes a packet of sound. Sound from before the file's first picture
+    /// is left out: the file's clock starts with that picture.
+    /// </summary>
+    public void WriteAudioPacket(
+        AVPacket* srcPacket,
+        AVRational srcTimeBase)
+    {
+        lock (syncLock)
+        {
+            if (outputCtx is null || !hasAudio || !receivedKeyframe || srcPacket->pts == AV_NOPTS_VALUE)
+            {
+                return;
+            }
+
+            var offset = srcPacket->pts - av_rescale_q(originMicroseconds, Microseconds, srcTimeBase);
+            if (offset < 0)
+            {
+                return;
+            }
+
+            var clonedPkt = av_packet_clone(srcPacket);
+            if (clonedPkt is null)
+            {
+                return;
+            }
+
+            clonedPkt->pts = av_rescale_q(offset, srcTimeBase, audioOutputTimeBase);
+            clonedPkt->dts = clonedPkt->pts;
+            clonedPkt->duration = av_rescale_q(srcPacket->duration, srcTimeBase, audioOutputTimeBase);
+            clonedPkt->stream_index = 1;
+            clonedPkt->pos = -1;
+
+            if (lastAudioDts != AV_NOPTS_VALUE && clonedPkt->dts <= lastAudioDts)
+            {
+                clonedPkt->dts = lastAudioDts + 1;
+                clonedPkt->pts = clonedPkt->dts;
+            }
+
+            lastAudioDts = clonedPkt->dts;
+
+            if (TryEnqueueDropOldest((IntPtr)clonedPkt))
+            {
+                packetQueued.Set();
+            }
+            else
+            {
+                av_packet_free(ref clonedPkt);
             }
         }
     }
@@ -417,6 +504,7 @@ internal sealed unsafe class Remuxer : IDisposable
         avio_closep(ref outputCtx->pb);
         avformat_free_context(outputCtx);
         outputCtx = null;
+        hasAudio = false;
 
         // A header and nothing to play is not a recording: the camera
         // stopped delivering right after the start.
@@ -426,7 +514,8 @@ internal sealed unsafe class Remuxer : IDisposable
         }
 
         outputPath = null;
-        firstDts = AV_NOPTS_VALUE;
+        originMicroseconds = AV_NOPTS_VALUE;
+        lastAudioDts = AV_NOPTS_VALUE;
         lastDts = AV_NOPTS_VALUE;
         receivedKeyframe = false;
     }

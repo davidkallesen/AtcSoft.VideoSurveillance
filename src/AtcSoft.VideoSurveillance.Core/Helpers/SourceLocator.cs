@@ -28,7 +28,8 @@ public sealed class SourceLocator
         string? rawDeviceSpec = null,
         string? videoSize = null,
         string? frameRate = null,
-        string? pixelFormat = null)
+        string? pixelFormat = null,
+        bool includesAudio = false)
     {
         ArgumentNullException.ThrowIfNull(uri);
         Uri = uri;
@@ -37,6 +38,7 @@ public sealed class SourceLocator
         VideoSize = string.IsNullOrEmpty(videoSize) ? null : videoSize;
         FrameRate = string.IsNullOrEmpty(frameRate) ? null : frameRate;
         PixelFormat = string.IsNullOrEmpty(pixelFormat) ? null : pixelFormat;
+        IncludesAudio = includesAudio;
     }
 
     /// <summary>
@@ -69,6 +71,13 @@ public sealed class SourceLocator
 
     /// <summary>FFmpeg <c>pixel_format</c> option (e.g. <c>nv12</c>).</summary>
     public string? PixelFormat { get; }
+
+    /// <summary>
+    /// <see langword="true"/> when the source was asked to deliver sound
+    /// as well (a USB camera with its microphone). A recording of it is
+    /// then made with sound.
+    /// </summary>
+    public bool IncludesAudio { get; }
 
     /// <summary>
     /// <see langword="true"/> when the locator references a local

@@ -137,7 +137,8 @@ public static class CameraUriHelper
             rawDeviceSpec: rawDeviceSpec,
             videoSize: videoSize,
             frameRate: frameRate,
-            pixelFormat: null);
+            pixelFormat: null,
+            includesAudio: includeAudio);
     }
 
     private static string? FormatVideoSize(UsbStreamFormat? format)

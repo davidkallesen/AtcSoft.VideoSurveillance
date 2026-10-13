@@ -551,7 +551,9 @@ Many UVC cameras expose an integrated microphone. Add it as an optional companio
 - ✅ `CameraUriHelper.BuildSourceLocator` — when `PreferAudio == true && !string.IsNullOrWhiteSpace(AudioDeviceName)`, the dshow `RawDeviceSpec` becomes `video=X:audio=Y` so a single `avformat_open_input` call grabs both streams. PreferAudio without a name (or name without flag) falls back to video-only — the dialog can keep the name while the operator toggles audio off without losing it.
 - ✅ 🧪 `CameraUriHelperTests` — three new cases pin the audio-on / audio-off / opt-in-without-name behaviour. `UsbConnectionSettingsTests` covers Clone + ValueEquals for the new field (including a regression case so a future converter refactor can't silently drop AudioDeviceName, mirroring the bug Phase 5 caught).
 
-#### 9.2 Packet-level audio (deferred — needs hardware)
+#### 9.2 Packet-level audio ✅ (2026-10-13)
+
+Built and seen on the server with the laptop camera and the monitor's microphone: a 16 s recording with H.264 and AAC, the sound starting 29 ms after the picture, at the same level as the microphone measured directly. Differences from the plan below: the sound is encoded to AAC instead of copied (PCM does not go into MP4), and the switch is `StreamOptions.RecordAudio`, set from `SourceLocator.IncludesAudio`. Not yet seen in the CameraWall app.
 
 - ⬜ 🧪 `RemuxerAudioPassthroughTests` — `[Trait("Category", "Hardware")]` — open dshow video + audio, record 5 s, verify the resulting MP4 has both streams via `MediaProbe`.
 - ⬜ `Demuxer` is currently single-stream — needs `audioStreamIndex` field, `IsAudioPacket` getter, `AudioCodecParameters` / `AudioTimeBase` properties, and audio-stream discovery in `FindStreams`.

@@ -36,7 +36,6 @@ internal sealed unsafe class FrameEncoder : IDisposable
     private int sourceHeight;
     private AVPixelFormat sourceFormat;
     private long frameDuration;
-    private long firstSourcePts = AV_NOPTS_VALUE;
     private long lastPts = AV_NOPTS_VALUE;
     private bool keyFrameRequested;
     private bool disposed;
@@ -328,12 +327,9 @@ internal sealed unsafe class FrameEncoder : IDisposable
             return lastPts == AV_NOPTS_VALUE ? 0 : lastPts + frameDuration;
         }
 
-        if (firstSourcePts == AV_NOPTS_VALUE)
-        {
-            firstSourcePts = sourcePts;
-        }
-
-        return av_rescale_q(sourcePts - firstSourcePts, sourceTimeBase, TimeBase);
+        // The camera's own clock is kept: the recorder sets each file's
+        // start, and sound recorded next to the picture is on the same clock.
+        return av_rescale_q(sourcePts, sourceTimeBase, TimeBase);
     }
 
     private void Convert(AVFrame* frame)
