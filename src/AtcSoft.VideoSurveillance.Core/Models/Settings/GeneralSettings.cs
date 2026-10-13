@@ -17,6 +17,14 @@ public class GeneralSettings
 
     public bool StartRibbonCollapsed { get; set; }
 
+    /// <summary>
+    /// Gets or sets the size of the camera grid the desktop app was last
+    /// showing: 0 for the automatic grid with every camera, 1 to 4 for a
+    /// fixed grid with that many cameras along a side. Chosen in the main
+    /// window, and a matter of each desktop: it is not part of the API.
+    /// </summary>
+    public int GridSize { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
         => $"GeneralSettings {{ Theme='{ThemeBase}/{ThemeAccent}', Language='{Language}' }}";
@@ -30,5 +38,6 @@ public class GeneralSettings
             ConnectCamerasOnStartup = ConnectCamerasOnStartup,
             StartMaximized = StartMaximized,
             StartRibbonCollapsed = StartRibbonCollapsed,
+            GridSize = GridSize,
         };
 }

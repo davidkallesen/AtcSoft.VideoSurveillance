@@ -680,6 +680,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
             ConnectCamerasOnStartup = ConnectCamerasOnStartup,
             StartMaximized = StartMaximized,
             StartRibbonCollapsed = StartRibbonCollapsed,
+
+            // Chosen in the main window, not here: kept as it is.
+            GridSize = settingsService.General.GridSize,
         };
 
         settingsService.SaveGeneral(settings);

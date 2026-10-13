@@ -22,6 +22,22 @@ public class ApiApplicationSettingsServiceTests
     }
 
     [Fact]
+    public void The_Grid_Size_Is_Kept_On_This_Computer_Because_The_Server_Has_No_Place_For_It()
+    {
+        // Each desktop has its own screen; the size of its grid is no
+        // setting of the server.
+        var general = new AtcSoft.VideoSurveillance.Models.Settings.GeneralSettings { GridSize = 2, StartRibbonCollapsed = true, ThemeBase = "Light" };
+
+        var preferences = ClientPreferences.From(general);
+        var loaded = ApiApplicationSettingsService.BuildCacheFrom(preferences, api: null);
+
+        preferences.GridSize.Should().Be(2);
+        loaded.General.GridSize.Should().Be(2);
+        loaded.General.StartRibbonCollapsed.Should().BeTrue();
+        loaded.General.ThemeBase.Should().Be("Light");
+    }
+
+    [Fact]
     public void DiskSpaceGuard_Stays_On_When_The_Api_Is_Unreachable()
     {
         // Act

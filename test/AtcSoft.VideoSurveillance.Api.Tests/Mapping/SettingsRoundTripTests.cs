@@ -15,6 +15,7 @@ public sealed class SettingsRoundTripTests
     {
         // A preference of each desktop client; the API client keeps its own.
         "General.StartRibbonCollapsed",
+        "General.GridSize",
 
         // How the standalone app's recordings browser behaves; the server has no browser.
         "Recording.CloseRecordingsBrowserOnPlay",

@@ -20,4 +20,29 @@ public sealed class ClientPreferences
     public bool StartMaximized { get; set; }
 
     public bool StartRibbonCollapsed { get; set; }
+
+    /// <summary>
+    /// Gets or sets the size of the live view's camera grid: 0 for the
+    /// automatic grid, 1 to 4 for that many cameras along a side.
+    /// </summary>
+    public int GridSize { get; set; }
+
+    /// <summary>
+    /// Takes from the general settings what is kept on this computer.
+    /// </summary>
+    public static ClientPreferences From(
+        AtcSoft.VideoSurveillance.Models.Settings.GeneralSettings general)
+    {
+        ArgumentNullException.ThrowIfNull(general);
+
+        return new ClientPreferences
+        {
+            ThemeBase = general.ThemeBase,
+            ThemeAccent = general.ThemeAccent,
+            Language = general.Language,
+            StartMaximized = general.StartMaximized,
+            StartRibbonCollapsed = general.StartRibbonCollapsed,
+            GridSize = general.GridSize,
+        };
+    }
 }

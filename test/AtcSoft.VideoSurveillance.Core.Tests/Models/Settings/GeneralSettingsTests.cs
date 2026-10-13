@@ -18,6 +18,14 @@ public class GeneralSettingsTests
     }
 
     [Fact]
+    public void The_Grid_Shows_All_Cameras_Until_A_Size_Is_Chosen_And_A_Copy_Keeps_The_Choice()
+    {
+        new GeneralSettings().GridSize.Should().Be(0, "zero is the automatic grid");
+
+        new GeneralSettings { GridSize = 3 }.Clone().GridSize.Should().Be(3);
+    }
+
+    [Fact]
     public void Clone_Creates_Independent_Copy()
     {
         // Arrange

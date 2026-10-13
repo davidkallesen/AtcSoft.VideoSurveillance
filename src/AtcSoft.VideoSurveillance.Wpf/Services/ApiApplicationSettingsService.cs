@@ -111,14 +111,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         ArgumentNullException.ThrowIfNull(settings);
         cache.General = settings;
 
-        SaveClientPrefs(new ClientPreferences
-        {
-            ThemeBase = settings.ThemeBase,
-            ThemeAccent = settings.ThemeAccent,
-            Language = settings.Language,
-            StartMaximized = settings.StartMaximized,
-            StartRibbonCollapsed = settings.StartRibbonCollapsed,
-        });
+        SaveClientPrefs(ClientPreferences.From(settings));
 
         PushToApi();
     }
@@ -174,14 +167,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     /// <inheritdoc/>
     public void Save()
     {
-        SaveClientPrefs(new ClientPreferences
-        {
-            ThemeBase = cache.General.ThemeBase,
-            ThemeAccent = cache.General.ThemeAccent,
-            Language = cache.General.Language,
-            StartMaximized = cache.General.StartMaximized,
-            StartRibbonCollapsed = cache.General.StartRibbonCollapsed,
-        });
+        SaveClientPrefs(ClientPreferences.From(cache.General));
 
         PushToApi();
     }
@@ -322,6 +308,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
                 Language = clientPrefs.Language,
                 StartMaximized = clientPrefs.StartMaximized,
                 StartRibbonCollapsed = clientPrefs.StartRibbonCollapsed,
+                GridSize = clientPrefs.GridSize,
                 ConnectCamerasOnStartup = api?.ConnectOnStartup ?? true,
             },
         };

@@ -15,6 +15,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly IUsbCameraWatcher usbCameraWatcher;
     private readonly string apiBaseAddress;
+    private readonly AtcSoft.VideoSurveillance.Services.IApplicationSettingsService? settingsService;
     private bool disposed;
     private bool usbWatcherSubscribed;
 
@@ -85,6 +86,25 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     {
         pageIndex = 0;
         ApplyArrangement(wrapPages: false);
+        RememberGridSize();
+    }
+
+    private void RememberGridSize()
+    {
+        if (settingsService is null)
+        {
+            return;
+        }
+
+        var size = (int)GridPager.ParsePreset(SelectedGridPreset);
+        if (settingsService.General.GridSize == size)
+        {
+            return;
+        }
+
+        var general = settingsService.General.Clone();
+        general.GridSize = size;
+        settingsService.SaveGeneral(general);
     }
 
     /// <summary>
@@ -124,7 +144,8 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         SurveillanceHubService hubService,
         IVideoPlayerFactory videoPlayerFactory,
         IUsbCameraWatcher usbCameraWatcher,
-        string apiBaseAddress)
+        string apiBaseAddress,
+        AtcSoft.VideoSurveillance.Services.IApplicationSettingsService? settingsService = null)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(hubService);
@@ -136,6 +157,11 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         this.videoPlayerFactory = videoPlayerFactory;
         this.usbCameraWatcher = usbCameraWatcher;
         this.apiBaseAddress = apiBaseAddress;
+        this.settingsService = settingsService;
+
+        // The grid starts in the size it was last shown in.
+        selectedGridPreset = ((int)GridPager.ParsePreset(
+            settingsService?.General.GridSize.ToString(CultureInfo.InvariantCulture))).ToString(CultureInfo.InvariantCulture);
 
         // Subscribe immediately so unplug events that arrive before the
         // first LoadAsync (e.g. SignalR backlog replay) are still

@@ -149,6 +149,8 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
         Manager.Initialize(cameraGridControl);
 
         cameraGrid = cameraGridControl;
+        cameraGrid.GridPreset = GridPager.ParsePreset(
+            settingsService.General.GridSize.ToString(CultureInfo.InvariantCulture));
         cameraGrid.PagingChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(SelectedGridPreset));
@@ -233,6 +235,15 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
 
         cameraGrid.GridPreset = GridPager.ParsePreset(side);
         cameraGrid.CurrentPage = 0;
+
+        // Remembered for the next start.
+        var size = (int)cameraGrid.GridPreset;
+        if (settingsService.General.GridSize != size)
+        {
+            var general = settingsService.General.Clone();
+            general.GridSize = size;
+            settingsService.SaveGeneral(general);
+        }
     }
 
     [RelayCommand(CanExecute = nameof(HasPages))]
