@@ -1,6 +1,7 @@
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 global using AtcSoft.VideoSurveillance.Wpf.Dialogs;
 global using AtcSoft.VideoSurveillance.Wpf.Extensions;
 global using AtcSoft.VideoSurveillance.Wpf.Services;

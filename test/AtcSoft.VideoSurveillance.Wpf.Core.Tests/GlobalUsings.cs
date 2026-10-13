@@ -6,3 +6,4 @@ global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Services;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;

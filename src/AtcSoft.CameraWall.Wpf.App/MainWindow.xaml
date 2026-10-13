@@ -70,6 +70,33 @@
             CommandParameter="9"
             Modifiers="Ctrl" />
         <KeyBinding
+            Key="D0"
+            Command="{Binding Path=SelectGridPresetCommand}"
+            CommandParameter="0"
+            Modifiers="Ctrl+Alt" />
+        <KeyBinding
+            Key="D1"
+            Command="{Binding Path=SelectGridPresetCommand}"
+            CommandParameter="1"
+            Modifiers="Ctrl+Alt" />
+        <KeyBinding
+            Key="D2"
+            Command="{Binding Path=SelectGridPresetCommand}"
+            CommandParameter="2"
+            Modifiers="Ctrl+Alt" />
+        <KeyBinding
+            Key="D3"
+            Command="{Binding Path=SelectGridPresetCommand}"
+            CommandParameter="3"
+            Modifiers="Ctrl+Alt" />
+        <KeyBinding
+            Key="D4"
+            Command="{Binding Path=SelectGridPresetCommand}"
+            CommandParameter="4"
+            Modifiers="Ctrl+Alt" />
+        <KeyBinding Key="PageDown" Command="{Binding Path=NextPageCommand}" />
+        <KeyBinding Key="PageUp" Command="{Binding Path=PreviousPageCommand}" />
+        <KeyBinding
             Key="N"
             Command="{Binding Path=AddCameraCommand}"
             Modifiers="Ctrl" />
@@ -158,6 +185,38 @@
                                                             Key=Layout}"
                             LabelWidthNumber="50"
                             SelectedKey="{Binding Path=SelectedLayoutId}" />
+                    </fluent:RibbonGroupBox>
+
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=GridSizeGroup}">
+                        <atcTheming:LabelComboBox
+                            Width="250"
+                            Margin="5,25,5,25"
+                            HideAreas="All"
+                            Items="{Binding Path=GridPresetItems}"
+                            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                            Key=GridSize}"
+                            LabelWidthNumber="50"
+                            SelectedKey="{Binding Path=SelectedGridPreset}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                          Key=GridSizeInfo}" />
+                        <fluent:Button
+                            Command="{Binding Path=PreviousPageCommand}"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                         Key=PreviousPage}"
+                            Size="Middle">
+                            <fluent:Button.Icon>
+                                <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="ChevronLeft" />
+                            </fluent:Button.Icon>
+                        </fluent:Button>
+                        <fluent:Button
+                            Command="{Binding Path=NextPageCommand}"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                         Key=NextPage}"
+                            Size="Middle">
+                            <fluent:Button.Icon>
+                                <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="ChevronRight" />
+                            </fluent:Button.Icon>
+                        </fluent:Button>
                     </fluent:RibbonGroupBox>
 
                     <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Actions}">
@@ -294,6 +353,12 @@
                     <TextBlock>
                         <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=ConnectedLabel}" />
                         <Run Text=" " /><Run Text="{Binding Path=ConnectedCount, Mode=OneWay}" />
+                    </TextBlock>
+                </StatusBarItem>
+                <StatusBarItem Visibility="{Binding Path=HasPages, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                    <TextBlock>
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=PageLabel}" />
+                        <Run Text=" " /><Run Text="{Binding Path=PageLabel, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
                 <StatusBarItem

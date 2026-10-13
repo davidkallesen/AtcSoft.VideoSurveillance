@@ -6,6 +6,7 @@ namespace AtcSoft.CameraWall.Wpf.App;
 public partial class MainWindowViewModel : MainWindowViewModelBase
 {
     private readonly IDialogService dialogService;
+    private CameraGrid? cameraGrid;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -129,7 +130,74 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     /// </summary>
     /// <param name="cameraGridControl">The camera grid control.</param>
     public void Initialize(CameraGrid cameraGridControl)
-        => Manager.Initialize(cameraGridControl);
+    {
+        ArgumentNullException.ThrowIfNull(cameraGridControl);
+
+        Manager.Initialize(cameraGridControl);
+
+        cameraGrid = cameraGridControl;
+        cameraGrid.PagingChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(SelectedGridPreset));
+            OnPropertyChanged(nameof(PageLabel));
+            OnPropertyChanged(nameof(HasPages));
+            CommandManager.InvalidateRequerySuggested();
+        };
+    }
+
+    /// <summary>
+    /// Gets the grid sizes to choose from.
+    /// </summary>
+    public IDictionary<string, string> GridPresetItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["0"] = Translations.GridSizeAuto,
+        ["1"] = "1 \u00D7 1",
+        ["2"] = "2 \u00D7 2",
+        ["3"] = "3 \u00D7 3",
+        ["4"] = "4 \u00D7 4",
+    };
+
+    /// <summary>
+    /// Gets or sets the grid's size, as its number of cameras along a side ("0" is automatic).
+    /// </summary>
+    public string SelectedGridPreset
+    {
+        get => ((int)(cameraGrid?.GridPreset ?? GridPreset.Auto)).ToString(CultureInfo.InvariantCulture);
+        set => SelectGridPreset(value);
+    }
+
+    /// <summary>
+    /// Gets the page of cameras shown ("2 / 3"); empty when there is one page.
+    /// </summary>
+    public string PageLabel => cameraGrid?.PageLabel ?? string.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether the cameras take more than one page.
+    /// </summary>
+    public bool HasPages => cameraGrid is { PageCount: > 1 };
+
+    /// <summary>
+    /// Sets the grid's size (Ctrl+Alt+0 to Ctrl+Alt+4) and goes back to the first page.
+    /// </summary>
+    [RelayCommand]
+    private void SelectGridPreset(string? side)
+    {
+        if (cameraGrid is null)
+        {
+            return;
+        }
+
+        cameraGrid.GridPreset = GridPager.ParsePreset(side);
+        cameraGrid.CurrentPage = 0;
+    }
+
+    [RelayCommand(CanExecute = nameof(HasPages))]
+    private void NextPage()
+        => cameraGrid?.ShowNextPage();
+
+    [RelayCommand(CanExecute = nameof(HasPages))]
+    private void PreviousPage()
+        => cameraGrid?.ShowPreviousPage();
 
     /// <summary>
     /// Shows a camera in full screen.

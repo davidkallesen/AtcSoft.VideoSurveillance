@@ -30,6 +30,95 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool isLoading;
 
+    // What is typed in the filter box: the cameras whose name or
+    // description has every word of it are shown.
+    [ObservableProperty(AfterChangedCallback = nameof(OnArrangementInputChanged))]
+    private string filterText = string.Empty;
+
+    // The grid's size, as its number of cameras along a side ("0" is automatic).
+    [ObservableProperty(AfterChangedCallback = nameof(OnArrangementInputChanged))]
+    private string selectedGridPreset = "0";
+
+    [ObservableProperty]
+    private string pageLabel = string.Empty;
+
+    [ObservableProperty]
+    private bool hasPages;
+
+    [ObservableProperty]
+    private bool hasNoMatches;
+
+    private int pageIndex;
+
+    /// <summary>
+    /// Gets the grid sizes to choose from.
+    /// </summary>
+    public IDictionary<string, string> GridPresetItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["0"] = "Automatic (all cameras)",
+        ["1"] = "1 \u00D7 1",
+        ["2"] = "2 \u00D7 2",
+        ["3"] = "3 \u00D7 3",
+        ["4"] = "4 \u00D7 4",
+    };
+
+    [RelayCommand]
+    private void ClearFilter()
+        => FilterText = string.Empty;
+
+    [RelayCommand(CanExecute = nameof(HasPages))]
+    private void NextPage()
+    {
+        pageIndex++;
+        ApplyArrangement(wrapPages: true);
+    }
+
+    [RelayCommand(CanExecute = nameof(HasPages))]
+    private void PreviousPage()
+    {
+        pageIndex--;
+        ApplyArrangement(wrapPages: true);
+    }
+
+    // A new filter or grid size starts at the first page again.
+    private void OnArrangementInputChanged()
+    {
+        pageIndex = 0;
+        ApplyArrangement(wrapPages: false);
+    }
+
+    /// <summary>
+    /// Shows the tiles the filter and the page leave in, and sizes the grid
+    /// for them. Has to run on the UI thread.
+    /// </summary>
+    private void ApplyArrangement(bool wrapPages)
+    {
+        var cameras = CameraTiles.Select(tile => (tile.DisplayName, tile.Description)).ToList();
+        var preset = GridPager.ParsePreset(SelectedGridPreset);
+        var arrangement = LiveGridArrangement.Arrange(cameras, FilterText, preset, pageIndex);
+
+        // Past the last page comes the first, and before the first the last.
+        if (wrapPages && arrangement.PageCount > 1 && arrangement.PageIndex != pageIndex)
+        {
+            pageIndex = pageIndex < 0 ? arrangement.PageCount - 1 : 0;
+            arrangement = LiveGridArrangement.Arrange(cameras, FilterText, preset, pageIndex);
+        }
+
+        pageIndex = arrangement.PageIndex;
+
+        for (var i = 0; i < CameraTiles.Count; i++)
+        {
+            CameraTiles[i].IsShownInGrid = arrangement.Shown[i];
+        }
+
+        GridRows = arrangement.Rows;
+        GridColumns = arrangement.Columns;
+        PageLabel = arrangement.PageLabel;
+        HasPages = arrangement.PageCount > 1;
+        HasNoMatches = CameraTiles.Count > 0 && arrangement.MatchCount == 0;
+        CommandManager.InvalidateRequerySuggested();
+    }
+
     public LiveViewViewModel(
         GatewayService gatewayService,
         SurveillanceHubService hubService,
@@ -178,10 +267,8 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                     CameraTiles.Add(tile);
                 }
 
-                // Calculate grid dimensions
-                var (rows, columns) = GridLayoutHelper.CalculateGridDimensions(CameraTiles.Count);
-                GridRows = rows;
-                GridColumns = columns;
+                // Size the grid, and leave out what the filter and the page leave out
+                ApplyArrangement(wrapPages: false);
             });
 
             // Start all streams (off UI thread)

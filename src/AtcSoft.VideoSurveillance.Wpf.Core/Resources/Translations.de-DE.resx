@@ -1363,6 +1363,27 @@
     <value>Tastenkürzel</value>
   </data>
   <data name="KeyboardShortcutsText" xml:space="preserve">
-    <value>Strg+1 bis Strg+9&#x9;Zu diesem Layout in der Liste wechseln&#xD;&#xA;Strg+N&#x9;Kamera hinzufügen&#xD;&#xA;Strg+Umschalt+N&#x9;Neues Layout&#xD;&#xA;Strg+R&#x9;Aufnahmen durchsuchen&#xD;&#xA;Strg+,&#x9;Einstellungen&#xD;&#xA;F5&#x9;Alle Kameras neu verbinden&#xD;&#xA;F1&#x9;Diese Liste&#xD;&#xA;&#xD;&#xA;Im Aufnahmen-Browser:&#xD;&#xA;Eingabe&#x9;Ausgewählte Aufnahme abspielen&#xD;&#xA;Esc&#x9;Player oder Browser schließen</value>
+    <value>Strg+1 bis Strg+9&#x9;Zu diesem Layout in der Liste wechseln&#xD;&#xA;Strg+Alt+0&#x9;Raster: automatisch, alle Kameras&#xD;&#xA;Strg+Alt+1 bis Strg+Alt+4&#x9;Raster: 1 x 1, 2 x 2, 3 x 3 oder 4 x 4&#xD;&#xA;Bild ab / Bild auf&#x9;Nächste oder vorherige Seite mit Kameras&#xD;&#xA;Strg+N&#x9;Kamera hinzufügen&#xD;&#xA;Strg+Umschalt+N&#x9;Neues Layout&#xD;&#xA;Strg+R&#x9;Aufnahmen durchsuchen&#xD;&#xA;Strg+,&#x9;Einstellungen&#xD;&#xA;F5&#x9;Alle Kameras neu verbinden&#xD;&#xA;F1&#x9;Diese Liste&#xD;&#xA;&#xD;&#xA;Im Aufnahmen-Browser:&#xD;&#xA;Eingabe&#x9;Ausgewählte Aufnahme abspielen&#xD;&#xA;Esc&#x9;Player oder Browser schließen</value>
+  </data>
+  <data name="GridSizeGroup" xml:space="preserve">
+    <value>Raster</value>
+  </data>
+  <data name="GridSize" xml:space="preserve">
+    <value>Größe</value>
+  </data>
+  <data name="GridSizeAuto" xml:space="preserve">
+    <value>Automatisch (alle Kameras)</value>
+  </data>
+  <data name="GridSizeInfo" xml:space="preserve">
+    <value>Automatisch zeigt alle Kameras und wächst mit ihrer Anzahl. Eine feste Größe zeigt so viele Kameras auf einmal; die übrigen sind auf den nächsten Seiten und bleiben verbunden und werden aufgezeichnet.</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>Vorherige Seite</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>Nächste Seite</value>
+  </data>
+  <data name="PageLabel" xml:space="preserve">
+    <value>Seite:</value>
   </data>
 </root>

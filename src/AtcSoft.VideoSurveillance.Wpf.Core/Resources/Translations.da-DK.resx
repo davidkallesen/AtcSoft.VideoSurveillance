@@ -1363,6 +1363,27 @@
     <value>Tastaturgenveje</value>
   </data>
   <data name="KeyboardShortcutsText" xml:space="preserve">
-    <value>Ctrl+1 til Ctrl+9&#x9;Skift til det layout i listen&#xD;&#xA;Ctrl+N&#x9;Tilføj et kamera&#xD;&#xA;Ctrl+Shift+N&#x9;Nyt layout&#xD;&#xA;Ctrl+R&#x9;Gennemse optagelser&#xD;&#xA;Ctrl+,&#x9;Indstillinger&#xD;&#xA;F5&#x9;Gentilslut alle kameraer&#xD;&#xA;F1&#x9;Denne liste&#xD;&#xA;&#xD;&#xA;I optagelsesbrowseren:&#xD;&#xA;Enter&#x9;Afspil den valgte optagelse&#xD;&#xA;Esc&#x9;Luk afspilleren eller browseren</value>
+    <value>Ctrl+1 til Ctrl+9&#x9;Skift til det layout i listen&#xD;&#xA;Ctrl+Alt+0&#x9;Gitter: automatisk, alle kameraer&#xD;&#xA;Ctrl+Alt+1 til Ctrl+Alt+4&#x9;Gitter: 1 x 1, 2 x 2, 3 x 3 eller 4 x 4&#xD;&#xA;Page Down / Page Up&#x9;Næste eller forrige side med kameraer&#xD;&#xA;Ctrl+N&#x9;Tilføj et kamera&#xD;&#xA;Ctrl+Shift+N&#x9;Nyt layout&#xD;&#xA;Ctrl+R&#x9;Gennemse optagelser&#xD;&#xA;Ctrl+,&#x9;Indstillinger&#xD;&#xA;F5&#x9;Gentilslut alle kameraer&#xD;&#xA;F1&#x9;Denne liste&#xD;&#xA;&#xD;&#xA;I optagelsesbrowseren:&#xD;&#xA;Enter&#x9;Afspil den valgte optagelse&#xD;&#xA;Esc&#x9;Luk afspilleren eller browseren</value>
+  </data>
+  <data name="GridSizeGroup" xml:space="preserve">
+    <value>Gitter</value>
+  </data>
+  <data name="GridSize" xml:space="preserve">
+    <value>Størrelse</value>
+  </data>
+  <data name="GridSizeAuto" xml:space="preserve">
+    <value>Automatisk (alle kameraer)</value>
+  </data>
+  <data name="GridSizeInfo" xml:space="preserve">
+    <value>Automatisk viser alle kameraer og vokser med antallet. En fast størrelse viser så mange kameraer ad gangen; de øvrige er på de næste sider og forbliver forbundet og optaget.</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>Forrige side</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>Næste side</value>
+  </data>
+  <data name="PageLabel" xml:space="preserve">
+    <value>Side:</value>
   </data>
 </root>

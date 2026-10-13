@@ -22,6 +22,28 @@ public partial class CameraGrid
     [DependencyProperty(DefaultValue = 1)]
     private int gridRowCount;
 
+    // Zero lets the columns follow from the rows and the number of cameras.
+    [DependencyProperty(DefaultValue = 0)]
+    private int gridColumnCount;
+
+    // The grid's size. Automatic grows with the cameras and shows them all;
+    // a fixed size shows one page of them. A camera that is not on the page
+    // stays connected (and recorded): it is only not shown.
+    [DependencyProperty(DefaultValue = GridPreset.Auto, PropertyChangedCallback = nameof(OnGridPagingChanged))]
+    private GridPreset gridPreset;
+
+    [DependencyProperty(DefaultValue = 0, PropertyChangedCallback = nameof(OnGridPagingChanged))]
+    private int currentPage;
+
+    [DependencyProperty(DefaultValue = 1)]
+    private int pageCount;
+
+    // "2 / 3"; empty when there is only one page.
+    [DependencyProperty(DefaultValue = "")]
+    private string pageLabel = string.Empty;
+
+    private bool isApplyingPage;
+
     [DependencyProperty(PropertyChangedCallback = nameof(OnCameraTilesChanged))]
     private ObservableCollection<CameraConfiguration> cameraTiles = [];
 
@@ -161,6 +183,8 @@ public partial class CameraGrid
     public CameraGrid()
     {
         InitializeComponent();
+
+        CameraItemsControl.ItemContainerGenerator.StatusChanged += OnTileContainersStatusChanged;
         CameraTiles = [];
 
         RegisterMessages();
@@ -723,9 +747,79 @@ public partial class CameraGrid
         Dispatcher.Invoke(() => SwapCamera(message.CameraId, message.Direction));
     }
 
+    /// <summary>
+    /// Occurs when the page shown, or the number of pages, has changed.
+    /// </summary>
+    public event EventHandler? PagingChanged;
+
+    /// <summary>
+    /// Shows the next page of cameras; after the last comes the first.
+    /// </summary>
+    public void ShowNextPage()
+        => CurrentPage = PageCount <= 1 ? 0 : (CurrentPage + 1) % PageCount;
+
+    /// <summary>
+    /// Shows the previous page of cameras; before the first comes the last.
+    /// </summary>
+    public void ShowPreviousPage()
+        => CurrentPage = PageCount <= 1 ? 0 : (CurrentPage + PageCount - 1) % PageCount;
+
+    private static void OnGridPagingChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CameraGrid grid && !grid.isApplyingPage)
+        {
+            grid.UpdateGridLayout();
+        }
+    }
+
     private void UpdateGridLayout()
     {
-        GridRowCount = GridLayoutHelper.CalculateRowCount(CameraTiles.Count);
+        var page = GridPager.Calculate(CameraTiles?.Count ?? 0, GridPreset, CurrentPage);
+
+        isApplyingPage = true;
+        try
+        {
+            GridRowCount = page.Rows;
+            GridColumnCount = page.Columns;
+            PageCount = page.PageCount;
+            CurrentPage = page.PageIndex;
+            PageLabel = page.Label;
+        }
+        finally
+        {
+            isApplyingPage = false;
+        }
+
+        ApplyPage(page);
+        PagingChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Hides the tiles that are not on the page. A hidden tile is left out
+    // of the grid's layout but keeps its camera open.
+    private void ApplyPage(GridPage page)
+    {
+        var generator = CameraItemsControl.ItemContainerGenerator;
+        for (var i = 0; i < CameraItemsControl.Items.Count; i++)
+        {
+            if (generator.ContainerFromIndex(i) is UIElement container)
+            {
+                container.Visibility = page.Shows(i) ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+    }
+
+    // The tiles of cameras added just now do not exist yet when the
+    // collection changes; the page is applied again once they do.
+    private void OnTileContainersStatusChanged(
+        object? sender,
+        EventArgs e)
+    {
+        if (CameraItemsControl.ItemContainerGenerator.Status == System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
+        {
+            ApplyPage(GridPager.Calculate(CameraTiles?.Count ?? 0, GridPreset, CurrentPage));
+        }
     }
 
     private void UpdateEmptyState()

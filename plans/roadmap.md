@@ -35,7 +35,7 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 |---|---|
 | [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
 | [USB cameras](roadmap-usb-cameras.md) | Hardware verification of recording-on-connect / motion for USB; audio capture at packet level |
-| [Suggestions](roadmap-suggestions.md) | Quick wins left: camera filter and layout presets in the server client's live view, disk-usage indicator, accessibility names. |
+| [Suggestions](roadmap-suggestions.md) | Quick wins left: disk-usage indicator, accessibility names. (Grid sizes with pages are in both desktop apps, and the server client's live view has a camera filter, since 2026-10-13; neither has been looked at on screen yet.) |
 
 ### Later
 

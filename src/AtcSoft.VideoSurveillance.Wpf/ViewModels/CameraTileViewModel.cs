@@ -22,6 +22,11 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string displayName = string.Empty;
 
+    // False while the live view's filter or page leaves this camera out.
+    // The tile is then not shown; its stream keeps running.
+    [ObservableProperty]
+    private bool isShownInGrid = true;
+
     [ObservableProperty]
     private string description = string.Empty;
 

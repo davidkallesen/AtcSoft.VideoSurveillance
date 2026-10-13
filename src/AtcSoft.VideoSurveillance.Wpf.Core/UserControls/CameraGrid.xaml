@@ -20,7 +20,10 @@
             ItemsSource="{Binding Path=CameraTiles, RelativeSource={RelativeSource AncestorType=UserControl}}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid x:Name="TileGrid" Rows="{Binding Path=GridRowCount, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <UniformGrid
+                        x:Name="TileGrid"
+                        Columns="{Binding Path=GridColumnCount, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Rows="{Binding Path=GridRowCount, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

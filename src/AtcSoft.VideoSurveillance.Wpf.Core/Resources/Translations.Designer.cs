@@ -2536,6 +2536,69 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Grid.
+        /// </summary>
+        public static string GridSizeGroup {
+            get {
+                return ResourceManager.GetString("GridSizeGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size.
+        /// </summary>
+        public static string GridSize {
+            get {
+                return ResourceManager.GetString("GridSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Automatic (all cameras).
+        /// </summary>
+        public static string GridSizeAuto {
+            get {
+                return ResourceManager.GetString("GridSizeAuto", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Automatic shows every camera and grows with their number. A .
+        /// </summary>
+        public static string GridSizeInfo {
+            get {
+                return ResourceManager.GetString("GridSizeInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Previous page.
+        /// </summary>
+        public static string PreviousPage {
+            get {
+                return ResourceManager.GetString("PreviousPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Next page.
+        /// </summary>
+        public static string NextPage {
+            get {
+                return ResourceManager.GetString("NextPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Page:.
+        /// </summary>
+        public static string PageLabel {
+            get {
+                return ResourceManager.GetString("PageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Recording video.
         /// </summary>
         public static string TranscodeVideoCodec {

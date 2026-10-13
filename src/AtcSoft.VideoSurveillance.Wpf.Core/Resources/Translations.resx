@@ -1363,6 +1363,27 @@
     <value>Keyboard Shortcuts</value>
   </data>
   <data name="KeyboardShortcutsText" xml:space="preserve">
-    <value>Ctrl+1 to Ctrl+9&#x9;Switch to that layout in the list&#xD;&#xA;Ctrl+N&#x9;Add a camera&#xD;&#xA;Ctrl+Shift+N&#x9;New layout&#xD;&#xA;Ctrl+R&#x9;Browse recordings&#xD;&#xA;Ctrl+,&#x9;Settings&#xD;&#xA;F5&#x9;Reconnect all cameras&#xD;&#xA;F1&#x9;This list&#xD;&#xA;&#xD;&#xA;In the recordings browser:&#xD;&#xA;Enter&#x9;Play the selected recording&#xD;&#xA;Esc&#x9;Close the player or the browser</value>
+    <value>Ctrl+1 to Ctrl+9&#x9;Switch to that layout in the list&#xD;&#xA;Ctrl+Alt+0&#x9;Grid: automatic, all cameras&#xD;&#xA;Ctrl+Alt+1 to Ctrl+Alt+4&#x9;Grid: 1 x 1, 2 x 2, 3 x 3 or 4 x 4&#xD;&#xA;Page Down / Page Up&#x9;Next or previous page of cameras&#xD;&#xA;Ctrl+N&#x9;Add a camera&#xD;&#xA;Ctrl+Shift+N&#x9;New layout&#xD;&#xA;Ctrl+R&#x9;Browse recordings&#xD;&#xA;Ctrl+,&#x9;Settings&#xD;&#xA;F5&#x9;Reconnect all cameras&#xD;&#xA;F1&#x9;This list&#xD;&#xA;&#xD;&#xA;In the recordings browser:&#xD;&#xA;Enter&#x9;Play the selected recording&#xD;&#xA;Esc&#x9;Close the player or the browser</value>
+  </data>
+  <data name="GridSizeGroup" xml:space="preserve">
+    <value>Grid</value>
+  </data>
+  <data name="GridSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="GridSizeAuto" xml:space="preserve">
+    <value>Automatic (all cameras)</value>
+  </data>
+  <data name="GridSizeInfo" xml:space="preserve">
+    <value>Automatic shows every camera and grows with their number. A fixed size shows that many cameras at a time; the others are on the next pages and stay connected and recorded.</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>Previous page</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>Next page</value>
+  </data>
+  <data name="PageLabel" xml:space="preserve">
+    <value>Page:</value>
   </data>
 </root>
