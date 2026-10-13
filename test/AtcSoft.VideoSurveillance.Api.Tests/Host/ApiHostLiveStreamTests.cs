@@ -72,6 +72,69 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
         }
     }
 
+    [Fact]
+    public async Task A_Camera_Can_Be_Watched_Live_Over_Hls()
+    {
+        var ffmpeg = FindFFmpegTool();
+        Assert.SkipWhen(ffmpeg is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = host.CreateClient();
+        var port = GetFreePort();
+        using var stream = StartTestStream(ffmpeg!, port);
+        await using var hub = host.CreateHubConnection();
+        Guid? cameraId = null;
+
+        try
+        {
+            // Arrange — an HTTP camera with a password
+            var created = await client.PostAsJsonAsync(
+                "/cameras",
+                new
+                {
+                    displayName = "Hls " + Guid.NewGuid().ToString("N")[..8],
+                    ipAddress = "127.0.0.1",
+                    port,
+                    protocol = "http",
+                    path = "live",
+                    username = "viewer",
+                    password = "hls-secret",
+                },
+                cancellationToken);
+            created.StatusCode.Should().Be(HttpStatusCode.Created);
+            cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+
+            var started = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            hub.On<JsonElement>("StreamStarted", e => started.TrySetResult(e.GetProperty("playlistUrl").GetString()!));
+            await hub.StartAsync(cancellationToken);
+
+            // Act
+            await hub.InvokeAsync("StartStream", cameraId.Value, cancellationToken);
+            var playlistUrl = await started.Task.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+
+            // Assert — the playlist and its first segment can be fetched
+            var playlist = await client.GetAsync(new Uri(playlistUrl, UriKind.Relative), cancellationToken);
+            playlist.StatusCode.Should().Be(HttpStatusCode.OK);
+            var text = await playlist.Content.ReadAsStringAsync(cancellationToken);
+            text.Should().StartWith("#EXTM3U");
+
+            var segment = text.Split('\n').Select(l => l.Trim()).First(l => l.EndsWith(".ts", StringComparison.Ordinal));
+            var segmentUrl = playlistUrl[..(playlistUrl.LastIndexOf('/') + 1)] + segment;
+            (await client.GetAsync(new Uri(segmentUrl, UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+            await hub.InvokeAsync("StopStream", cameraId.Value, cancellationToken);
+        }
+        finally
+        {
+            if (cameraId is not null)
+            {
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
+            }
+
+            Stop(stream);
+        }
+    }
+
     private static async Task<JsonElement> WaitForThumbnailAsync(
         HttpClient client,
         string cameraName,

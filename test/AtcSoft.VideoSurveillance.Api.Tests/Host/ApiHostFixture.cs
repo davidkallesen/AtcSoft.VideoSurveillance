@@ -55,6 +55,25 @@ public sealed class ApiHostFixture : IDisposable
         return client;
     }
 
+    /// <summary>
+    /// Gets a SignalR connection to the running server's hub.
+    /// </summary>
+    public HubConnection CreateHubConnection()
+    {
+        // Makes sure the server is running in the test data folder.
+        using var client = CreateClient();
+
+        return new HubConnectionBuilder()
+            .WithUrl(
+                new Uri(factory.Value.Server.BaseAddress, "hubs/surveillance"),
+                options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => factory.Value.Server.CreateHandler();
+                    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+                })
+            .Build();
+    }
+
     public void Dispose()
     {
         if (factory.IsValueCreated)

@@ -305,48 +305,11 @@ public sealed partial class StreamingService : IDisposable
         Directory.CreateDirectory(outputDir);
 
         var playlistPath = Path.Combine(outputDir, "stream.m3u8");
-        var streamUri = camera.BuildUri();
-        var transport = camera.Stream.RtspTransport ?? "tcp";
-
-        // -c:v copy: pass the camera's native H.264/H.265 video stream
-        // straight through to HLS without re-encoding. Modern IP cameras
-        // already produce HLS-compatible video, so transcoding is pure CPU
-        // waste — at 10+ viewed cameras libx264 saturates the host. HLS
-        // still honours -hls_time at GOP boundaries (typically 2-4 s).
-        // Audio is always re-encoded because cameras commonly use G.711
-        // / PCMU which HLS / browser MSE cannot demux. Cameras with non-
-        // H.264/H.265 video will fail under this default — for those, add
-        // a future per-camera "force transcoding" setting.
-        // hls_flags split_by_time is critical for stream-copied input
-        // (-c:v copy): without it, the HLS muxer only cuts segments at
-        // keyframe boundaries, so a camera with a long GOP (30s+ between
-        // I-frames) won't produce its first .ts file — and therefore won't
-        // produce stream.m3u8 — within the StartStream playlist-ready
-        // timeout. split_by_time relaxes that to cut at hls_time boundaries
-        // regardless of keyframes; the first segment may briefly fail to
-        // decode until the browser finds a keyframe, but playback recovers
-        // within a fraction of a second and the stream actually starts.
-        var args = string.Join(
-            ' ',
-            "-v info",
-            "-fflags nobuffer",
-            "-flags low_delay",
-            "-probesize 512000",
-            "-analyzeduration 500000",
-            $"-rtsp_transport {transport}",
-            "-timeout 10000000",
-            $"-i \"{streamUri}\"",
-            "-c:v copy",
-            "-c:a aac -b:a 64k",
-            "-f hls",
-            "-hls_time 2",
-            "-hls_list_size 5",
-            "-hls_flags delete_segments+split_by_time",
-            $"\"{playlistPath}\"");
+        var args = HlsStreamCommand.BuildArguments(camera, playlistPath);
 
         var psi = new ProcessStartInfo
         {
-            FileName = "ffmpeg",
+            FileName = HlsStreamCommand.FindTool(VideoEngineBootstrap.FindFFmpegPath()),
             Arguments = args,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -354,7 +317,9 @@ public sealed partial class StreamingService : IDisposable
             RedirectStandardError = true,
         };
 
-        LogStartingFfmpeg(cameraId, args);
+        // The command line and FFmpeg's own output both hold the camera's
+        // password; neither goes into the log, or to a client, as it is.
+        LogStartingFfmpeg(cameraId, HlsStreamCommand.Redact(args, camera));
 
         var process = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start FFmpeg HLS process.");
@@ -366,8 +331,9 @@ public sealed partial class StreamingService : IDisposable
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
-                session.AddErrorLine(e.Data);
-                LogFfmpegOutput(cameraId, e.Data);
+                var line = HlsStreamCommand.Redact(e.Data, camera);
+                session.AddErrorLine(line);
+                LogFfmpegOutput(cameraId, line);
             }
         };
         process.BeginErrorReadLine();
@@ -379,9 +345,13 @@ public sealed partial class StreamingService : IDisposable
 
     private sealed class StreamSession : IDisposable
     {
+        // Only the last lines are ever asked for; FFmpeg writes several a
+        // second for as long as the stream runs.
+        private const int MaxErrorLines = 50;
+
         private readonly Process process;
         private readonly string outputDir;
-        private readonly List<string> errorLines = [];
+        private readonly Queue<string> errorLines = new();
         private int viewerCount;
         private long lastActivityUtcTicks;
 
@@ -410,7 +380,17 @@ public sealed partial class StreamingService : IDisposable
         public void TouchActivity()
             => Interlocked.Exchange(ref lastActivityUtcTicks, DateTime.UtcNow.Ticks);
 
-        public void AddErrorLine(string line) => errorLines.Add(line);
+        public void AddErrorLine(string line)
+        {
+            lock (errorLines)
+            {
+                errorLines.Enqueue(line);
+                while (errorLines.Count > MaxErrorLines)
+                {
+                    errorLines.Dequeue();
+                }
+            }
+        }
 
         public string GetRecentErrors()
         {

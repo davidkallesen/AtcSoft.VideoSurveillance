@@ -18,6 +18,7 @@ global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Services;
 global using Microsoft.AspNetCore.Http.HttpResults;
 global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.AspNetCore.SignalR.Client;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Cameras.Parameters;

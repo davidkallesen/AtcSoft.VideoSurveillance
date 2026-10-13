@@ -1,0 +1,114 @@
+﻿namespace AtcSoft.VideoSurveillance.Api.Services;
+
+public sealed class HlsStreamCommandTests
+{
+    private const string Playlist = @"C:\hls\cam\stream.m3u8";
+
+    [Fact]
+    public void An_Rtsp_Camera_Gets_Its_Rtsp_Transport()
+    {
+        var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);
+        camera.Stream.RtspTransport = "udp";
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+
+        arguments.Should().Contain("-rtsp_transport udp");
+        arguments.Should().Contain("-i \"rtsp://192.0.2.10:554/stream1\"");
+        arguments.Should().EndWith($"\"{Playlist}\"");
+    }
+
+    [Theory]
+    [InlineData(CoreCameraProtocol.Http, 80)]
+    [InlineData(CoreCameraProtocol.Https, 443)]
+    public void An_Http_Camera_Does_Not_Get_The_Rtsp_Only_Option(
+        CoreCameraProtocol protocol,
+        int port)
+    {
+        // FFmpeg refuses an option the input format does not know, so an
+        // HTTP camera with -rtsp_transport never starts streaming.
+        var camera = CreateCamera(protocol, port);
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+
+        arguments.Should().NotContain("rtsp_transport");
+        arguments.Should().Contain("-c:v copy");
+    }
+
+    [Fact]
+    public void The_Password_Is_Not_In_What_Gets_Logged()
+    {
+        var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);
+        camera.Authentication.UserName = "admin";
+        camera.Authentication.Password = "s3cr3t!pw";
+
+        var arguments = HlsStreamCommand.BuildArguments(camera, Playlist);
+        arguments.Should().Contain("s3cr3t", "FFmpeg itself needs the password");
+
+        var logged = HlsStreamCommand.Redact(arguments, camera);
+
+        logged.Should().NotContain("s3cr3t").And.NotContain("admin");
+        logged.Should().Contain("192.0.2.10:554/stream1", "the rest of the address stays readable");
+    }
+
+    [Fact]
+    public void The_Password_Is_Removed_From_FFmpeg_Output_Too()
+    {
+        // FFmpeg prints the input address, user and password included.
+        var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);
+        camera.Authentication.UserName = "admin";
+        camera.Authentication.Password = "p@ss word";
+        var line = $"Input #0, rtsp, from '{camera.BuildUri()}':";
+
+        var logged = HlsStreamCommand.Redact(line, camera);
+
+        logged.Should().NotContain("p%40ss").And.NotContain("p@ss").And.NotContain("admin");
+        logged.Should().StartWith("Input #0, rtsp, from 'rtsp://");
+    }
+
+    [Fact]
+    public void Text_Without_Credentials_Is_Left_As_It_Is()
+    {
+        var camera = CreateCamera(CoreCameraProtocol.Rtsp, 554);
+
+        HlsStreamCommand.Redact("frame=  120 fps= 15", camera).Should().Be("frame=  120 fps= 15");
+    }
+
+    [Fact]
+    public void The_Tool_Is_Taken_From_The_Folder_The_Engine_Uses()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "atcsoft-hls-tool-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var tool = Path.Combine(folder, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
+            File.WriteAllText(tool, string.Empty);
+
+            HlsStreamCommand.FindTool(folder).Should().Be(tool);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(@"C:\no-such-folder-for-ffmpeg")]
+    public void Without_The_Tool_In_That_Folder_The_Path_Is_Searched(
+        string? folder)
+    {
+        HlsStreamCommand.FindTool(folder).Should().Be("ffmpeg");
+    }
+
+    private static CameraConfiguration CreateCamera(
+        CoreCameraProtocol protocol,
+        int port)
+    {
+        var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+        camera.Connection.Protocol = protocol;
+        camera.Connection.IpAddress = "192.0.2.10";
+        camera.Connection.Port = port;
+        camera.Connection.Path = "stream1";
+        return camera;
+    }
+}
