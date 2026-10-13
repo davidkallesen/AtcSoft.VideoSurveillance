@@ -18,10 +18,13 @@ internal sealed unsafe class Remuxer : IDisposable
     private readonly Lock syncLock = new();
 
     // BlockingCollection (not Channel) because the surrounding class is
-    // `unsafe` and cannot host `await`. The writer thread blocks on
-    // GetConsumingEnumerable instead of an async wait.
+    // `unsafe` and cannot host `await`. The writer thread waits for
+    // packetQueued instead of an async wait.
     private readonly BlockingCollection<IntPtr> writeQueue =
         new(new ConcurrentQueue<IntPtr>(), boundedCapacity: WriteQueueCapacity);
+
+    // Wakes the writer when a packet was queued, and when it has to stop.
+    private readonly AutoResetEvent packetQueued = new(initialState: false);
 
     private AVFormatContext* outputCtx;
     private AVRational outputTimeBase;
@@ -29,6 +32,8 @@ internal sealed unsafe class Remuxer : IDisposable
     private long lastDts = AV_NOPTS_VALUE;
     private bool receivedKeyframe;
     private bool disposed;
+
+    private volatile bool stopWriter;
 
     private Thread? writerThread;
 
@@ -71,6 +76,52 @@ internal sealed unsafe class Remuxer : IDisposable
         string outputPath,
         AVCodecParameters* codecpar,
         AVRational inputTimeBase,
+        int rotationDegrees)
+    {
+        try
+        {
+            OpenOutputLocked(outputPath, codecpar, rotationDegrees);
+        }
+        catch
+        {
+            // A recording that could not be started must not stay "open":
+            // the next start would be taken for one that is already running,
+            // and packets would go into a file without a header.
+            AbandonOutputLocked(outputPath);
+            throw;
+        }
+    }
+
+    private void AbandonOutputLocked(string outputPath)
+    {
+        if (outputCtx is not null)
+        {
+            if (outputCtx->pb is not null)
+            {
+                avio_closep(ref outputCtx->pb);
+            }
+
+            avformat_free_context(outputCtx);
+            outputCtx = null;
+        }
+
+        try
+        {
+            File.Delete(outputPath);
+        }
+        catch (IOException)
+        {
+            // An empty file left behind is the lesser problem.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // As above.
+        }
+    }
+
+    private void OpenOutputLocked(
+        string outputPath,
+        AVCodecParameters* codecpar,
         int rotationDegrees)
     {
         AVFormatContext* ctx = null;
@@ -209,6 +260,7 @@ internal sealed unsafe class Remuxer : IDisposable
                 {
                     // Ownership transferred to the queue — do NOT free here.
                     clonedPkt = null;
+                    packetQueued.Set();
                 }
             }
             finally
@@ -244,10 +296,10 @@ internal sealed unsafe class Remuxer : IDisposable
         return writeQueue.TryAdd(ptr);
     }
 
-    // Started lazily on first Open and stopped in Dispose. Drains the
-    // bounded write queue and writes packets to the current outputCtx
-    // under syncLock. CloseLocked drains synchronously before closing the
-    // muxer, so packets are never written to a stale outputCtx.
+    // Started lazily on first Open and stopped in Dispose. Writes the
+    // queued packets to the current outputCtx under syncLock. CloseLocked
+    // drains synchronously before closing the muxer, so packets are never
+    // written to a stale outputCtx.
     private void EnsureWriterRunning()
     {
         if (writerThread is not null)
@@ -267,25 +319,48 @@ internal sealed unsafe class Remuxer : IDisposable
     {
         try
         {
-            // GetConsumingEnumerable blocks the thread until items are
-            // available, and exits cleanly when CompleteAdding is called.
-            foreach (var ptr in writeQueue.GetConsumingEnumerable())
+            while (!stopWriter)
             {
-                lock (syncLock)
-                {
-                    if (outputCtx is not null)
-                    {
-                        var pkt = (AVPacket*)ptr;
-                        _ = av_interleaved_write_frame(outputCtx, pkt);
-                    }
+                packetQueued.WaitOne();
 
-                    FreeQueuedPacket(ptr);
+                // A packet is only taken out of the queue while holding the
+                // lock. Taken first and written after waiting for the lock,
+                // it could be overtaken by a Close or a SwitchTo: the file
+                // it belonged to was closed without it, and the packet was
+                // dropped or written into the next file.
+                // The lock is taken per packet so WritePacket is never kept
+                // waiting for a whole backlog to be written.
+                bool written;
+                do
+                {
+                    written = WriteNextQueuedPacket();
                 }
+                while (written);
             }
         }
         catch (ObjectDisposedException)
         {
             // Race during Dispose; safe to ignore.
+        }
+    }
+
+    private bool WriteNextQueuedPacket()
+    {
+        lock (syncLock)
+        {
+            if (!writeQueue.TryTake(out var ptr))
+            {
+                return false;
+            }
+
+            if (outputCtx is not null)
+            {
+                var pkt = (AVPacket*)ptr;
+                _ = av_interleaved_write_frame(outputCtx, pkt);
+            }
+
+            FreeQueuedPacket(ptr);
+            return true;
         }
     }
 
@@ -354,9 +429,11 @@ internal sealed unsafe class Remuxer : IDisposable
         disposed = true;
         Close();
 
-        // Stop the writer thread cleanly: complete the queue so
-        // GetConsumingEnumerable exits, then join with a bounded wait.
+        // Stop the writer thread cleanly: no more packets, wake it so it
+        // sees the stop, then join with a bounded wait.
         writeQueue.CompleteAdding();
+        stopWriter = true;
+        packetQueued.Set();
         writerThread?.Join(TimeSpan.FromSeconds(2));
 
         // Free any packets still queued at shutdown so we don't leak
@@ -367,6 +444,7 @@ internal sealed unsafe class Remuxer : IDisposable
         }
 
         writeQueue.Dispose();
+        packetQueued.Dispose();
         writerThread = null;
     }
 }
