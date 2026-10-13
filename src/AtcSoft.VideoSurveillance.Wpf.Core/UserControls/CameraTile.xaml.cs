@@ -158,6 +158,10 @@ public partial class CameraTile : IDisposable
     [DependencyProperty(DefaultValue = false)]
     private bool enableRecordingOnConnect;
 
+    // Read when the camera is opened: a change reaches the camera the next time it connects.
+    [DependencyProperty(DefaultValue = VideoTranscodeCodec.None)]
+    private VideoTranscodeCodec transcodeVideoCodec;
+
     // Bounding box settings
     [DependencyProperty(DefaultValue = false, PropertyChangedCallback = nameof(OnBoundingBoxSettingsChanged))]
     private bool showBoundingBoxInGrid;
@@ -1554,6 +1558,7 @@ public partial class CameraTile : IDisposable
             InputFormat = MapInputFormat(locator.InputFormat),
             RawDeviceSpec = locator.RawDeviceSpec,
             RecordAudio = locator.IncludesAudio,
+            TranscodeRecordingToH264 = TranscodeVideoCodec == VideoTranscodeCodec.H264,
             VideoSize = locator.VideoSize,
             FrameRate = locator.FrameRate,
             PixelFormat = locator.PixelFormat,

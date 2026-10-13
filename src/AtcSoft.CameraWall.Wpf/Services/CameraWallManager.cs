@@ -432,6 +432,7 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         var recording = settingsService.Recording;
         CameraGrid.EnableRecordingOnMotion = recording.EnableRecordingOnMotion;
         CameraGrid.EnableRecordingOnConnect = recording.EnableRecordingOnConnect;
+        CameraGrid.TranscodeVideoCodec = recording.TranscodeVideoCodec;
 
         // Motion detection settings
         var motionDetection = settingsService.MotionDetection;

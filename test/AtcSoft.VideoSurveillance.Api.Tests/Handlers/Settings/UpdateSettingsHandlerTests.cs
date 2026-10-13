@@ -237,6 +237,7 @@ public class UpdateSettingsHandlerTests
             BoundingBoxSmoothing: 0.3,
             RecordingPath: @"C:\recordings",
             RecordingFormat: AppSettingsRecordingFormat.Mp4,
+            RecordAsH264: false,
             EnableRecordingOnMotion: false,
             EnableRecordingOnConnect: false,
             EnableHourlySegmentation: false,

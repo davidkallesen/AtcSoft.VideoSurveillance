@@ -7,11 +7,14 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 public sealed class VideoEngineMediaPipelineFactory : IMediaPipelineFactory
 {
     private readonly IVideoPlayerFactory videoPlayerFactory;
+    private readonly IApplicationSettingsService? settingsService;
 
     public VideoEngineMediaPipelineFactory(
-        IVideoPlayerFactory videoPlayerFactory)
+        IVideoPlayerFactory videoPlayerFactory,
+        IApplicationSettingsService? settingsService = null)
     {
         this.videoPlayerFactory = videoPlayerFactory ?? throw new ArgumentNullException(nameof(videoPlayerFactory));
+        this.settingsService = settingsService;
     }
 
     /// <inheritdoc />
@@ -28,6 +31,12 @@ public sealed class VideoEngineMediaPipelineFactory : IMediaPipelineFactory
         try
         {
             pipeline = new VideoEngineMediaPipeline(player, camera.Display.DisplayName);
+
+            // Recorded as H.264 or as it is sent: the application's choice,
+            // or the camera's own.
+            pipeline.TranscodeRecordingToH264 = RecordingPolicyHelper.ResolveTranscodeCodec(
+                camera,
+                settingsService?.Recording.TranscodeVideoCodec ?? VideoTranscodeCodec.None) == VideoTranscodeCodec.H264;
 
             // BuildSourceLocator handles network and USB cameras
             // uniformly. For network cameras it's equivalent to the

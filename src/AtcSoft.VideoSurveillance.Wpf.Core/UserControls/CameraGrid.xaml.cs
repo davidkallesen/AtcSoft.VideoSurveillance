@@ -117,6 +117,9 @@ public partial class CameraGrid
     [DependencyProperty(DefaultValue = false)]
     private bool enableRecordingOnConnect;
 
+    [DependencyProperty(DefaultValue = VideoTranscodeCodec.None)]
+    private VideoTranscodeCodec transcodeVideoCodec;
+
     // Motion detection settings
     [DependencyProperty(DefaultValue = 30)]
     private int motionSensitivity;

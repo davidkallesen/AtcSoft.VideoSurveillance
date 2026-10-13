@@ -32,6 +32,12 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
     /// <inheritdoc />
     public bool IsRecordingActive => player.IsRecording;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the camera is recorded as
+    /// H.264 whatever it sends. Read when the pipeline is opened.
+    /// </summary>
+    public bool TranscodeRecordingToH264 { get; set; }
+
     /// <inheritdoc />
     public bool IsLiveStreamActive => player.IsStreaming;
 
@@ -62,6 +68,7 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
             InputFormat = MapInputFormat(locator.InputFormat),
             RawDeviceSpec = locator.RawDeviceSpec,
             RecordAudio = locator.IncludesAudio,
+            TranscodeRecordingToH264 = TranscodeRecordingToH264,
             VideoSize = locator.VideoSize,
             FrameRate = locator.FrameRate,
             PixelFormat = locator.PixelFormat,

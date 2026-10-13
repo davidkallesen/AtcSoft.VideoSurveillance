@@ -2536,6 +2536,24 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recording video.
+        /// </summary>
+        public static string TranscodeVideoCodec {
+            get {
+                return ResourceManager.GetString("TranscodeVideoCodec", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to What the camera sends is recorded untouched ....
+        /// </summary>
+        public static string TranscodeVideoCodecInfo {
+            get {
+                return ResourceManager.GetString("TranscodeVideoCodecInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MKV (Matroska).
         /// </summary>
         public static string RecordingFormatMkv {

@@ -195,6 +195,7 @@ public sealed class SettingsStateTests
             BoundingBoxSmoothing: 0.5,
             RecordingPath: @"D:\media\recordings",
             RecordingFormat: AppSettingsRecordingFormat.Mp4,
+            RecordAsH264: false,
             EnableRecordingOnMotion: true,
             EnableRecordingOnConnect: true,
             EnableHourlySegmentation: false,

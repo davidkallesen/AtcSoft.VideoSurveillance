@@ -124,6 +124,8 @@ public sealed class SettingsState
 
     public AppSettingsRecordingFormat RecordingFormat { get; set; } = AppSettingsRecordingFormat.Mkv;
 
+    public bool RecordAsH264 { get; set; }
+
     public bool EnableRecordingOnMotion { get; set; }
 
     public bool EnableRecordingOnConnect { get; set; }
@@ -258,6 +260,7 @@ public sealed class SettingsState
 
         RecordingPath = settings.RecordingPath ?? string.Empty;
         RecordingFormat = settings.RecordingFormat ?? AppSettingsRecordingFormat.Mp4;
+        RecordAsH264 = settings.RecordAsH264;
         EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
         EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
         EnableHourlySegmentation = settings.EnableHourlySegmentation;
@@ -335,6 +338,7 @@ public sealed class SettingsState
             BoundingBoxSmoothing: BoundingBoxSmoothing,
             RecordingPath: RecordingPath,
             RecordingFormat: RecordingFormat,
+            RecordAsH264: RecordAsH264,
             EnableRecordingOnMotion: EnableRecordingOnMotion,
             EnableRecordingOnConnect: EnableRecordingOnConnect,
             EnableHourlySegmentation: EnableHourlySegmentation,

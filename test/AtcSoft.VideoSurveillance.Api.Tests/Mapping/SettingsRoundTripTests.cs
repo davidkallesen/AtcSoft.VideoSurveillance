@@ -16,9 +16,6 @@ public sealed class SettingsRoundTripTests
         // A preference of each desktop client; the API client keeps its own.
         "General.StartRibbonCollapsed",
 
-        // The engine has no transcoding path, so the setting has no effect yet.
-        "Recording.TranscodeVideoCodec",
-
         // How the standalone app's recordings browser behaves; the server has no browser.
         "Recording.CloseRecordingsBrowserOnPlay",
         "Recording.RememberRecordingsBrowserState",

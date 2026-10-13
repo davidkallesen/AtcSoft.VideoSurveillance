@@ -78,7 +78,7 @@ For a 16:9 camera rotated 90°, the picture is drawn 9:16 but the overlay assume
 ### Related findings
 
 - Recording **thumbnails** draw each frame into a fixed 320×240 cell with no aspect preservation, so a rotated (portrait) frame is squashed.
-- `RecordingSettings.TranscodeVideoCodec` exists as a setting, but the engine has **no transcoding path** — the recorder is copy-only. Burning the rotation into the pixels is therefore not available today (see Decision 1).
+- `RecordingSettings.TranscodeVideoCodec` records a camera as H.264 since 2026-10-13, but only cameras that do not send H.264 already, and without turning the pixels: the rotation is still flagged in the file, never burned in (see Decision 1).
 - `CameraRotation`'s doc comment claims "display, snapshots, and (via MP4 metadata) recordings are all rotated". It will be true after this roadmap.
 - There are **no tests** for rotation, the overlay mapping, the remuxer or motion detection.
 

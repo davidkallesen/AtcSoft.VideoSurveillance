@@ -1127,6 +1127,9 @@ components:
         recordingFormat:
           type: string
           enum: [mp4, mkv, avi]
+        recordAsH264:
+          type: boolean
+          description: Record every camera as H.264 whatever it sends. A camera that sends anything else (H.265, MJPEG) is then decoded and encoded again while it is recorded, which costs processor time. Takes effect the next time a camera is opened.
         enableRecordingOnMotion:
           type: boolean
         enableRecordingOnConnect:

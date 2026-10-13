@@ -585,6 +585,12 @@
   <data name="RecordingFormat" xml:space="preserve">
     <value>Aufnahmeformat</value>
   </data>
+  <data name="TranscodeVideoCodec" xml:space="preserve">
+    <value>Video in Aufnahmen</value>
+  </data>
+  <data name="TranscodeVideoCodecInfo" xml:space="preserve">
+    <value>Was die Kamera sendet, wird unverändert aufgezeichnet, was fast nichts kostet. &quot;Immer H.264&quot; dekodiert und kodiert eine Kamera, die etwas anderes sendet (H.265, MJPEG), während sie aufgezeichnet wird: Die Dateien laufen dann in jedem Player und Browser, auf Kosten von Prozessorzeit für jede dieser Kameras. Kameras, die bereits H.264 senden, sind nicht betroffen. Wirkt beim nächsten Verbinden einer Kamera.</value>
+  </data>
   <data name="EnableRecordingOnMotion" xml:space="preserve">
     <value>Aufnahme bei Bewegungserkennung aktivieren</value>
   </data>

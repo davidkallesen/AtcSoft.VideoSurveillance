@@ -14,6 +14,9 @@
         <MudSelectItem Value="AppSettingsRecordingFormat.Avi">AVI</MudSelectItem>
     }
 </MudSelect>
+<SettingSwitch @bind-Value="State.RecordAsH264"
+               Label="Always record as H.264"
+               Help="Off: what a camera sends is recorded untouched, which costs next to nothing. On: a camera that sends anything else (H.265, MJPEG) is decoded and encoded again while it is recorded, so its files play in every player and browser, at the price of processor time on the server. Takes effect the next time a camera is opened." />
 <MudSelect @bind-Value="State.ThumbnailTileCount" Label="Thumbnail tiles" Class="mt-2">
     @foreach (var (value, label) in SettingsOptions.ThumbnailTiles)
     {

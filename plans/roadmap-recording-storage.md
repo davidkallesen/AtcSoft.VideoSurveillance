@@ -129,7 +129,7 @@ The generator's contract takes only the video path. The browser's delete, cleanu
 - ✅ The server never generated thumbnails — fixed 2026-10-13, see *Implementation Notes*.
 - Browsing and cleanup only cover the global recording path; per-camera path overrides are never browsed or cleaned.
 - ✅ The disk-space-guard settings never reached the API contract — fixed 2026-10-12; they are now in the contract, the WPF API client and Blazor.
-- `TranscodeVideoCodec` is not in the API contract either. It is left out on purpose: the engine has no transcoding path, so the setting has no effect anywhere yet.
+- ✅ `TranscodeVideoCodec` had no effect and no place to set it — fixed 2026-10-13: the engine records a compressed source as H.264 on request, and the choice is in the settings dialog, the web client and the API (`recordAsH264`).
 
 ---
 

@@ -175,7 +175,7 @@ Recording paths, formats, segmentation, and timelapse configuration.
 |---------|------|---------|----------|-------------|
 | `RecordingPath` | string | `{ProgramData}\...\recordings` | Yes | Directory for storing recordings |
 | `RecordingFormat` | string | `"mkv"` | Yes | Container format for recordings |
-| `TranscodeVideoCodec` | enum | `None` | Yes | Video codec for transcoding |
+| `TranscodeVideoCodec` | enum | `None` | Yes | `None` records what the camera sends, untouched. `H264` records every camera as H.264 — see [Recording as H.264](#recording-as-h264) |
 | `EnableRecordingOnMotion` | bool | `false` | Yes | Auto-record when motion is detected |
 | `EnableRecordingOnConnect` | bool | `false` | Yes | Auto-record when camera connects |
 | `EnableHourlySegmentation` | bool | `true` | No | Split recordings into clock-aligned segments |
@@ -189,6 +189,16 @@ Recording paths, formats, segmentation, and timelapse configuration.
 | `TimelapseInterval` | string | `"5m"` | Yes | Timelapse capture interval |
 | `Cleanup` | object | *(see below)* | No | Media cleanup settings |
 | `PlaybackOverlay` | object | *(see below)* | No | Playback overlay settings |
+
+### Recording as H.264
+
+A camera's video is normally copied into the recording as it arrives, which costs next to nothing. With `TranscodeVideoCodec` set to `H264` (*Recording video: Always H.264* in the settings dialog, *Always record as H.264* in the web client; `recordAsH264` in the API), a camera that sends anything else is decoded and encoded again while it is recorded:
+
+- **Why:** H.265 halves the file, but not every player takes it and no browser on Windows does. As H.264 the recordings play everywhere.
+- **Which cameras:** those that send H.265 or MJPEG. A camera that already sends H.264 is copied as before, whatever the setting. A USB camera that delivers uncompressed video is always encoded.
+- **Cost:** processor time for every such camera, and larger files. One 1280x720 H.265 camera at 15 pictures a second took about a sixth of a processor core on the server instead of a twentieth, and its recording grew from about 1.1 to about 4 Mbit/s.
+- **When:** the choice is read when a camera is opened, so a change reaches a camera the next time it connects.
+- **Per camera:** `Overrides.Recording.TranscodeVideoCodec` overrides the application's choice for one camera. There is no field for it in the camera dialog yet.
 
 ### Recording Format Options
 

@@ -276,6 +276,13 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     public IDictionary<string, string> MaxRecordingDurationItems
         => DropDownItemsFactory.MaxRecordingDurationItems;
 
+    // Whether recordings are made as H.264 whatever the camera sends.
+    [ObservableProperty]
+    private string selectedTranscodeVideoCodec = AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.DefaultTranscodeVideoCodec;
+
+    public IDictionary<string, string> TranscodeVideoCodecItems
+        => AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.TranscodeVideoCodecItems;
+
     // Thumbnail Settings
     [ObservableProperty]
     private string selectedThumbnailTileCount = DropDownItemsFactory.DefaultThumbnailTileCount.ToString(CultureInfo.InvariantCulture);
@@ -496,6 +503,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         // Recording Tab
         RecordingPath = new DirectoryInfo(ApplicationPaths.DefaultRecordingsPath);
         SelectedRecordingFormat = "mp4";
+        SelectedTranscodeVideoCodec = AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.DefaultTranscodeVideoCodec;
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
 
@@ -608,6 +616,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         var recording = settingsService.Recording;
         RecordingPath = new DirectoryInfo(recording.RecordingPath);
         SelectedRecordingFormat = recording.RecordingFormat;
+        SelectedTranscodeVideoCodec = recording.TranscodeVideoCodec.ToString();
         EnableRecordingOnMotion = recording.EnableRecordingOnMotion;
         EnableRecordingOnConnect = recording.EnableRecordingOnConnect;
 
@@ -771,6 +780,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         {
             RecordingPath = RecordingPath?.FullName ?? ApplicationPaths.DefaultRecordingsPath,
             RecordingFormat = SelectedRecordingFormat,
+            TranscodeVideoCodec = Enum.TryParse<VideoTranscodeCodec>(SelectedTranscodeVideoCodec, ignoreCase: true, out var transcodeCodec)
+                ? transcodeCodec
+                : VideoTranscodeCodec.None,
             EnableRecordingOnMotion = EnableRecordingOnMotion,
             EnableRecordingOnConnect = EnableRecordingOnConnect,
             EnableHourlySegmentation = EnableHourlySegmentation,

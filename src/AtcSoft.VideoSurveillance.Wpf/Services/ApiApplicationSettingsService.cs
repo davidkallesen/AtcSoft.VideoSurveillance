@@ -394,6 +394,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         {
             RecordingPath = api.RecordingPath,
             RecordingFormat = api.RecordingFormat?.ToString() ?? "mp4",
+            TranscodeVideoCodec = api.RecordAsH264 ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
             EnableRecordingOnMotion = api.EnableRecordingOnMotion,
             EnableRecordingOnConnect = api.EnableRecordingOnConnect,
             EnableHourlySegmentation = api.EnableHourlySegmentation,
@@ -494,6 +495,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             BoundingBoxSmoothing: settings.MotionDetection.BoundingBox.Smoothing,
             RecordingPath: settings.Recording.RecordingPath,
             RecordingFormat: recordingFormat,
+            RecordAsH264: settings.Recording.TranscodeVideoCodec == AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264,
             EnableRecordingOnMotion: settings.Recording.EnableRecordingOnMotion,
             EnableRecordingOnConnect: settings.Recording.EnableRecordingOnConnect,
             EnableHourlySegmentation: settings.Recording.EnableHourlySegmentation,

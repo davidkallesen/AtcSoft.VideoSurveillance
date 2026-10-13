@@ -32,6 +32,15 @@
                 SelectedKey="{Binding Path=SelectedRecordingFormat, Mode=TwoWay}" />
 
             <atc:LabelComboBox
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                      Key=TranscodeVideoCodecInfo}"
+                Items="{Binding Path=TranscodeVideoCodecItems}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                                Key=TranscodeVideoCodec}"
+                Orientation="Vertical"
+                SelectedKey="{Binding Path=SelectedTranscodeVideoCodec, Mode=TwoWay}" />
+
+            <atc:LabelComboBox
                 Items="{Binding Path=ThumbnailTileCountItems}"
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
                                                 Key=ThumbnailTileCount}"

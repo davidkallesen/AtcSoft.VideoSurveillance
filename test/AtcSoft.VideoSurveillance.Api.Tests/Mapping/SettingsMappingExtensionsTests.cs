@@ -395,6 +395,7 @@ public class SettingsMappingExtensionsTests
             BoundingBoxSmoothing: 0.3,
             RecordingPath: recordingPath,
             RecordingFormat: recordingFormat,
+            RecordAsH264: false,
             EnableRecordingOnMotion: false,
             EnableRecordingOnConnect: false,
             EnableHourlySegmentation: false,

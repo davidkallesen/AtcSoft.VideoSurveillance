@@ -146,6 +146,12 @@
                                 <Binding Path="EnableRecordingOnMotion" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                             </MultiBinding>
                         </local:CameraTile.EnableRecordingOnMotion>
+                        <local:CameraTile.TranscodeVideoCodec>
+                            <MultiBinding Converter="{x:Static valueConverters:OverrideOrDefaultMultiValueConverter.Instance}">
+                                <Binding Path="Overrides.Recording.TranscodeVideoCodec" />
+                                <Binding Path="TranscodeVideoCodec" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                            </MultiBinding>
+                        </local:CameraTile.TranscodeVideoCodec>
                         <local:CameraTile.EnableRecordingOnConnect>
                             <MultiBinding Converter="{x:Static valueConverters:OverrideOrDefaultMultiValueConverter.Instance}">
                                 <Binding Path="Overrides.Recording.EnableRecordingOnConnect" />

@@ -66,6 +66,7 @@ internal static class SettingsMappingExtensions
             BoundingBoxSmoothing: motionDetection.BoundingBox.Smoothing,
             RecordingPath: recording.RecordingPath,
             RecordingFormat: ParseRecordingFormat(recording.RecordingFormat),
+            RecordAsH264: recording.TranscodeVideoCodec == AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264,
             EnableRecordingOnMotion: recording.EnableRecordingOnMotion,
             EnableRecordingOnConnect: recording.EnableRecordingOnConnect,
             EnableHourlySegmentation: recording.EnableHourlySegmentation,
@@ -271,6 +272,7 @@ internal static class SettingsMappingExtensions
             recording.RecordingFormat = api.RecordingFormat.Value.ToString().ToLowerInvariant();
         }
 
+        recording.TranscodeVideoCodec = api.RecordAsH264 ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None;
         recording.EnableRecordingOnMotion = api.EnableRecordingOnMotion;
         recording.EnableRecordingOnConnect = api.EnableRecordingOnConnect;
         recording.EnableHourlySegmentation = api.EnableHourlySegmentation;

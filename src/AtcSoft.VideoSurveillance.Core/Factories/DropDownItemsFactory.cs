@@ -30,8 +30,8 @@ public static class DropDownItemsFactory
 
     public static IDictionary<string, string> TranscodeVideoCodecItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["None"] = "None (Copy Original)",
-        ["H264"] = "H.264 (AVC)",
+        ["None"] = "As the camera sends it",
+        ["H264"] = "Always H.264 (plays everywhere)",
     };
 
     public static IDictionary<string, string> OverlayPositionItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)

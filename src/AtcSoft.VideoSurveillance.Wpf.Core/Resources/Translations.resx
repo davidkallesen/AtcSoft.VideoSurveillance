@@ -588,6 +588,12 @@
   <data name="RecordingFormat" xml:space="preserve">
     <value>Recording format</value>
   </data>
+  <data name="TranscodeVideoCodec" xml:space="preserve">
+    <value>Recording video</value>
+  </data>
+  <data name="TranscodeVideoCodecInfo" xml:space="preserve">
+    <value>What the camera sends is recorded untouched, which costs next to nothing. &quot;Always H.264&quot; decodes and encodes a camera that sends anything else (H.265, MJPEG) while it is recorded: the files then play in every player and browser, at the price of processor time for each such camera. Cameras that already send H.264 are not affected. Takes effect the next time a camera connects.</value>
+  </data>
   <data name="EnableRecordingOnMotion" xml:space="preserve">
     <value>Enable recording on motion detection</value>
   </data>

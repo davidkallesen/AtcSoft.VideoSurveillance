@@ -585,6 +585,12 @@
   <data name="RecordingFormat" xml:space="preserve">
     <value>Optagelsesformat</value>
   </data>
+  <data name="TranscodeVideoCodec" xml:space="preserve">
+    <value>Video i optagelser</value>
+  </data>
+  <data name="TranscodeVideoCodecInfo" xml:space="preserve">
+    <value>Det kameraet sender, optages uændret, hvilket næsten intet koster. &quot;Altid H.264&quot; afkoder og koder et kamera, der sender andet (H.265, MJPEG), mens det optages: filerne kan så afspilles i alle afspillere og browsere, mod processortid for hvert af de kameraer. Kameraer, der allerede sender H.264, påvirkes ikke. Træder i kraft næste gang et kamera forbinder.</value>
+  </data>
   <data name="EnableRecordingOnMotion" xml:space="preserve">
     <value>Aktiver optagelse ved bevægelsesregistrering</value>
   </data>

@@ -215,6 +215,13 @@ public partial class SettingsDialogViewModel : ViewModelBase
     public IDictionary<string, string> RecordingFormatItems
         => DropDownItemsFactory.RecordingFormatItems;
 
+    // Whether recordings are made as H.264 whatever the camera sends.
+    [ObservableProperty]
+    private string selectedTranscodeVideoCodec = AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.DefaultTranscodeVideoCodec;
+
+    public IDictionary<string, string> TranscodeVideoCodecItems
+        => AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.TranscodeVideoCodecItems;
+
     [ObservableProperty]
     private bool enableRecordingOnMotion;
 
@@ -439,6 +446,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             // Capture
             RecordingPath = !string.IsNullOrEmpty(settings.RecordingPath) ? new DirectoryInfo(settings.RecordingPath) : null;
             SelectedRecordingFormat = settings.RecordingFormat?.ToString() ?? "Mp4";
+            SelectedTranscodeVideoCodec = settings.RecordAsH264 ? "H264" : "None";
             EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
             EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
             EnableHourlySegmentation = settings.EnableHourlySegmentation;
@@ -568,6 +576,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
         // Capture Tab
         RecordingPath = new DirectoryInfo(ApplicationPaths.DefaultRecordingsPath);
         SelectedRecordingFormat = "mp4";
+        SelectedTranscodeVideoCodec = "None";
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
         EnableHourlySegmentation = true;
@@ -720,6 +729,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             BoundingBoxSmoothing: originalApiSettings?.BoundingBoxSmoothing ?? 0.3,
             RecordingPath: RecordingPath?.FullName ?? string.Empty,
             RecordingFormat: recordingFormat,
+            RecordAsH264: string.Equals(SelectedTranscodeVideoCodec, "H264", StringComparison.OrdinalIgnoreCase),
             EnableRecordingOnMotion: EnableRecordingOnMotion,
             EnableRecordingOnConnect: EnableRecordingOnConnect,
             EnableHourlySegmentation: EnableHourlySegmentation,
