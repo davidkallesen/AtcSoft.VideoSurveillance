@@ -400,81 +400,81 @@ public partial class SettingsDialogViewModel : ViewModelBase
             originalApiSettings = settings;
 
             // Camera Display
-            ShowCameraOverlayTitle = settings.ShowOverlayTitle ?? false;
-            ShowCameraOverlayDescription = settings.ShowOverlayDescription ?? false;
-            ShowCameraOverlayTime = settings.ShowOverlayTime ?? false;
-            ShowCameraOverlayConnectionStatus = settings.ShowOverlayConnectionStatus ?? false;
-            ShowCameraOverlayQuickActions = settings.ShowOverlayQuickActions ?? true;
-            ShowCameraOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon ?? false;
-            SelectedConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement?.ToString() ?? DropDownItemsFactory.DefaultConnectionTypeIconPlacement;
-            SelectedOverlayOpacity = (settings.OverlayOpacity ?? 0).ToString("F1", CultureInfo.InvariantCulture);
-            SelectedOverlayPosition = settings.OverlayPosition?.ToString() ?? "TopLeft";
-            AllowDragAndDropReorder = settings.AllowDragAndDropReorder ?? false;
-            AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges ?? false;
+            ShowCameraOverlayTitle = settings.ShowOverlayTitle;
+            ShowCameraOverlayDescription = settings.ShowOverlayDescription;
+            ShowCameraOverlayTime = settings.ShowOverlayTime;
+            ShowCameraOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+            ShowCameraOverlayQuickActions = settings.ShowOverlayQuickActions;
+            ShowCameraOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
+            SelectedConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement.ToString();
+            SelectedOverlayOpacity = settings.OverlayOpacity.ToString("F1", CultureInfo.InvariantCulture);
+            SelectedOverlayPosition = settings.OverlayPosition.ToString();
+            AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
+            AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges;
             SnapshotPath = !string.IsNullOrEmpty(settings.SnapshotPath) ? new DirectoryInfo(settings.SnapshotPath) : null;
 
             // Connection
-            SelectedDefaultProtocol = settings.DefaultProtocol?.ToString() ?? "Rtsp";
-            DefaultPort = settings.DefaultPort ?? 0;
-            ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds ?? 0;
-            ReconnectDelaySeconds = settings.ReconnectDelaySeconds ?? 0;
-            AutoReconnectOnFailure = settings.AutoReconnectOnFailure ?? false;
-            ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect ?? false;
-            ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect ?? false;
-            PlayNotificationSound = settings.PlayNotificationSound ?? false;
+            SelectedDefaultProtocol = settings.DefaultProtocol.ToString();
+            DefaultPort = settings.DefaultPort;
+            ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds;
+            ReconnectDelaySeconds = settings.ReconnectDelaySeconds;
+            AutoReconnectOnFailure = settings.AutoReconnectOnFailure;
+            ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect;
+            ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect;
+            PlayNotificationSound = settings.PlayNotificationSound;
 
             // Performance
             SelectedVideoQuality = AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Normalize(settings.VideoQuality) ?? DropDownItemsFactory.DefaultVideoQuality;
-            HardwareAcceleration = settings.HardwareAcceleration ?? false;
-            LowLatencyMode = settings.LowLatencyMode ?? false;
-            BufferDurationMs = settings.BufferDurationMs ?? 0;
-            SelectedRtspTransport = settings.RtspTransport?.ToString() ?? "Tcp";
-            MaxLatencyMs = settings.MaxLatencyMs ?? 0;
+            HardwareAcceleration = settings.HardwareAcceleration;
+            LowLatencyMode = settings.LowLatencyMode;
+            BufferDurationMs = settings.BufferDurationMs;
+            SelectedRtspTransport = settings.RtspTransport.ToString();
+            MaxLatencyMs = settings.MaxLatencyMs;
 
             // Motion Detection
-            MotionSensitivity = settings.MotionSensitivity ?? 0;
-            PostMotionDurationSeconds = settings.PostMotionDurationSeconds ?? 0;
-            AnalysisFrameRate = settings.AnalysisFrameRate ?? 0;
-            SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(settings.AnalysisWidth ?? 0, settings.AnalysisHeight ?? 0);
-            CooldownSeconds = settings.CooldownSeconds ?? 0;
-            ShowBoundingBoxInGrid = settings.BoundingBoxShowInGrid ?? false;
-            ShowBoundingBoxInFullScreen = settings.BoundingBoxShowInFullScreen ?? false;
+            MotionSensitivity = settings.MotionSensitivity;
+            PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
+            AnalysisFrameRate = settings.AnalysisFrameRate;
+            SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(settings.AnalysisWidth, settings.AnalysisHeight);
+            CooldownSeconds = settings.CooldownSeconds;
+            ShowBoundingBoxInGrid = settings.BoundingBoxShowInGrid;
+            ShowBoundingBoxInFullScreen = settings.BoundingBoxShowInFullScreen;
             SelectedBoundingBoxColor = settings.BoundingBoxColor ?? DropDownItemsFactory.DefaultBoundingBoxColor;
-            SelectedBoundingBoxThickness = (settings.BoundingBoxThickness ?? 0).ToString(CultureInfo.InvariantCulture);
-            SelectedBoundingBoxMinArea = (settings.BoundingBoxMinArea ?? 0).ToString(CultureInfo.InvariantCulture);
+            SelectedBoundingBoxThickness = settings.BoundingBoxThickness.ToString(CultureInfo.InvariantCulture);
+            SelectedBoundingBoxMinArea = settings.BoundingBoxMinArea.ToString(CultureInfo.InvariantCulture);
 
             // Capture
             RecordingPath = !string.IsNullOrEmpty(settings.RecordingPath) ? new DirectoryInfo(settings.RecordingPath) : null;
-            SelectedRecordingFormat = settings.RecordingFormat?.ToString() ?? "Mp4";
-            SelectedTranscodeVideoCodec = settings.RecordAsH264 == true ? "H264" : "None";
-            EnableRecordingOnMotion = settings.EnableRecordingOnMotion ?? false;
-            EnableRecordingOnConnect = settings.EnableRecordingOnConnect ?? false;
-            EnableHourlySegmentation = settings.EnableHourlySegmentation ?? false;
-            UseDailySubfolders = settings.UseDailySubfolders ?? true;
-            SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
-            SelectedMaxRecordingDuration = (settings.MaxRecordingDurationMinutes ?? 0).ToString(CultureInfo.InvariantCulture);
-            SelectedThumbnailTileCount = (settings.ThumbnailTileCount ?? 0).ToString(CultureInfo.InvariantCulture);
+            SelectedRecordingFormat = settings.RecordingFormat.ToString();
+            SelectedTranscodeVideoCodec = settings.RecordAsH264 ? "H264" : "None";
+            EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
+            EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
+            EnableHourlySegmentation = settings.EnableHourlySegmentation;
+            UseDailySubfolders = settings.UseDailySubfolders;
+            SeparateThumbnailFolder = settings.SeparateThumbnailFolder;
+            SelectedMaxRecordingDuration = settings.MaxRecordingDurationMinutes.ToString(CultureInfo.InvariantCulture);
+            SelectedThumbnailTileCount = settings.ThumbnailTileCount.ToString(CultureInfo.InvariantCulture);
 
             // Timelapse
-            EnableTimelapse = settings.EnableTimelapse ?? false;
+            EnableTimelapse = settings.EnableTimelapse;
             SelectedTimelapseInterval = settings.TimelapseInterval ?? DropDownItemsFactory.DefaultTimelapseInterval;
 
             // Storage
-            SelectedCleanupSchedule = settings.CleanupSchedule?.ToString() ?? DropDownItemsFactory.DefaultMediaCleanupSchedule;
-            SelectedRecordingRetention = (settings.RecordingRetentionDays ?? 0).ToString(CultureInfo.InvariantCulture);
-            IncludeSnapshotsInCleanup = settings.CleanupIncludeSnapshots ?? false;
-            SelectedSnapshotRetention = (settings.SnapshotRetentionDays ?? 0).ToString(CultureInfo.InvariantCulture);
-            IsDiskSpaceGuardEnabled = settings.EnableDiskSpaceGuard ?? true;
+            SelectedCleanupSchedule = settings.CleanupSchedule.ToString();
+            SelectedRecordingRetention = settings.RecordingRetentionDays.ToString(CultureInfo.InvariantCulture);
+            IncludeSnapshotsInCleanup = settings.CleanupIncludeSnapshots;
+            SelectedSnapshotRetention = settings.SnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
+            IsDiskSpaceGuardEnabled = settings.EnableDiskSpaceGuard;
             SelectedMinFreeSpace = settings.MinFreeSpaceMb > 0
-                ? settings.MinFreeSpaceMb.Value.ToString(CultureInfo.InvariantCulture)
+                ? settings.MinFreeSpaceMb.ToString(CultureInfo.InvariantCulture)
                 : DropDownItemsFactory.DefaultMinFreeSpaceMb;
-            ShowPlaybackFilename = settings.PlaybackShowFilename ?? false;
+            ShowPlaybackFilename = settings.PlaybackShowFilename;
             SelectedPlaybackFilenameColor = settings.PlaybackFilenameColor ?? "White";
-            ShowPlaybackTimestamp = settings.PlaybackShowTimestamp ?? false;
+            ShowPlaybackTimestamp = settings.PlaybackShowTimestamp;
             SelectedPlaybackTimestampColor = settings.PlaybackTimestampColor ?? "White";
 
             // Advanced
-            EnableDebugLogging = settings.EnableDebugLogging ?? false;
+            EnableDebugLogging = settings.EnableDebugLogging;
             LogPath = !string.IsNullOrEmpty(settings.LogPath) ? new DirectoryInfo(settings.LogPath) : null;
         }
         catch
@@ -653,7 +653,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
     #region Private Helpers
 
-    private AppSettings BuildApiSettings()
+    private UpdateSettingsRequest BuildApiSettings()
     {
         // Get current theme/accent/language from live state (Atc controls update these directly)
         var currentTheme = ThemeManager.Current.DetectTheme(Application.Current);
@@ -684,7 +684,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
         var (analysisWidth, analysisHeight) = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
 
-        return new AppSettings(
+        return new UpdateSettingsRequest(
             ThemeBase: themeBase,
             ThemeAccent: apiThemeAccent,
             Language: apiLanguage,

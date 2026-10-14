@@ -208,88 +208,88 @@ public sealed class SettingsState
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        ThemeBase = settings.ThemeBase ?? AppSettingsThemeBase.Dark;
+        ThemeBase = settings.ThemeBase;
         ThemeAccent = settings.ThemeAccent ?? "Blue";
         Language = settings.Language ?? "1033";
-        ConnectOnStartup = settings.ConnectOnStartup ?? false;
-        StartMaximized = settings.StartMaximized ?? false;
+        ConnectOnStartup = settings.ConnectOnStartup;
+        StartMaximized = settings.StartMaximized;
 
-        ShowOverlayTitle = settings.ShowOverlayTitle ?? false;
-        ShowOverlayDescription = settings.ShowOverlayDescription ?? false;
-        ShowOverlayTime = settings.ShowOverlayTime ?? false;
-        ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus ?? false;
-        ShowOverlayQuickActions = settings.ShowOverlayQuickActions ?? true;
-        OverlayOpacity = settings.OverlayOpacity ?? 0;
-        OverlayPosition = settings.OverlayPosition ?? AppSettingsOverlayPosition.TopLeft;
-        ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon ?? false;
-        ConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement ?? AppSettingsConnectionTypeIconPlacement.SameRow;
-        AllowDragAndDropReorder = settings.AllowDragAndDropReorder ?? false;
-        AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges ?? false;
+        ShowOverlayTitle = settings.ShowOverlayTitle;
+        ShowOverlayDescription = settings.ShowOverlayDescription;
+        ShowOverlayTime = settings.ShowOverlayTime;
+        ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+        ShowOverlayQuickActions = settings.ShowOverlayQuickActions;
+        OverlayOpacity = settings.OverlayOpacity;
+        OverlayPosition = settings.OverlayPosition;
+        ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
+        ConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement;
+        AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
+        AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges;
         SnapshotPath = settings.SnapshotPath ?? string.Empty;
 
-        DefaultProtocol = settings.DefaultProtocol ?? AppSettingsDefaultProtocol.Rtsp;
-        DefaultPort = settings.DefaultPort ?? 0;
-        ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds ?? 0;
-        ReconnectDelaySeconds = settings.ReconnectDelaySeconds ?? 0;
-        AutoReconnectOnFailure = settings.AutoReconnectOnFailure ?? false;
-        ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect ?? false;
-        ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect ?? false;
-        PlayNotificationSound = settings.PlayNotificationSound ?? false;
+        DefaultProtocol = settings.DefaultProtocol;
+        DefaultPort = settings.DefaultPort;
+        ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds;
+        ReconnectDelaySeconds = settings.ReconnectDelaySeconds;
+        AutoReconnectOnFailure = settings.AutoReconnectOnFailure;
+        ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect;
+        ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect;
+        PlayNotificationSound = settings.PlayNotificationSound;
 
         VideoQuality = string.IsNullOrEmpty(settings.VideoQuality) ? "Auto" : settings.VideoQuality;
-        HardwareAcceleration = settings.HardwareAcceleration ?? false;
-        LowLatencyMode = settings.LowLatencyMode ?? false;
-        BufferDurationMs = settings.BufferDurationMs ?? 0;
-        RtspTransport = settings.RtspTransport ?? AppSettingsRtspTransport.Tcp;
-        MaxLatencyMs = settings.MaxLatencyMs ?? 0;
+        HardwareAcceleration = settings.HardwareAcceleration;
+        LowLatencyMode = settings.LowLatencyMode;
+        BufferDurationMs = settings.BufferDurationMs;
+        RtspTransport = settings.RtspTransport;
+        MaxLatencyMs = settings.MaxLatencyMs;
 
-        MotionSensitivity = settings.MotionSensitivity ?? 0;
-        MinimumChangePercent = settings.MinimumChangePercent ?? 0;
-        AnalysisFrameRate = settings.AnalysisFrameRate ?? 0;
-        AnalysisWidth = settings.AnalysisWidth ?? 0;
-        AnalysisHeight = settings.AnalysisHeight ?? 0;
-        PostMotionDurationSeconds = settings.PostMotionDurationSeconds ?? 0;
-        CooldownSeconds = settings.CooldownSeconds ?? 0;
-        BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid ?? false;
-        BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen ?? false;
+        MotionSensitivity = settings.MotionSensitivity;
+        MinimumChangePercent = settings.MinimumChangePercent;
+        AnalysisFrameRate = settings.AnalysisFrameRate;
+        AnalysisWidth = settings.AnalysisWidth;
+        AnalysisHeight = settings.AnalysisHeight;
+        PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
+        CooldownSeconds = settings.CooldownSeconds;
+        BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid;
+        BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen;
         BoundingBoxColor = ColorChoices.Normalize(settings.BoundingBoxColor, "Red");
-        BoundingBoxThickness = settings.BoundingBoxThickness ?? 0;
-        BoundingBoxMinArea = settings.BoundingBoxMinArea ?? 0;
-        BoundingBoxPadding = settings.BoundingBoxPadding ?? 0;
-        BoundingBoxSmoothing = settings.BoundingBoxSmoothing ?? 0;
+        BoundingBoxThickness = settings.BoundingBoxThickness;
+        BoundingBoxMinArea = settings.BoundingBoxMinArea;
+        BoundingBoxPadding = settings.BoundingBoxPadding;
+        BoundingBoxSmoothing = settings.BoundingBoxSmoothing;
 
         RecordingPath = settings.RecordingPath ?? string.Empty;
-        RecordingFormat = settings.RecordingFormat ?? AppSettingsRecordingFormat.Mp4;
-        RecordAsH264 = settings.RecordAsH264 ?? false;
-        EnableRecordingOnMotion = settings.EnableRecordingOnMotion ?? false;
-        EnableRecordingOnConnect = settings.EnableRecordingOnConnect ?? false;
-        EnableHourlySegmentation = settings.EnableHourlySegmentation ?? false;
-        MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes ?? 0;
+        RecordingFormat = settings.RecordingFormat;
+        RecordAsH264 = settings.RecordAsH264;
+        EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
+        EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
+        EnableHourlySegmentation = settings.EnableHourlySegmentation;
+        MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes;
 
         // The server makes a thumbnail of one tile or of four.
         ThumbnailTileCount = settings.ThumbnailTileCount == 1 ? 1 : 4;
-        UseDailySubfolders = settings.UseDailySubfolders ?? true;
-        SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
+        UseDailySubfolders = settings.UseDailySubfolders;
+        SeparateThumbnailFolder = settings.SeparateThumbnailFolder;
         loadedUseDailySubfolders = UseDailySubfolders;
         loadedSeparateThumbnailFolder = SeparateThumbnailFolder;
-        EnableTimelapse = settings.EnableTimelapse ?? false;
+        EnableTimelapse = settings.EnableTimelapse;
         TimelapseInterval = settings.TimelapseInterval ?? "5m";
-        CleanupSchedule = settings.CleanupSchedule ?? AppSettingsCleanupSchedule.Disabled;
-        RecordingRetentionDays = settings.RecordingRetentionDays ?? 0;
-        CleanupIncludeSnapshots = settings.CleanupIncludeSnapshots ?? false;
-        SnapshotRetentionDays = settings.SnapshotRetentionDays ?? 0;
-        EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard ?? true;
-        MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb.Value : 2048;
-        PlaybackShowFilename = settings.PlaybackShowFilename ?? false;
+        CleanupSchedule = settings.CleanupSchedule;
+        RecordingRetentionDays = settings.RecordingRetentionDays;
+        CleanupIncludeSnapshots = settings.CleanupIncludeSnapshots;
+        SnapshotRetentionDays = settings.SnapshotRetentionDays;
+        EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard;
+        MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb : 2048;
+        PlaybackShowFilename = settings.PlaybackShowFilename;
         PlaybackFilenameColor = ColorChoices.Normalize(settings.PlaybackFilenameColor, "White");
-        PlaybackShowTimestamp = settings.PlaybackShowTimestamp ?? false;
+        PlaybackShowTimestamp = settings.PlaybackShowTimestamp;
         PlaybackTimestampColor = ColorChoices.Normalize(settings.PlaybackTimestampColor, "White");
 
-        EnableDebugLogging = settings.EnableDebugLogging ?? false;
+        EnableDebugLogging = settings.EnableDebugLogging;
         LogPath = settings.LogPath ?? string.Empty;
     }
 
-    public AppSettings ToApiModel()
+    public UpdateSettingsRequest ToApiModel()
         => new(
             ThemeBase: ThemeBase,
             ThemeAccent: ThemeAccent,

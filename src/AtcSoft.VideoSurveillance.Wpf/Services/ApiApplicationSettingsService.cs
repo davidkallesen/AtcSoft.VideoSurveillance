@@ -320,98 +320,98 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
 
         result.CameraDisplay = new CameraDisplayAppSettings
         {
-            ShowOverlayTitle = api.ShowOverlayTitle ?? false,
-            ShowOverlayDescription = api.ShowOverlayDescription ?? false,
-            ShowOverlayTime = api.ShowOverlayTime ?? false,
-            ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus ?? false,
-            ShowOverlayQuickActions = api.ShowOverlayQuickActions ?? true,
-            ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon ?? false,
-            ConnectionTypeIconPlacement = ParseEnumOrDefault(api.ConnectionTypeIconPlacement?.ToString(), AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow),
-            OverlayOpacity = api.OverlayOpacity ?? 0,
-            OverlayPosition = ParseEnumOrDefault(api.OverlayPosition?.ToString(), OverlayPosition.TopLeft),
-            AllowDragAndDropReorder = api.AllowDragAndDropReorder ?? false,
-            AutoSaveLayoutChanges = api.AutoSaveLayoutChanges ?? false,
+            ShowOverlayTitle = api.ShowOverlayTitle,
+            ShowOverlayDescription = api.ShowOverlayDescription,
+            ShowOverlayTime = api.ShowOverlayTime,
+            ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus,
+            ShowOverlayQuickActions = api.ShowOverlayQuickActions,
+            ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon,
+            ConnectionTypeIconPlacement = ParseEnumOrDefault(api.ConnectionTypeIconPlacement.ToString(), AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow),
+            OverlayOpacity = api.OverlayOpacity,
+            OverlayPosition = ParseEnumOrDefault(api.OverlayPosition.ToString(), OverlayPosition.TopLeft),
+            AllowDragAndDropReorder = api.AllowDragAndDropReorder,
+            AutoSaveLayoutChanges = api.AutoSaveLayoutChanges,
             SnapshotPath = api.SnapshotPath ?? string.Empty,
         };
 
         result.Connection = new ConnectionAppSettings
         {
-            DefaultProtocol = ParseEnumOrDefault(api.DefaultProtocol?.ToString(), CameraProtocol.Rtsp),
-            DefaultPort = api.DefaultPort ?? 0,
-            ConnectionTimeoutSeconds = api.ConnectionTimeoutSeconds ?? 0,
-            ReconnectDelaySeconds = api.ReconnectDelaySeconds ?? 0,
-            AutoReconnectOnFailure = api.AutoReconnectOnFailure ?? false,
-            ShowNotificationOnDisconnect = api.ShowNotificationOnDisconnect ?? false,
-            ShowNotificationOnReconnect = api.ShowNotificationOnReconnect ?? false,
-            PlayNotificationSound = api.PlayNotificationSound ?? false,
+            DefaultProtocol = ParseEnumOrDefault(api.DefaultProtocol.ToString(), CameraProtocol.Rtsp),
+            DefaultPort = api.DefaultPort,
+            ConnectionTimeoutSeconds = api.ConnectionTimeoutSeconds,
+            ReconnectDelaySeconds = api.ReconnectDelaySeconds,
+            AutoReconnectOnFailure = api.AutoReconnectOnFailure,
+            ShowNotificationOnDisconnect = api.ShowNotificationOnDisconnect,
+            ShowNotificationOnReconnect = api.ShowNotificationOnReconnect,
+            PlayNotificationSound = api.PlayNotificationSound,
         };
 
         result.Performance = new PerformanceSettings
         {
             VideoQuality = AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Normalize(api.VideoQuality) ?? AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Auto,
-            HardwareAcceleration = api.HardwareAcceleration ?? false,
-            LowLatencyMode = api.LowLatencyMode ?? false,
-            BufferDurationMs = api.BufferDurationMs ?? 0,
-            RtspTransport = api.RtspTransport?.ToString() ?? "tcp",
-            MaxLatencyMs = api.MaxLatencyMs ?? 0,
+            HardwareAcceleration = api.HardwareAcceleration,
+            LowLatencyMode = api.LowLatencyMode,
+            BufferDurationMs = api.BufferDurationMs,
+            RtspTransport = api.RtspTransport.ToString(),
+            MaxLatencyMs = api.MaxLatencyMs,
         };
 
         result.MotionDetection = new MotionDetectionSettings
         {
-            Sensitivity = api.MotionSensitivity ?? 0,
-            MinimumChangePercent = api.MinimumChangePercent ?? 0,
-            AnalysisFrameRate = api.AnalysisFrameRate ?? 0,
-            AnalysisWidth = api.AnalysisWidth ?? 0,
-            AnalysisHeight = api.AnalysisHeight ?? 0,
-            PostMotionDurationSeconds = api.PostMotionDurationSeconds ?? 0,
-            CooldownSeconds = api.CooldownSeconds ?? 0,
+            Sensitivity = api.MotionSensitivity,
+            MinimumChangePercent = api.MinimumChangePercent,
+            AnalysisFrameRate = api.AnalysisFrameRate,
+            AnalysisWidth = api.AnalysisWidth,
+            AnalysisHeight = api.AnalysisHeight,
+            PostMotionDurationSeconds = api.PostMotionDurationSeconds,
+            CooldownSeconds = api.CooldownSeconds,
             BoundingBox = new BoundingBoxSettings
             {
-                ShowInGrid = api.BoundingBoxShowInGrid ?? false,
-                ShowInFullScreen = api.BoundingBoxShowInFullScreen ?? false,
+                ShowInGrid = api.BoundingBoxShowInGrid,
+                ShowInFullScreen = api.BoundingBoxShowInFullScreen,
                 Color = api.BoundingBoxColor ?? string.Empty,
-                Thickness = api.BoundingBoxThickness ?? 0,
-                MinArea = api.BoundingBoxMinArea ?? 0,
-                Padding = api.BoundingBoxPadding ?? 0,
-                Smoothing = api.BoundingBoxSmoothing ?? 0,
+                Thickness = api.BoundingBoxThickness,
+                MinArea = api.BoundingBoxMinArea,
+                Padding = api.BoundingBoxPadding,
+                Smoothing = api.BoundingBoxSmoothing,
             },
         };
 
         result.Recording = new RecordingSettings
         {
             RecordingPath = api.RecordingPath ?? string.Empty,
-            RecordingFormat = api.RecordingFormat?.ToString() ?? "mp4",
-            TranscodeVideoCodec = api.RecordAsH264 == true ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
-            EnableRecordingOnMotion = api.EnableRecordingOnMotion ?? false,
-            EnableRecordingOnConnect = api.EnableRecordingOnConnect ?? false,
-            EnableHourlySegmentation = api.EnableHourlySegmentation ?? false,
-            UseDailySubfolders = api.UseDailySubfolders ?? true,
-            SeparateThumbnailFolder = api.SeparateThumbnailFolder ?? true,
-            MaxRecordingDurationMinutes = api.MaxRecordingDurationMinutes ?? 0,
-            ThumbnailTileCount = api.ThumbnailTileCount ?? 0,
-            EnableTimelapse = api.EnableTimelapse ?? false,
+            RecordingFormat = api.RecordingFormat.ToString(),
+            TranscodeVideoCodec = api.RecordAsH264 ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
+            EnableRecordingOnMotion = api.EnableRecordingOnMotion,
+            EnableRecordingOnConnect = api.EnableRecordingOnConnect,
+            EnableHourlySegmentation = api.EnableHourlySegmentation,
+            UseDailySubfolders = api.UseDailySubfolders,
+            SeparateThumbnailFolder = api.SeparateThumbnailFolder,
+            MaxRecordingDurationMinutes = api.MaxRecordingDurationMinutes,
+            ThumbnailTileCount = api.ThumbnailTileCount,
+            EnableTimelapse = api.EnableTimelapse,
             TimelapseInterval = api.TimelapseInterval ?? string.Empty,
             Cleanup = new MediaCleanupSettings
             {
-                Schedule = ParseEnumOrDefault(api.CleanupSchedule?.ToString(), MediaCleanupSchedule.Disabled),
-                RecordingRetentionDays = api.RecordingRetentionDays ?? 0,
-                IncludeSnapshots = api.CleanupIncludeSnapshots ?? false,
-                SnapshotRetentionDays = api.SnapshotRetentionDays ?? 0,
-                EnableDiskSpaceGuard = api.EnableDiskSpaceGuard ?? DefaultCleanup.EnableDiskSpaceGuard,
-                MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb.Value : DefaultCleanup.MinFreeSpaceMb,
+                Schedule = ParseEnumOrDefault(api.CleanupSchedule.ToString(), MediaCleanupSchedule.Disabled),
+                RecordingRetentionDays = api.RecordingRetentionDays,
+                IncludeSnapshots = api.CleanupIncludeSnapshots,
+                SnapshotRetentionDays = api.SnapshotRetentionDays,
+                EnableDiskSpaceGuard = api.EnableDiskSpaceGuard,
+                MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb : DefaultCleanup.MinFreeSpaceMb,
             },
             PlaybackOverlay = new PlaybackOverlaySettings
             {
-                ShowFilename = api.PlaybackShowFilename ?? false,
+                ShowFilename = api.PlaybackShowFilename,
                 FilenameColor = api.PlaybackFilenameColor ?? string.Empty,
-                ShowTimestamp = api.PlaybackShowTimestamp ?? false,
+                ShowTimestamp = api.PlaybackShowTimestamp,
                 TimestampColor = api.PlaybackTimestampColor ?? string.Empty,
             },
         };
 
         result.Advanced = new AdvancedSettings
         {
-            EnableDebugLogging = api.EnableDebugLogging ?? false,
+            EnableDebugLogging = api.EnableDebugLogging,
             LogPath = api.LogPath ?? string.Empty,
         };
 
@@ -425,7 +425,8 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     /// the local <see cref="ClientPreferences"/> file is authoritative for
     /// those.
     /// </summary>
-    internal static AppSettings BuildApiSettings(ApplicationSettings settings)
+    internal static UpdateSettingsRequest BuildApiSettings(
+        ApplicationSettings settings)
     {
         _ = Enum.TryParse<AppSettingsThemeBase>(settings.General.ThemeBase, out var themeBase);
         _ = Enum.TryParse<AppSettingsOverlayPosition>(settings.CameraDisplay.OverlayPosition.ToString(), out var overlayPosition);
@@ -434,7 +435,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         _ = Enum.TryParse<AppSettingsRecordingFormat>(settings.Recording.RecordingFormat, true, out var recordingFormat);
         _ = Enum.TryParse<AppSettingsCleanupSchedule>(settings.Recording.Cleanup.Schedule.ToString(), out var cleanupSchedule);
 
-        return new AppSettings(
+        return new UpdateSettingsRequest(
             ThemeBase: themeBase,
             ThemeAccent: settings.General.ThemeAccent,
             Language: settings.General.Language,

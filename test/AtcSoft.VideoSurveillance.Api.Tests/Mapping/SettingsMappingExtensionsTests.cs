@@ -117,7 +117,7 @@ public class SettingsMappingExtensionsTests
         var recording = new RecordingSettings();
         var advanced = new AdvancedSettings();
 
-        var api = CreateFullAppSettings(
+        var api = CreateFullUpdateRequest(
             themeBase: AppSettingsThemeBase.Light,
             language: "1030",
             connectOnStartup: false,
@@ -145,7 +145,7 @@ public class SettingsMappingExtensionsTests
         // Arrange
         var general = new GeneralSettings { ThemeBase = "Dark" };
 
-        var api = CreateFullAppSettings(themeBase: null);
+        var api = CreateFullUpdateRequest(themeBase: null);
 
         // Act
         api.ApplyToCore(
@@ -181,7 +181,7 @@ public class SettingsMappingExtensionsTests
             new RecordingSettings(),
             new AdvancedSettings());
         var target = new CameraDisplayAppSettings();
-        api.ApplyToCore(
+        api.AsUpdateRequest().ApplyToCore(
             new GeneralSettings(),
             target,
             new ConnectionAppSettings(),
@@ -218,7 +218,7 @@ public class SettingsMappingExtensionsTests
             recording,
             new AdvancedSettings());
         var target = new RecordingSettings();
-        api.ApplyToCore(
+        api.AsUpdateRequest().ApplyToCore(
             new GeneralSettings(),
             new CameraDisplayAppSettings(),
             new ConnectionAppSettings(),
@@ -239,7 +239,7 @@ public class SettingsMappingExtensionsTests
     {
         // Arrange — changing the layout moves files, so a client that does
         // not know the two properties (and sends nothing) must not change it
-        var api = CreateFullAppSettings();
+        var api = CreateFullUpdateRequest();
         var recording = new RecordingSettings
         {
             UseDailySubfolders = false,
@@ -279,7 +279,7 @@ public class SettingsMappingExtensionsTests
             recording,
             new AdvancedSettings());
         var target = new RecordingSettings();
-        api.ApplyToCore(
+        api.AsUpdateRequest().ApplyToCore(
             new GeneralSettings(),
             new CameraDisplayAppSettings(),
             new ConnectionAppSettings(),
@@ -299,7 +299,7 @@ public class SettingsMappingExtensionsTests
     public void ApplyToCore_Keeps_The_Disk_Space_Guard_Off_When_The_Request_Does_Not_Mention_It()
     {
         // Arrange — an older client does not know the property and sends nothing
-        var api = CreateFullAppSettings();
+        var api = CreateFullUpdateRequest();
         var recording = new RecordingSettings();
         recording.Cleanup.EnableDiskSpaceGuard = false;
 
@@ -321,7 +321,7 @@ public class SettingsMappingExtensionsTests
     public void ApplyToCore_Keeps_The_Free_Space_Threshold_When_The_Request_Has_None()
     {
         // Arrange — a client that does not send the value sends 0
-        var api = CreateFullAppSettings();
+        var api = CreateFullUpdateRequest();
         var recording = new RecordingSettings();
         recording.Cleanup.MinFreeSpaceMb = 4096;
 
@@ -339,7 +339,7 @@ public class SettingsMappingExtensionsTests
         recording.Cleanup.MinFreeSpaceMb.Should().Be(4096);
     }
 
-    private static AppSettings CreateFullAppSettings(
+    private static UpdateSettingsRequest CreateFullUpdateRequest(
         AppSettingsThemeBase? themeBase = AppSettingsThemeBase.Dark,
         string language = "1033",
         bool connectOnStartup = true,

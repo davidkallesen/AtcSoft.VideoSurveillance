@@ -18,7 +18,7 @@ public sealed partial class GatewayService
     }
 
     public async Task<AppSettings?> UpdateSettingsAsync(
-        AppSettings settings,
+        UpdateSettingsRequest settings,
         CancellationToken cancellationToken = default)
     {
         var parameters = new UpdateSettingsParameters(Request: settings);

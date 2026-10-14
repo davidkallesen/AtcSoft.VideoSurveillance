@@ -89,8 +89,12 @@ internal static class SettingsMappingExtensions
             EnableDebugLogging: advanced.EnableDebugLogging,
             LogPath: advanced.LogPath);
 
+    /// <summary>
+    /// Applies the settings the request has. A setting it leaves out keeps its value,
+    /// so a client that does not know a setting yet does not reset it.
+    /// </summary>
     public static void ApplyToCore(
-        this AppSettings api,
+        this UpdateSettingsRequest api,
         CoreGeneralSettings general,
         CoreCameraDisplayAppSettings cameraDisplay,
         CoreConnectionAppSettings connection,
@@ -114,23 +118,50 @@ internal static class SettingsMappingExtensions
             general.Language = api.Language;
         }
 
-        general.ConnectCamerasOnStartup = api.ConnectOnStartup ?? false;
-        general.StartMaximized = api.StartMaximized ?? false;
+        if (api.ConnectOnStartup is { } connectOnStartup)
+        {
+            general.ConnectCamerasOnStartup = connectOnStartup;
+        }
 
-        cameraDisplay.ShowOverlayTitle = api.ShowOverlayTitle ?? false;
-        cameraDisplay.ShowOverlayDescription = api.ShowOverlayDescription ?? false;
-        cameraDisplay.ShowOverlayTime = api.ShowOverlayTime ?? false;
-        cameraDisplay.ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus ?? false;
+        if (api.StartMaximized is { } startMaximized)
+        {
+            general.StartMaximized = startMaximized;
+        }
 
-        // On by default, so a client that predates the property (and sends
-        // nothing) must not switch it off.
+        if (api.ShowOverlayTitle is { } showOverlayTitle)
+        {
+            cameraDisplay.ShowOverlayTitle = showOverlayTitle;
+        }
+
+        if (api.ShowOverlayDescription is { } showOverlayDescription)
+        {
+            cameraDisplay.ShowOverlayDescription = showOverlayDescription;
+        }
+
+        if (api.ShowOverlayTime is { } showOverlayTime)
+        {
+            cameraDisplay.ShowOverlayTime = showOverlayTime;
+        }
+
+        if (api.ShowOverlayConnectionStatus is { } showOverlayConnectionStatus)
+        {
+            cameraDisplay.ShowOverlayConnectionStatus = showOverlayConnectionStatus;
+        }
+
         if (api.ShowOverlayQuickActions is not null)
         {
             cameraDisplay.ShowOverlayQuickActions = api.ShowOverlayQuickActions.Value;
         }
 
-        cameraDisplay.ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon ?? false;
-        cameraDisplay.OverlayOpacity = api.OverlayOpacity ?? 0;
+        if (api.ShowOverlayConnectionTypeIcon is { } showOverlayConnectionTypeIcon)
+        {
+            cameraDisplay.ShowOverlayConnectionTypeIcon = showOverlayConnectionTypeIcon;
+        }
+
+        if (api.OverlayOpacity is { } overlayOpacity)
+        {
+            cameraDisplay.OverlayOpacity = overlayOpacity;
+        }
 
         if (api.ConnectionTypeIconPlacement is not null)
         {
@@ -142,8 +173,15 @@ internal static class SettingsMappingExtensions
             cameraDisplay.OverlayPosition = ToCoreOverlayPosition(api.OverlayPosition.Value);
         }
 
-        cameraDisplay.AllowDragAndDropReorder = api.AllowDragAndDropReorder ?? false;
-        cameraDisplay.AutoSaveLayoutChanges = api.AutoSaveLayoutChanges ?? false;
+        if (api.AllowDragAndDropReorder is { } allowDragAndDropReorder)
+        {
+            cameraDisplay.AllowDragAndDropReorder = allowDragAndDropReorder;
+        }
+
+        if (api.AutoSaveLayoutChanges is { } autoSaveLayoutChanges)
+        {
+            cameraDisplay.AutoSaveLayoutChanges = autoSaveLayoutChanges;
+        }
 
         if (!string.IsNullOrEmpty(api.SnapshotPath))
         {
@@ -170,10 +208,25 @@ internal static class SettingsMappingExtensions
             connection.ReconnectDelaySeconds = api.ReconnectDelaySeconds.Value;
         }
 
-        connection.AutoReconnectOnFailure = api.AutoReconnectOnFailure ?? false;
-        connection.ShowNotificationOnDisconnect = api.ShowNotificationOnDisconnect ?? false;
-        connection.ShowNotificationOnReconnect = api.ShowNotificationOnReconnect ?? false;
-        connection.PlayNotificationSound = api.PlayNotificationSound ?? false;
+        if (api.AutoReconnectOnFailure is { } autoReconnectOnFailure)
+        {
+            connection.AutoReconnectOnFailure = autoReconnectOnFailure;
+        }
+
+        if (api.ShowNotificationOnDisconnect is { } showNotificationOnDisconnect)
+        {
+            connection.ShowNotificationOnDisconnect = showNotificationOnDisconnect;
+        }
+
+        if (api.ShowNotificationOnReconnect is { } showNotificationOnReconnect)
+        {
+            connection.ShowNotificationOnReconnect = showNotificationOnReconnect;
+        }
+
+        if (api.PlayNotificationSound is { } playNotificationSound)
+        {
+            connection.PlayNotificationSound = playNotificationSound;
+        }
 
         // A value that is not a video quality leaves the setting as it is.
         if (VideoQualityHelper.Normalize(api.VideoQuality) is { } videoQuality)
@@ -181,8 +234,15 @@ internal static class SettingsMappingExtensions
             performance.VideoQuality = videoQuality;
         }
 
-        performance.HardwareAcceleration = api.HardwareAcceleration ?? false;
-        performance.LowLatencyMode = api.LowLatencyMode ?? false;
+        if (api.HardwareAcceleration is { } hardwareAcceleration)
+        {
+            performance.HardwareAcceleration = hardwareAcceleration;
+        }
+
+        if (api.LowLatencyMode is { } lowLatencyMode)
+        {
+            performance.LowLatencyMode = lowLatencyMode;
+        }
 
         if (api.BufferDurationMs > 0)
         {
@@ -234,8 +294,15 @@ internal static class SettingsMappingExtensions
             motionDetection.CooldownSeconds = api.CooldownSeconds.Value;
         }
 
-        motionDetection.BoundingBox.ShowInGrid = api.BoundingBoxShowInGrid ?? false;
-        motionDetection.BoundingBox.ShowInFullScreen = api.BoundingBoxShowInFullScreen ?? false;
+        if (api.BoundingBoxShowInGrid is { } boundingBoxShowInGrid)
+        {
+            motionDetection.BoundingBox.ShowInGrid = boundingBoxShowInGrid;
+        }
+
+        if (api.BoundingBoxShowInFullScreen is { } boundingBoxShowInFullScreen)
+        {
+            motionDetection.BoundingBox.ShowInFullScreen = boundingBoxShowInFullScreen;
+        }
 
         if (!string.IsNullOrEmpty(api.BoundingBoxColor))
         {
@@ -272,13 +339,28 @@ internal static class SettingsMappingExtensions
             recording.RecordingFormat = api.RecordingFormat.Value.ToString().ToLowerInvariant();
         }
 
-        recording.TranscodeVideoCodec = api.RecordAsH264 == true ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None;
-        recording.EnableRecordingOnMotion = api.EnableRecordingOnMotion ?? false;
-        recording.EnableRecordingOnConnect = api.EnableRecordingOnConnect ?? false;
-        recording.EnableHourlySegmentation = api.EnableHourlySegmentation ?? false;
+        if (api.RecordAsH264 is { } recordAsH264)
+        {
+            recording.TranscodeVideoCodec = recordAsH264
+                ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264
+                : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None;
+        }
 
-        // Changing the layout moves files, so a client that predates these
-        // properties (and sends nothing) must not change it.
+        if (api.EnableRecordingOnMotion is { } enableRecordingOnMotion)
+        {
+            recording.EnableRecordingOnMotion = enableRecordingOnMotion;
+        }
+
+        if (api.EnableRecordingOnConnect is { } enableRecordingOnConnect)
+        {
+            recording.EnableRecordingOnConnect = enableRecordingOnConnect;
+        }
+
+        if (api.EnableHourlySegmentation is { } enableHourlySegmentation)
+        {
+            recording.EnableHourlySegmentation = enableHourlySegmentation;
+        }
+
         if (api.UseDailySubfolders is not null)
         {
             recording.UseDailySubfolders = api.UseDailySubfolders.Value;
@@ -299,7 +381,10 @@ internal static class SettingsMappingExtensions
             recording.ThumbnailTileCount = api.ThumbnailTileCount.Value;
         }
 
-        recording.EnableTimelapse = api.EnableTimelapse ?? false;
+        if (api.EnableTimelapse is { } enableTimelapse)
+        {
+            recording.EnableTimelapse = enableTimelapse;
+        }
 
         if (!string.IsNullOrEmpty(api.TimelapseInterval))
         {
@@ -316,15 +401,16 @@ internal static class SettingsMappingExtensions
             recording.Cleanup.RecordingRetentionDays = api.RecordingRetentionDays.Value;
         }
 
-        recording.Cleanup.IncludeSnapshots = api.CleanupIncludeSnapshots ?? false;
+        if (api.CleanupIncludeSnapshots is { } cleanupIncludeSnapshots)
+        {
+            recording.Cleanup.IncludeSnapshots = cleanupIncludeSnapshots;
+        }
 
         if (api.SnapshotRetentionDays > 0)
         {
             recording.Cleanup.SnapshotRetentionDays = api.SnapshotRetentionDays.Value;
         }
 
-        // The guard is on by default, so a client that predates the property
-        // (and sends nothing) must not switch it off.
         if (api.EnableDiskSpaceGuard is not null)
         {
             recording.Cleanup.EnableDiskSpaceGuard = api.EnableDiskSpaceGuard.Value;
@@ -335,21 +421,30 @@ internal static class SettingsMappingExtensions
             recording.Cleanup.MinFreeSpaceMb = api.MinFreeSpaceMb.Value;
         }
 
-        recording.PlaybackOverlay.ShowFilename = api.PlaybackShowFilename ?? false;
+        if (api.PlaybackShowFilename is { } playbackShowFilename)
+        {
+            recording.PlaybackOverlay.ShowFilename = playbackShowFilename;
+        }
 
         if (!string.IsNullOrEmpty(api.PlaybackFilenameColor))
         {
             recording.PlaybackOverlay.FilenameColor = api.PlaybackFilenameColor;
         }
 
-        recording.PlaybackOverlay.ShowTimestamp = api.PlaybackShowTimestamp ?? false;
+        if (api.PlaybackShowTimestamp is { } playbackShowTimestamp)
+        {
+            recording.PlaybackOverlay.ShowTimestamp = playbackShowTimestamp;
+        }
 
         if (!string.IsNullOrEmpty(api.PlaybackTimestampColor))
         {
             recording.PlaybackOverlay.TimestampColor = api.PlaybackTimestampColor;
         }
 
-        advanced.EnableDebugLogging = api.EnableDebugLogging ?? false;
+        if (api.EnableDebugLogging is { } enableDebugLogging)
+        {
+            advanced.EnableDebugLogging = enableDebugLogging;
+        }
 
         if (!string.IsNullOrEmpty(api.LogPath))
         {
@@ -357,33 +452,19 @@ internal static class SettingsMappingExtensions
         }
     }
 
-    private static AppSettingsThemeBase? ParseThemeBase(string? themeBase)
-    {
-        if (string.IsNullOrEmpty(themeBase))
-        {
-            return null;
-        }
-
-        return string.Equals(themeBase, "Light", StringComparison.OrdinalIgnoreCase)
+    private static AppSettingsThemeBase ParseThemeBase(string? themeBase)
+        => string.Equals(themeBase, "Light", StringComparison.OrdinalIgnoreCase)
             ? AppSettingsThemeBase.Light
             : AppSettingsThemeBase.Dark;
-    }
 
-    private static AppSettingsRecordingFormat? ParseRecordingFormat(
+    private static AppSettingsRecordingFormat ParseRecordingFormat(
         string? format)
-    {
-        if (string.IsNullOrEmpty(format))
-        {
-            return null;
-        }
-
-        return format.ToUpperInvariant() switch
+        => format?.ToUpperInvariant() switch
         {
             "MKV" => AppSettingsRecordingFormat.Mkv,
             "AVI" => AppSettingsRecordingFormat.Avi,
             _ => AppSettingsRecordingFormat.Mp4,
         };
-    }
 
     private static AppSettingsConnectionTypeIconPlacement ToApiConnectionTypeIconPlacement(
         AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement placement)
@@ -397,7 +478,7 @@ internal static class SettingsMappingExtensions
             ? AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameColumn
             : AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow;
 
-    private static AppSettingsOverlayPosition? ParseOverlayPosition(
+    private static AppSettingsOverlayPosition ParseOverlayPosition(
         AtcSoft.VideoSurveillance.Enums.OverlayPosition position)
         => position switch
         {
@@ -417,7 +498,7 @@ internal static class SettingsMappingExtensions
             _ => AtcSoft.VideoSurveillance.Enums.OverlayPosition.TopLeft,
         };
 
-    private static AppSettingsDefaultProtocol? ParseDefaultProtocol(
+    private static AppSettingsDefaultProtocol ParseDefaultProtocol(
         AtcSoft.VideoSurveillance.Enums.CameraProtocol protocol)
         => protocol switch
         {
@@ -435,20 +516,13 @@ internal static class SettingsMappingExtensions
             _ => AtcSoft.VideoSurveillance.Enums.CameraProtocol.Rtsp,
         };
 
-    private static AppSettingsRtspTransport? ParseRtspTransport(
+    private static AppSettingsRtspTransport ParseRtspTransport(
         string? transport)
-    {
-        if (string.IsNullOrEmpty(transport))
-        {
-            return null;
-        }
-
-        return string.Equals(transport, "udp", StringComparison.OrdinalIgnoreCase)
+        => string.Equals(transport, "udp", StringComparison.OrdinalIgnoreCase)
             ? AppSettingsRtspTransport.Udp
             : AppSettingsRtspTransport.Tcp;
-    }
 
-    private static AppSettingsCleanupSchedule? ParseCleanupSchedule(
+    private static AppSettingsCleanupSchedule ParseCleanupSchedule(
         AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule schedule)
         => schedule switch
         {

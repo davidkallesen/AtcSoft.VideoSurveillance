@@ -1,6 +1,7 @@
 global using System.Net;
 global using System.Net.Http;
 global using System.Net.Http.Headers;
+global using System.Text.Json;
 
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Events;
@@ -15,3 +16,4 @@ global using Microsoft.Extensions.Http.Resilience;
 global using Microsoft.Extensions.Options;
 global using Microsoft.Extensions.Time.Testing;
 global using VideoSurveillance.Generated;
+global using VideoSurveillance.Generated.Settings.Models;

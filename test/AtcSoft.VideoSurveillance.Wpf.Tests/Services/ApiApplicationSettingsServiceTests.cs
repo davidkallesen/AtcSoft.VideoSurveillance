@@ -12,7 +12,7 @@ public class ApiApplicationSettingsServiceTests
 
         // Act
         var api = ApiApplicationSettingsService.BuildApiSettings(settings);
-        var roundTripped = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences(), api);
+        var roundTripped = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences(), AsServerAnswer(api));
 
         // Assert
         api.EnableDiskSpaceGuard.Should().BeFalse();
@@ -47,4 +47,10 @@ public class ApiApplicationSettingsServiceTests
         settings.Recording.Cleanup.EnableDiskSpaceGuard.Should().BeTrue();
         settings.Recording.Cleanup.MinFreeSpaceMb.Should().Be(2048);
     }
+
+    /// <summary>
+    /// What the server answers to the update: the same settings, as it writes them.
+    /// </summary>
+    private static AppSettings AsServerAnswer(UpdateSettingsRequest update)
+        => JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(update))!;
 }

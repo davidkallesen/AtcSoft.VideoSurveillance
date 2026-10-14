@@ -486,7 +486,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AppSettings"
+              $ref: "#/components/schemas/UpdateSettingsRequest"
       responses:
         '200':
           description: Settings updated
@@ -1052,11 +1052,81 @@ components:
 
     AppSettings:
       type: object
+      description: The settings as the server has them. Every setting is always there.
+      required:
+        - themeBase
+        - themeAccent
+        - language
+        - connectOnStartup
+        - startMaximized
+        - showOverlayTitle
+        - showOverlayDescription
+        - showOverlayTime
+        - showOverlayConnectionStatus
+        - showOverlayQuickActions
+        - showOverlayConnectionTypeIcon
+        - connectionTypeIconPlacement
+        - overlayOpacity
+        - overlayPosition
+        - allowDragAndDropReorder
+        - autoSaveLayoutChanges
+        - snapshotPath
+        - defaultProtocol
+        - defaultPort
+        - connectionTimeoutSeconds
+        - reconnectDelaySeconds
+        - autoReconnectOnFailure
+        - showNotificationOnDisconnect
+        - showNotificationOnReconnect
+        - playNotificationSound
+        - videoQuality
+        - hardwareAcceleration
+        - lowLatencyMode
+        - bufferDurationMs
+        - rtspTransport
+        - maxLatencyMs
+        - motionSensitivity
+        - minimumChangePercent
+        - analysisFrameRate
+        - analysisWidth
+        - analysisHeight
+        - postMotionDurationSeconds
+        - cooldownSeconds
+        - boundingBoxShowInGrid
+        - boundingBoxShowInFullScreen
+        - boundingBoxColor
+        - boundingBoxThickness
+        - boundingBoxMinArea
+        - boundingBoxPadding
+        - boundingBoxSmoothing
+        - recordingPath
+        - recordingFormat
+        - recordAsH264
+        - enableRecordingOnMotion
+        - enableRecordingOnConnect
+        - enableHourlySegmentation
+        - maxRecordingDurationMinutes
+        - thumbnailTileCount
+        - useDailySubfolders
+        - separateThumbnailFolder
+        - enableTimelapse
+        - timelapseInterval
+        - cleanupSchedule
+        - recordingRetentionDays
+        - cleanupIncludeSnapshots
+        - snapshotRetentionDays
+        - enableDiskSpaceGuard
+        - minFreeSpaceMb
+        - playbackShowFilename
+        - playbackFilenameColor
+        - playbackShowTimestamp
+        - playbackTimestampColor
+        - enableDebugLogging
+        - logPath
       properties:
         # General
         themeBase:
-          type: string
-          enum: [dark, light]
+          $ref: "#/components/schemas/AppSettingsThemeBase"
         themeAccent:
           type: string
         language:
@@ -1076,21 +1146,18 @@ components:
           type: boolean
         showOverlayQuickActions:
           type: boolean
-          nullable: true
-          description: Show the quick-action buttons on a camera tile. On by default. Omit to leave the current value unchanged.
+          description: Show the quick-action buttons on a camera tile. On by default.
         showOverlayConnectionTypeIcon:
           type: boolean
           description: Show the connection-type icon (LAN / Wi-Fi / USB) in a free tile corner.
         connectionTypeIconPlacement:
-          type: string
-          enum: [sameRow, sameColumn]
+          $ref: "#/components/schemas/AppSettingsConnectionTypeIconPlacement"
           description: Which corner adjacent to the overlay info box holds the connection-type icon.
         overlayOpacity:
           type: number
           format: double
         overlayPosition:
-          type: string
-          enum: [topLeft, topRight, bottomLeft, bottomRight]
+          $ref: "#/components/schemas/AppSettingsOverlayPosition"
         allowDragAndDropReorder:
           type: boolean
         autoSaveLayoutChanges:
@@ -1099,8 +1166,7 @@ components:
           type: string
         # Connection
         defaultProtocol:
-          type: string
-          enum: [rtsp, http, https]
+          $ref: "#/components/schemas/AppSettingsDefaultProtocol"
         defaultPort:
           type: integer
           format: int32
@@ -1130,8 +1196,7 @@ components:
           type: integer
           format: int32
         rtspTransport:
-          type: string
-          enum: [tcp, udp]
+          $ref: "#/components/schemas/AppSettingsRtspTransport"
         maxLatencyMs:
           type: integer
           format: int32
@@ -1179,8 +1244,7 @@ components:
         recordingPath:
           type: string
         recordingFormat:
-          type: string
-          enum: [mp4, mkv, avi]
+          $ref: "#/components/schemas/AppSettingsRecordingFormat"
         recordAsH264:
           type: boolean
           description: Record every camera as H.264 whatever it sends. A camera that sends anything else (H.265, MJPEG) is then decoded and encoded again while it is recorded, which costs processor time. Takes effect the next time a camera is opened.
@@ -1198,19 +1262,16 @@ components:
           format: int32
         useDailySubfolders:
           type: boolean
-          nullable: true
-          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings. Omit to leave the current value unchanged.
+          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings.
         separateThumbnailFolder:
           type: boolean
-          nullable: true
-          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos. On by default. Changing it moves the existing thumbnails. Omit to leave the current value unchanged.
+          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos. On by default. Changing it moves the existing thumbnails.
         enableTimelapse:
           type: boolean
         timelapseInterval:
           type: string
         cleanupSchedule:
-          type: string
-          enum: [disabled, onStartup, onStartupAndPeriodically]
+          $ref: "#/components/schemas/AppSettingsCleanupSchedule"
         recordingRetentionDays:
           type: integer
           format: int32
@@ -1221,12 +1282,11 @@ components:
           format: int32
         enableDiskSpaceGuard:
           type: boolean
-          nullable: true
-          description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb. Omit to leave the current value unchanged.
+          description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb.
         minFreeSpaceMb:
           type: integer
           format: int32
-          description: Free disk space, in megabytes, the disk space guard keeps available. 0 or omitted leaves the current value unchanged.
+          description: Free disk space, in megabytes, the disk space guard keeps available.
         playbackShowFilename:
           type: boolean
         playbackFilenameColor:
@@ -1240,6 +1300,215 @@ components:
           type: boolean
         logPath:
           type: string
+
+    UpdateSettingsRequest:
+      type: object
+      description: A change of the settings. A setting that is left out keeps its value, so a client that does not know a setting yet does not reset it.
+      properties:
+        # General
+        themeBase:
+          $ref: "#/components/schemas/AppSettingsThemeBase"
+        themeAccent:
+          type: string
+        language:
+          type: string
+        connectOnStartup:
+          type: boolean
+        startMaximized:
+          type: boolean
+        # Camera Display
+        showOverlayTitle:
+          type: boolean
+        showOverlayDescription:
+          type: boolean
+        showOverlayTime:
+          type: boolean
+        showOverlayConnectionStatus:
+          type: boolean
+        showOverlayQuickActions:
+          type: boolean
+          description: Show the quick-action buttons on a camera tile. On by default.
+        showOverlayConnectionTypeIcon:
+          type: boolean
+          description: Show the connection-type icon (LAN / Wi-Fi / USB) in a free tile corner.
+        connectionTypeIconPlacement:
+          $ref: "#/components/schemas/AppSettingsConnectionTypeIconPlacement"
+          description: Which corner adjacent to the overlay info box holds the connection-type icon.
+        overlayOpacity:
+          type: number
+          format: double
+        overlayPosition:
+          $ref: "#/components/schemas/AppSettingsOverlayPosition"
+        allowDragAndDropReorder:
+          type: boolean
+        autoSaveLayoutChanges:
+          type: boolean
+        snapshotPath:
+          type: string
+        # Connection
+        defaultProtocol:
+          $ref: "#/components/schemas/AppSettingsDefaultProtocol"
+        defaultPort:
+          type: integer
+          format: int32
+        connectionTimeoutSeconds:
+          type: integer
+          format: int32
+        reconnectDelaySeconds:
+          type: integer
+          format: int32
+        autoReconnectOnFailure:
+          type: boolean
+        showNotificationOnDisconnect:
+          type: boolean
+        showNotificationOnReconnect:
+          type: boolean
+        playNotificationSound:
+          type: boolean
+        # Performance
+        videoQuality:
+          type: string
+          description: "The highest resolution to decode at: Auto (the camera's own), 1080p, 720p, 480p or 360p. The older names low, medium, high and ultra are still accepted."
+        hardwareAcceleration:
+          type: boolean
+        lowLatencyMode:
+          type: boolean
+        bufferDurationMs:
+          type: integer
+          format: int32
+        rtspTransport:
+          $ref: "#/components/schemas/AppSettingsRtspTransport"
+        maxLatencyMs:
+          type: integer
+          format: int32
+        # Motion Detection
+        motionSensitivity:
+          type: integer
+          format: int32
+        minimumChangePercent:
+          type: number
+          format: double
+        analysisFrameRate:
+          type: integer
+          format: int32
+        analysisWidth:
+          type: integer
+          format: int32
+        analysisHeight:
+          type: integer
+          format: int32
+        postMotionDurationSeconds:
+          type: integer
+          format: int32
+        cooldownSeconds:
+          type: integer
+          format: int32
+        boundingBoxShowInGrid:
+          type: boolean
+        boundingBoxShowInFullScreen:
+          type: boolean
+        boundingBoxColor:
+          type: string
+        boundingBoxThickness:
+          type: integer
+          format: int32
+        boundingBoxMinArea:
+          type: integer
+          format: int32
+        boundingBoxPadding:
+          type: integer
+          format: int32
+        boundingBoxSmoothing:
+          type: number
+          format: double
+        # Recording
+        recordingPath:
+          type: string
+        recordingFormat:
+          $ref: "#/components/schemas/AppSettingsRecordingFormat"
+        recordAsH264:
+          type: boolean
+          description: Record every camera as H.264 whatever it sends. A camera that sends anything else (H.265, MJPEG) is then decoded and encoded again while it is recorded, which costs processor time. Takes effect the next time a camera is opened.
+        enableRecordingOnMotion:
+          type: boolean
+        enableRecordingOnConnect:
+          type: boolean
+        enableHourlySegmentation:
+          type: boolean
+        maxRecordingDurationMinutes:
+          type: integer
+          format: int32
+        thumbnailTileCount:
+          type: integer
+          format: int32
+        useDailySubfolders:
+          type: boolean
+          description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings.
+        separateThumbnailFolder:
+          type: boolean
+          description: Keep thumbnails in a thumbnails folder below the recording path instead of next to the videos. On by default. Changing it moves the existing thumbnails.
+        enableTimelapse:
+          type: boolean
+        timelapseInterval:
+          type: string
+        cleanupSchedule:
+          $ref: "#/components/schemas/AppSettingsCleanupSchedule"
+        recordingRetentionDays:
+          type: integer
+          format: int32
+        cleanupIncludeSnapshots:
+          type: boolean
+        snapshotRetentionDays:
+          type: integer
+          format: int32
+        enableDiskSpaceGuard:
+          type: boolean
+          description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb.
+        minFreeSpaceMb:
+          type: integer
+          format: int32
+          description: Free disk space, in megabytes, the disk space guard keeps available.
+        playbackShowFilename:
+          type: boolean
+        playbackFilenameColor:
+          type: string
+        playbackShowTimestamp:
+          type: boolean
+        playbackTimestampColor:
+          type: string
+        # Advanced
+        enableDebugLogging:
+          type: boolean
+        logPath:
+          type: string
+
+    AppSettingsThemeBase:
+      type: string
+      enum: [dark, light]
+
+    AppSettingsConnectionTypeIconPlacement:
+      type: string
+      enum: [sameRow, sameColumn]
+
+    AppSettingsOverlayPosition:
+      type: string
+      enum: [topLeft, topRight, bottomLeft, bottomRight]
+
+    AppSettingsDefaultProtocol:
+      type: string
+      enum: [rtsp, http, https]
+
+    AppSettingsRtspTransport:
+      type: string
+      enum: [tcp, udp]
+
+    AppSettingsRecordingFormat:
+      type: string
+      enum: [mp4, mkv, avi]
+
+    AppSettingsCleanupSchedule:
+      type: string
+      enum: [disabled, onStartup, onStartupAndPeriodically]
 
     ProblemDetails:
       type: object

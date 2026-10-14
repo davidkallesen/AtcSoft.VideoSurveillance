@@ -64,7 +64,7 @@ public sealed class SettingsRoundTripTests
             sent.Advanced);
 
         var received = new SettingsSet();
-        api.ApplyToCore(
+        api.AsUpdateRequest().ApplyToCore(
             received.General,
             received.CameraDisplay,
             received.Connection,
@@ -86,6 +86,51 @@ public sealed class SettingsRoundTripTests
                       Environment.NewLine +
                       string.Join(Environment.NewLine, lost);
         Assert.True(lost.Count == 0, message);
+    }
+
+    [Fact]
+    public void An_Update_That_Leaves_Every_Setting_Out_Changes_Nothing()
+    {
+        // A client that predates a setting leaves it out of its update.
+        var stored = new SettingsSet();
+        foreach (var (name, section) in stored.Sections)
+        {
+            ChangeEveryProperty(name, section);
+        }
+
+        var before = stored.Flatten();
+
+        new UpdateSettingsRequest().ApplyToCore(
+            stored.General,
+            stored.CameraDisplay,
+            stored.Connection,
+            stored.Performance,
+            stored.MotionDetection,
+            stored.Recording,
+            stored.Advanced);
+
+        var after = stored.Flatten();
+        var changed = before
+            .Where(kv => !Equals(kv.Value, after[kv.Key]))
+            .Select(kv => $"{kv.Key}: was '{kv.Value}', is '{after[kv.Key]}'")
+            .ToList();
+
+        var message = "A setting left out of an update must keep its value:" +
+                      Environment.NewLine +
+                      string.Join(Environment.NewLine, changed);
+        Assert.True(changed.Count == 0, message);
+    }
+
+    [Fact]
+    public void The_Update_Request_Has_Every_Setting_Of_The_Response()
+    {
+        static IEnumerable<string> Names(Type type)
+            => type
+                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Select(p => p.Name)
+                .Order(StringComparer.Ordinal);
+
+        Names(typeof(UpdateSettingsRequest)).Should().Equal(Names(typeof(AppSettings)));
     }
 
     [Fact]

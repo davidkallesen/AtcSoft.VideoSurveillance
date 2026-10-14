@@ -23,7 +23,7 @@ public class UpdateSettingsHandlerTests
         settingsService.Advanced.Returns(advanced);
         var handler = new UpdateSettingsHandler(settingsService, Substitute.For<IRecordingService>());
 
-        var apiSettings = CreateFullAppSettings(
+        var apiSettings = CreateFullUpdateRequest(
             themeBase: AppSettingsThemeBase.Light,
             language: "1030",
             enableDebugLogging: true);
@@ -58,7 +58,7 @@ public class UpdateSettingsHandlerTests
         settingsService.Advanced.Returns(new AdvancedSettings());
         var handler = new UpdateSettingsHandler(settingsService, Substitute.For<IRecordingService>());
 
-        var apiSettings = CreateFullAppSettings();
+        var apiSettings = CreateFullUpdateRequest();
 
         // Act
         await handler.ExecuteAsync(
@@ -87,7 +87,7 @@ public class UpdateSettingsHandlerTests
 
             // Act
             await handler.ExecuteAsync(
-                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root, UseDailySubfolders = true }),
+                new UpdateSettingsParameters(CreateFullUpdateRequest() with { RecordingPath = root, UseDailySubfolders = true }),
                 CancellationToken.None);
 
             // Assert — the server names files in UTC; the day folder is the local day
@@ -115,7 +115,7 @@ public class UpdateSettingsHandlerTests
 
             // Act
             await handler.ExecuteAsync(
-                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root, UseDailySubfolders = true }),
+                new UpdateSettingsParameters(CreateFullUpdateRequest() with { RecordingPath = root, UseDailySubfolders = true }),
                 CancellationToken.None);
 
             // Assert
@@ -139,7 +139,7 @@ public class UpdateSettingsHandlerTests
 
             // Act
             await handler.ExecuteAsync(
-                new UpdateSettingsParameters(CreateFullAppSettings() with { RecordingPath = root }),
+                new UpdateSettingsParameters(CreateFullUpdateRequest() with { RecordingPath = root }),
                 CancellationToken.None);
 
             // Assert
@@ -185,7 +185,7 @@ public class UpdateSettingsHandlerTests
         return path;
     }
 
-    private static AppSettings CreateFullAppSettings(
+    private static UpdateSettingsRequest CreateFullUpdateRequest(
         AppSettingsThemeBase? themeBase = AppSettingsThemeBase.Dark,
         string language = "1033",
         bool enableDebugLogging = false)
