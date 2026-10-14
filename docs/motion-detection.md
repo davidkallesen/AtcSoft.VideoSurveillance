@@ -231,47 +231,27 @@ PUT /settings
 Content-Type: application/json
 
 {
-  "motionDetection": {
-    "sensitivity": 30,
-    "minimumChangePercent": 0.5,
-    "analysisFrameRate": 5,
-    "analysisWidth": 640,
-    "analysisHeight": 480,
-    "postMotionDurationSeconds": 10,
-    "cooldownSeconds": 5,
-    "boundingBox": {
-      "showInGrid": true,
-      "color": "Red",
-      "thickness": 2,
-      "minArea": 25
-    }
-  },
-  "recording": {
-    "enableRecordingOnMotion": true,
-    "recordingFormat": "mkv"
-  }
+  "motionSensitivity": 30,
+  "minimumChangePercent": 0.5,
+  "analysisFrameRate": 5,
+  "analysisWidth": 640,
+  "analysisHeight": 480,
+  "postMotionDurationSeconds": 10,
+  "cooldownSeconds": 5,
+  "boundingBoxShowInGrid": true,
+  "boundingBoxColor": "Red",
+  "boundingBoxThickness": 2,
+  "boundingBoxMinArea": 25,
+  "enableRecordingOnMotion": true,
+  "recordingFormat": "mkv"
 }
 ```
 
-### 2. Per-Camera Overrides via API
+The settings resource is flat. Send only the settings you change: the server keeps every setting the request leaves out.
 
-```http
-PUT /cameras/{cameraId}
-Content-Type: application/json
+### 2. Per-Camera Overrides
 
-{
-  "overrides": {
-    "motionDetection": {
-      "sensitivity": 50,
-      "analysisWidth": 320,
-      "analysisHeight": 240,
-      "boundingBox": {
-        "color": "Green"
-      }
-    }
-  }
-}
-```
+Per-camera motion overrides are not part of the API; they are set in the desktop apps.
 
 ### 3. Monitor Events via SignalR
 

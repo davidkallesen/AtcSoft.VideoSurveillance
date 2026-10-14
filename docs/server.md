@@ -48,6 +48,14 @@ An enum is written and read as the specification writes it: `rtsp`, `topLeft`, `
 
 ---
 
+## ✏️ Changes
+
+An update changes only what it sends. A property the request leaves out keeps its value: in `PUT /settings`, `PUT /cameras/{id}` and `PUT /layouts/{id}`. So a client that does not know a property yet cannot reset it. To clear a text, send it empty: a camera's password, for example, is removed with `""` and kept when it is left out.
+
+A response lists in `required` everything the server always sends. What it may leave out is optional: a camera's connection state and USB settings, a recording's thumbnail.
+
+---
+
 ## 📼 Recordings and thumbnails
 
 `GET /recordings` lists the recordings, newest first. Each entry has:

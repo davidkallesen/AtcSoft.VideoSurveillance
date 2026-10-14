@@ -513,7 +513,7 @@ The REST API exposes settings via endpoints:
 - `GET /settings` - Retrieve current application settings
 - `PUT /settings` - Update application settings
 
-The API returns and accepts the full `ApplicationSettings` structure (General, CameraDisplay, Connection, Performance, MotionDetection, Recording, Advanced).
+`GET /settings` returns `AppSettings`: every setting, flat, always all of them. `PUT /settings` takes an `UpdateSettingsRequest` with the same properties, none of them required: a setting the request leaves out keeps its value, so a client that does not know a setting yet cannot reset it. A test keeps the two models' properties the same.
 
 A few settings are left out of the API on purpose: `StartRibbonCollapsed` (each desktop client keeps its own), `TranscodeVideoCodec` (no effect yet) and the two recordings-browser switches of the standalone app. A test (`SettingsRoundTripTests`) sends every other setting through the API and back, and fails by name for one that is added to the model and forgotten in the contract or the mapping.
 
