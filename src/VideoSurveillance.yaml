@@ -850,6 +850,7 @@ x-signalr-hubs:
 components:
   schemas:
     Camera:
+      title: Camera
       type: object
       required:
         - id
@@ -942,6 +943,7 @@ components:
           type: boolean
 
     ConnectionTypeDetection:
+      title: ConnectionTypeDetection
       type: object
       required:
         - connectionType
@@ -950,6 +952,7 @@ components:
           type: string
           enum: [none, lan, wifi, usb]
     UsbDeviceDescriptor:
+      title: UsbDeviceDescriptor
       type: object
       required:
         - deviceId
@@ -977,6 +980,7 @@ components:
             $ref: "#/components/schemas/UsbStreamFormat"
 
     UsbStreamFormat:
+      title: UsbStreamFormat
       type: object
       required:
         - width
@@ -998,6 +1002,7 @@ components:
           description: FFmpeg pixel-format string (nv12 / yuyv422 / mjpeg / h264 / etc).
 
     CreateCameraRequest:
+      title: CreateCameraRequest
       type: object
       required:
         - displayName
@@ -1080,6 +1085,7 @@ components:
           format: int32
 
     UpdateCameraRequest:
+      title: UpdateCameraRequest
       type: object
       properties:
         displayName:
@@ -1157,6 +1163,7 @@ components:
           format: int32
 
     RecordingStatus:
+      title: RecordingStatus
       type: object
       required:
         - cameraId
@@ -1174,6 +1181,7 @@ components:
           format: date-time
 
     Layout:
+      title: Layout
       type: object
       required:
         - id
@@ -1199,6 +1207,7 @@ components:
             $ref: "#/components/schemas/LayoutItem"
 
     LayoutItem:
+      title: LayoutItem
       type: object
       properties:
         cameraId:
@@ -1209,6 +1218,7 @@ components:
           format: int32
 
     CreateLayoutRequest:
+      title: CreateLayoutRequest
       type: object
       required:
         - name
@@ -1229,6 +1239,7 @@ components:
           minimum: 1
 
     UpdateLayoutRequest:
+      title: UpdateLayoutRequest
       type: object
       properties:
         name:
@@ -1249,6 +1260,7 @@ components:
             $ref: "#/components/schemas/LayoutItem"
 
     Recording:
+      title: Recording
       type: object
       required:
         - id
@@ -1290,6 +1302,7 @@ components:
           description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
 
     AppSettings:
+      title: AppSettings
       type: object
       description: The settings as the server has them. Every setting is always there.
       required:
@@ -1569,6 +1582,7 @@ components:
           type: string
 
     UpdateSettingsRequest:
+      title: UpdateSettingsRequest
       type: object
       description: A change of the settings. A setting that is left out keeps its value, so a client that does not know a setting yet does not reset it.
       properties:
@@ -1806,6 +1820,7 @@ components:
       enum: [disabled, onStartup, onStartupAndPeriodically]
 
     ProblemDetails:
+      title: ProblemDetails
       type: object
       description: An RFC 9457 problem, as every error response is written.
       properties:
@@ -1822,6 +1837,7 @@ components:
           type: string
 
     Webhook:
+      title: Webhook
       type: object
       required:
         - id
@@ -1849,6 +1865,7 @@ components:
           description: False for a receiver that comes from the server's configuration.
 
     CreateWebhookRequest:
+      title: CreateWebhookRequest
       type: object
       required:
         - url
@@ -1865,6 +1882,7 @@ components:
             type: string
 
     UpdateWebhookRequest:
+      title: UpdateWebhookRequest
       type: object
       required:
         - url
@@ -1881,6 +1899,7 @@ components:
             type: string
 
     WebhookTestResult:
+      title: WebhookTestResult
       type: object
       required:
         - delivered
@@ -1890,6 +1909,7 @@ components:
           description: Whether the receiver answered the test event with a success status.
 
     StorageStatus:
+      title: StorageStatus
       type: object
       required:
         - freeBytes
@@ -1942,6 +1962,7 @@ components:
       enum: [left, right]
 
     ConnectionStateChangedEvent:
+      title: ConnectionStateChangedEvent
       type: object
       description: Hub event - the server's connection to a camera changed.
       required:
@@ -1959,6 +1980,7 @@ components:
           format: date-time
 
     RecordingStateChangedEvent:
+      title: RecordingStateChangedEvent
       type: object
       description: Hub event - a camera started or stopped being recorded.
       required:
@@ -1982,6 +2004,7 @@ components:
           format: date-time
 
     MotionBox:
+      title: MotionBox
       type: object
       description: Where something moved, in the coordinates of the analysed picture.
       required:
@@ -2004,6 +2027,7 @@ components:
           format: double
 
     MotionDetectedEvent:
+      title: MotionDetectedEvent
       type: object
       description: Hub event - motion on a camera started, goes on, or ended.
       required:
@@ -2039,6 +2063,7 @@ components:
           format: date-time
 
     UsbCameraLifecycleEvent:
+      title: UsbCameraLifecycleEvent
       type: object
       description: Hub event - a USB camera on the server was unplugged or plugged in again.
       required:
@@ -2062,6 +2087,7 @@ components:
           format: date-time
 
     StreamStartedEvent:
+      title: StreamStartedEvent
       type: object
       description: Hub event, to the caller of StartStream - the stream is ready to play.
       required:
@@ -2076,6 +2102,7 @@ components:
           description: The HLS playlist, from the server's root (/streams/...).
 
     CameraSwapRequestedEvent:
+      title: CameraSwapRequestedEvent
       type: object
       description: Hub event - a client asked to swap a camera with its neighbour in the layout.
       required:
@@ -2089,6 +2116,7 @@ components:
           $ref: "#/components/schemas/SwapDirection"
 
     WebhookPayload:
+      title: WebhookPayload
       type: object
       description: >-
         What the server posts to a webhook receiver. Not an operation of this API - the server sends it - so it is
@@ -2117,6 +2145,7 @@ components:
           $ref: "#/components/schemas/WebhookPayloadData"
 
     WebhookPayloadData:
+      title: WebhookPayloadData
       type: object
       description: What else is known about the event. A field the event has no value for is left out.
       properties:
@@ -2135,6 +2164,7 @@ components:
           description: webhook.test - what the test is.
 
     SurveillanceEvent:
+      title: SurveillanceEvent
       type: object
       description: >-
         One event of GET /events. type names the part that is filled, as the hub names the event; a type this
