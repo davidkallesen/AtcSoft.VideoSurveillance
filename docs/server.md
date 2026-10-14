@@ -39,6 +39,8 @@ Every error the server answers is an [RFC 9457](https://www.rfc-editor.org/rfc/r
 
 - `detail` says what went wrong, in words a person can read. A client shows it as it is.
 - The framework's own errors are problems too: an address the server does not have (404) and a body that is no JSON (400).
+- A value outside the limits in the specification (a name of 1-256 characters, a port of 1-65535, a timeout of at least a second, ...) is refused before the handler runs: a 400 validation problem with one entry per field in `errors`, keyed by the name the client sent (`port`, `displayName`). Nothing is stored.
+- The clients show the server's words: the field messages of a 400, else `detail`. The desktop client in its "Failed to ..." dialogs, the web client after the page's own sentence.
 - An unhandled exception is a 500 problem without the exception's text. In Development the developer exception page shows it instead.
 - A snapshot of a camera that exists but gives no picture is 503; 404 is a camera the server does not know.
 
