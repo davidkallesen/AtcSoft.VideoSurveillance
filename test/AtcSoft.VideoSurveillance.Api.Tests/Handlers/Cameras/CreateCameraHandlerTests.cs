@@ -23,12 +23,11 @@ public class CreateCameraHandlerTests
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
         // Assert
-        var created = result.Result.Should().BeOfType<Created<Camera>>().Subject;
-        created.Value.Should().NotBeNull();
-        created.Value!.DisplayName.Should().Be("Test Camera");
-        created.Value.IpAddress.Should().Be("10.0.0.1");
-        created.Value.Port.Should().Be(554);
-        created.Value.Id.Should().NotBeEmpty();
+        var created = await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
+        created.DisplayName.Should().Be("Test Camera");
+        created.IpAddress.Should().Be("10.0.0.1");
+        created.Port.Should().Be(554);
+        created.Id.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -86,7 +85,7 @@ public class CreateCameraHandlerTests
 
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
-        result.Result.Should().BeOfType<Created<Camera>>();
+        await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
         storage.Received(1).AddOrUpdateCamera(Arg.Is<CameraConfiguration>(c =>
             c.Connection.Source == CoreCameraSource.Usb &&
             c.Connection.Usb != null &&

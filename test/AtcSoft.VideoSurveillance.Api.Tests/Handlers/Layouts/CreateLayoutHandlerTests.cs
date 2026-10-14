@@ -15,10 +15,9 @@ public class CreateLayoutHandlerTests
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
         // Assert
-        var created = result.Result.Should().BeOfType<Created<Layout>>().Subject;
-        created.Value.Should().NotBeNull();
-        created.Value!.Name.Should().Be("My Layout");
-        created.Value.Id.Should().NotBeEmpty();
+        var created = await result.Result.ShouldBeCreatedAsync<Layout>("/layouts/");
+        created.Name.Should().Be("My Layout");
+        created.Id.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -34,8 +33,8 @@ public class CreateLayoutHandlerTests
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
         // Assert
-        var created = result.Result.Should().BeOfType<Created<Layout>>().Subject;
-        created.Value!.Cameras.Should().HaveCount(6);
+        var created = await result.Result.ShouldBeCreatedAsync<Layout>("/layouts/");
+        created.Cameras.Should().HaveCount(6);
         storage.Received(1).AddOrUpdateLayout(Arg.Is<CameraLayout>(l =>
             l.Items.Count == 6 && l.Name == "3x2 Grid"));
         storage.Received(1).Save();
