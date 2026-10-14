@@ -273,6 +273,13 @@ paths:
     get:
       summary: List USB cameras visible to the server host
       operationId: listUsbDevices
+      # Enumerating the devices takes a moment; the list is kept 5 seconds, and
+      # the server drops it as soon as a USB camera is plugged in or pulled out.
+      x-cache-type: output
+      x-cache-policy: usb-devices
+      x-cache-expiration-seconds: 5
+      x-cache-tags:
+        - usb-devices
       tags:
         - devices
       responses:

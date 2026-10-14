@@ -21,6 +21,7 @@ global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Services;
 
+global using Microsoft.AspNetCore.OutputCaching;
 global using Microsoft.AspNetCore.SignalR;
 global using Microsoft.AspNetCore.StaticFiles;
 global using Microsoft.Extensions.FileProviders;

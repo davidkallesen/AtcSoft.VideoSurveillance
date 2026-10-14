@@ -176,6 +176,10 @@ try
     builder.Services.AddSingleton(new SurveillanceEventBroadcasterOptions());
     builder.Services.AddHostedService<SurveillanceEventBroadcaster>();
 
+    // GET /devices/usb is cached a few seconds; a camera plugged in or pulled out drops it.
+    builder.Services.AddSingleton(new UsbDeviceCacheEvictorOptions());
+    builder.Services.AddHostedService<UsbDeviceCacheEvictor>();
+
     // Each BackgroundServiceBase-derived worker gets its OWN typed options
     // instance so they can run on independent intervals — a single shared
     // IBackgroundServiceOptions singleton would force them all onto one cadence.
