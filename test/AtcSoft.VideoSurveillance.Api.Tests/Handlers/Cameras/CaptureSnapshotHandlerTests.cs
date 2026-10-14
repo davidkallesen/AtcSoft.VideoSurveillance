@@ -23,7 +23,7 @@ public class CaptureSnapshotHandlerTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CaptureReturnsNull_ReturnsNotFound()
+    public async Task ExecuteAsync_CaptureReturnsNull_IsServiceUnavailable()
     {
         // Arrange
         var storage = Substitute.For<ICameraStorageService>();
@@ -53,11 +53,11 @@ public class CaptureSnapshotHandlerTests
         // Assert
         pipelineFactory.Received(1).Create(camera);
         await pipeline.Received(1).CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
     }
 
     [Fact]
-    public async Task ExecuteAsync_PipelineEntersErrorState_ReturnsNotFoundWithoutCalling_CaptureFrameAsync()
+    public async Task ExecuteAsync_PipelineEntersErrorState_IsServiceUnavailableWithoutCalling_CaptureFrameAsync()
     {
         // Arrange
         var storage = Substitute.For<ICameraStorageService>();
@@ -86,7 +86,7 @@ public class CaptureSnapshotHandlerTests
 
         // Assert
         await pipeline.DidNotReceive().CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class CaptureSnapshotHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound).Detail.Should().Contain("unplugged");
+        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable).Detail.Should().Contain("unplugged");
         usb.PipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
         usb.Host.DidNotReceiveWithAnyArgs().Release(Guid.Empty, default);
     }
@@ -150,7 +150,7 @@ public class CaptureSnapshotHandlerTests
                 AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
         var result = await executing;
 
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Snapshot);
         usb.Pipeline.DidNotReceive().Dispose();
     }

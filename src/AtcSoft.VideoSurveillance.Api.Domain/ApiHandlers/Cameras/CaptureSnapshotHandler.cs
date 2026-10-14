@@ -46,7 +46,7 @@ public sealed class CaptureSnapshotHandler(
             .ConfigureAwait(false);
         if (!connected)
         {
-            return CaptureSnapshotResult.NotFound(
+            return CaptureSnapshotResult.ServiceUnavailable(
                 $"Camera {parameters.CameraId} did not reach Connected within {ConnectionTimeout.TotalSeconds:N0}s.");
         }
 
@@ -61,7 +61,7 @@ public sealed class CaptureSnapshotHandler(
         var pipeline = host.Acquire(camera, AtcSoft.VideoSurveillance.Enums.CameraPipelineUse.Snapshot);
         if (pipeline is null)
         {
-            return CaptureSnapshotResult.NotFound(
+            return CaptureSnapshotResult.ServiceUnavailable(
                 "This USB camera cannot be opened right now: it is unplugged, or the server is still connecting to it. Try again in a moment.");
         }
 
@@ -73,7 +73,7 @@ public sealed class CaptureSnapshotHandler(
                 .ConfigureAwait(false);
             if (!playing)
             {
-                return CaptureSnapshotResult.NotFound(
+                return CaptureSnapshotResult.ServiceUnavailable(
                     $"Camera {camera.Id} delivered no picture within {ConnectionTimeout.TotalSeconds:N0}s.");
             }
 
@@ -93,7 +93,7 @@ public sealed class CaptureSnapshotHandler(
         var frame = await pipeline.CaptureFrameAsync(cancellationToken);
         if (frame is null)
         {
-            return CaptureSnapshotResult.NotFound("Failed to capture frame from camera stream.");
+            return CaptureSnapshotResult.ServiceUnavailable("Failed to capture frame from camera stream.");
         }
 
         var snapshotPath = settingsService.CameraDisplay.SnapshotPath;
