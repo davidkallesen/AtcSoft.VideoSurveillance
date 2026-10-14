@@ -57,6 +57,30 @@ public sealed class ApiHostErrorTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task An_Unexpected_Failure_Outside_Development_Is_A_Problem_Without_The_Exception()
+    {
+        // Makes sure the test data folder is in place before a second server starts on it.
+        using var fixtureClient = host.CreateClient();
+
+        var storage = Substitute.For<ICameraStorageService>();
+        storage.GetAllCameras().Returns([]);
+        storage.GetAllLayouts().Returns([]);
+        storage.GetCameraById(Arg.Any<Guid>()).Returns(_ => throw new InvalidOperationException("secret inner detail"));
+        await using var factory = new WebApplicationFactory<Program>();
+        await using var production = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.ConfigureTestServices(services => services.AddSingleton(storage));
+        });
+        using var client = production.CreateClient();
+
+        using var response = await client.GetAsync(new Uri($"/cameras/{Guid.NewGuid()}", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        await ReadProblemAsync(response, HttpStatusCode.InternalServerError);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().NotContain("secret inner detail");
+    }
+
+    [Fact]
     public async Task A_Camera_Is_Written_With_The_Enum_Values_Of_The_Specification()
     {
         using var client = host.CreateClient();
