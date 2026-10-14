@@ -16,6 +16,6 @@ public sealed class CreateCameraHandler(
         storage.AddOrUpdateCamera(camera);
         storage.Save();
 
-        return Task.FromResult(CreateCameraResult.Created(camera.ToApiModel()));
+        return Task.FromResult(CreateCameraResult.Created(camera.ToApiModel(), location: $"/cameras/{camera.Id}"));
     }
 }

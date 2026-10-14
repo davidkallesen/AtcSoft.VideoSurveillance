@@ -16,6 +16,6 @@ public sealed class CreateLayoutHandler(
         storage.AddOrUpdateLayout(layout);
         storage.Save();
 
-        return Task.FromResult(CreateLayoutResult.Created(layout.ToApiModel()));
+        return Task.FromResult(CreateLayoutResult.Created(layout.ToApiModel(), location: $"/layouts/{layout.Id}"));
     }
 }

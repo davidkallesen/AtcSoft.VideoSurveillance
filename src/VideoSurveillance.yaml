@@ -36,6 +36,11 @@ paths:
       responses:
         '201':
           description: Camera created
+          headers:
+            Location:
+              description: The new resource's address.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -307,6 +312,11 @@ paths:
       responses:
         '201':
           description: Layout created
+          headers:
+            Location:
+              description: The new resource's address.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -601,6 +611,11 @@ paths:
       responses:
         '201':
           description: Receiver added
+          headers:
+            Location:
+              description: The new resource's address.
+              schema:
+                type: string
           content:
             application/json:
               schema:
