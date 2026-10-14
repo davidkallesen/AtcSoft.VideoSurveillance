@@ -77,7 +77,7 @@ public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
                         connected++;
                     }
 
-                    if (camera.IsRecording)
+                    if (camera.IsRecording == true)
                     {
                         recording++;
                     }
@@ -128,11 +128,11 @@ public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
         {
             Id = camera.Id,
             DisplayName = camera.DisplayName,
-            Source = camera.Source?.ToString() ?? "Network",
+            Source = camera.Source.ToString(),
             IpAddress = string.IsNullOrEmpty(camera.IpAddress) ? null : camera.IpAddress,
             UsbDeviceId = string.IsNullOrEmpty(camera.UsbDeviceId) ? null : camera.UsbDeviceId,
             UsbFriendlyName = string.IsNullOrEmpty(camera.UsbFriendlyName) ? null : camera.UsbFriendlyName,
             ConnectionState = camera.ConnectionState?.ToString(),
-            IsRecording = camera.IsRecording,
+            IsRecording = camera.IsRecording ?? false,
         };
 }

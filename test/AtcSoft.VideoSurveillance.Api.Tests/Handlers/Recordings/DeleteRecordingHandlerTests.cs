@@ -44,7 +44,7 @@ public sealed class DeleteRecordingHandlerTests : IDisposable
 
         var result = await ExecuteAsync("Garden/Garden_20261012_101500_000.mp4");
 
-        result.Result.Should().BeOfType<Conflict<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status409Conflict);
         File.Exists(video).Should().BeTrue();
     }
 
@@ -53,7 +53,7 @@ public sealed class DeleteRecordingHandlerTests : IDisposable
     {
         var result = await ExecuteAsync("Garden/Garden_20261012_111500_000.mp4");
 
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
     }
 
     [Theory]
@@ -64,7 +64,7 @@ public sealed class DeleteRecordingHandlerTests : IDisposable
     {
         var result = await ExecuteAsync(filePath);
 
-        result.Result.Should().BeOfType<BadRequest<global::VideoSurveillance.Generated.Models.Error>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
         File.Exists(video).Should().BeTrue();
     }
 

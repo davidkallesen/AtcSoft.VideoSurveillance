@@ -31,7 +31,7 @@ public sealed class DeleteRecordingHandler(
                 "This recording is still being made. Stop the recording, or wait for it to end, and delete it then."),
             RecordingRemovalOutcome.NotFound => DeleteRecordingResult.NotFound("There is no such recording."),
             _ => DeleteRecordingResult.BadRequest(
-                new global::VideoSurveillance.Generated.Models.Error(Code: 400, Message: "The path does not name a recording.")),
+                new ProblemDetails { Detail = "The path does not name a recording." }),
         });
     }
 }

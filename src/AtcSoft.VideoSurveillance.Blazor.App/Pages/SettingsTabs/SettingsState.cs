@@ -211,60 +211,60 @@ public sealed class SettingsState
         ThemeBase = settings.ThemeBase ?? AppSettingsThemeBase.Dark;
         ThemeAccent = settings.ThemeAccent ?? "Blue";
         Language = settings.Language ?? "1033";
-        ConnectOnStartup = settings.ConnectOnStartup;
-        StartMaximized = settings.StartMaximized;
+        ConnectOnStartup = settings.ConnectOnStartup ?? false;
+        StartMaximized = settings.StartMaximized ?? false;
 
-        ShowOverlayTitle = settings.ShowOverlayTitle;
-        ShowOverlayDescription = settings.ShowOverlayDescription;
-        ShowOverlayTime = settings.ShowOverlayTime;
-        ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
+        ShowOverlayTitle = settings.ShowOverlayTitle ?? false;
+        ShowOverlayDescription = settings.ShowOverlayDescription ?? false;
+        ShowOverlayTime = settings.ShowOverlayTime ?? false;
+        ShowOverlayConnectionStatus = settings.ShowOverlayConnectionStatus ?? false;
         ShowOverlayQuickActions = settings.ShowOverlayQuickActions ?? true;
-        OverlayOpacity = settings.OverlayOpacity;
+        OverlayOpacity = settings.OverlayOpacity ?? 0;
         OverlayPosition = settings.OverlayPosition ?? AppSettingsOverlayPosition.TopLeft;
-        ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
+        ShowOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon ?? false;
         ConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement ?? AppSettingsConnectionTypeIconPlacement.SameRow;
-        AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
-        AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges;
+        AllowDragAndDropReorder = settings.AllowDragAndDropReorder ?? false;
+        AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges ?? false;
         SnapshotPath = settings.SnapshotPath ?? string.Empty;
 
         DefaultProtocol = settings.DefaultProtocol ?? AppSettingsDefaultProtocol.Rtsp;
-        DefaultPort = settings.DefaultPort;
-        ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds;
-        ReconnectDelaySeconds = settings.ReconnectDelaySeconds;
-        AutoReconnectOnFailure = settings.AutoReconnectOnFailure;
-        ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect;
-        ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect;
-        PlayNotificationSound = settings.PlayNotificationSound;
+        DefaultPort = settings.DefaultPort ?? 0;
+        ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds ?? 0;
+        ReconnectDelaySeconds = settings.ReconnectDelaySeconds ?? 0;
+        AutoReconnectOnFailure = settings.AutoReconnectOnFailure ?? false;
+        ShowNotificationOnDisconnect = settings.ShowNotificationOnDisconnect ?? false;
+        ShowNotificationOnReconnect = settings.ShowNotificationOnReconnect ?? false;
+        PlayNotificationSound = settings.PlayNotificationSound ?? false;
 
         VideoQuality = string.IsNullOrEmpty(settings.VideoQuality) ? "Auto" : settings.VideoQuality;
-        HardwareAcceleration = settings.HardwareAcceleration;
-        LowLatencyMode = settings.LowLatencyMode;
-        BufferDurationMs = settings.BufferDurationMs;
+        HardwareAcceleration = settings.HardwareAcceleration ?? false;
+        LowLatencyMode = settings.LowLatencyMode ?? false;
+        BufferDurationMs = settings.BufferDurationMs ?? 0;
         RtspTransport = settings.RtspTransport ?? AppSettingsRtspTransport.Tcp;
-        MaxLatencyMs = settings.MaxLatencyMs;
+        MaxLatencyMs = settings.MaxLatencyMs ?? 0;
 
-        MotionSensitivity = settings.MotionSensitivity;
-        MinimumChangePercent = settings.MinimumChangePercent;
-        AnalysisFrameRate = settings.AnalysisFrameRate;
-        AnalysisWidth = settings.AnalysisWidth;
-        AnalysisHeight = settings.AnalysisHeight;
-        PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
-        CooldownSeconds = settings.CooldownSeconds;
-        BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid;
-        BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen;
+        MotionSensitivity = settings.MotionSensitivity ?? 0;
+        MinimumChangePercent = settings.MinimumChangePercent ?? 0;
+        AnalysisFrameRate = settings.AnalysisFrameRate ?? 0;
+        AnalysisWidth = settings.AnalysisWidth ?? 0;
+        AnalysisHeight = settings.AnalysisHeight ?? 0;
+        PostMotionDurationSeconds = settings.PostMotionDurationSeconds ?? 0;
+        CooldownSeconds = settings.CooldownSeconds ?? 0;
+        BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid ?? false;
+        BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen ?? false;
         BoundingBoxColor = ColorChoices.Normalize(settings.BoundingBoxColor, "Red");
-        BoundingBoxThickness = settings.BoundingBoxThickness;
-        BoundingBoxMinArea = settings.BoundingBoxMinArea;
-        BoundingBoxPadding = settings.BoundingBoxPadding;
-        BoundingBoxSmoothing = settings.BoundingBoxSmoothing;
+        BoundingBoxThickness = settings.BoundingBoxThickness ?? 0;
+        BoundingBoxMinArea = settings.BoundingBoxMinArea ?? 0;
+        BoundingBoxPadding = settings.BoundingBoxPadding ?? 0;
+        BoundingBoxSmoothing = settings.BoundingBoxSmoothing ?? 0;
 
         RecordingPath = settings.RecordingPath ?? string.Empty;
         RecordingFormat = settings.RecordingFormat ?? AppSettingsRecordingFormat.Mp4;
-        RecordAsH264 = settings.RecordAsH264;
-        EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
-        EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
-        EnableHourlySegmentation = settings.EnableHourlySegmentation;
-        MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes;
+        RecordAsH264 = settings.RecordAsH264 ?? false;
+        EnableRecordingOnMotion = settings.EnableRecordingOnMotion ?? false;
+        EnableRecordingOnConnect = settings.EnableRecordingOnConnect ?? false;
+        EnableHourlySegmentation = settings.EnableHourlySegmentation ?? false;
+        MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes ?? 0;
 
         // The server makes a thumbnail of one tile or of four.
         ThumbnailTileCount = settings.ThumbnailTileCount == 1 ? 1 : 4;
@@ -272,20 +272,20 @@ public sealed class SettingsState
         SeparateThumbnailFolder = settings.SeparateThumbnailFolder ?? true;
         loadedUseDailySubfolders = UseDailySubfolders;
         loadedSeparateThumbnailFolder = SeparateThumbnailFolder;
-        EnableTimelapse = settings.EnableTimelapse;
+        EnableTimelapse = settings.EnableTimelapse ?? false;
         TimelapseInterval = settings.TimelapseInterval ?? "5m";
         CleanupSchedule = settings.CleanupSchedule ?? AppSettingsCleanupSchedule.Disabled;
-        RecordingRetentionDays = settings.RecordingRetentionDays;
-        CleanupIncludeSnapshots = settings.CleanupIncludeSnapshots;
-        SnapshotRetentionDays = settings.SnapshotRetentionDays;
+        RecordingRetentionDays = settings.RecordingRetentionDays ?? 0;
+        CleanupIncludeSnapshots = settings.CleanupIncludeSnapshots ?? false;
+        SnapshotRetentionDays = settings.SnapshotRetentionDays ?? 0;
         EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard ?? true;
-        MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb : 2048;
-        PlaybackShowFilename = settings.PlaybackShowFilename;
+        MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb.Value : 2048;
+        PlaybackShowFilename = settings.PlaybackShowFilename ?? false;
         PlaybackFilenameColor = ColorChoices.Normalize(settings.PlaybackFilenameColor, "White");
-        PlaybackShowTimestamp = settings.PlaybackShowTimestamp;
+        PlaybackShowTimestamp = settings.PlaybackShowTimestamp ?? false;
         PlaybackTimestampColor = ColorChoices.Normalize(settings.PlaybackTimestampColor, "White");
 
-        EnableDebugLogging = settings.EnableDebugLogging;
+        EnableDebugLogging = settings.EnableDebugLogging ?? false;
         LogPath = settings.LogPath ?? string.Empty;
     }
 

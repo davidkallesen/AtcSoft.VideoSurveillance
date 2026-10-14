@@ -64,11 +64,11 @@ public partial class CameraItemViewModel : ViewModelBase
             Id = camera.Id,
             DisplayName = camera.DisplayName,
             Description = camera.Description ?? string.Empty,
-            IpAddress = camera.IpAddress,
-            Port = camera.Port,
+            IpAddress = camera.IpAddress ?? string.Empty,
+            Port = camera.Port ?? 0,
             Protocol = camera.Protocol ?? CameraProtocol.Rtsp,
             ConnectionState = camera.ConnectionState?.ToString() ?? "disconnected",
-            IsRecording = camera.IsRecording,
+            IsRecording = camera.IsRecording ?? false,
         };
     }
 }

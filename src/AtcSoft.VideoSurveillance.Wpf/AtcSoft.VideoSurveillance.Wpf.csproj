@@ -5,6 +5,9 @@
     <UseWPF>true</UseWPF>
     <Description>WPF library for the AtcSoft VideoSurveillance API client. Provides base components, views, and services for the WPF management application.</Description>
     <IsPackable>false</IsPackable>
+    <!-- The spec declares ProblemDetails so the server's error factories take the framework type (generator v3,
+         Upgrading to v3); this client generates its own ProblemDetails, so the schema is skipped on purpose. -->
+    <NoWarn>$(NoWarn);ATC_API_SCH021</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Client" Version="2.3.0" />
+    <PackageReference Include="Atc.Rest.Client" Version="2.6.0" />
     <PackageReference Include="Atc.SourceGenerators" Version="0.1.66">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -23,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="2.1.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.e6413984" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -17,6 +17,6 @@ public sealed class CreateWebhookHandler(
 
         return Task.FromResult(outcome == WebhookChangeOutcome.Done && webhook is not null
             ? CreateWebhookResult.Created(webhook.ToApiModel())
-            : CreateWebhookResult.BadRequest(new global::VideoSurveillance.Generated.Models.Error(Code: 400, Message: "A receiver needs an http or https address.")));
+            : CreateWebhookResult.BadRequest(new ProblemDetails { Detail = "A receiver needs an http or https address." }));
     }
 }

@@ -45,14 +45,14 @@ internal static class LayoutMappingExtensions
             core.Items = request.Cameras
                 .Select(c => new CoreCameraLayoutItem
                 {
-                    CameraId = c.CameraId,
-                    OrderNumber = c.Position,
+                    CameraId = c.CameraId ?? Guid.Empty,
+                    OrderNumber = c.Position ?? 0,
                 })
                 .ToList();
         }
         else if (request.Rows > 0 && request.Columns > 0)
         {
-            var totalSlots = request.Rows * request.Columns;
+            var totalSlots = request.Rows.Value * request.Columns.Value;
             while (core.Items.Count < totalSlots)
             {
                 core.Items.Add(new CoreCameraLayoutItem { OrderNumber = core.Items.Count });

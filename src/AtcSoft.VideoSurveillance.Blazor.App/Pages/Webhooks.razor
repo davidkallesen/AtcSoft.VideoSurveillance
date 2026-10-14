@@ -41,8 +41,8 @@ else
         <RowTemplate>
             <MudTd DataLabel="Address" Style="word-break: break-all;">@context.Url</MudTd>
             <MudTd DataLabel="Events">@WebhookEventChoices.Describe(context.Events)</MudTd>
-            <MudTd DataLabel="Signed">@(context.HasSecret ? "Yes" : "No")</MudTd>
-            <MudTd DataLabel="Set in">@(context.IsEditable ? "This page" : "Server configuration")</MudTd>
+            <MudTd DataLabel="Signed">@(context.HasSecret == true ? "Yes" : "No")</MudTd>
+            <MudTd DataLabel="Set in">@(context.IsEditable == true ? "This page" : "Server configuration")</MudTd>
             <MudTd>
                 <MudTooltip Text="Send a test event">
                     <MudIconButton Icon="@Icons.Material.Filled.Send"
@@ -51,7 +51,7 @@ else
                                    Disabled="@testing.Contains(context.Id)"
                                    OnClick="@(() => TestAsync(context))" />
                 </MudTooltip>
-                @if (context.IsEditable)
+                @if (context.IsEditable ?? false)
                 {
                     <MudTooltip Text="Edit">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -74,7 +74,7 @@ else
         </NoRecordsContent>
     </MudTable>
 
-    @if (webhooks.Any(w => !w.IsEditable))
+    @if (webhooks.Any(w => w.IsEditable != true))
     {
         <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">
             A receiver from the server's configuration is changed there, not here.

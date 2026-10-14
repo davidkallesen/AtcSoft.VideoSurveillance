@@ -28,8 +28,8 @@ public sealed class LayoutItemViewModel
         {
             Id = layout.Id,
             Name = layout.Name,
-            Rows = layout.Rows,
-            Columns = layout.Columns,
+            Rows = layout.Rows ?? 0,
+            Columns = layout.Columns ?? 0,
             CameraCount = layout.Cameras?.Count ?? 0,
         };
     }

@@ -263,7 +263,7 @@ else
 
     private IEnumerable<Guid> LayoutCameraIds()
         => (activeLayout?.Cameras ?? [])
-            .Select(c => c.CameraId)
+            .Select(c => c.CameraId ?? Guid.Empty)
             .Where(id => cameras.Any(c => c.Id == id))
             .Distinct();
 

@@ -19,7 +19,7 @@ public class CaptureSnapshotHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class CaptureSnapshotHandlerTests
         // Assert
         pipelineFactory.Received(1).Create(camera);
         await pipeline.Received(1).CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class CaptureSnapshotHandlerTests
 
         // Assert
         await pipeline.DidNotReceive().CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class CaptureSnapshotHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.Should().NotBeOfType<NotFound<string>>();
+        result.Result.Should().NotBeOfType<ProblemHttpResult>();
         File.Exists(Directory.EnumerateFiles(usb.SnapshotFolder).Single()).Should().BeTrue();
         usb.PipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
         usb.Host.Received(1).Acquire(usb.Camera, CameraPipelineUse.Snapshot);
@@ -120,7 +120,7 @@ public class CaptureSnapshotHandlerTests
         usb.Pipeline.FramesDecoded.Returns(1);
         var result = await executing;
 
-        result.Result.Should().NotBeOfType<NotFound<string>>();
+        result.Result.Should().NotBeOfType<ProblemHttpResult>();
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Snapshot);
     }
 
@@ -132,7 +132,7 @@ public class CaptureSnapshotHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.Should().BeOfType<NotFound<string>>().Which.Value.Should().Contain("unplugged");
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound).Detail.Should().Contain("unplugged");
         usb.PipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
         usb.Host.DidNotReceiveWithAnyArgs().Release(Guid.Empty, default);
     }
@@ -150,7 +150,7 @@ public class CaptureSnapshotHandlerTests
                 AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
         var result = await executing;
 
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Snapshot);
         usb.Pipeline.DidNotReceive().Dispose();
     }

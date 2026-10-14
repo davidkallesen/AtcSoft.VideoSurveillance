@@ -86,39 +86,39 @@
         </MudTd>
         <MudTd DataLabel="Camera">
             @(string.IsNullOrEmpty(context.CameraName) ? "Unknown camera" : context.CameraName)
-            @if (context.InProgress)
+            @if (context.InProgress ?? false)
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="ml-2">Recording</MudChip>
             }
         </MudTd>
         <MudTd DataLabel="Started">@context.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</MudTd>
         <MudTd DataLabel="Length">@RecordingDisplay.FormatDuration(context.Duration)</MudTd>
-        <MudTd DataLabel="Size">@RecordingDisplay.FormatSize(context.FileSizeBytes)</MudTd>
+        <MudTd DataLabel="Size">@RecordingDisplay.FormatSize(context.FileSizeBytes ?? 0)</MudTd>
         <MudTd DataLabel="File">
             <MudText Typo="Typo.body2" Style="max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@context.FilePath">
                 @RecordingDisplay.FileName(context.FilePath)
             </MudText>
         </MudTd>
         <MudTd>
-            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Play")">
+            <MudTooltip Text="@(context.InProgress == true ? "Still being recorded" : "Play")">
                 <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
                                Size="Size.Small"
                                Color="Color.Primary"
-                               Disabled="context.InProgress"
+                               Disabled="context.InProgress == true"
                                OnClick="@(() => PlayRecordingAsync(context))" />
             </MudTooltip>
-            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Download")">
+            <MudTooltip Text="@(context.InProgress == true ? "Still being recorded" : "Download")">
                 <MudIconButton Icon="@Icons.Material.Filled.Download"
                                Size="Size.Small"
-                               Disabled="context.InProgress"
+                               Disabled="context.InProgress == true"
                                OnClick="@(() => DownloadRecordingAsync(context))" />
             </MudTooltip>
-            <MudTooltip Text="@(context.InProgress ? "Still being recorded" : "Delete")">
+            <MudTooltip Text="@(context.InProgress == true ? "Still being recorded" : "Delete")">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Size="Size.Small"
                                Color="Color.Error"
                                aria-label="Delete recording"
-                               Disabled="context.InProgress"
+                               Disabled="context.InProgress == true"
                                OnClick="@(() => DeleteRecordingAsync(context))" />
             </MudTooltip>
         </MudTd>
@@ -214,7 +214,7 @@
 
     private async Task PlayRecordingAsync(Recording? recording)
     {
-        if (recording is null || recording.InProgress)
+        if (recording is null || recording.InProgress == true)
         {
             return;
         }
@@ -250,7 +250,7 @@
 
     private async Task DeleteRecordingAsync(Recording recording)
     {
-        if (recording.InProgress || string.IsNullOrEmpty(recording.FilePath))
+        if (recording.InProgress == true || string.IsNullOrEmpty(recording.FilePath))
         {
             return;
         }

@@ -46,7 +46,7 @@ public class UpdateCameraHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.Should().BeOfType<NotFound<string>>();
+        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
     }
 
     [Fact]

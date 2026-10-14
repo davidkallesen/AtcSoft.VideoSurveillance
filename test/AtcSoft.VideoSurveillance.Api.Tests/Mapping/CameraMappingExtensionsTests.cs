@@ -80,14 +80,10 @@ public class CameraMappingExtensionsTests
     }
 
     [Fact]
-    public void ToCoreModel_NullProtocol_DefaultsToRtsp()
+    public void ToCoreModel_ProtocolLeftOut_IsRtsp()
     {
         // Arrange
-        var request = NetworkCreateRequest(
-            displayName: "Cam",
-            ipAddress: "10.0.0.1",
-            port: 554,
-            protocol: null);
+        var request = new CreateCameraRequest(DisplayName: "Cam", IpAddress: "10.0.0.1", Port: 554);
 
         // Act
         var core = request.ToCoreModel();
@@ -227,7 +223,6 @@ public class CameraMappingExtensionsTests
             ConnectionType: null,
             Rotation: null,
             IpAddress: string.Empty,
-            Protocol: null,
             Path: string.Empty,
             Username: string.Empty,
             Password: string.Empty,
@@ -473,7 +468,7 @@ public class CameraMappingExtensionsTests
         string description = "",
         string ipAddress = "",
         int port = 554,
-        ApiCameraProtocol? protocol = ApiCameraProtocol.Rtsp,
+        ApiCameraProtocol protocol = ApiCameraProtocol.Rtsp,
         string path = "",
         string username = "",
         string password = "")

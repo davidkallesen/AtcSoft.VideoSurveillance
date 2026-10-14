@@ -40,8 +40,7 @@ public class CreateCameraHandlerTests
         var request = NetworkRequest(
             displayName: "New Cam",
             ipAddress: "192.168.1.50",
-            port: 554,
-            protocol: null);
+            port: 554);
         var parameters = new CreateCameraParameters(request);
 
         // Act
@@ -66,7 +65,6 @@ public class CreateCameraHandlerTests
             ConnectionType: null,
             Rotation: null,
             IpAddress: string.Empty,
-            Protocol: null,
             Path: string.Empty,
             Username: string.Empty,
             Password: string.Empty,
@@ -100,7 +98,7 @@ public class CreateCameraHandlerTests
         string description = "",
         string ipAddress = "",
         int port = 554,
-        ApiCameraProtocol? protocol = ApiCameraProtocol.Rtsp,
+        ApiCameraProtocol protocol = ApiCameraProtocol.Rtsp,
         string path = "",
         string username = "",
         string password = "")

@@ -54,7 +54,7 @@ internal static class CameraMappingExtensions
     public static CoreCameraConfiguration ToCoreModel(
         this CreateCameraRequest request)
     {
-        var source = request.Source?.ToCoreSource() ?? CoreCameraSource.Network;
+        var source = request.Source.ToCoreSource();
 
         var camera = new CoreCameraConfiguration
         {
@@ -63,7 +63,7 @@ internal static class CameraMappingExtensions
                 Source = source,
                 IpAddress = request.IpAddress ?? string.Empty,
                 Port = request.Port,
-                Protocol = request.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp,
+                Protocol = request.Protocol.ToCoreProtocol(),
                 Path = request.Path,
                 Usb = source == CoreCameraSource.Usb ? BuildUsbSettings(request) : null,
                 ConnectionType = request.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None,
@@ -89,11 +89,11 @@ internal static class CameraMappingExtensions
             camera.Display.OverlayPosition = ToCoreOverlayPosition(request.OverlayPosition.Value);
         }
 
-        camera.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode;
+        camera.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode ?? false;
 
         if (request.StreamMaxLatencyMs > 0)
         {
-            camera.Stream.MaxLatencyMs = request.StreamMaxLatencyMs;
+            camera.Stream.MaxLatencyMs = request.StreamMaxLatencyMs.Value;
         }
 
         if (request.StreamRtspTransport is not null)
@@ -103,7 +103,7 @@ internal static class CameraMappingExtensions
 
         if (request.StreamBufferDurationMs > 0)
         {
-            camera.Stream.BufferDurationMs = request.StreamBufferDurationMs;
+            camera.Stream.BufferDurationMs = request.StreamBufferDurationMs.Value;
         }
 
         return camera;
@@ -135,7 +135,7 @@ internal static class CameraMappingExtensions
 
         if (request.Port > 0)
         {
-            core.Connection.Port = request.Port;
+            core.Connection.Port = request.Port.Value;
         }
 
         if (request.Protocol is not null)
@@ -178,11 +178,11 @@ internal static class CameraMappingExtensions
             core.Display.Rotation = request.Rotation.Value.ToCoreRotation();
         }
 
-        core.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode;
+        core.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode ?? false;
 
         if (request.StreamMaxLatencyMs > 0)
         {
-            core.Stream.MaxLatencyMs = request.StreamMaxLatencyMs;
+            core.Stream.MaxLatencyMs = request.StreamMaxLatencyMs.Value;
         }
 
         if (request.StreamRtspTransport is not null)
@@ -192,7 +192,7 @@ internal static class CameraMappingExtensions
 
         if (request.StreamBufferDurationMs > 0)
         {
-            core.Stream.BufferDurationMs = request.StreamBufferDurationMs;
+            core.Stream.BufferDurationMs = request.StreamBufferDurationMs.Value;
         }
     }
 
@@ -327,14 +327,14 @@ internal static class CameraMappingExtensions
         {
             DeviceId = request.UsbDeviceId ?? string.Empty,
             FriendlyName = request.UsbFriendlyName ?? string.Empty,
-            PreferAudio = request.UsbCaptureAudio,
+            PreferAudio = request.UsbCaptureAudio ?? false,
             AudioDeviceName = request.UsbAudioDeviceName ?? string.Empty,
             Format = (request.UsbWidth > 0 && request.UsbHeight > 0)
                 ? new CoreUsbStreamFormat
                 {
-                    Width = request.UsbWidth,
-                    Height = request.UsbHeight,
-                    FrameRate = request.UsbFrameRate,
+                    Width = request.UsbWidth.Value,
+                    Height = request.UsbHeight.Value,
+                    FrameRate = request.UsbFrameRate ?? 0,
                     PixelFormat = request.UsbPixelFormat ?? string.Empty,
                 }
                 : null,
@@ -350,7 +350,7 @@ internal static class CameraMappingExtensions
             || request.UsbHeight > 0
             || request.UsbFrameRate > 0
             || request.UsbPixelFormat is not null
-            || request.UsbCaptureAudio
+            || request.UsbCaptureAudio == true
             || request.UsbAudioDeviceName is not null;
 
         if (!hasUsbField && core.Connection.Source != CoreCameraSource.Usb)
@@ -373,7 +373,7 @@ internal static class CameraMappingExtensions
         // PreferAudio is a non-nullable bool — only overwrite when the
         // request explicitly carries `true` so existing-camera updates
         // that omit the field don't silently disable audio.
-        if (request.UsbCaptureAudio)
+        if (request.UsbCaptureAudio == true)
         {
             core.Connection.Usb.PreferAudio = true;
         }
@@ -390,17 +390,17 @@ internal static class CameraMappingExtensions
 
             if (request.UsbWidth > 0)
             {
-                core.Connection.Usb.Format.Width = request.UsbWidth;
+                core.Connection.Usb.Format.Width = request.UsbWidth.Value;
             }
 
             if (request.UsbHeight > 0)
             {
-                core.Connection.Usb.Format.Height = request.UsbHeight;
+                core.Connection.Usb.Format.Height = request.UsbHeight.Value;
             }
 
             if (request.UsbFrameRate > 0)
             {
-                core.Connection.Usb.Format.FrameRate = request.UsbFrameRate;
+                core.Connection.Usb.Format.FrameRate = request.UsbFrameRate.Value;
             }
 
             if (request.UsbPixelFormat is not null)

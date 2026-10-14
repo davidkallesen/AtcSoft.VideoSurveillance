@@ -29,11 +29,11 @@ public sealed class RecordingEntryViewModel
 
     public DateTimeOffset RecordingTime => recording.StartedAt;
 
-    public long FileSizeBytes => recording.FileSizeBytes;
+    public long FileSizeBytes => recording.FileSizeBytes ?? 0;
 
     public TimeSpan Duration => ParseIsoDuration(recording.Duration);
 
-    public bool HasThumbnail => recording.HasThumbnail;
+    public bool HasThumbnail => recording.HasThumbnail ?? false;
 
     public Uri PlaybackUrl
         => BuildFileUrl(recording.FilePath);

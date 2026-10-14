@@ -353,29 +353,29 @@ else
             var camera = await Gateway.GetCameraByIdAsync(CameraId!.Value);
             if (camera is not null)
             {
-                source = camera.Source ?? CameraSource.Network;
+                source = camera.Source;
                 usbDeviceId = camera.UsbDeviceId ?? string.Empty;
                 usbFriendlyName = camera.UsbFriendlyName ?? string.Empty;
-                usbWidth = camera.UsbWidth;
-                usbHeight = camera.UsbHeight;
-                usbFrameRate = camera.UsbFrameRate;
+                usbWidth = camera.UsbWidth ?? 0;
+                usbHeight = camera.UsbHeight ?? 0;
+                usbFrameRate = camera.UsbFrameRate ?? 0;
                 usbPixelFormat = camera.UsbPixelFormat ?? string.Empty;
-                usbCaptureAudio = camera.UsbCaptureAudio;
+                usbCaptureAudio = camera.UsbCaptureAudio ?? false;
                 usbAudioDeviceName = camera.UsbAudioDeviceName ?? string.Empty;
                 displayName = camera.DisplayName;
                 description = camera.Description ?? string.Empty;
-                ipAddress = camera.IpAddress;
-                port = camera.Port;
+                ipAddress = camera.IpAddress ?? string.Empty;
+                port = camera.Port ?? 0;
                 protocol = camera.Protocol ?? CameraProtocol.Rtsp;
                 path = camera.Path ?? string.Empty;
                 username = camera.Username ?? string.Empty;
                 overlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
                 connectionType = camera.ConnectionType ?? CameraConnectionType.None;
                 rotation = camera.Rotation ?? CameraRotation.None;
-                streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
-                streamMaxLatencyMs = camera.StreamMaxLatencyMs;
+                streamUseLowLatencyMode = camera.StreamUseLowLatencyMode ?? false;
+                streamMaxLatencyMs = camera.StreamMaxLatencyMs ?? 0;
                 streamRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
-                streamBufferDurationMs = camera.StreamBufferDurationMs;
+                streamBufferDurationMs = camera.StreamBufferDurationMs ?? 0;
             }
 
             if (IsUsb)

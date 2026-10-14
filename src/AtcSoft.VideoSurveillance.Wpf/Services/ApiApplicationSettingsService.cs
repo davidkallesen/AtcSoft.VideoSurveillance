@@ -320,99 +320,99 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
 
         result.CameraDisplay = new CameraDisplayAppSettings
         {
-            ShowOverlayTitle = api.ShowOverlayTitle,
-            ShowOverlayDescription = api.ShowOverlayDescription,
-            ShowOverlayTime = api.ShowOverlayTime,
-            ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus,
+            ShowOverlayTitle = api.ShowOverlayTitle ?? false,
+            ShowOverlayDescription = api.ShowOverlayDescription ?? false,
+            ShowOverlayTime = api.ShowOverlayTime ?? false,
+            ShowOverlayConnectionStatus = api.ShowOverlayConnectionStatus ?? false,
             ShowOverlayQuickActions = api.ShowOverlayQuickActions ?? true,
-            ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon,
+            ShowOverlayConnectionTypeIcon = api.ShowOverlayConnectionTypeIcon ?? false,
             ConnectionTypeIconPlacement = ParseEnumOrDefault(api.ConnectionTypeIconPlacement?.ToString(), AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameRow),
-            OverlayOpacity = api.OverlayOpacity,
+            OverlayOpacity = api.OverlayOpacity ?? 0,
             OverlayPosition = ParseEnumOrDefault(api.OverlayPosition?.ToString(), OverlayPosition.TopLeft),
-            AllowDragAndDropReorder = api.AllowDragAndDropReorder,
-            AutoSaveLayoutChanges = api.AutoSaveLayoutChanges,
-            SnapshotPath = api.SnapshotPath,
+            AllowDragAndDropReorder = api.AllowDragAndDropReorder ?? false,
+            AutoSaveLayoutChanges = api.AutoSaveLayoutChanges ?? false,
+            SnapshotPath = api.SnapshotPath ?? string.Empty,
         };
 
         result.Connection = new ConnectionAppSettings
         {
             DefaultProtocol = ParseEnumOrDefault(api.DefaultProtocol?.ToString(), CameraProtocol.Rtsp),
-            DefaultPort = api.DefaultPort,
-            ConnectionTimeoutSeconds = api.ConnectionTimeoutSeconds,
-            ReconnectDelaySeconds = api.ReconnectDelaySeconds,
-            AutoReconnectOnFailure = api.AutoReconnectOnFailure,
-            ShowNotificationOnDisconnect = api.ShowNotificationOnDisconnect,
-            ShowNotificationOnReconnect = api.ShowNotificationOnReconnect,
-            PlayNotificationSound = api.PlayNotificationSound,
+            DefaultPort = api.DefaultPort ?? 0,
+            ConnectionTimeoutSeconds = api.ConnectionTimeoutSeconds ?? 0,
+            ReconnectDelaySeconds = api.ReconnectDelaySeconds ?? 0,
+            AutoReconnectOnFailure = api.AutoReconnectOnFailure ?? false,
+            ShowNotificationOnDisconnect = api.ShowNotificationOnDisconnect ?? false,
+            ShowNotificationOnReconnect = api.ShowNotificationOnReconnect ?? false,
+            PlayNotificationSound = api.PlayNotificationSound ?? false,
         };
 
         result.Performance = new PerformanceSettings
         {
             VideoQuality = AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Normalize(api.VideoQuality) ?? AtcSoft.VideoSurveillance.Helpers.VideoQualityHelper.Auto,
-            HardwareAcceleration = api.HardwareAcceleration,
-            LowLatencyMode = api.LowLatencyMode,
-            BufferDurationMs = api.BufferDurationMs,
+            HardwareAcceleration = api.HardwareAcceleration ?? false,
+            LowLatencyMode = api.LowLatencyMode ?? false,
+            BufferDurationMs = api.BufferDurationMs ?? 0,
             RtspTransport = api.RtspTransport?.ToString() ?? "tcp",
-            MaxLatencyMs = api.MaxLatencyMs,
+            MaxLatencyMs = api.MaxLatencyMs ?? 0,
         };
 
         result.MotionDetection = new MotionDetectionSettings
         {
-            Sensitivity = api.MotionSensitivity,
-            MinimumChangePercent = api.MinimumChangePercent,
-            AnalysisFrameRate = api.AnalysisFrameRate,
-            AnalysisWidth = api.AnalysisWidth,
-            AnalysisHeight = api.AnalysisHeight,
-            PostMotionDurationSeconds = api.PostMotionDurationSeconds,
-            CooldownSeconds = api.CooldownSeconds,
+            Sensitivity = api.MotionSensitivity ?? 0,
+            MinimumChangePercent = api.MinimumChangePercent ?? 0,
+            AnalysisFrameRate = api.AnalysisFrameRate ?? 0,
+            AnalysisWidth = api.AnalysisWidth ?? 0,
+            AnalysisHeight = api.AnalysisHeight ?? 0,
+            PostMotionDurationSeconds = api.PostMotionDurationSeconds ?? 0,
+            CooldownSeconds = api.CooldownSeconds ?? 0,
             BoundingBox = new BoundingBoxSettings
             {
-                ShowInGrid = api.BoundingBoxShowInGrid,
-                ShowInFullScreen = api.BoundingBoxShowInFullScreen,
-                Color = api.BoundingBoxColor,
-                Thickness = api.BoundingBoxThickness,
-                MinArea = api.BoundingBoxMinArea,
-                Padding = api.BoundingBoxPadding,
-                Smoothing = api.BoundingBoxSmoothing,
+                ShowInGrid = api.BoundingBoxShowInGrid ?? false,
+                ShowInFullScreen = api.BoundingBoxShowInFullScreen ?? false,
+                Color = api.BoundingBoxColor ?? string.Empty,
+                Thickness = api.BoundingBoxThickness ?? 0,
+                MinArea = api.BoundingBoxMinArea ?? 0,
+                Padding = api.BoundingBoxPadding ?? 0,
+                Smoothing = api.BoundingBoxSmoothing ?? 0,
             },
         };
 
         result.Recording = new RecordingSettings
         {
-            RecordingPath = api.RecordingPath,
+            RecordingPath = api.RecordingPath ?? string.Empty,
             RecordingFormat = api.RecordingFormat?.ToString() ?? "mp4",
-            TranscodeVideoCodec = api.RecordAsH264 ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
-            EnableRecordingOnMotion = api.EnableRecordingOnMotion,
-            EnableRecordingOnConnect = api.EnableRecordingOnConnect,
-            EnableHourlySegmentation = api.EnableHourlySegmentation,
+            TranscodeVideoCodec = api.RecordAsH264 == true ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
+            EnableRecordingOnMotion = api.EnableRecordingOnMotion ?? false,
+            EnableRecordingOnConnect = api.EnableRecordingOnConnect ?? false,
+            EnableHourlySegmentation = api.EnableHourlySegmentation ?? false,
             UseDailySubfolders = api.UseDailySubfolders ?? true,
             SeparateThumbnailFolder = api.SeparateThumbnailFolder ?? true,
-            MaxRecordingDurationMinutes = api.MaxRecordingDurationMinutes,
-            ThumbnailTileCount = api.ThumbnailTileCount,
-            EnableTimelapse = api.EnableTimelapse,
-            TimelapseInterval = api.TimelapseInterval,
+            MaxRecordingDurationMinutes = api.MaxRecordingDurationMinutes ?? 0,
+            ThumbnailTileCount = api.ThumbnailTileCount ?? 0,
+            EnableTimelapse = api.EnableTimelapse ?? false,
+            TimelapseInterval = api.TimelapseInterval ?? string.Empty,
             Cleanup = new MediaCleanupSettings
             {
                 Schedule = ParseEnumOrDefault(api.CleanupSchedule?.ToString(), MediaCleanupSchedule.Disabled),
-                RecordingRetentionDays = api.RecordingRetentionDays,
-                IncludeSnapshots = api.CleanupIncludeSnapshots,
-                SnapshotRetentionDays = api.SnapshotRetentionDays,
+                RecordingRetentionDays = api.RecordingRetentionDays ?? 0,
+                IncludeSnapshots = api.CleanupIncludeSnapshots ?? false,
+                SnapshotRetentionDays = api.SnapshotRetentionDays ?? 0,
                 EnableDiskSpaceGuard = api.EnableDiskSpaceGuard ?? DefaultCleanup.EnableDiskSpaceGuard,
-                MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb : DefaultCleanup.MinFreeSpaceMb,
+                MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb.Value : DefaultCleanup.MinFreeSpaceMb,
             },
             PlaybackOverlay = new PlaybackOverlaySettings
             {
-                ShowFilename = api.PlaybackShowFilename,
-                FilenameColor = api.PlaybackFilenameColor,
-                ShowTimestamp = api.PlaybackShowTimestamp,
-                TimestampColor = api.PlaybackTimestampColor,
+                ShowFilename = api.PlaybackShowFilename ?? false,
+                FilenameColor = api.PlaybackFilenameColor ?? string.Empty,
+                ShowTimestamp = api.PlaybackShowTimestamp ?? false,
+                TimestampColor = api.PlaybackTimestampColor ?? string.Empty,
             },
         };
 
         result.Advanced = new AdvancedSettings
         {
-            EnableDebugLogging = api.EnableDebugLogging,
-            LogPath = api.LogPath,
+            EnableDebugLogging = api.EnableDebugLogging ?? false,
+            LogPath = api.LogPath ?? string.Empty,
         };
 
         return result;

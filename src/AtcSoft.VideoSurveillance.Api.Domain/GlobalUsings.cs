@@ -9,6 +9,8 @@ global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Services;
 
+global using Microsoft.AspNetCore.Mvc;
+
 global using VideoSurveillance.Generated.Cameras.Handlers;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Cameras.Parameters;

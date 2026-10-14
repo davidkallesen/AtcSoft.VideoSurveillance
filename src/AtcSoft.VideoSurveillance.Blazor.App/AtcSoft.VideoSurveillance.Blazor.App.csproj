@@ -3,11 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- The spec declares ProblemDetails so the server's error factories take the framework type (generator v3,
+         Upgrading to v3); this client generates its own ProblemDetails, so the schema is skipped on purpose. -->
+    <NoWarn>$(NoWarn);ATC_API_SCH021</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Atc" Version="3.0.186" />
-    <PackageReference Include="Atc.Rest.Client" Version="2.3.0" />
+    <PackageReference Include="Atc.Rest.Client" Version="2.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
@@ -16,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="2.1.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.e6413984" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

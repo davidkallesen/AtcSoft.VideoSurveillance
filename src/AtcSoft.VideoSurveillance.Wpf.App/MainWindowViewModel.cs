@@ -376,7 +376,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 ConnectedCameras = cameras.Count(c =>
                     c.ConnectionState == CameraConnectionState.Connected);
-                ActiveRecordings = cameras.Count(c => c.IsRecording);
+                ActiveRecordings = cameras.Count(c => c.IsRecording == true);
             }
         }
         catch (HttpRequestException)

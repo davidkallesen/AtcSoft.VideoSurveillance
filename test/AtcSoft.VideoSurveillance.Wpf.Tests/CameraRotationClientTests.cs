@@ -111,7 +111,6 @@ public class CameraRotationClientTests
             Id: Guid.NewGuid(),
             DisplayName: "Cam",
             Description: string.Empty,
-            Source: null,
             ConnectionType: null,
             Rotation: rotation,
             IpAddress: "10.0.0.1",

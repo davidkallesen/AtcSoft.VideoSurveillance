@@ -33,8 +33,8 @@ public static class CameraModelMappingExtensions
             Id = camera.Id,
         };
 
-        config.Connection.IpAddress = camera.IpAddress;
-        config.Connection.Port = camera.Port;
+        config.Connection.IpAddress = camera.IpAddress ?? string.Empty;
+        config.Connection.Port = camera.Port ?? 0;
         config.Connection.Protocol = camera.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp;
         config.Connection.ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None;
 
@@ -45,10 +45,10 @@ public static class CameraModelMappingExtensions
         config.Display.OverlayPosition = camera.OverlayPosition?.ToCoreOverlayPosition() ?? CoreOverlayPosition.TopLeft;
         config.Display.Rotation = camera.Rotation?.ToCoreRotation() ?? CoreCameraRotation.None;
 
-        config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode;
-        config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs;
+        config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode ?? false;
+        config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs ?? 0;
         config.Stream.RtspTransport = camera.StreamRtspTransport?.ToString()?.ToLowerInvariant() ?? "tcp";
-        config.Stream.BufferDurationMs = camera.StreamBufferDurationMs;
+        config.Stream.BufferDurationMs = camera.StreamBufferDurationMs ?? 0;
 
         return config;
     }

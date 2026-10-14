@@ -43,9 +43,9 @@ paths:
         '400':
           description: Invalid request
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /cameras/{cameraId}:
     get:
@@ -70,9 +70,9 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
     put:
       summary: Update a camera
       operationId: updateCamera
@@ -101,15 +101,15 @@ paths:
         '400':
           description: Invalid request
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       summary: Delete a camera
       operationId: deleteCamera
@@ -128,9 +128,9 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /cameras/{cameraId}/snapshot:
     get:
@@ -156,15 +156,15 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '503':
           description: Camera not connected
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /cameras/{cameraId}/detect-connection-type:
     post:
@@ -194,9 +194,9 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /cameras/{cameraId}/recording:
     post:
@@ -221,15 +221,15 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '409':
           description: Already recording
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       summary: Stop recording a camera
       operationId: stopRecording
@@ -252,9 +252,9 @@ paths:
         '404':
           description: Camera not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /devices/usb:
     get:
@@ -274,9 +274,9 @@ paths:
         '503':
           description: USB enumeration is not supported on this host (e.g. headless Linux without v4l2 yet).
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /layouts:
     get:
@@ -314,9 +314,9 @@ paths:
         '400':
           description: Invalid request
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /layouts/{layoutId}:
     put:
@@ -347,15 +347,15 @@ paths:
         '400':
           description: Invalid request
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '404':
           description: Layout not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       summary: Delete a layout
       operationId: deleteLayout
@@ -374,9 +374,9 @@ paths:
         '404':
           description: Layout not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /layouts/{layoutId}/apply:
     post:
@@ -401,9 +401,9 @@ paths:
         '404':
           description: Layout not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /recordings:
     get:
@@ -447,21 +447,21 @@ paths:
         '400':
           description: The path does not name a recording
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '404':
           description: Recording not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '409':
           description: The recording is still being made
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /settings:
     get:
@@ -497,9 +497,9 @@ paths:
         '400':
           description: Invalid settings
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /settings/storage:
     get:
@@ -517,9 +517,9 @@ paths:
         '503':
           description: The disk of the recording folder cannot be read (a share that is offline, a drive that is gone).
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /webhooks:
     get:
@@ -557,9 +557,9 @@ paths:
         '400':
           description: The address is not an http or https address
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /webhooks/{webhookId}:
     put:
@@ -590,21 +590,21 @@ paths:
         '400':
           description: The address is not an http or https address
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '404':
           description: Receiver not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '409':
           description: The receiver comes from the server's configuration and cannot be changed here
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       summary: Remove a receiver
       operationId: deleteWebhook
@@ -623,15 +623,15 @@ paths:
         '404':
           description: Receiver not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         '409':
           description: The receiver comes from the server's configuration and cannot be removed here
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /webhooks/{webhookId}/test:
     post:
@@ -656,9 +656,9 @@ paths:
         '404':
           description: Receiver not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
 components:
   schemas:
@@ -1241,16 +1241,20 @@ components:
         logPath:
           type: string
 
-    Error:
+    ProblemDetails:
       type: object
-      required:
-        - code
-        - message
+      description: An RFC 9457 problem, as every error response is written.
       properties:
-        code:
+        type:
+          type: string
+        title:
+          type: string
+        status:
           type: integer
           format: int32
-        message:
+        detail:
+          type: string
+        instance:
           type: string
 
     Webhook:

@@ -300,7 +300,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                         DisplayName = camera.DisplayName,
                         Description = camera.Description ?? string.Empty,
                         ConnectionState = MapApiConnectionState(camera.ConnectionState),
-                        IsRecording = camera.IsRecording,
+                        IsRecording = camera.IsRecording ?? false,
                         UsbDeviceId = camera.UsbDeviceId ?? string.Empty,
                         ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? AtcSoft.VideoSurveillance.Enums.CameraConnectionType.None,
                         ShowConnectionTypeIcon = showConnectionTypeIcon,
