@@ -300,11 +300,11 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                         DisplayName = camera.DisplayName,
                         Description = camera.Description ?? string.Empty,
                         ConnectionState = MapApiConnectionState(camera.ConnectionState),
-                        IsRecording = camera.IsRecording ?? false,
+                        IsRecording = camera.IsRecording,
                         UsbDeviceId = camera.UsbDeviceId ?? string.Empty,
-                        ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? AtcSoft.VideoSurveillance.Enums.CameraConnectionType.None,
+                        ConnectionType = camera.ConnectionType.ToCoreConnectionType(),
                         ShowConnectionTypeIcon = showConnectionTypeIcon,
-                        Rotation = camera.Rotation?.ToCoreRotation() ?? AtcSoft.VideoSurveillance.Enums.CameraRotation.None,
+                        Rotation = camera.Rotation.ToCoreRotation(),
                     };
 
                     CameraTiles.Add(tile);

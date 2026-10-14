@@ -1,6 +1,5 @@
 namespace AtcSoft.VideoSurveillance.Wpf;
 
-using ApiCamera = global::VideoSurveillance.Generated.Cameras.Models.Camera;
 using ApiCameraRotation = global::VideoSurveillance.Generated.Cameras.Models.CameraRotation;
 using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
 
@@ -19,23 +18,15 @@ public class CameraRotationClientTests
         ApiCameraRotation api,
         CoreCameraRotation expected)
     {
-        var config = BuildApiCamera(api).ToCameraConfiguration();
+        var config = TestCameras.Network(api).ToCameraConfiguration();
 
         config.Display.Rotation.Should().Be(expected);
     }
 
     [Fact]
-    public void ToCameraConfiguration_Without_A_Rotation_Is_Upright()
-    {
-        var config = BuildApiCamera(rotation: null).ToCameraConfiguration();
-
-        config.Display.Rotation.Should().Be(CoreCameraRotation.None);
-    }
-
-    [Fact]
     public void ToCreateCameraRequest_Sends_The_Rotation()
     {
-        var config = BuildApiCamera(ApiCameraRotation.Rotate90).ToCameraConfiguration();
+        var config = TestCameras.Network(ApiCameraRotation.Rotate90).ToCameraConfiguration();
 
         config.ToCreateCameraRequest().Rotation.Should().Be(ApiCameraRotation.Rotate90);
     }
@@ -43,7 +34,7 @@ public class CameraRotationClientTests
     [Fact]
     public void ToUpdateCameraRequest_Sends_The_Rotation()
     {
-        var config = BuildApiCamera(ApiCameraRotation.Rotate270).ToCameraConfiguration();
+        var config = TestCameras.Network(ApiCameraRotation.Rotate270).ToCameraConfiguration();
 
         config.ToUpdateCameraRequest().Rotation.Should().Be(ApiCameraRotation.Rotate270);
     }
@@ -51,7 +42,7 @@ public class CameraRotationClientTests
     [Fact]
     public void ToUpdateCameraRequest_Sends_Upright_So_A_Rotation_Can_Be_Removed()
     {
-        var config = BuildApiCamera(ApiCameraRotation.None).ToCameraConfiguration();
+        var config = TestCameras.Network(ApiCameraRotation.None).ToCameraConfiguration();
 
         config.ToUpdateCameraRequest().Rotation.Should().Be(ApiCameraRotation.None);
     }
@@ -59,7 +50,7 @@ public class CameraRotationClientTests
     [Fact]
     public void EditDialog_Shows_The_Camera_Rotation()
     {
-        var vm = new CameraEditDialogViewModel(BuildApiCamera(ApiCameraRotation.Rotate180));
+        var vm = new CameraEditDialogViewModel(TestCameras.Network(ApiCameraRotation.Rotate180));
 
         vm.SelectedRotation.Should().Be(ApiCameraRotation.Rotate180);
     }
@@ -67,7 +58,7 @@ public class CameraRotationClientTests
     [Fact]
     public void EditDialog_Sends_The_Selected_Rotation_On_Update()
     {
-        var vm = new CameraEditDialogViewModel(BuildApiCamera(ApiCameraRotation.None))
+        var vm = new CameraEditDialogViewModel(TestCameras.Network(ApiCameraRotation.None))
         {
             SelectedRotation = ApiCameraRotation.Rotate90,
         };
@@ -105,32 +96,4 @@ public class CameraRotationClientTests
 
         player.Received(1).SetRotation(expected);
     }
-
-    private static ApiCamera BuildApiCamera(ApiCameraRotation? rotation)
-        => new(
-            Id: Guid.NewGuid(),
-            DisplayName: "Cam",
-            Description: string.Empty,
-            ConnectionType: null,
-            Rotation: rotation,
-            IpAddress: "10.0.0.1",
-            Port: 554,
-            Protocol: null,
-            Path: string.Empty,
-            Username: string.Empty,
-            UsbDeviceId: string.Empty,
-            UsbFriendlyName: string.Empty,
-            UsbWidth: 0,
-            UsbHeight: 0,
-            UsbFrameRate: 0,
-            UsbPixelFormat: string.Empty,
-            UsbCaptureAudio: false,
-            UsbAudioDeviceName: string.Empty,
-            OverlayPosition: null,
-            StreamUseLowLatencyMode: false,
-            StreamMaxLatencyMs: 0,
-            StreamRtspTransport: null,
-            StreamBufferDurationMs: 0,
-            ConnectionState: null,
-            IsRecording: false);
 }

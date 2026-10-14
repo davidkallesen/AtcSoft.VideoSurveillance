@@ -667,6 +667,21 @@ components:
       required:
         - id
         - displayName
+        - description
+        - source
+        - connectionType
+        - rotation
+        - ipAddress
+        - port
+        - protocol
+        - path
+        - username
+        - overlayPosition
+        - streamUseLowLatencyMode
+        - streamMaxLatencyMs
+        - streamRtspTransport
+        - streamBufferDurationMs
+        - isRecording
       properties:
         id:
           type: string
@@ -753,6 +768,8 @@ components:
       required:
         - deviceId
         - friendlyName
+        - isPresent
+        - capabilities
       properties:
         deviceId:
           type: string
@@ -778,6 +795,8 @@ components:
       required:
         - width
         - height
+        - frameRate
+        - pixelFormat
       properties:
         width:
           type: integer
@@ -954,6 +973,9 @@ components:
       required:
         - id
         - name
+        - rows
+        - columns
+        - cameras
       properties:
         id:
           type: string
@@ -1018,8 +1040,13 @@ components:
       required:
         - id
         - cameraId
+        - cameraName
         - filePath
         - startedAt
+        - duration
+        - fileSizeBytes
+        - hasThumbnail
+        - inProgress
       properties:
         id:
           type: string
@@ -1530,6 +1557,9 @@ components:
       required:
         - id
         - url
+        - events
+        - hasSecret
+        - isEditable
       properties:
         id:
           type: string
@@ -1593,7 +1623,10 @@ components:
       required:
         - freeBytes
         - totalBytes
+        - minFreeBytes
         - isLow
+        - usedPercent
+        - text
       properties:
         freeBytes:
           type: integer

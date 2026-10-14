@@ -30,7 +30,7 @@ public static class UsbFormatChoices
         int height)
         => [.. (capabilities ?? [])
             .Where(c => c.Width == width && c.Height == height && c.FrameRate > 0)
-            .Select(c => c.FrameRate!.Value)
+            .Select(c => c.FrameRate)
             .Distinct()
             .OrderByDescending(rate => rate)];
 

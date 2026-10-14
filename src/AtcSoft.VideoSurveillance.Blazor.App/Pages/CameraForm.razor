@@ -365,17 +365,17 @@ else
                 displayName = camera.DisplayName;
                 description = camera.Description ?? string.Empty;
                 ipAddress = camera.IpAddress ?? string.Empty;
-                port = camera.Port ?? 0;
-                protocol = camera.Protocol ?? CameraProtocol.Rtsp;
+                port = camera.Port;
+                protocol = camera.Protocol;
                 path = camera.Path ?? string.Empty;
                 username = camera.Username ?? string.Empty;
-                overlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
-                connectionType = camera.ConnectionType ?? CameraConnectionType.None;
-                rotation = camera.Rotation ?? CameraRotation.None;
-                streamUseLowLatencyMode = camera.StreamUseLowLatencyMode ?? false;
-                streamMaxLatencyMs = camera.StreamMaxLatencyMs ?? 0;
-                streamRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
-                streamBufferDurationMs = camera.StreamBufferDurationMs ?? 0;
+                overlayPosition = camera.OverlayPosition;
+                connectionType = camera.ConnectionType;
+                rotation = camera.Rotation;
+                streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
+                streamMaxLatencyMs = camera.StreamMaxLatencyMs;
+                streamRtspTransport = camera.StreamRtspTransport;
+                streamBufferDurationMs = camera.StreamBufferDurationMs;
             }
 
             if (IsUsb)

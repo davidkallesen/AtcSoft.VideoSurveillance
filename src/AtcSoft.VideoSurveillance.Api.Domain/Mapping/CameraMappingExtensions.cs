@@ -291,7 +291,7 @@ internal static class CameraMappingExtensions
             _ => RecordingStatusState.Idle,
         };
 
-    private static CameraOverlayPosition? ToApiOverlayPosition(
+    private static CameraOverlayPosition ToApiOverlayPosition(
         CoreOverlayPosition position)
         => position switch
         {
@@ -311,18 +311,11 @@ internal static class CameraMappingExtensions
             _ => CoreOverlayPosition.TopLeft,
         };
 
-    private static CameraStreamRtspTransport? ToApiRtspTransport(
+    private static CameraStreamRtspTransport ToApiRtspTransport(
         string? transport)
-    {
-        if (string.IsNullOrEmpty(transport))
-        {
-            return null;
-        }
-
-        return string.Equals(transport, "udp", StringComparison.OrdinalIgnoreCase)
+        => string.Equals(transport, "udp", StringComparison.OrdinalIgnoreCase)
             ? CameraStreamRtspTransport.Udp
             : CameraStreamRtspTransport.Tcp;
-    }
 
     private static CoreUsbConnectionSettings BuildUsbSettings(
         CreateCameraRequest request)

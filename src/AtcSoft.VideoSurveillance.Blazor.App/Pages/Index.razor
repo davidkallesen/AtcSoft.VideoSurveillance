@@ -69,7 +69,7 @@
             <MudSpacer />
             <MudText Typo="Typo.body2" Class="mud-text-secondary">@storage.UsedPercent % used</MudText>
         </MudStack>
-        <MudProgressLinear Value="@(storage.UsedPercent ?? 0)"
+        <MudProgressLinear Value="@(storage.UsedPercent)"
                            Color="@(storage.IsLow ? Color.Error : Color.Primary)"
                            Class="mt-2"
                            aria-label="Share of the recording disk in use" />
@@ -149,7 +149,7 @@ else if (!isLoading && !loadFailed)
 
         // The counts come from the cameras' own states, so they are right
         // from the start and cannot drift as events arrive.
-        board.Load(cameras.Select(c => (c.Id, c.ConnectionState == CameraConnectionState.Connected, c.IsRecording ?? false)));
+        board.Load(cameras.Select(c => (c.Id, c.ConnectionState == CameraConnectionState.Connected, c.IsRecording)));
 
         layoutCount = (await Gateway.GetLayoutsAsync())?.Length ?? 0;
         storage = await Gateway.GetStorageStatusAsync();

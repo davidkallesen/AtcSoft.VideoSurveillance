@@ -140,17 +140,17 @@ public partial class CameraEditDialogViewModel : ViewModelBase
         displayName = camera.DisplayName;
         description = camera.Description ?? string.Empty;
         ipAddress = camera.IpAddress ?? string.Empty;
-        port = camera.Port ?? 0;
-        selectedProtocol = camera.Protocol ?? CameraProtocol.Rtsp;
+        port = camera.Port;
+        selectedProtocol = camera.Protocol;
         path = camera.Path ?? string.Empty;
         username = camera.Username ?? string.Empty;
-        selectedOverlayPosition = camera.OverlayPosition ?? CameraOverlayPosition.TopLeft;
-        selectedConnectionType = camera.ConnectionType ?? CameraConnectionType.None;
-        selectedRotation = camera.Rotation ?? CameraRotation.None;
-        streamUseLowLatencyMode = camera.StreamUseLowLatencyMode ?? false;
-        streamMaxLatencyMs = camera.StreamMaxLatencyMs ?? 0;
-        selectedRtspTransport = camera.StreamRtspTransport ?? CameraStreamRtspTransport.Tcp;
-        streamBufferDurationMs = camera.StreamBufferDurationMs ?? 0;
+        selectedOverlayPosition = camera.OverlayPosition;
+        selectedConnectionType = camera.ConnectionType;
+        selectedRotation = camera.Rotation;
+        streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
+        streamMaxLatencyMs = camera.StreamMaxLatencyMs;
+        selectedRtspTransport = camera.StreamRtspTransport;
+        streamBufferDurationMs = camera.StreamBufferDurationMs;
     }
 
     /// <summary>

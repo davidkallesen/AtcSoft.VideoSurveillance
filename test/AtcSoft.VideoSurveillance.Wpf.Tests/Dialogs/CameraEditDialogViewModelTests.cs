@@ -9,7 +9,7 @@ public sealed class CameraEditDialogViewModelTests
     [Fact]
     public void An_Update_Leaves_Out_The_Source_And_The_Usb_Settings()
     {
-        var vm = new CameraEditDialogViewModel(Camera());
+        var vm = new CameraEditDialogViewModel(TestCameras.Network());
 
         var request = vm.BuildUpdateRequest();
 
@@ -27,7 +27,7 @@ public sealed class CameraEditDialogViewModelTests
     [Fact]
     public void An_Update_Without_A_New_Password_Leaves_The_Password_Out()
     {
-        var vm = new CameraEditDialogViewModel(Camera());
+        var vm = new CameraEditDialogViewModel(TestCameras.Network());
 
         vm.BuildUpdateRequest().Password.Should().BeNull();
     }
@@ -35,7 +35,7 @@ public sealed class CameraEditDialogViewModelTests
     [Fact]
     public void An_Update_Sends_The_Fields_The_Dialog_Edits()
     {
-        var vm = new CameraEditDialogViewModel(Camera())
+        var vm = new CameraEditDialogViewModel(TestCameras.Network())
         {
             DisplayName = "Back door",
             Path = "/stream2",
@@ -49,12 +49,4 @@ public sealed class CameraEditDialogViewModelTests
         request.Password.Should().Be("secret");
         request.IpAddress.Should().Be("192.0.2.10");
     }
-
-    private static global::VideoSurveillance.Generated.Cameras.Models.Camera Camera()
-        => new(
-            Id: Guid.NewGuid(),
-            DisplayName: "Gate",
-            IpAddress: "192.0.2.10",
-            Port: 554,
-            Path: "/stream1");
 }

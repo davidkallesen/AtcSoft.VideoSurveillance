@@ -34,22 +34,22 @@ public static class CameraModelMappingExtensions
         };
 
         config.Connection.IpAddress = camera.IpAddress ?? string.Empty;
-        config.Connection.Port = camera.Port ?? 0;
-        config.Connection.Protocol = camera.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp;
+        config.Connection.Port = camera.Port;
+        config.Connection.Protocol = camera.Protocol.ToCoreProtocol();
         config.Connection.Path = camera.Path;
-        config.Connection.ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None;
+        config.Connection.ConnectionType = camera.ConnectionType.ToCoreConnectionType();
 
         config.Authentication.UserName = camera.Username ?? string.Empty;
 
         config.Display.DisplayName = camera.DisplayName;
         config.Display.Description = camera.Description ?? string.Empty;
-        config.Display.OverlayPosition = camera.OverlayPosition?.ToCoreOverlayPosition() ?? CoreOverlayPosition.TopLeft;
-        config.Display.Rotation = camera.Rotation?.ToCoreRotation() ?? CoreCameraRotation.None;
+        config.Display.OverlayPosition = camera.OverlayPosition.ToCoreOverlayPosition();
+        config.Display.Rotation = camera.Rotation.ToCoreRotation();
 
-        config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode ?? false;
-        config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs ?? 0;
-        config.Stream.RtspTransport = camera.StreamRtspTransport?.ToString()?.ToLowerInvariant() ?? "tcp";
-        config.Stream.BufferDurationMs = camera.StreamBufferDurationMs ?? 0;
+        config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode;
+        config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs;
+        config.Stream.RtspTransport = camera.StreamRtspTransport.ToString().ToLowerInvariant();
+        config.Stream.BufferDurationMs = camera.StreamBufferDurationMs;
 
         return config;
     }

@@ -46,8 +46,8 @@ public partial class LayoutEditDialogViewModel : ViewModelBase
         IsEdit = true;
         layoutId = layout.Id;
         layoutName = layout.Name;
-        rows = layout.Rows ?? 0;
-        columns = layout.Columns ?? 0;
+        rows = layout.Rows;
+        columns = layout.Columns;
     }
 
     /// <summary>

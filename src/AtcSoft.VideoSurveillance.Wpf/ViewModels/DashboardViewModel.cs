@@ -62,7 +62,7 @@ public partial class DashboardViewModel : ViewModelBase
                     TotalCameras = cameras.Length;
                     ConnectedCameras = cameras.Count(c =>
                         c.ConnectionState == CameraConnectionState.Connected);
-                    ActiveRecordings = cameras.Count(c => c.IsRecording ?? false);
+                    ActiveRecordings = cameras.Count(c => c.IsRecording);
                 }
                 else
                 {

@@ -36,9 +36,9 @@ else
             <MudTd DataLabel="Source">@UsbFormatChoices.DescribeSource(
                 context.Source == CameraSource.Usb,
                 context.UsbFriendlyName,
-                context.Protocol?.ToString(),
+                context.Protocol.ToString(),
                 context.IpAddress,
-                context.Port ?? 0,
+                context.Port,
                 context.Path)</MudTd>
             <MudTd DataLabel="State">
                 <MudChip T="string"
@@ -48,7 +48,7 @@ else
                 </MudChip>
             </MudTd>
             <MudTd DataLabel="Recording">
-                @if (context.IsRecording ?? false)
+                @if (context.IsRecording)
                 {
                     <MudChip T="string" Size="Size.Small" Color="Color.Error">Recording</MudChip>
                 }
@@ -64,7 +64,7 @@ else
                                    Size="Size.Small"
                                    OnClick="@(() => CaptureSnapshotAsync(context))" />
                 </MudTooltip>
-                @if (context.IsRecording ?? false)
+                @if (context.IsRecording)
                 {
                     <MudTooltip Text="Stop recording">
                         <MudIconButton Icon="@Icons.Material.Filled.Stop"

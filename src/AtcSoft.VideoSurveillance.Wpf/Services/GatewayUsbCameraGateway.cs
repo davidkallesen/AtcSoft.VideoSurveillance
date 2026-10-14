@@ -53,7 +53,7 @@ public sealed class GatewayUsbCameraGateway : IUsbCameraGateway
                 {
                     Width = c.Width,
                     Height = c.Height,
-                    FrameRate = c.FrameRate ?? 0,
+                    FrameRate = c.FrameRate,
                     PixelFormat = c.PixelFormat ?? string.Empty,
                 });
             }
@@ -64,7 +64,7 @@ public sealed class GatewayUsbCameraGateway : IUsbCameraGateway
             friendlyName: api.FriendlyName,
             vendorId: string.IsNullOrEmpty(api.VendorId) ? null : api.VendorId,
             productId: string.IsNullOrEmpty(api.ProductId) ? null : api.ProductId,
-            isPresent: api.IsPresent ?? false,
+            isPresent: api.IsPresent,
             capabilities: caps);
     }
 }
