@@ -210,26 +210,12 @@ public sealed partial class ServerConnectionDialogViewModel : ObservableObject
         IsTesting = true;
         ConnectionStatus = "Testing...";
 
-        var url = ServerUrl.TrimEnd('/');
-
         try
         {
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-            var response = await httpClient
-                .GetAsync(new Uri($"{url}/api/v1/cameras"))
+            ConnectionStatus = await ServerConnectionProbe
+                .TestAsync(httpClient, new Uri(ServerUrl))
                 .ConfigureAwait(true);
-
-            ConnectionStatus = response.IsSuccessStatusCode
-                ? $"Connected ({(int)response.StatusCode})"
-                : $"Failed: {(int)response.StatusCode} {response.ReasonPhrase}";
-        }
-        catch (TaskCanceledException)
-        {
-            ConnectionStatus = "Failed: Connection timed out";
-        }
-        catch (HttpRequestException ex)
-        {
-            ConnectionStatus = $"Failed: {ex.Message}";
         }
         catch (Exception ex)
         {
