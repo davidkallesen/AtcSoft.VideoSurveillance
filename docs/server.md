@@ -78,6 +78,32 @@ The states are written as the REST API writes them: `connected`, `deviceUnplugge
 
 ---
 
+## 🌊 Events
+
+`GET /events` is what the hub sends to every client - connection, recording, motion and USB events - as one stream of Server-Sent Events, readable without a SignalR client:
+
+```bash
+curl -N "http://localhost:5000/events?cameraId=47c2d0ad-b1c1-424f-91de-70d7ef99b279"
+```
+
+```text
+event: ping
+data:
+
+id: 412
+data: {"type":"recordingStateChanged","cameraId":"47c2d0ad-...","timestamp":"2026-10-15T09:00:00+00:00","recording":{"cameraId":"47c2d0ad-...","newState":"recording","oldState":"idle","filePath":"...","timestamp":"..."}}
+```
+
+- **One model:** `SurveillanceEvent` has a `type` (`connectionStateChanged`, `recordingStateChanged`, `motionDetected`, `usbCameraLifecycleChanged` - the hub's names) and the matching part (`connection`, `recording`, `motion`, `usb`), the hub's own payload.
+- **Resume:** every event has an id. Send the last one you read as `Last-Event-ID` and the stream goes on after it, from a buffer of the latest 256 events; `X-Events-Missed` says how many the buffer no longer had.
+- **Heartbeat:** a named `ping` event at once and then after `heartbeatSeconds` (15) without an event, so a proxy does not close the idle connection. The generated clients read past it.
+- **A slow reader** is cut off and resumes; it never holds up the others.
+- **Filter:** `?cameraId=` for one camera.
+
+The web client's dashboard reads it (`EventStreamService`, which resumes by itself); the other pages and the desktop client use the hub.
+
+---
+
 ## 📼 Recordings and thumbnails
 
 `GET /recordings` lists the recordings, newest first. Each entry has:
