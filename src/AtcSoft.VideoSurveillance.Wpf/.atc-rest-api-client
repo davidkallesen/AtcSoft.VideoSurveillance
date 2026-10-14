@@ -3,5 +3,6 @@
     "validateSpecificationStrategy": "Standard",
     "includeDeprecated": false,
     "generationMode": "EndpointPerOperation",
-    "extensibleEnums": false
+    "extensibleEnums": false,
+    "readEnumMemberNames": true
 }

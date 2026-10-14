@@ -1,5 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/atc-net/atc-rest-api-source-generator/main/schemas/atc-rest-api-server.schema.json",
     "validateSpecificationStrategy": "Standard",
-    "includeDeprecated": false
+    "includeDeprecated": false,
+    "readEnumMemberNames": true
 }

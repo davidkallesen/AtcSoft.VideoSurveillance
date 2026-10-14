@@ -30,8 +30,7 @@ public sealed class DeleteRecordingHandler(
             RecordingRemovalOutcome.InProgress => DeleteRecordingResult.Conflict(
                 "This recording is still being made. Stop the recording, or wait for it to end, and delete it then."),
             RecordingRemovalOutcome.NotFound => DeleteRecordingResult.NotFound("There is no such recording."),
-            _ => DeleteRecordingResult.BadRequest(
-                new ProblemDetails { Detail = "The path does not name a recording." }),
+            _ => DeleteRecordingResult.BadRequest("The path does not name a recording."),
         });
     }
 }

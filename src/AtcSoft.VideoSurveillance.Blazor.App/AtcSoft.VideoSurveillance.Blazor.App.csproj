@@ -3,9 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <!-- The spec declares ProblemDetails so the server's error factories take the framework type (generator v3,
-         Upgrading to v3); this client generates its own ProblemDetails, so the schema is skipped on purpose. -->
-    <NoWarn>$(NoWarn);ATC_API_SCH021</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.e6413984" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.869c5746" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

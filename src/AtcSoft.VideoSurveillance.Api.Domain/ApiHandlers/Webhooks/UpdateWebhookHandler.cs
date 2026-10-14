@@ -19,7 +19,7 @@ public sealed class UpdateWebhookHandler(
         {
             WebhookChangeOutcome.Done when webhook is not null => UpdateWebhookResult.Ok(webhook.ToApiModel()),
             WebhookChangeOutcome.NotEditable => UpdateWebhookResult.Conflict("This receiver comes from the server's configuration and is changed there."),
-            WebhookChangeOutcome.InvalidAddress => UpdateWebhookResult.BadRequest(new ProblemDetails { Detail = "A receiver needs an http or https address." }),
+            WebhookChangeOutcome.InvalidAddress => UpdateWebhookResult.BadRequest("A receiver needs an http or https address."),
             _ => UpdateWebhookResult.NotFound($"Receiver {parameters.WebhookId} not found."),
         });
     }

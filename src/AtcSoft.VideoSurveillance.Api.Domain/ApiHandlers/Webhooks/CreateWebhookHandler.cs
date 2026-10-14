@@ -17,6 +17,6 @@ public sealed class CreateWebhookHandler(
 
         return Task.FromResult(outcome == WebhookChangeOutcome.Done && webhook is not null
             ? CreateWebhookResult.Created(webhook.ToApiModel())
-            : CreateWebhookResult.BadRequest(new ProblemDetails { Detail = "A receiver needs an http or https address." }));
+            : CreateWebhookResult.BadRequest("A receiver needs an http or https address."));
     }
 }

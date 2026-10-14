@@ -42,7 +42,9 @@ Every error the server answers is an [RFC 9457](https://www.rfc-editor.org/rfc/r
 - An unhandled exception is a 500 problem without the exception's text. In Development the developer exception page shows it instead.
 - A snapshot of a camera that exists but gives no picture is 503; 404 is a camera the server does not know.
 
-In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` take the message, `BadRequest` takes a `ProblemDetails` (`new ProblemDetails { Detail = "…" }`).
+In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` and `BadRequest("…")` take the message.
+
+An enum is written as the specification writes it: `rtsp`, `topLeft`, `rotate90`. Clients built on generator 2.x sent the C# member name (`Rtsp`, `TopLeft`), so the server reads that too (`"readEnumMemberNames": true` in the server marker); the clients read a member name from a 2.x server the same way. This is for the rollout, and goes once every client and server is on v3.
 
 ---
 

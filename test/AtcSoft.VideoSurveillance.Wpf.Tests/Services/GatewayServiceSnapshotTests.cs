@@ -13,7 +13,7 @@ public sealed class GatewayServiceSnapshotTests
     public async Task A_Snapshot_Is_The_Picture_The_Server_Sent()
     {
         using var png = new ByteArrayContent(Png);
-        using var server = new SnapshotServer(HttpStatusCode.OK, png, "image/png");
+        using var server = new GatewayTestServer(HttpStatusCode.OK, png, "image/png");
 
         var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
@@ -24,45 +24,10 @@ public sealed class GatewayServiceSnapshotTests
     public async Task A_Camera_That_Gives_No_Picture_Gives_No_Snapshot()
     {
         using var problem = new StringContent("""{"status":503,"detail":"Camera did not reach Connected within 15s."}""");
-        using var server = new SnapshotServer(HttpStatusCode.ServiceUnavailable, problem, "application/problem+json");
+        using var server = new GatewayTestServer(HttpStatusCode.ServiceUnavailable, problem, "application/problem+json");
 
         var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         picture.Should().BeNull();
-    }
-
-    private sealed class SnapshotServer : IDisposable
-    {
-        private readonly ServiceProvider services;
-
-        public SnapshotServer(
-            HttpStatusCode status,
-            HttpContent content,
-            string mediaType)
-        {
-            content.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
-            var collection = new ServiceCollection();
-            collection
-                .AddHttpClient(Constants.HttpClientName, c => c.BaseAddress = new Uri("http://server.test"))
-                .ConfigurePrimaryHttpMessageHandler(() => new AnswerHandler(status, content));
-            collection.AddVideoSurveillanceEndpoints();
-            services = collection.BuildServiceProvider();
-            Gateway = ActivatorUtilities.CreateInstance<GatewayService>(services);
-        }
-
-        public GatewayService Gateway { get; }
-
-        public void Dispose()
-            => services.Dispose();
-    }
-
-    private sealed class AnswerHandler(
-        HttpStatusCode status,
-        HttpContent content) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-            => Task.FromResult(new HttpResponseMessage(status) { Content = content, RequestMessage = request });
     }
 }
