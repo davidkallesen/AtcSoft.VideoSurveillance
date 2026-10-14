@@ -80,8 +80,7 @@ public sealed class RemoteUsbCameraWatcher : IUsbCameraWatcher
         disposed = true;
     }
 
-    private void OnLifecycleChanged(
-        SurveillanceHubService.UsbCameraLifecycleEvent e)
+    private void OnLifecycleChanged(UsbCameraLifecycleEvent e)
     {
         // Synthesize a descriptor from the SignalR payload so consumers
         // get a fully-qualified UsbDeviceDescriptor matching the same
@@ -91,15 +90,15 @@ public sealed class RemoteUsbCameraWatcher : IUsbCameraWatcher
         var descriptor = new UsbDeviceDescriptor(
             deviceId: string.IsNullOrEmpty(e.DeviceId) ? Guid.NewGuid().ToString() : e.DeviceId,
             friendlyName: e.FriendlyName ?? string.Empty,
-            isPresent: string.Equals(e.Phase, "Replugged", StringComparison.OrdinalIgnoreCase));
+            isPresent: e.Phase == UsbCameraLifecyclePhase.Replugged);
 
         var args = new UsbCameraEventArgs(descriptor);
 
-        if (string.Equals(e.Phase, "Replugged", StringComparison.OrdinalIgnoreCase))
+        if (e.Phase == UsbCameraLifecyclePhase.Replugged)
         {
             DeviceArrived?.Invoke(this, args);
         }
-        else if (string.Equals(e.Phase, "Unplugged", StringComparison.OrdinalIgnoreCase))
+        else if (e.Phase == UsbCameraLifecyclePhase.Unplugged)
         {
             DeviceRemoved?.Invoke(this, args);
         }

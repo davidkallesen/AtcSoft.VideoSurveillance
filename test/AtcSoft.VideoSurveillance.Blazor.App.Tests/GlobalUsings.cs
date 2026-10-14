@@ -8,5 +8,6 @@ global using Microsoft.Extensions.DependencyInjection;
 global using VideoSurveillance.Generated;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Devices.Models;
+global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Settings.Models;

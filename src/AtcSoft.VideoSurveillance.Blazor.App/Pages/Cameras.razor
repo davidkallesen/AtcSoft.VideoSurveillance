@@ -121,7 +121,7 @@ else
         isLoading = false;
     }
 
-    private void OnConnectionStateChanged(SurveillanceHubService.ConnectionStateEvent e)
+    private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         InvokeAsync(() =>
         {
@@ -136,7 +136,7 @@ else
                 {
                     cameras[i] = cameras[i] with
                     {
-                        ConnectionState = CameraStateText.Parse(e.NewState) ?? cameras[i].ConnectionState,
+                        ConnectionState = e.NewState,
                     };
                     break;
                 }
@@ -146,7 +146,7 @@ else
         });
     }
 
-    private void OnRecordingStateChanged(SurveillanceHubService.RecordingStateEvent e)
+    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
     {
         InvokeAsync(() =>
         {

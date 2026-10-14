@@ -59,9 +59,9 @@ public class RemoteUsbCameraWatcherTests
         var captured = new List<UsbCameraEventArgs>();
         watcher.DeviceArrived += (_, e) => captured.Add(e);
 
-        channel.Raise(new SurveillanceHubService.UsbCameraLifecycleEvent(
+        channel.Raise(new UsbCameraLifecycleEvent(
             CameraId: Guid.NewGuid(),
-            Phase: "Replugged",
+            Phase: new UsbCameraLifecyclePhase("Replugged"),
             DeviceId: @"\\?\usb#vid_046d&pid_085e",
             FriendlyName: "Logitech BRIO",
             Timestamp: DateTimeOffset.UtcNow));
@@ -82,9 +82,9 @@ public class RemoteUsbCameraWatcherTests
         var captured = new List<UsbCameraEventArgs>();
         watcher.DeviceRemoved += (_, e) => captured.Add(e);
 
-        channel.Raise(new SurveillanceHubService.UsbCameraLifecycleEvent(
+        channel.Raise(new UsbCameraLifecycleEvent(
             CameraId: Guid.NewGuid(),
-            Phase: "Unplugged",
+            Phase: new UsbCameraLifecyclePhase("Unplugged"),
             DeviceId: "abc",
             FriendlyName: "Cam",
             Timestamp: DateTimeOffset.UtcNow));
@@ -192,9 +192,9 @@ public class RemoteUsbCameraWatcherTests
         var captured = new List<UsbCameraEventArgs>();
         watcher.DeviceArrived += (_, e) => captured.Add(e);
 
-        channel.Raise(new SurveillanceHubService.UsbCameraLifecycleEvent(
+        channel.Raise(new UsbCameraLifecycleEvent(
             CameraId: Guid.NewGuid(),
-            Phase: "Replugged",
+            Phase: new UsbCameraLifecyclePhase("Replugged"),
             DeviceId: string.Empty,
             FriendlyName: "Cam",
             Timestamp: DateTimeOffset.UtcNow));
@@ -211,23 +211,22 @@ public class RemoteUsbCameraWatcherTests
         act.Should().Throw<ArgumentNullException>();
     }
 
-    private static SurveillanceHubService.UsbCameraLifecycleEvent SamplePayload(
-        string phase)
+    private static UsbCameraLifecycleEvent SamplePayload(string phase)
         => new(
             CameraId: Guid.NewGuid(),
-            Phase: phase,
+            Phase: new UsbCameraLifecyclePhase(phase),
             DeviceId: "device",
             FriendlyName: "Cam",
             Timestamp: DateTimeOffset.UtcNow);
 
     private sealed class FakeChannel : IUsbLifecycleHubChannel
     {
-        public event Action<SurveillanceHubService.UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
+        public event Action<UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
 
         public int SubscriberCount
             => UsbCameraLifecycleChanged?.GetInvocationList().Length ?? 0;
 
-        public void Raise(SurveillanceHubService.UsbCameraLifecycleEvent e)
+        public void Raise(UsbCameraLifecycleEvent e)
             => UsbCameraLifecycleChanged?.Invoke(e);
     }
 }

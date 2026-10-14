@@ -1,17 +1,15 @@
 namespace AtcSoft.VideoSurveillance.Api.Hubs;
 
 /// <summary>
-/// SignalR hub for real-time surveillance events.
-/// Broadcasts camera connection changes, recording state, and motion detection events.
-/// Provides client-to-server methods for camera control.
+/// SignalR hub for real-time surveillance events and camera control.
 /// </summary>
 /// <remarks>
-/// Server-to-client events (broadcast by <see cref="SurveillanceEventBroadcaster"/>):
-/// - ConnectionStateChanged { CameraId, NewState, Timestamp }
-/// - MotionDetected { CameraId, IsMotionActive, BoundingBoxes[], AnalysisWidth, AnalysisHeight }
-/// - RecordingStateChanged { CameraId, NewState, OldState, FilePath }
+/// The hub is declared in the specification (<c>x-signalr-hubs</c>): the events
+/// (<see cref="ISurveillanceHubClient"/>, most of them sent by
+/// <see cref="SurveillanceEventBroadcaster"/>) and the methods
+/// (<see cref="ISurveillanceHub"/>) and what they carry are generated from it.
 /// </remarks>
-public sealed partial class SurveillanceHub : Hub
+public sealed partial class SurveillanceHub : Hub<ISurveillanceHubClient>, ISurveillanceHub
 {
     // How long a USB camera that had to be opened for a recording gets to
     // deliver its first picture.
@@ -72,7 +70,7 @@ public sealed partial class SurveillanceHub : Hub
         if (camera is null)
         {
             await Clients.Caller
-                .SendAsync("Error", $"Camera {cameraId} not found.")
+                .Error($"Camera {cameraId} not found.")
                 .ConfigureAwait(false);
             return;
         }
@@ -80,7 +78,7 @@ public sealed partial class SurveillanceHub : Hub
         if (recordingService.IsRecording(cameraId))
         {
             await Clients.Caller
-                .SendAsync("Error", $"Camera {cameraId} is already recording.")
+                .Error($"Camera {cameraId} is already recording.")
                 .ConfigureAwait(false);
             return;
         }
@@ -95,7 +93,7 @@ public sealed partial class SurveillanceHub : Hub
             if (outcome != HostedCameraRecordingOutcome.Started)
             {
                 await Clients.Caller
-                    .SendAsync("Error", HostedCameraRecording.Describe(outcome, HostedCameraTimeout))
+                    .Error(HostedCameraRecording.Describe(outcome, HostedCameraTimeout))
                     .ConfigureAwait(false);
             }
 
@@ -135,10 +133,8 @@ public sealed partial class SurveillanceHub : Hub
     /// </summary>
     public Task SwapCameras(
         Guid cameraId,
-        SwapDirection direction)
-        => Clients.All.SendAsync(
-            "CameraSwapRequested",
-            new { CameraId = cameraId, Direction = direction.ToString() });
+        HubSwapDirection direction)
+        => Clients.All.CameraSwapRequested(new CameraSwapRequestedEvent(cameraId, direction));
 
     /// <summary>
     /// Starts HLS streaming for a camera. Returns the playlist URL.
@@ -205,10 +201,7 @@ public sealed partial class SurveillanceHub : Hub
                 playlistPath).Replace('\\', '/');
 
             await Clients.Caller
-                .SendAsync(
-                    "StreamStarted",
-                    new { CameraId = cameraId, PlaylistUrl = $"/streams/{relativePath}" },
-                    cancellationToken)
+                .StreamStarted(new StreamStartedEvent(cameraId, $"/streams/{relativePath}"))
                 .ConfigureAwait(false);
         }
         catch (Exception ex)

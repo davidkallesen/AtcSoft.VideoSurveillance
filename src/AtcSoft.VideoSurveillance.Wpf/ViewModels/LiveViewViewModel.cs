@@ -1,4 +1,3 @@
-using ConnectionState = Atc.Network.ConnectionState;
 using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;
 using UsbCameraEventArgs = AtcSoft.VideoSurveillance.Events.UsbCameraEventArgs;
 
@@ -299,7 +298,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                         CameraId = camera.Id,
                         DisplayName = camera.DisplayName,
                         Description = camera.Description ?? string.Empty,
-                        ConnectionState = MapApiConnectionState(camera.ConnectionState),
+                        ConnectionState = HubStates.ToConnectionState(camera.ConnectionState),
                         IsRecording = camera.IsRecording,
                         UsbDeviceId = camera.UsbDeviceId ?? string.Empty,
                         ConnectionType = camera.ConnectionType.ToCoreConnectionType(),
@@ -441,15 +440,4 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
 
         CameraTiles.Clear();
     }
-
-    private static ConnectionState MapApiConnectionState(
-        CameraConnectionState? apiState)
-        => apiState?.Value switch
-        {
-            CameraConnectionState.Names.Connected => ConnectionState.Connected,
-            CameraConnectionState.Names.Connecting => ConnectionState.Connecting,
-            CameraConnectionState.Names.Reconnecting => ConnectionState.Reconnecting,
-            CameraConnectionState.Names.Error => ConnectionState.ConnectionFailed,
-            _ => ConnectionState.Disconnected,
-        };
 }

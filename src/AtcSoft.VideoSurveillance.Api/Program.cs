@@ -359,7 +359,7 @@ try
     });
 
     // Map SignalR hub for real-time surveillance events
-    app.MapHub<SurveillanceHub>("/hubs/surveillance");
+    app.MapHub<SurveillanceHub>(SurveillanceHubContract.Url);
 
     // Bring the recording folder in line with the layout settings, in the
     // background: this catches a layout changed while the server was down and

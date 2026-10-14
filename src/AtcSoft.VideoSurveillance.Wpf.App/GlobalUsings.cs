@@ -38,6 +38,7 @@ global using AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Resources;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Extensions;
+global using AtcSoft.VideoSurveillance.Wpf.Helpers;
 global using AtcSoft.VideoSurveillance.Wpf.Models;
 global using AtcSoft.VideoSurveillance.Wpf.Services;
 global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
@@ -53,6 +54,7 @@ global using Serilog.Events;
 
 global using VideoSurveillance.Generated;
 global using VideoSurveillance.Generated.Cameras.Models;
+global using VideoSurveillance.Generated.Models;
 
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using IApplicationSettingsService = AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;

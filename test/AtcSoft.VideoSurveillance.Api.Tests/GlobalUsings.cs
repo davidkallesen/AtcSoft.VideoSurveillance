@@ -34,6 +34,7 @@ global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Cameras.Parameters;
 global using VideoSurveillance.Generated.Layouts.Models;
 global using VideoSurveillance.Generated.Layouts.Parameters;
+global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Recordings.Parameters;
 global using VideoSurveillance.Generated.Settings.Models;

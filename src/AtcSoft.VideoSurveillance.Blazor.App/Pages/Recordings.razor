@@ -193,7 +193,7 @@
     private void ApplyFilter()
         => visible = [.. filter.Apply(recordings, DateTimeOffset.Now)];
 
-    private void OnRecordingStateChanged(SurveillanceHubService.RecordingStateEvent e)
+    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
     {
         // A recording started, stopped or began a new file: the list changed.
         // Several events arrive together at a segment switch; reload once.

@@ -19,7 +19,7 @@ public sealed class GatewayServiceEnumWireTests
         camera!.Protocol.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraProtocol.Rtsp);
         camera.Rotation.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraRotation.Rotate90);
         camera.OverlayPosition.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraOverlayPosition.TopLeft);
-        camera.ConnectionState.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState.Connected);
+        camera.ConnectionState.Should().Be(global::VideoSurveillance.Generated.Models.CameraConnectionState.Connected);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class GatewayServiceEnumWireTests
         var camera = await server.Gateway.GetCameraByIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         camera!.Protocol.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraProtocol.Rtsp);
-        camera.ConnectionState.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState.Connected);
+        camera.ConnectionState.Should().Be(global::VideoSurveillance.Generated.Models.CameraConnectionState.Connected);
     }
 
     [Fact]

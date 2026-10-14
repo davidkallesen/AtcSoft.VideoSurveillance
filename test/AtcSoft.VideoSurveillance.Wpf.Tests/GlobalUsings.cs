@@ -17,4 +17,5 @@ global using Microsoft.Extensions.Http.Resilience;
 global using Microsoft.Extensions.Options;
 global using Microsoft.Extensions.Time.Testing;
 global using VideoSurveillance.Generated;
+global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Settings.Models;

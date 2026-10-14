@@ -7,8 +7,8 @@ namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 public sealed class CameraItemViewModelStateTests
 {
     [Theory]
-    [InlineData(global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState.Names.Connected, "Connected")]
-    [InlineData(global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState.Names.DeviceUnplugged, "DeviceUnplugged")]
+    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.Connected, "Connected")]
+    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.DeviceUnplugged, "DeviceUnplugged")]
     [InlineData("rebooting", "Rebooting")]
     public void The_State_Is_Written_As_The_Hub_Writes_It(
         string state,
@@ -16,7 +16,7 @@ public sealed class CameraItemViewModelStateTests
     {
         var camera = TestCameras.Network() with
         {
-            ConnectionState = new global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState(state),
+            ConnectionState = new global::VideoSurveillance.Generated.Models.CameraConnectionState(state),
         };
 
         CameraItemViewModel.FromCamera(camera).ConnectionState.Should().Be(expected);

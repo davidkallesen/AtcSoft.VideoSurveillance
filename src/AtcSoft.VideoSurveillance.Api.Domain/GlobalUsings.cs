@@ -4,8 +4,9 @@ global using System.Globalization;
 global using System.Threading;
 global using System.Threading.Tasks;
 
-global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
+global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Services;
 
@@ -20,6 +21,7 @@ global using VideoSurveillance.Generated.Layouts.Handlers;
 global using VideoSurveillance.Generated.Layouts.Models;
 global using VideoSurveillance.Generated.Layouts.Parameters;
 global using VideoSurveillance.Generated.Layouts.Results;
+global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Recordings.Handlers;
 global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Recordings.Parameters;

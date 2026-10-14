@@ -8,9 +8,6 @@
 /// </summary>
 public sealed class CameraStatusBoard
 {
-    private const string ConnectedState = "Connected";
-    private const string RecordingStatePrefix = "Recording";
-
     private readonly Dictionary<Guid, Status> cameras = [];
 
     /// <summary>
@@ -48,22 +45,22 @@ public sealed class CameraStatusBoard
     /// </summary>
     public void ApplyConnectionState(
         Guid cameraId,
-        string? newState)
+        CameraConnectionState newState)
     {
         var status = cameras.GetValueOrDefault(cameraId);
         cameras[cameraId] = status with
         {
-            IsConnected = string.Equals(newState, ConnectedState, StringComparison.OrdinalIgnoreCase),
+            IsConnected = newState == CameraConnectionState.Connected,
         };
     }
 
     /// <summary>
-    /// Applies a recording state reported by the server. Every state that
-    /// starts with "Recording" (plain, on motion, after motion) is recording.
+    /// Applies a recording state reported by the server. Every state but idle
+    /// (plain, on motion, after motion) is recording.
     /// </summary>
     public void ApplyRecordingState(
         Guid cameraId,
-        string? newState)
+        RecordingStatusState newState)
     {
         var status = cameras.GetValueOrDefault(cameraId);
         cameras[cameraId] = status with
@@ -85,11 +82,13 @@ public sealed class CameraStatusBoard
         => cameras.GetValueOrDefault(cameraId).IsRecording;
 
     /// <summary>
-    /// Gets a value indicating whether a recording state name means the camera is recording.
+    /// Gets a value indicating whether a recording state means the camera is recording;
+    /// a state this client does not know yet does not.
     /// </summary>
-    public static bool IsRecordingState(string? state)
-        => state is not null &&
-           state.StartsWith(RecordingStatePrefix, StringComparison.OrdinalIgnoreCase);
+    public static bool IsRecordingState(RecordingStatusState state)
+        => state.Value is RecordingStatusState.Names.Recording
+            or RecordingStatusState.Names.RecordingMotion
+            or RecordingStatusState.Names.RecordingPostMotion;
 
     private readonly record struct Status(bool IsConnected, bool IsRecording);
 }

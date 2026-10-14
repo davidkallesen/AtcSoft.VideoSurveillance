@@ -440,12 +440,11 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void OnConnectionStateChanged(
-        SurveillanceHubService.ConnectionStateEvent e)
+    private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
-            if (string.Equals(e.NewState, "connected", StringComparison.OrdinalIgnoreCase))
+            if (e.NewState == CameraConnectionState.Connected)
             {
                 ConnectedCameras++;
             }
@@ -456,18 +455,15 @@ public partial class MainWindowViewModel : ViewModelBase
         });
     }
 
-    private void OnRecordingStateChanged(
-        SurveillanceHubService.RecordingStateEvent e)
+    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
     {
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
-            if (string.Equals(e.NewState, "recording", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(e.NewState, "recordingMotion", StringComparison.OrdinalIgnoreCase))
+            if (HubStates.IsRecording(e.NewState) && !HubStates.IsRecording(e.OldState))
             {
                 ActiveRecordings++;
             }
-            else if (string.Equals(e.OldState, "recording", StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(e.OldState, "recordingMotion", StringComparison.OrdinalIgnoreCase))
+            else if (!HubStates.IsRecording(e.NewState) && HubStates.IsRecording(e.OldState))
             {
                 ActiveRecordings = Math.Max(0, ActiveRecordings - 1);
             }

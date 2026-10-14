@@ -29,8 +29,8 @@ public sealed class CameraStatusBoardTests
         var sut = new CameraStatusBoard();
         sut.Load([(Front, IsConnected: false, IsRecording: false)]);
 
-        sut.ApplyConnectionState(Front, "Connected");
-        sut.ApplyConnectionState(Front, "Connected");
+        sut.ApplyConnectionState(Front, new CameraConnectionState("Connected"));
+        sut.ApplyConnectionState(Front, new CameraConnectionState("Connected"));
 
         sut.ConnectedCount.Should().Be(1);
     }
@@ -45,7 +45,7 @@ public sealed class CameraStatusBoardTests
         var sut = new CameraStatusBoard();
         sut.Load([(Front, IsConnected: true, IsRecording: false)]);
 
-        sut.ApplyConnectionState(Front, state);
+        sut.ApplyConnectionState(Front, new CameraConnectionState(state));
 
         sut.ConnectedCount.Should().Be(0);
     }
@@ -58,8 +58,8 @@ public sealed class CameraStatusBoardTests
         var sut = new CameraStatusBoard();
         sut.Load([(Front, IsConnected: true, IsRecording: true)]);
 
-        sut.ApplyRecordingState(Front, "Idle");
-        sut.ApplyRecordingState(Front, "Recording");
+        sut.ApplyRecordingState(Front, new RecordingStatusState("Idle"));
+        sut.ApplyRecordingState(Front, new RecordingStatusState("Recording"));
 
         sut.RecordingCount.Should().Be(1);
     }
@@ -71,15 +71,15 @@ public sealed class CameraStatusBoardTests
     [InlineData("recording", true)]
     [InlineData("Idle", false)]
     [InlineData("", false)]
-    [InlineData(null, false)]
+    [InlineData("paused", false)]
     public void Every_Recording_State_Counts_As_Recording(
-        string? state,
+        string state,
         bool expected)
     {
         var sut = new CameraStatusBoard();
         sut.Load([(Front, IsConnected: true, IsRecording: !expected)]);
 
-        sut.ApplyRecordingState(Front, state);
+        sut.ApplyRecordingState(Front, new RecordingStatusState(state));
 
         sut.IsRecording(Front).Should().Be(expected);
     }
@@ -90,7 +90,7 @@ public sealed class CameraStatusBoardTests
         var sut = new CameraStatusBoard();
         sut.Load([(Front, IsConnected: false, IsRecording: false)]);
 
-        sut.ApplyConnectionState(Garden, "Connected");
+        sut.ApplyConnectionState(Garden, new CameraConnectionState("Connected"));
 
         sut.CameraCount.Should().Be(2);
         sut.ConnectedCount.Should().Be(1);

@@ -7,7 +7,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 /// </summary>
 public interface IUsbLifecycleHubChannel
 {
-    event Action<SurveillanceHubService.UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
+    event Action<UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
 }
 
 /// <summary>
@@ -29,8 +29,8 @@ public sealed class SurveillanceHubLifecycleChannel : IUsbLifecycleHubChannel
         hubService.OnUsbCameraLifecycleChanged += Forward;
     }
 
-    public event Action<SurveillanceHubService.UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
+    public event Action<UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
 
-    private void Forward(SurveillanceHubService.UsbCameraLifecycleEvent e)
+    private void Forward(UsbCameraLifecycleEvent e)
         => UsbCameraLifecycleChanged?.Invoke(e);
 }

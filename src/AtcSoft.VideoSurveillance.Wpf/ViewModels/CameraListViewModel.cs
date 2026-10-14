@@ -319,30 +319,26 @@ public partial class CameraListViewModel : ViewModelBase
         }
     }
 
-    private void OnConnectionStateChanged(
-        SurveillanceHubService.ConnectionStateEvent e)
+    private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
             var camera = Cameras.FirstOrDefault(c => c.Id == e.CameraId);
             if (camera is not null)
             {
-                camera.ConnectionState = e.NewState;
+                camera.ConnectionState = HubStates.ToText(e.NewState);
             }
         });
     }
 
-    private void OnRecordingStateChanged(
-        SurveillanceHubService.RecordingStateEvent e)
+    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
     {
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
             var camera = Cameras.FirstOrDefault(c => c.Id == e.CameraId);
             if (camera is not null)
             {
-                camera.IsRecording =
-                    string.Equals(e.NewState, "recording", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(e.NewState, "recordingMotion", StringComparison.OrdinalIgnoreCase);
+                camera.IsRecording = HubStates.IsRecording(e.NewState);
             }
         });
     }

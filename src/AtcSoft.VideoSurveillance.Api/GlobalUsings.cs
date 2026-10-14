@@ -8,6 +8,7 @@ global using System.Text.Json.Serialization;
 global using Atc.Hosting;
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers;
+global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Api.Hubs;
 global using AtcSoft.VideoSurveillance.Api.Services;
@@ -27,3 +28,8 @@ global using Scalar.AspNetCore;
 global using Serilog;
 global using VideoSurveillance;
 global using VideoSurveillance.Generated.Extensions;
+global using VideoSurveillance.Generated.Hubs;
+
+global using CameraSwapRequestedEvent = VideoSurveillance.Generated.Models.CameraSwapRequestedEvent;
+global using HubSwapDirection = VideoSurveillance.Generated.Models.SwapDirection;
+global using StreamStartedEvent = VideoSurveillance.Generated.Models.StreamStartedEvent;

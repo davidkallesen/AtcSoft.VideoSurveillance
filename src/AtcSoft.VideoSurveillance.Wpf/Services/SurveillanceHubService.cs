@@ -3,11 +3,9 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 /// <summary>
 /// Service for connecting to the SignalR surveillance hub.
 /// Provides real-time camera events: connection state, recording, motion, and streaming.
+/// The events, the methods and what they carry are the generated
+/// <see cref="SurveillanceHubClient"/>, from the hub in the specification.
 /// </summary>
-[SuppressMessage(
-    "Design",
-    "CA1034:Nested types should not be visible",
-    Justification = "Event payload records are local to this service.")]
 [SuppressMessage(
     "Design",
     "CA1054:URI parameters should not be strings",
@@ -27,11 +25,12 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 public sealed class SurveillanceHubService : IAsyncDisposable
 {
     private HubConnection? hubConnection;
+    private SurveillanceHubClient? hub;
     private Func<Task>? stopConnecting;
 
-    public event Action<ConnectionStateEvent>? OnConnectionStateChanged;
+    public event Action<ConnectionStateChangedEvent>? OnConnectionStateChanged;
 
-    public event Action<RecordingStateEvent>? OnRecordingStateChanged;
+    public event Action<RecordingStateChangedEvent>? OnRecordingStateChanged;
 
     public event Action<MotionDetectedEvent>? OnMotionDetected;
 
@@ -73,37 +72,20 @@ public sealed class SurveillanceHubService : IAsyncDisposable
             return;
         }
 
-        var hubUrl = $"{ApiBaseUrl}/hubs/surveillance";
+        var hubUrl = $"{ApiBaseUrl.TrimEnd('/')}{SurveillanceHubClient.Url}";
 
         hubConnection = new HubConnectionBuilder()
             .WithUrl(hubUrl)
             .WithAutomaticReconnect(new HubReconnectPolicy())
             .Build();
 
-        hubConnection.On<ConnectionStateEvent>("ConnectionStateChanged", e =>
-        {
-            OnConnectionStateChanged?.Invoke(e);
-        });
-
-        hubConnection.On<RecordingStateEvent>("RecordingStateChanged", e =>
-        {
-            OnRecordingStateChanged?.Invoke(e);
-        });
-
-        hubConnection.On<MotionDetectedEvent>("MotionDetected", e =>
-        {
-            OnMotionDetected?.Invoke(e);
-        });
-
-        hubConnection.On<StreamStartedEvent>("StreamStarted", e =>
-        {
-            OnStreamStarted?.Invoke(e);
-        });
-
-        hubConnection.On<UsbCameraLifecycleEvent>("UsbCameraLifecycleChanged", e =>
-        {
-            OnUsbCameraLifecycleChanged?.Invoke(e);
-        });
+        // The subscriptions live as long as the connection: both are disposed together.
+        hub = new SurveillanceHubClient(hubConnection);
+        hub.OnConnectionStateChanged(e => OnConnectionStateChanged?.Invoke(e));
+        hub.OnRecordingStateChanged(e => OnRecordingStateChanged?.Invoke(e));
+        hub.OnMotionDetected(e => OnMotionDetected?.Invoke(e));
+        hub.OnStreamStarted(e => OnStreamStarted?.Invoke(e));
+        hub.OnUsbCameraLifecycleChanged(e => OnUsbCameraLifecycleChanged?.Invoke(e));
 
         hubConnection.Reconnecting += _ =>
         {
@@ -183,50 +165,50 @@ public sealed class SurveillanceHubService : IAsyncDisposable
 
     public async Task StartRecordingAsync(Guid cameraId)
     {
-        if (hubConnection?.State == HubConnectionState.Connected)
+        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
         {
-            await hubConnection
-                .InvokeAsync("StartRecording", cameraId)
+            await hub
+                .StartRecordingAsync(cameraId)
                 .ConfigureAwait(false);
         }
     }
 
     public async Task StopRecordingAsync(Guid cameraId)
     {
-        if (hubConnection?.State == HubConnectionState.Connected)
+        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
         {
-            await hubConnection
-                .InvokeAsync("StopRecording", cameraId)
+            await hub
+                .StopRecordingAsync(cameraId)
                 .ConfigureAwait(false);
         }
     }
 
     public async Task StartStreamAsync(Guid cameraId)
     {
-        if (hubConnection?.State == HubConnectionState.Connected)
+        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
         {
-            await hubConnection
-                .InvokeAsync("StartStream", cameraId)
+            await hub
+                .StartStreamAsync(cameraId)
                 .ConfigureAwait(false);
         }
     }
 
     public async Task StopStreamAsync(Guid cameraId)
     {
-        if (hubConnection?.State == HubConnectionState.Connected)
+        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
         {
-            await hubConnection
-                .InvokeAsync("StopStream", cameraId)
+            await hub
+                .StopStreamAsync(cameraId)
                 .ConfigureAwait(false);
         }
     }
 
     public async Task StreamHeartbeatAsync(Guid cameraId)
     {
-        if (hubConnection?.State == HubConnectionState.Connected)
+        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
         {
-            await hubConnection
-                .InvokeAsync("StreamHeartbeat", cameraId)
+            await hub
+                .StreamHeartbeatAsync(cameraId)
                 .ConfigureAwait(false);
         }
     }
@@ -242,6 +224,12 @@ public sealed class SurveillanceHubService : IAsyncDisposable
             }
 
             await hubConnection.StopAsync().ConfigureAwait(false);
+            if (hub is not null)
+            {
+                await hub.DisposeAsync().ConfigureAwait(false);
+                hub = null;
+            }
+
             await hubConnection.DisposeAsync().ConfigureAwait(false);
             hubConnection = null;
             OnHubConnectionStateChanged?.Invoke("Disconnected");
@@ -252,35 +240,4 @@ public sealed class SurveillanceHubService : IAsyncDisposable
     {
         await DisconnectAsync().ConfigureAwait(false);
     }
-
-    public sealed record ConnectionStateEvent(Guid CameraId, string NewState, DateTimeOffset Timestamp);
-
-    public sealed record RecordingStateEvent(Guid CameraId, string NewState, string OldState, string? FilePath);
-
-    public sealed record MotionDetectedEvent(
-        Guid CameraId,
-        bool IsMotionActive,
-        double ChangePercentage,
-        IReadOnlyList<MotionBoundingBox> BoundingBoxes,
-        int AnalysisWidth,
-        int AnalysisHeight);
-
-    public sealed record MotionBoundingBox(double X, double Y, double Width, double Height);
-
-    public sealed record StreamStartedEvent(Guid CameraId, string PlaylistUrl);
-
-    /// <summary>
-    /// Server-broadcast notification that a USB camera attached to the
-    /// API host transitioned between <c>Unplugged</c> and
-    /// <c>Replugged</c>. <see cref="Phase"/> matches the
-    /// <c>UsbCameraLifecyclePhase</c> enum (<c>"Unplugged"</c> /
-    /// <c>"Replugged"</c>) — string-typed so the contract survives
-    /// deliberate enum extensions without forcing client redeploys.
-    /// </summary>
-    public sealed record UsbCameraLifecycleEvent(
-        Guid CameraId,
-        string Phase,
-        string DeviceId,
-        string FriendlyName,
-        DateTimeOffset Timestamp);
 }

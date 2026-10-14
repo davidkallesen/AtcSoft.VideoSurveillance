@@ -388,7 +388,7 @@ else
         }
     }
 
-    private void OnStreamStarted(SurveillanceHubService.StreamStartedEvent e)
+    private void OnStreamStarted(StreamStartedEvent e)
     {
         InvokeAsync(() =>
         {
@@ -399,12 +399,11 @@ else
         });
     }
 
-    private void OnConnectionStateChanged(SurveillanceHubService.ConnectionStateEvent e)
+    private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         InvokeAsync(async () =>
         {
-            if ((string.Equals(e.NewState, "Disconnected", StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(e.NewState, "Error", StringComparison.OrdinalIgnoreCase))
+            if ((e.NewState == CameraConnectionState.Disconnected || e.NewState == CameraConnectionState.Error)
                 && streamUrls.Remove(e.CameraId))
             {
                 await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{e.CameraId}");
@@ -422,7 +421,7 @@ else
         pictureSizes[cameraId] = await JS.InvokeAsync<int[]>("hlsInterop.videoSize", $"video-{cameraId}");
     }
 
-    private void OnMotionDetected(SurveillanceHubService.MotionDetectedEvent e)
+    private void OnMotionDetected(MotionDetectedEvent e)
     {
         InvokeAsync(() =>
         {
@@ -470,7 +469,7 @@ else
 
     private sealed record MotionState(
         bool IsActive,
-        IReadOnlyList<SurveillanceHubService.MotionBoundingBox> BoundingBoxes,
+        IReadOnlyList<MotionBox> BoundingBoxes,
         int AnalysisWidth,
         int AnalysisHeight);
 }

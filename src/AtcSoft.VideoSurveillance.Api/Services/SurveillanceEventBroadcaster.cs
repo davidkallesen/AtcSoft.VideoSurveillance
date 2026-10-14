@@ -13,12 +13,12 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// </summary>
 public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase<SurveillanceEventBroadcaster>
 {
-    // Bound the time any single broadcast can spend in SendAsync so a
+    // Bound the time any single broadcast can spend sending so a
     // slow/disconnected client cannot accumulate unbounded in-flight tasks
     // while events keep firing from the recording / motion services.
     private static readonly TimeSpan BroadcastTimeout = TimeSpan.FromSeconds(5);
 
-    private readonly IHubContext<SurveillanceHub> hubContext;
+    private readonly IHubContext<SurveillanceHub, ISurveillanceHubClient> hubContext;
     private readonly IRecordingService recordingService;
     private readonly ServerRecordingService serverRecordingService;
     private readonly IMotionDetectionService motionDetectionService;
@@ -27,7 +27,7 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     public SurveillanceEventBroadcaster(
         ILogger<SurveillanceEventBroadcaster> logger,
         SurveillanceEventBroadcasterOptions options,
-        IHubContext<SurveillanceHub> hubContext,
+        IHubContext<SurveillanceHub, ISurveillanceHubClient> hubContext,
         IRecordingService recordingService,
         ServerRecordingService serverRecordingService,
         IMotionDetectionService motionDetectionService,
@@ -101,19 +101,9 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
-            using var cts = new CancellationTokenSource(BroadcastTimeout);
             await hubContext.Clients.All
-                .SendAsync(
-                    "RecordingStateChanged",
-                    new
-                    {
-                        e.CameraId,
-                        NewState = e.NewState.ToString(),
-                        OldState = e.OldState.ToString(),
-                        e.FilePath,
-                        e.Timestamp,
-                    },
-                    cts.Token)
+                .RecordingStateChanged(e.ToHubEvent())
+                .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -128,17 +118,9 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
-            using var cts = new CancellationTokenSource(BroadcastTimeout);
             await hubContext.Clients.All
-                .SendAsync(
-                    "ConnectionStateChanged",
-                    new
-                    {
-                        CameraId = cameraId,
-                        NewState = newState.ToString(),
-                        Timestamp = DateTimeOffset.UtcNow,
-                    },
-                    cts.Token)
+                .ConnectionStateChanged(HubEventMapping.ToHubEvent(cameraId, newState, DateTimeOffset.UtcNow))
+                .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -152,19 +134,9 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
-            using var cts = new CancellationTokenSource(BroadcastTimeout);
             await hubContext.Clients.All
-                .SendAsync(
-                    "UsbCameraLifecycleChanged",
-                    new
-                    {
-                        e.CameraId,
-                        Phase = e.Phase.ToString(),
-                        e.Device.DeviceId,
-                        e.Device.FriendlyName,
-                        Timestamp = DateTimeOffset.UtcNow,
-                    },
-                    cts.Token)
+                .UsbCameraLifecycleChanged(e.ToHubEvent(DateTimeOffset.UtcNow))
+                .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -177,27 +149,9 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
-            using var cts = new CancellationTokenSource(BroadcastTimeout);
             await hubContext.Clients.All
-                .SendAsync(
-                    "MotionDetected",
-                    new
-                    {
-                        e.CameraId,
-                        e.IsMotionActive,
-                        e.ChangePercentage,
-                        BoundingBoxes = e.BoundingBoxes.Select(b => new
-                        {
-                            b.X,
-                            b.Y,
-                            b.Width,
-                            b.Height,
-                        }),
-                        e.AnalysisWidth,
-                        e.AnalysisHeight,
-                        e.Timestamp,
-                    },
-                    cts.Token)
+                .MotionDetected(e.ToHubEvent())
+                .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)

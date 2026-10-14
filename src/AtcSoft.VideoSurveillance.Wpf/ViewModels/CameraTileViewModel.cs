@@ -245,7 +245,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnStreamStarted(SurveillanceHubService.StreamStartedEvent e)
+    private void OnStreamStarted(StreamStartedEvent e)
     {
         if (e.CameraId != CameraId)
         {
@@ -309,8 +309,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         });
     }
 
-    private void OnHubConnectionStateChanged(
-        SurveillanceHubService.ConnectionStateEvent e)
+    private void OnHubConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         if (e.CameraId != CameraId)
         {
@@ -319,23 +318,11 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
-            ConnectionState = ParseHubConnectionState(e.NewState);
+            ConnectionState = HubStates.ToConnectionState(e.NewState);
         });
     }
 
-    private static ConnectionState ParseHubConnectionState(string? wireValue)
-        => wireValue switch
-        {
-            "Connected" => ConnectionState.Connected,
-            "Connecting" => ConnectionState.Connecting,
-            "Reconnecting" => ConnectionState.Reconnecting,
-            "Error" => ConnectionState.ConnectionFailed,
-            "Disconnected" => ConnectionState.Disconnected,
-            _ => ConnectionState.Disconnected,
-        };
-
-    private void OnHubRecordingStateChanged(
-        SurveillanceHubService.RecordingStateEvent e)
+    private void OnHubRecordingStateChanged(RecordingStateChangedEvent e)
     {
         if (e.CameraId != CameraId)
         {
@@ -344,8 +331,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
         _ = Application.Current?.Dispatcher.InvokeAsync(() =>
         {
-            IsRecording = string.Equals(e.NewState, "recording", StringComparison.OrdinalIgnoreCase) ||
-                          string.Equals(e.NewState, "recordingMotion", StringComparison.OrdinalIgnoreCase);
+            IsRecording = HubStates.IsRecording(e.NewState);
         });
     }
 
@@ -483,8 +469,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnHubMotionDetected(
-        SurveillanceHubService.MotionDetectedEvent e)
+    private void OnHubMotionDetected(MotionDetectedEvent e)
     {
         if (e.CameraId != CameraId)
         {

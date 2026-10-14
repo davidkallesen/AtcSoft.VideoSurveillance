@@ -147,8 +147,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
         });
     }
 
-    private void OnHubConnectionStateChanged(
-        SurveillanceHubService.ConnectionStateEvent e)
+    private void OnHubConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         if (e.CameraId != cameraId)
         {
@@ -157,23 +156,11 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
 
         Application.Current?.Dispatcher.Invoke(() =>
         {
-            ConnectionState = ParseHubConnectionState(e.NewState);
+            ConnectionState = HubStates.ToConnectionState(e.NewState);
         });
     }
 
-    private static ConnectionState ParseHubConnectionState(string? wireValue)
-        => wireValue switch
-        {
-            "Connected" => ConnectionState.Connected,
-            "Connecting" => ConnectionState.Connecting,
-            "Reconnecting" => ConnectionState.Reconnecting,
-            "Error" => ConnectionState.ConnectionFailed,
-            "Disconnected" => ConnectionState.Disconnected,
-            _ => ConnectionState.Disconnected,
-        };
-
-    private void OnHubRecordingStateChanged(
-        SurveillanceHubService.RecordingStateEvent e)
+    private void OnHubRecordingStateChanged(RecordingStateChangedEvent e)
     {
         if (e.CameraId != cameraId)
         {
@@ -182,13 +169,11 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
 
         Application.Current?.Dispatcher.Invoke(() =>
         {
-            IsRecording = string.Equals(e.NewState, "recording", StringComparison.OrdinalIgnoreCase) ||
-                          string.Equals(e.NewState, "recordingMotion", StringComparison.OrdinalIgnoreCase);
+            IsRecording = HubStates.IsRecording(e.NewState);
         });
     }
 
-    private void OnHubMotionDetected(
-        SurveillanceHubService.MotionDetectedEvent e)
+    private void OnHubMotionDetected(MotionDetectedEvent e)
     {
         if (e.CameraId != cameraId)
         {

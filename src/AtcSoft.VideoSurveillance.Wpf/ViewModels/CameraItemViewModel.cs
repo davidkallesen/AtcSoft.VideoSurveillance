@@ -67,15 +67,8 @@ public partial class CameraItemViewModel : ViewModelBase
             IpAddress = camera.IpAddress ?? string.Empty,
             Port = camera.Port,
             Protocol = camera.Protocol,
-            ConnectionState = AsHubWritesIt(camera.ConnectionState?.ToString()),
+            ConnectionState = HubStates.ToText(camera.ConnectionState),
             IsRecording = camera.IsRecording,
         };
     }
-
-    // The hub writes the server's C# name (Connected); the REST value is the
-    // same with a small first letter (connected).
-    private static string AsHubWritesIt(string? state)
-        => string.IsNullOrEmpty(state)
-            ? "Disconnected"
-            : string.Concat(state[..1].ToUpperInvariant(), state[1..]);
 }

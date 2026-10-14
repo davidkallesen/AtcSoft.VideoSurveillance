@@ -660,6 +660,52 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+x-signalr-hubs:
+  surveillance:
+    url: /hubs/surveillance
+    events:
+      - name: ConnectionStateChanged
+        payload: ConnectionStateChangedEvent
+      - name: RecordingStateChanged
+        payload: RecordingStateChangedEvent
+      - name: MotionDetected
+        payload: MotionDetectedEvent
+      - name: UsbCameraLifecycleChanged
+        payload: UsbCameraLifecycleEvent
+      - name: StreamStarted
+        payload: StreamStartedEvent
+      - name: CameraSwapRequested
+        payload: CameraSwapRequestedEvent
+      - name: Error
+        payload: string
+    methods:
+      - name: StartRecording
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+      - name: StopRecording
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+      - name: SwapCameras
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+          - name: direction
+            payload: SwapDirection
+      - name: StartStream
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+      - name: StopStream
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+      - name: StreamHeartbeat
+        arguments:
+          - name: cameraId
+            payload: { type: string, format: uuid }
+
 components:
   schemas:
     Camera:
@@ -750,8 +796,7 @@ components:
           type: integer
           format: int32
         connectionState:
-          type: string
-          enum: [disconnected, connecting, connected, reconnecting, error, deviceUnplugged]
+          $ref: "#/components/schemas/CameraConnectionState"
         isRecording:
           type: boolean
 
@@ -980,8 +1025,7 @@ components:
           type: string
           format: uuid
         state:
-          type: string
-          enum: [idle, recording, recordingMotion, recordingPostMotion]
+          $ref: "#/components/schemas/RecordingStatusState"
         filePath:
           type: string
         startedAt:
@@ -1735,3 +1779,170 @@ components:
         text:
           type: string
           description: The status in words, for a status bar ("120 GB free of 500 GB").
+
+    CameraConnectionState:
+      type: string
+      description: How the server's connection to a camera is.
+      enum: [disconnected, connecting, connected, reconnecting, error, deviceUnplugged]
+
+    RecordingStatusState:
+      type: string
+      description: Whether a camera is being recorded, and why.
+      enum: [idle, recording, recordingMotion, recordingPostMotion]
+
+    UsbCameraLifecyclePhase:
+      type: string
+      description: A USB camera on the server was unplugged, or plugged in again.
+      enum: [unplugged, replugged]
+
+    SwapDirection:
+      type: string
+      description: Which neighbour a camera swaps places with.
+      enum: [left, right]
+
+    ConnectionStateChangedEvent:
+      type: object
+      description: Hub event - the server's connection to a camera changed.
+      required:
+        - cameraId
+        - newState
+        - timestamp
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        newState:
+          $ref: "#/components/schemas/CameraConnectionState"
+        timestamp:
+          type: string
+          format: date-time
+
+    RecordingStateChangedEvent:
+      type: object
+      description: Hub event - a camera started or stopped being recorded.
+      required:
+        - cameraId
+        - newState
+        - oldState
+        - timestamp
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        newState:
+          $ref: "#/components/schemas/RecordingStatusState"
+        oldState:
+          $ref: "#/components/schemas/RecordingStatusState"
+        filePath:
+          type: string
+          description: The file being written, or the file just finished.
+        timestamp:
+          type: string
+          format: date-time
+
+    MotionBox:
+      type: object
+      description: Where something moved, in the coordinates of the analysed picture.
+      required:
+        - x
+        - y
+        - width
+        - height
+      properties:
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        width:
+          type: number
+          format: double
+        height:
+          type: number
+          format: double
+
+    MotionDetectedEvent:
+      type: object
+      description: Hub event - motion on a camera started, goes on, or ended.
+      required:
+        - cameraId
+        - isMotionActive
+        - changePercentage
+        - boundingBoxes
+        - analysisWidth
+        - analysisHeight
+        - timestamp
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        isMotionActive:
+          type: boolean
+        changePercentage:
+          type: number
+          format: double
+        boundingBoxes:
+          type: array
+          items:
+            $ref: "#/components/schemas/MotionBox"
+        analysisWidth:
+          type: integer
+          format: int32
+          description: The width of the analysed picture, which the boxes are in.
+        analysisHeight:
+          type: integer
+          format: int32
+        timestamp:
+          type: string
+          format: date-time
+
+    UsbCameraLifecycleEvent:
+      type: object
+      description: Hub event - a USB camera on the server was unplugged or plugged in again.
+      required:
+        - cameraId
+        - phase
+        - deviceId
+        - friendlyName
+        - timestamp
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        phase:
+          $ref: "#/components/schemas/UsbCameraLifecyclePhase"
+        deviceId:
+          type: string
+        friendlyName:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    StreamStartedEvent:
+      type: object
+      description: Hub event, to the caller of StartStream - the stream is ready to play.
+      required:
+        - cameraId
+        - playlistUrl
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        playlistUrl:
+          type: string
+          description: The HLS playlist, from the server's root (/streams/...).
+
+    CameraSwapRequestedEvent:
+      type: object
+      description: Hub event - a client asked to swap a camera with its neighbour in the layout.
+      required:
+        - cameraId
+        - direction
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        direction:
+          $ref: "#/components/schemas/SwapDirection"

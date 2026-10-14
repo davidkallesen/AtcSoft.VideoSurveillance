@@ -112,12 +112,11 @@ public sealed class NotificationCoordinator : IDisposable
         }
     }
 
-    private void OnConnectionStateChanged(
-        SurveillanceHubService.ConnectionStateEvent e)
+    private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
         var cameraName = GetCameraName(e.CameraId);
 
-        if (string.Equals(e.NewState, "disconnected", StringComparison.OrdinalIgnoreCase) &&
+        if (e.NewState == CameraConnectionState.Disconnected &&
             Preferences.NotifyOnDisconnect)
         {
             ShowNotification(
@@ -125,7 +124,7 @@ public sealed class NotificationCoordinator : IDisposable
                 "Camera disconnected",
                 NotificationEventType.CameraDisconnected);
         }
-        else if (string.Equals(e.NewState, "connected", StringComparison.OrdinalIgnoreCase) &&
+        else if (e.NewState == CameraConnectionState.Connected &&
                  Preferences.NotifyOnReconnect)
         {
             ShowNotification(
@@ -135,18 +134,12 @@ public sealed class NotificationCoordinator : IDisposable
         }
     }
 
-    private void OnRecordingStateChanged(
-        SurveillanceHubService.RecordingStateEvent e)
+    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
     {
         var cameraName = GetCameraName(e.CameraId);
 
-        var isNowRecording =
-            string.Equals(e.NewState, "recording", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(e.NewState, "recordingMotion", StringComparison.OrdinalIgnoreCase);
-
-        var wasRecording =
-            string.Equals(e.OldState, "recording", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(e.OldState, "recordingMotion", StringComparison.OrdinalIgnoreCase);
+        var isNowRecording = HubStates.IsRecording(e.NewState);
+        var wasRecording = HubStates.IsRecording(e.OldState);
 
         if (isNowRecording && Preferences.NotifyOnRecordingStarted)
         {
@@ -164,7 +157,7 @@ public sealed class NotificationCoordinator : IDisposable
         }
     }
 
-    private void OnMotionDetected(SurveillanceHubService.MotionDetectedEvent e)
+    private void OnMotionDetected(MotionDetectedEvent e)
     {
         if (!e.IsMotionActive || !Preferences.NotifyOnMotionDetected)
         {
