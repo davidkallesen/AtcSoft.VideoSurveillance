@@ -1047,7 +1047,6 @@ components:
           description: True while the recording is still being made. Its size and duration are not final, and it may not play until it is finished.
         thumbnailPath:
           type: string
-          nullable: true
           description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
 
     AppSettings:
@@ -1559,7 +1558,6 @@ components:
           type: string
         secret:
           type: string
-          nullable: true
           description: Signs each request (X-AtcSoft-Signature). Leave out for unsigned requests.
         events:
           type: array
@@ -1575,7 +1573,6 @@ components:
           type: string
         secret:
           type: string
-          nullable: true
           description: Leave out to keep the secret as it is; send an empty text to remove it.
         events:
           type: array

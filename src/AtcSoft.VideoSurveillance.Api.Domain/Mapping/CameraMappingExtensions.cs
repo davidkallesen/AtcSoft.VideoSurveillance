@@ -178,7 +178,10 @@ internal static class CameraMappingExtensions
             core.Display.Rotation = request.Rotation.Value.ToCoreRotation();
         }
 
-        core.Stream.UseLowLatencyMode = request.StreamUseLowLatencyMode ?? false;
+        if (request.StreamUseLowLatencyMode is { } useLowLatencyMode)
+        {
+            core.Stream.UseLowLatencyMode = useLowLatencyMode;
+        }
 
         if (request.StreamMaxLatencyMs > 0)
         {
@@ -350,7 +353,7 @@ internal static class CameraMappingExtensions
             || request.UsbHeight > 0
             || request.UsbFrameRate > 0
             || request.UsbPixelFormat is not null
-            || request.UsbCaptureAudio == true
+            || request.UsbCaptureAudio is not null
             || request.UsbAudioDeviceName is not null;
 
         if (!hasUsbField && core.Connection.Source != CoreCameraSource.Usb)
@@ -370,12 +373,9 @@ internal static class CameraMappingExtensions
             core.Connection.Usb.FriendlyName = request.UsbFriendlyName;
         }
 
-        // PreferAudio is a non-nullable bool — only overwrite when the
-        // request explicitly carries `true` so existing-camera updates
-        // that omit the field don't silently disable audio.
-        if (request.UsbCaptureAudio == true)
+        if (request.UsbCaptureAudio is { } captureAudio)
         {
-            core.Connection.Usb.PreferAudio = true;
+            core.Connection.Usb.PreferAudio = captureAudio;
         }
 
         if (request.UsbAudioDeviceName is not null)

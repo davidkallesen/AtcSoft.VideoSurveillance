@@ -261,8 +261,7 @@ public class CameraMappingExtensionsTests
     {
         // Existing USB camera with an audio device set; an update that
         // changes only the audio device name must take effect and not
-        // require resetting the entire format block. Mirrors the
-        // "PreferAudio is opt-in" wording in ApplyUsbUpdate.
+        // require resetting the entire format block.
         var core = new CameraConfiguration();
         core.Connection.Source = CoreCameraSource.Usb;
         core.Connection.Usb = new UsbConnectionSettings
@@ -291,7 +290,7 @@ public class CameraMappingExtensionsTests
             UsbHeight: 0,
             UsbFrameRate: 0,
             UsbPixelFormat: null!,
-            UsbCaptureAudio: false,
+            UsbCaptureAudio: null,
             UsbAudioDeviceName: "Microphone (Logitech BRIO)",
             OverlayPosition: null,
             StreamUseLowLatencyMode: true,
@@ -303,10 +302,46 @@ public class CameraMappingExtensionsTests
 
         core.Connection.Usb!.AudioDeviceName.Should().Be("Microphone (Logitech BRIO)");
 
-        // PreferAudio left intact: ApplyUsbUpdate only flips it to true,
-        // never back to false, so an unrelated update with usbCaptureAudio
-        // omitted (default false) must not silently disable audio.
+        // usbCaptureAudio was left out, so the sound stays on.
         core.Connection.Usb.PreferAudio.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ApplyUpdate_Without_Fields_Changes_Nothing()
+    {
+        // A client that predates a field leaves it out of its update.
+        var core = new CameraConfiguration();
+        core.Display.DisplayName = "Gate";
+        core.Connection.Source = CoreCameraSource.Usb;
+        core.Connection.ConnectionType = CoreCameraConnectionType.Usb;
+        core.Connection.Usb = new UsbConnectionSettings
+        {
+            DeviceId = "device-1",
+            FriendlyName = "Logitech BRIO",
+            PreferAudio = true,
+            AudioDeviceName = "Microphone (Logitech BRIO)",
+            Format = new UsbStreamFormat { Width = 1280, Height = 720, FrameRate = 30, PixelFormat = "mjpeg" },
+        };
+        core.Stream.UseLowLatencyMode = !core.Stream.UseLowLatencyMode;
+        core.Stream.MaxLatencyMs = 750;
+        core.Stream.BufferDurationMs = 250;
+        var before = JsonSerializer.Serialize(core);
+
+        core.ApplyUpdate(new UpdateCameraRequest());
+
+        JsonSerializer.Serialize(core).Should().Be(before);
+    }
+
+    [Fact]
+    public void ApplyUpdate_UsbCaptureAudio_False_Turns_The_Sound_Off()
+    {
+        var core = new CameraConfiguration();
+        core.Connection.Source = CoreCameraSource.Usb;
+        core.Connection.Usb = new UsbConnectionSettings { DeviceId = "device-1", PreferAudio = true };
+
+        core.ApplyUpdate(new UpdateCameraRequest(UsbCaptureAudio: false));
+
+        core.Connection.Usb!.PreferAudio.Should().BeFalse();
     }
 
     [Fact]
