@@ -43,8 +43,10 @@ Every error the server answers is an [RFC 9457](https://www.rfc-editor.org/rfc/r
 - The clients show the server's words: the field messages of a 400, else `detail`. The desktop client in its "Failed to ..." dialogs, the web client after the page's own sentence.
 - An unhandled exception is a 500 problem without the exception's text. In Development the developer exception page shows it instead.
 - A snapshot of a camera that exists but gives no picture is 503; 404 is a camera the server does not know.
+- A 503 that will pass says when to ask again in `Retry-After` (seconds): 5 for a snapshot of a camera that is still connecting, 30 for a recording disk that cannot be read.
+- Too many calls from one client address are a 429 with `Retry-After` (see *Limits, caching and retries*).
 
-In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` and `BadRequest("…")` take the message.
+In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` and `BadRequest("…")` take the message, and `retryAfter:` where the specification declares the header.
 
 An enum is written and read as the specification writes it: `rtsp`, `topLeft`, `rotate90`. Clients built on generator 2.x sent the C# member name (`Rtsp`, `TopLeft`); the server refuses that with a 400, so update the server and the desktop client together.
 
@@ -55,6 +57,26 @@ An enum is written and read as the specification writes it: `rtsp`, `topLeft`, `
 An update changes only what it sends. A property the request leaves out keeps its value: in `PUT /settings`, `PUT /cameras/{id}` and `PUT /layouts/{id}`. So a client that does not know a property yet cannot reset it. To clear a text, send it empty: a camera's password, for example, is removed with `""` and kept when it is left out.
 
 A response lists in `required` everything the server always sends. What it may leave out is optional: a camera's connection state and USB settings, a recording's thumbnail.
+
+A create (`POST /cameras`, `/layouts`, `/webhooks`) answers 201 with the new resource, and its address in `Location` (`/cameras/{id}`).
+
+---
+
+## 🛡️ Limits, caching and retries
+
+All three are declared in `src/VideoSurveillance.yaml`, and the generator builds them; nothing is configured by hand.
+
+- **Rate limits** (`x-ratelimit-*`), per client address. A call over the limit is a 429 problem with `Retry-After`.
+
+  | Operation | Limit | Why |
+  |---|---|---|
+  | `GET /cameras/{id}/snapshot` | 20 per 10 s | a snapshot opens the camera's stream |
+  | `POST /webhooks/{id}/test` | 10 per minute | a test sends a request to someone else's server |
+
+- **Output cache** (`x-cache-*`): `GET /devices/usb` is kept 5 seconds, since enumerating the devices takes a moment. A USB camera plugged in or pulled out drops it at once (`UsbDeviceCacheEvictor`), so the next read has the new list. A cached answer has an `Age` header.
+- **Retries in the clients** (`x-retry-*`): both clients call `AddApiResilience(ResiliencePolicies.Standard)`. An attempt has two minutes, since some calls are slow by nature (starting a recording waits for the camera; saving a changed folder layout moves the recordings). A failed read (5xx, 408, a timeout, a 429 that asks for a short wait) is tried up to 3 more times. A change is sent once: POST and PATCH are never repeated, and every PUT and DELETE has `x-retry-enabled: false`. A new PUT or DELETE needs it too. `GET /events` is not repeated either: its reader resumes on its own.
+
+The specification is validated `Strict`. The rules that do not fit it are switched off in `Directory.Build.props` with the reason (camelCase enum values, `captureSnapshot`, `stopRecording`).
 
 ---
 
