@@ -262,6 +262,7 @@ public sealed partial class OnvifConnectionTypeDetector : ICameraConnectionTypeD
         }
     }
 
+    [SuppressMessage("Security", "S5332:Using clear-text protocols is security-sensitive", Justification = "An ONVIF camera serves its device service over http on the camera's own port; the request carries no credentials")]
     private Uri? BuildDeviceServiceUri(
         string ipAddress,
         int port)

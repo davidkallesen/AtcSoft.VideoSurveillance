@@ -317,7 +317,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         var basePath = GetRecordingsBasePath();
         if (Directory.Exists(basePath))
         {
-            System.Diagnostics.Process.Start("explorer.exe", basePath);
+            System.Diagnostics.Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), basePath);
         }
     }
 

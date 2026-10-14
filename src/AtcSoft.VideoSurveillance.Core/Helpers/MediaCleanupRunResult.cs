@@ -16,7 +16,7 @@ public sealed record MediaCleanupRunResult(
     /// <summary>
     /// Gets a value indicating whether the reclaim pass exhausted all eligible
     /// files without reaching the target free-space goal. Only meaningful for
-    /// results returned by <see cref="MediaCleanupRunner.ReclaimBySize"/>.
+    /// results returned by <see cref="MediaCleanupRunner.ReclaimBySize(string, IReadOnlyCollection{string}, long, IReadOnlySet{string}, bool)"/>.
     /// </summary>
     public bool StillShort { get; init; }
 }

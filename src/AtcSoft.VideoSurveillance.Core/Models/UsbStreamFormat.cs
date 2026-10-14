@@ -49,6 +49,7 @@ public class UsbStreamFormat
         PixelFormat = source.PixelFormat;
     }
 
+    [SuppressMessage("Major Bug", "S1244:Floating point numbers should not be tested for equality", Justification = "Value equality: the same format is the same stored frame rate, exactly")]
     public bool ValueEquals(UsbStreamFormat? other)
     {
         if (other is null)

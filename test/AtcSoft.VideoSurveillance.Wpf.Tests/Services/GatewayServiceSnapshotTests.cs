@@ -12,7 +12,8 @@ public sealed class GatewayServiceSnapshotTests
     [Fact]
     public async Task A_Snapshot_Is_The_Picture_The_Server_Sent()
     {
-        using var server = new SnapshotServer(HttpStatusCode.OK, new ByteArrayContent(Png), "image/png");
+        using var png = new ByteArrayContent(Png);
+        using var server = new SnapshotServer(HttpStatusCode.OK, png, "image/png");
 
         var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
@@ -22,10 +23,8 @@ public sealed class GatewayServiceSnapshotTests
     [Fact]
     public async Task A_Camera_That_Gives_No_Picture_Gives_No_Snapshot()
     {
-        using var server = new SnapshotServer(
-            HttpStatusCode.ServiceUnavailable,
-            new StringContent("""{"status":503,"detail":"Camera did not reach Connected within 15s."}"""),
-            "application/problem+json");
+        using var problem = new StringContent("""{"status":503,"detail":"Camera did not reach Connected within 15s."}""");
+        using var server = new SnapshotServer(HttpStatusCode.ServiceUnavailable, problem, "application/problem+json");
 
         var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 

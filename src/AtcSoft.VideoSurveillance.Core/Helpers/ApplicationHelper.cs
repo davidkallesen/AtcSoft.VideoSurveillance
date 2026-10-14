@@ -10,7 +10,7 @@ public static class ApplicationHelper
     /// matching the value declared in version.json and GitHub release tags.
     /// </summary>
     /// <remarks>
-    /// Delegates to <see cref="Atc.Helpers.AssemblyHelper.GetSystemVersion"/>, which reads the
+    /// Delegates to <see cref="Atc.Helpers.AssemblyHelper.GetSystemVersion()"/>, which reads the
     /// assembly file version. Nerdbank.GitVersioning stamps a 4-part value (e.g., "1.0.6.7"
     /// where ".7" is the build height); <see cref="Version.ToString(int)"/> clips it to 3 parts
     /// so the user-facing version matches the published SemVer.

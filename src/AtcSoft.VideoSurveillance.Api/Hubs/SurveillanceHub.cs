@@ -214,7 +214,7 @@ public sealed partial class SurveillanceHub : Hub
         catch (Exception ex)
         {
             LogStartStreamFailed(ex, cameraId);
-            throw new HubException($"Failed to start stream: {ex.Message}");
+            throw new HubException($"Failed to start stream: {ex.Message}", ex);
         }
     }
 
