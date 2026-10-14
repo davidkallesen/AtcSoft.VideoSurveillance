@@ -24,6 +24,8 @@ global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Devices.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Devices.Models;
+global using VideoSurveillance.Generated.Events.Client;
+global using VideoSurveillance.Generated.Events.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Events.Models;
 global using VideoSurveillance.Generated.Hubs;
 global using VideoSurveillance.Generated.Layouts.Client;

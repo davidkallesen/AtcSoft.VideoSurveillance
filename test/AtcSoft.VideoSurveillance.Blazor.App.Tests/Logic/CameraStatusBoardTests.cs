@@ -95,4 +95,39 @@ public sealed class CameraStatusBoardTests
         sut.CameraCount.Should().Be(2);
         sut.ConnectedCount.Should().Be(1);
     }
+
+    [Fact]
+    public void An_Event_From_The_Stream_Updates_Its_Camera()
+    {
+        var sut = new CameraStatusBoard();
+        sut.Load([(Front, IsConnected: false, IsRecording: false)]);
+        var now = DateTimeOffset.UtcNow;
+
+        sut.Apply(new SurveillanceEvent(
+            Type: "connectionStateChanged",
+            CameraId: Front,
+            Timestamp: now,
+            Connection: new ConnectionStateChangedEvent(Front, CameraConnectionState.Connected, now)));
+        sut.Apply(new SurveillanceEvent(
+            Type: "recordingStateChanged",
+            CameraId: Front,
+            Timestamp: now,
+            Recording: new RecordingStateChangedEvent(Front, RecordingStatusState.RecordingMotion, RecordingStatusState.Idle, Timestamp: now)));
+
+        sut.IsConnected(Front).Should().BeTrue();
+        sut.IsRecording(Front).Should().BeTrue();
+    }
+
+    [Fact]
+    public void An_Event_That_Does_Not_Change_A_State_Leaves_The_Camera_As_It_Is()
+    {
+        var sut = new CameraStatusBoard();
+        sut.Load([(Front, IsConnected: true, IsRecording: true)]);
+
+        sut.Apply(new SurveillanceEvent(Type: "motionDetected", CameraId: Front, Timestamp: DateTimeOffset.UtcNow));
+        sut.Apply(new SurveillanceEvent(Type: "somethingNew", CameraId: Front, Timestamp: DateTimeOffset.UtcNow));
+
+        sut.IsConnected(Front).Should().BeTrue();
+        sut.IsRecording(Front).Should().BeTrue();
+    }
 }

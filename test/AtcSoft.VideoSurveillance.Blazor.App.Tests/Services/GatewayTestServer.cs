@@ -24,6 +24,10 @@ internal sealed class GatewayTestServer : IDisposable
 
     public GatewayService Gateway { get; }
 
+    public T Get<T>()
+        where T : notnull
+        => services.GetRequiredService<T>();
+
     public static GatewayTestServer Answering(
         System.Net.HttpStatusCode status,
         string problemJson)

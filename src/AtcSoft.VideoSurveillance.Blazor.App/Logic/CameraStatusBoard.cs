@@ -70,6 +70,25 @@ public sealed class CameraStatusBoard
     }
 
     /// <summary>
+    /// Applies an event of the server's event stream; an event that carries no
+    /// connection or recording state changes nothing.
+    /// </summary>
+    public void Apply(SurveillanceEvent surveillanceEvent)
+    {
+        ArgumentNullException.ThrowIfNull(surveillanceEvent);
+
+        if (surveillanceEvent.Connection is { } connection)
+        {
+            ApplyConnectionState(connection.CameraId, connection.NewState);
+        }
+
+        if (surveillanceEvent.Recording is { } recording)
+        {
+            ApplyRecordingState(recording.CameraId, recording.NewState);
+        }
+    }
+
+    /// <summary>
     /// Gets a value indicating whether a camera is connected.
     /// </summary>
     public bool IsConnected(Guid cameraId)
