@@ -136,9 +136,7 @@ else
                 {
                     cameras[i] = cameras[i] with
                     {
-                        ConnectionState = Enum.TryParse<CameraConnectionState>(e.NewState, ignoreCase: true, out var state)
-                            ? state
-                            : cameras[i].ConnectionState,
+                        ConnectionState = CameraStateText.Parse(e.NewState) ?? cameras[i].ConnectionState,
                     };
                     break;
                 }
