@@ -352,7 +352,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             HardwareAcceleration = api.HardwareAcceleration,
             LowLatencyMode = api.LowLatencyMode,
             BufferDurationMs = api.BufferDurationMs,
-            RtspTransport = api.RtspTransport.ToString(),
+            RtspTransport = api.RtspTransport.ToWireValue(),
             MaxLatencyMs = api.MaxLatencyMs,
         };
 
@@ -380,7 +380,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         result.Recording = new RecordingSettings
         {
             RecordingPath = api.RecordingPath ?? string.Empty,
-            RecordingFormat = api.RecordingFormat.ToString(),
+            RecordingFormat = api.RecordingFormat.ToWireValue(),
             TranscodeVideoCodec = api.RecordAsH264 ? AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264 : AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.None,
             EnableRecordingOnMotion = api.EnableRecordingOnMotion,
             EnableRecordingOnConnect = api.EnableRecordingOnConnect,

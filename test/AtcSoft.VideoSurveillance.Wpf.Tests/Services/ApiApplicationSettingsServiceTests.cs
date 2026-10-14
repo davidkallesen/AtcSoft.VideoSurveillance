@@ -22,6 +22,33 @@ public class ApiApplicationSettingsServiceTests
     }
 
     [Fact]
+    public void Every_Choice_Survives_The_Trip_To_The_Api_And_Back()
+    {
+        // Arrange — every choice differs from its default
+        var settings = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences(), api: null);
+        settings.General.ThemeBase = "Light";
+        settings.CameraDisplay.OverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomRight;
+        settings.CameraDisplay.ConnectionTypeIconPlacement = AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameColumn;
+        settings.Connection.DefaultProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol.Https;
+        settings.Performance.RtspTransport = "udp";
+        settings.Recording.RecordingFormat = "mkv";
+        settings.Recording.Cleanup.Schedule = AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically;
+
+        // Act
+        var api = ApiApplicationSettingsService.BuildApiSettings(settings);
+        var roundTripped = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences(), AsServerAnswer(api));
+
+        // Assert
+        api.ThemeBase.Should().Be(AppSettingsThemeBase.Light);
+        roundTripped.CameraDisplay.OverlayPosition.Should().Be(AtcSoft.VideoSurveillance.Enums.OverlayPosition.BottomRight);
+        roundTripped.CameraDisplay.ConnectionTypeIconPlacement.Should().Be(AtcSoft.VideoSurveillance.Enums.ConnectionTypeIconPlacement.SameColumn);
+        roundTripped.Connection.DefaultProtocol.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraProtocol.Https);
+        roundTripped.Performance.RtspTransport.Should().Be("udp");
+        roundTripped.Recording.RecordingFormat.Should().Be("mkv");
+        roundTripped.Recording.Cleanup.Schedule.Should().Be(AtcSoft.VideoSurveillance.Enums.MediaCleanupSchedule.OnStartupAndPeriodically);
+    }
+
+    [Fact]
     public void The_Grid_Size_Is_Kept_On_This_Computer_Because_The_Server_Has_No_Place_For_It()
     {
         // Each desktop has its own screen; the size of its grid is no
