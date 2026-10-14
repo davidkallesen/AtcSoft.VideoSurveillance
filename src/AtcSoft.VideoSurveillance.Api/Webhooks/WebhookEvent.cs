@@ -7,10 +7,10 @@
 /// <param name="CameraId">The camera it happened to.</param>
 /// <param name="CameraName">The camera's display name.</param>
 /// <param name="Timestamp">When it happened.</param>
-/// <param name="Data">What else is known about it; depends on the event.</param>
+/// <param name="Data">What else is known about it; depends on the event (the specification's WebhookPayloadData).</param>
 public sealed record WebhookEvent(
     string Type,
     Guid CameraId,
     string CameraName,
     DateTimeOffset Timestamp,
-    IReadOnlyDictionary<string, object?> Data);
+    WebhookPayloadData Data);

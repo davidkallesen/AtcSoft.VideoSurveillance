@@ -33,3 +33,5 @@ global using VideoSurveillance.Generated.Hubs;
 global using CameraSwapRequestedEvent = VideoSurveillance.Generated.Models.CameraSwapRequestedEvent;
 global using HubSwapDirection = VideoSurveillance.Generated.Models.SwapDirection;
 global using StreamStartedEvent = VideoSurveillance.Generated.Models.StreamStartedEvent;
+global using WebhookPayload = VideoSurveillance.Generated.Models.WebhookPayload;
+global using WebhookPayloadData = VideoSurveillance.Generated.Models.WebhookPayloadData;

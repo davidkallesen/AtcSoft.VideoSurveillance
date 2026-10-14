@@ -212,10 +212,7 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
             Guid.Empty,
             string.Empty,
             DateTimeOffset.UtcNow,
-            new Dictionary<string, object?>(StringComparer.Ordinal)
-            {
-                ["message"] = "This is a test event. Nothing happened on a camera.",
-            });
+            new WebhookPayloadData(Message: "This is a test event. Nothing happened on a camera."));
 
         return await sender.SendAsync(endpoint, test, cancellationToken).ConfigureAwait(false);
     }

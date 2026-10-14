@@ -25,7 +25,7 @@ public sealed class WebhookEventFactoryTests
         result!.Type.Should().Be(expected);
         result.CameraId.Should().Be(CameraId);
         result.CameraName.Should().Be("Front Door");
-        result.Data["filePath"].Should().Be("Front Door/2026-10-13/Front Door_20261013_101500_000.mp4", "the path is the one the API lists the recording under");
+        result.Data.FilePath.Should().Be("Front Door/2026-10-13/Front Door_20261013_101500_000.mp4", "the path is the one the API lists the recording under");
     }
 
     [Theory]
@@ -52,7 +52,7 @@ public sealed class WebhookEventFactoryTests
         var result = WebhookEventFactory.FromConnection(CameraId, "Front Door", state);
 
         result!.Type.Should().Be(expected);
-        result.Data["state"].Should().Be(state.ToString());
+        result.Data.State.Should().Be(state.ToString());
     }
 
     [Theory]
@@ -74,6 +74,6 @@ public sealed class WebhookEventFactoryTests
             "Front Door");
 
         result.Type.Should().Be(expected);
-        result.Data["changePercentage"].Should().Be(4.5);
+        result.Data.ChangePercentage.Should().Be(4.5);
     }
 }

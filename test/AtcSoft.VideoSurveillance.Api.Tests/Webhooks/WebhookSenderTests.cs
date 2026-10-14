@@ -7,7 +7,7 @@ public sealed class WebhookSenderTests
         Guid.Parse("11111111-2222-3333-4444-555555555555"),
         "Front Door",
         new DateTimeOffset(2026, 10, 13, 10, 15, 0, TimeSpan.Zero),
-        new Dictionary<string, object?>(StringComparer.Ordinal) { ["changePercentage"] = 4.5 });
+        new global::VideoSurveillance.Generated.Models.WebhookPayloadData(ChangePercentage: 4.5));
 
     [Fact]
     public async Task The_Event_Is_Posted_As_Json_With_Its_Type_In_A_Header()
@@ -32,6 +32,22 @@ public sealed class WebhookSenderTests
         body.RootElement.GetProperty("cameraName").GetString().Should().Be("Front Door");
         body.RootElement.GetProperty("timestamp").GetDateTimeOffset().Should().Be(Event.Timestamp);
         body.RootElement.GetProperty("data").GetProperty("changePercentage").GetDouble().Should().Be(4.5);
+    }
+
+    [Fact]
+    public async Task The_Body_Has_Only_What_The_Event_Knows()
+    {
+        // Receivers match on these names; a field without a value is left out.
+        using var handler = new RecordingHandler(HttpStatusCode.OK);
+        var sut = CreateSender(handler);
+
+        await sut.SendAsync(new WebhookEndpoint { Url = "https://example.test/hook" }, Event, TestContext.Current.CancellationToken);
+
+        using var body = JsonDocument.Parse(handler.Requests.Single().Body);
+        body.RootElement.EnumerateObject().Select(p => p.Name)
+            .Should().Equal("event", "cameraId", "cameraName", "timestamp", "data");
+        body.RootElement.GetProperty("data").EnumerateObject().Select(p => p.Name)
+            .Should().Equal("changePercentage");
     }
 
     [Fact]

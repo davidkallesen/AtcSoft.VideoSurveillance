@@ -2,8 +2,8 @@
 
 public sealed class WebhookDispatcherServiceTests
 {
-    private static readonly WebhookEvent Motion = new(WebhookEventTypes.MotionStarted, Guid.NewGuid(), "Front Door", DateTimeOffset.UtcNow, new Dictionary<string, object?>(StringComparer.Ordinal));
-    private static readonly WebhookEvent Recording = new(WebhookEventTypes.RecordingStopped, Guid.NewGuid(), "Garden", DateTimeOffset.UtcNow, new Dictionary<string, object?>(StringComparer.Ordinal));
+    private static readonly WebhookEvent Motion = new(WebhookEventTypes.MotionStarted, Guid.NewGuid(), "Front Door", DateTimeOffset.UtcNow, new global::VideoSurveillance.Generated.Models.WebhookPayloadData());
+    private static readonly WebhookEvent Recording = new(WebhookEventTypes.RecordingStopped, Guid.NewGuid(), "Garden", DateTimeOffset.UtcNow, new global::VideoSurveillance.Generated.Models.WebhookPayloadData());
 
     private readonly IWebhookSender sender = Substitute.For<IWebhookSender>();
     private readonly IMotionDetectionService motionDetection = Substitute.For<IMotionDetectionService>();

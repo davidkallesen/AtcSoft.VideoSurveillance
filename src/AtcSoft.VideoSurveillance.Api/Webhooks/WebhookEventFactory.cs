@@ -31,10 +31,7 @@ public static class WebhookEventFactory
             e.CameraId,
             cameraName,
             new DateTimeOffset(DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)),
-            new Dictionary<string, object?>(StringComparer.Ordinal)
-            {
-                ["filePath"] = ToRelativePath(e.FilePath, recordingRoot),
-            });
+            new WebhookPayloadData(FilePath: ToRelativePath(e.FilePath, recordingRoot)));
     }
 
     /// <summary>
@@ -61,10 +58,7 @@ public static class WebhookEventFactory
                 cameraId,
                 cameraName,
                 DateTimeOffset.UtcNow,
-                new Dictionary<string, object?>(StringComparer.Ordinal)
-                {
-                    ["state"] = state.ToString(),
-                });
+                new WebhookPayloadData(State: state.ToString()));
     }
 
     /// <summary>
@@ -82,10 +76,7 @@ public static class WebhookEventFactory
             e.CameraId,
             cameraName,
             new DateTimeOffset(DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)),
-            new Dictionary<string, object?>(StringComparer.Ordinal)
-            {
-                ["changePercentage"] = e.ChangePercentage,
-            });
+            new WebhookPayloadData(ChangePercentage: e.ChangePercentage));
     }
 
     // The path the API lists the recording under: below the recording

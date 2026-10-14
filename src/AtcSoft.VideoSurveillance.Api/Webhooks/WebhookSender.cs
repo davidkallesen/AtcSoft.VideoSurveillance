@@ -21,7 +21,11 @@ public sealed partial class WebhookSender : IWebhookSender
     private const string DeliveryHeader = "X-AtcSoft-Delivery";
     private const string SignatureHeader = "X-AtcSoft-Signature";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    // The body is the specification's WebhookPayload; a field without a value is left out.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
 
     private readonly IHttpClientFactory httpClientFactory;
     private readonly ILogger<WebhookSender> logger;
@@ -55,14 +59,12 @@ public sealed partial class WebhookSender : IWebhookSender
         }
 
         var body = JsonSerializer.SerializeToUtf8Bytes(
-            new
-            {
-                @event = webhookEvent.Type,
-                cameraId = webhookEvent.CameraId,
-                cameraName = webhookEvent.CameraName,
-                timestamp = webhookEvent.Timestamp,
-                data = webhookEvent.Data,
-            },
+            new WebhookPayload(
+                Event: webhookEvent.Type,
+                CameraId: webhookEvent.CameraId,
+                CameraName: webhookEvent.CameraName,
+                Timestamp: webhookEvent.Timestamp,
+                Data: webhookEvent.Data),
             JsonOptions);
 
         // The same for every attempt, so a receiver can drop a repeat.

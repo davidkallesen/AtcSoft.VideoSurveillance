@@ -1946,3 +1946,49 @@ components:
           format: uuid
         direction:
           $ref: "#/components/schemas/SwapDirection"
+
+    WebhookPayload:
+      type: object
+      description: >-
+        What the server posts to a webhook receiver. Not an operation of this API - the server sends it - so it is
+        declared here only to document the body and generate its type. Headers - X-AtcSoft-Event (the event),
+        X-AtcSoft-Delivery (the same for every attempt) and X-AtcSoft-Signature (sha256= and the HMAC-SHA256 of the
+        body, when the receiver has a secret).
+      required:
+        - event
+        - cameraId
+        - cameraName
+        - timestamp
+        - data
+      properties:
+        event:
+          type: string
+          description: camera.connected, camera.disconnected, recording.started, recording.stopped, motion.started, motion.stopped, or webhook.test.
+        cameraId:
+          type: string
+          format: uuid
+        cameraName:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/WebhookPayloadData"
+
+    WebhookPayloadData:
+      type: object
+      description: What else is known about the event. A field the event has no value for is left out.
+      properties:
+        filePath:
+          type: string
+          description: recording.* - the recording, below the recording folder, with forward slashes.
+        state:
+          type: string
+          description: camera.* - the camera's state as the server names it (Connected, Disconnected, Error).
+        changePercentage:
+          type: number
+          format: double
+          description: motion.* - how much of the picture changed.
+        message:
+          type: string
+          description: webhook.test - what the test is.
