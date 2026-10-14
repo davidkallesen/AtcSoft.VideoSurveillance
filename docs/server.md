@@ -58,6 +58,26 @@ A response lists in `required` everything the server always sends. What it may l
 
 ---
 
+## 📡 The SignalR hub
+
+`/hubs/surveillance` is declared in the specification (`x-signalr-hubs` in `src/VideoSurveillance.yaml`), with what each event and method carries as a component schema:
+
+| Events (server to client) | Carries |
+|---|---|
+| `ConnectionStateChanged` | `ConnectionStateChangedEvent`: the camera, its new state, when |
+| `RecordingStateChanged` | `RecordingStateChangedEvent`: the camera, the old and new recording state, the file |
+| `MotionDetected` | `MotionDetectedEvent`: the camera, active or not, how much changed, the boxes in the analysed picture |
+| `UsbCameraLifecycleChanged` | `UsbCameraLifecycleEvent`: a USB camera on the server unplugged or plugged in again |
+| `StreamStarted` | `StreamStartedEvent`, to the caller of `StartStream`: the playlist |
+| `CameraSwapRequested` | `CameraSwapRequestedEvent`: a camera and the neighbour to swap with |
+| `Error` | a text, to the caller of `StartRecording` that failed |
+
+Methods (client to server): `StartRecording`, `StopRecording`, `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id) and `SwapCameras(cameraId, direction)`.
+
+The states are written as the REST API writes them: `connected`, `deviceUnplugged`, `recordingMotion`, `replugged`, `right`. The server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`; both clients use the generated `SurveillanceHubClient`.
+
+---
+
 ## 📼 Recordings and thumbnails
 
 `GET /recordings` lists the recordings, newest first. Each entry has:
@@ -193,6 +213,7 @@ X-AtcSoft-Signature: sha256=6d0f...
 
 - **Signature:** `sha256=` followed by the HMAC-SHA256 of the body, keyed with the secret, in lower-case hex. Compute the same over the raw body you received and compare.
 - **Delivery id:** the same for every attempt of one delivery, so a receiver can ignore a repeat.
+- **Body:** the `WebhookPayload` schema in `src/VideoSurveillance.yaml`. `data` has `filePath` (recording events), `state` (camera events), `changePercentage` (motion events) or `message` (the test event); a field the event has no value for is left out.
 
 ### Delivery
 

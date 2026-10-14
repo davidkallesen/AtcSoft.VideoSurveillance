@@ -53,7 +53,7 @@ The solution follows a layered architecture with Core at the base:
 The REST API + SignalR server enables headless video surveillance:
 - **OpenAPI-first**: `src/VideoSurveillance.yaml` defines all endpoints; `Atc.Rest.Api.SourceGenerator` generates contracts
 - **Endpoints**: Cameras CRUD, Layouts CRUD, Recordings list, Settings get/update, Snapshot capture, Recording start/stop
-- **SignalR hub**: `/hubs/surveillance` broadcasts connection state, motion, and recording events
+- **SignalR hub**: `/hubs/surveillance` broadcasts connection state, motion, and recording events. It is declared in the spec (`x-signalr-hubs`): the server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`, both clients use the generated `SurveillanceHubClient`, and a new event or method goes into the spec first. Its states use the REST values (`connected`); the WPF client reads them through `HubStates`
 - **Run with Aspire**: `dotnet run --project src/AtcSoft.VideoSurveillance.Aspire` starts the API with the Aspire dashboard
 
 ### Server rules
