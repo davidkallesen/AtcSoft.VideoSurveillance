@@ -254,11 +254,11 @@ else
     private async Task CaptureSnapshotAsync(Camera camera)
     {
         Snackbar.Add($"Capturing snapshot from '{camera.DisplayName}'...", Severity.Info);
-        var base64 = await Gateway.CaptureSnapshotAsync(camera.Id);
-        if (base64 is not null)
+        var picture = await Gateway.CaptureSnapshotAsync(camera.Id);
+        if (picture is { Length: > 0 })
         {
             var fileName = $"{camera.DisplayName}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-            await JS.InvokeVoidAsync("fileInterop.downloadBlob", base64, fileName, "image/png");
+            await JS.InvokeVoidAsync("fileInterop.downloadBlob", Convert.ToBase64String(picture), fileName, "image/png");
             Snackbar.Add("Snapshot downloaded.", Severity.Success);
         }
         else

@@ -276,11 +276,11 @@ public partial class CameraListViewModel : ViewModelBase
 
         try
         {
-            var snapshotData = await gatewayService
+            var picture = await gatewayService
                 .CaptureSnapshotAsync(item.Id)
                 .ConfigureAwait(false);
 
-            if (string.IsNullOrEmpty(snapshotData))
+            if (picture is not { Length: > 0 })
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                     UserDialog.ShowWarning(Translations.NoSnapshotData, Translations.Snapshot));
@@ -298,8 +298,7 @@ public partial class CameraListViewModel : ViewModelBase
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    var bytes = Convert.FromBase64String(snapshotData);
-                    System.IO.File.WriteAllBytes(saveDialog.FileName, bytes);
+                    System.IO.File.WriteAllBytes(saveDialog.FileName, picture);
 
                     UserDialog.ShowInfo(
                         string.Format(

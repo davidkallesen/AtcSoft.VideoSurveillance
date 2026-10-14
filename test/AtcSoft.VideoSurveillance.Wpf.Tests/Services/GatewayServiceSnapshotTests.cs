@@ -1,0 +1,69 @@
+namespace AtcSoft.VideoSurveillance.Wpf.Services;
+
+/// <summary>
+/// The snapshot goes through the real generated endpoint and Atc.Rest.Client,
+/// so a test sees what the client really makes of the server's PNG.
+/// </summary>
+public sealed class GatewayServiceSnapshotTests
+{
+    // A PNG signature and bytes that are no UTF-8: read as text, they change.
+    private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0xFF, 0x00, 0xC3, 0x28, 0x7F];
+
+    [Fact]
+    public async Task A_Snapshot_Is_The_Picture_The_Server_Sent()
+    {
+        using var server = new SnapshotServer(HttpStatusCode.OK, new ByteArrayContent(Png), "image/png");
+
+        var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        picture.Should().Equal(Png);
+    }
+
+    [Fact]
+    public async Task A_Camera_That_Gives_No_Picture_Gives_No_Snapshot()
+    {
+        using var server = new SnapshotServer(
+            HttpStatusCode.ServiceUnavailable,
+            new StringContent("""{"status":503,"detail":"Camera did not reach Connected within 15s."}"""),
+            "application/problem+json");
+
+        var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        picture.Should().BeNull();
+    }
+
+    private sealed class SnapshotServer : IDisposable
+    {
+        private readonly ServiceProvider services;
+
+        public SnapshotServer(
+            HttpStatusCode status,
+            HttpContent content,
+            string mediaType)
+        {
+            content.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
+            var collection = new ServiceCollection();
+            collection
+                .AddHttpClient(Constants.HttpClientName, c => c.BaseAddress = new Uri("http://server.test"))
+                .ConfigurePrimaryHttpMessageHandler(() => new AnswerHandler(status, content));
+            collection.AddVideoSurveillanceEndpoints();
+            services = collection.BuildServiceProvider();
+            Gateway = ActivatorUtilities.CreateInstance<GatewayService>(services);
+        }
+
+        public GatewayService Gateway { get; }
+
+        public void Dispose()
+            => services.Dispose();
+    }
+
+    private sealed class AnswerHandler(
+        HttpStatusCode status,
+        HttpContent content) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(status) { Content = content, RequestMessage = request });
+    }
+}

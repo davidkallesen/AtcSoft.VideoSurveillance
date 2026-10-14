@@ -122,7 +122,11 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<string?> CaptureSnapshotAsync(
+    /// <summary>
+    /// Gets a PNG of the camera's picture now, or <see langword="null"/> when
+    /// the camera is unknown or gives no picture.
+    /// </summary>
+    public async Task<byte[]?> CaptureSnapshotAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -131,8 +135,8 @@ public sealed partial class GatewayService
             .ExecuteAsync(parameters, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        return result.IsSuccess
-            ? result.Content
+        return result.IsOk
+            ? result.OkContent.Content
             : null;
     }
 }
