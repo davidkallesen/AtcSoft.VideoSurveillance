@@ -45,6 +45,8 @@ global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
 global using AtcSoft.VideoSurveillance.Wpf.Windows;
 global using ControlzEx.Theming;
 global using Microsoft.AspNetCore.SignalR.Client;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Http.Resilience;
 global using Microsoft.Extensions.Logging;
 global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;

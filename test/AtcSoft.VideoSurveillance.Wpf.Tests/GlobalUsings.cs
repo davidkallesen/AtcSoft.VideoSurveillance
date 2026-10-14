@@ -11,5 +11,7 @@ global using AtcSoft.VideoSurveillance.Wpf.Extensions;
 global using AtcSoft.VideoSurveillance.Wpf.Services;
 global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Http.Resilience;
+global using Microsoft.Extensions.Options;
 global using Microsoft.Extensions.Time.Testing;
 global using VideoSurveillance.Generated;

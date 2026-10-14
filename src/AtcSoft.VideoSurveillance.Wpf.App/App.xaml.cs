@@ -324,7 +324,7 @@ public partial class App
                     {
                         client.BaseAddress = new Uri(apiBaseAddress);
                     })
-                    .AddStandardResilienceHandler();
+                    .AddApiResilience();
 
                 // Source-generated endpoint DI
                 services.AddVideoSurveillanceEndpoints();
