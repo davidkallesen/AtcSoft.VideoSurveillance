@@ -406,15 +406,15 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowCameraOverlayConnectionStatus = settings.ShowOverlayConnectionStatus;
             ShowCameraOverlayQuickActions = settings.ShowOverlayQuickActions;
             ShowCameraOverlayConnectionTypeIcon = settings.ShowOverlayConnectionTypeIcon;
-            SelectedConnectionTypeIconPlacement = settings.ConnectionTypeIconPlacement.ToString();
+            SelectedConnectionTypeIconPlacement = DropDownKey.For(settings.ConnectionTypeIconPlacement.ToWireValue(), ConnectionTypeIconPlacementItems, DropDownItemsFactory.DefaultConnectionTypeIconPlacement);
             SelectedOverlayOpacity = settings.OverlayOpacity.ToString("F1", CultureInfo.InvariantCulture);
-            SelectedOverlayPosition = settings.OverlayPosition.ToString();
+            SelectedOverlayPosition = DropDownKey.For(settings.OverlayPosition.ToWireValue(), OverlayPositionItems, DropDownItemsFactory.DefaultOverlayPosition);
             AllowDragAndDropReorder = settings.AllowDragAndDropReorder;
             AutoSaveLayoutChanges = settings.AutoSaveLayoutChanges;
             SnapshotPath = !string.IsNullOrEmpty(settings.SnapshotPath) ? new DirectoryInfo(settings.SnapshotPath) : null;
 
             // Connection
-            SelectedDefaultProtocol = settings.DefaultProtocol.ToString();
+            SelectedDefaultProtocol = DropDownKey.For(settings.DefaultProtocol.ToWireValue(), DefaultProtocolItems, DropDownItemsFactory.DefaultProtocol);
             DefaultPort = settings.DefaultPort;
             ConnectionTimeoutSeconds = settings.ConnectionTimeoutSeconds;
             ReconnectDelaySeconds = settings.ReconnectDelaySeconds;
@@ -428,7 +428,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             HardwareAcceleration = settings.HardwareAcceleration;
             LowLatencyMode = settings.LowLatencyMode;
             BufferDurationMs = settings.BufferDurationMs;
-            SelectedRtspTransport = settings.RtspTransport.ToString();
+            SelectedRtspTransport = DropDownKey.For(settings.RtspTransport.ToWireValue(), RtspTransportItems, DropDownItemsFactory.DefaultRtspTransport);
             MaxLatencyMs = settings.MaxLatencyMs;
 
             // Motion Detection
@@ -445,7 +445,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
             // Capture
             RecordingPath = !string.IsNullOrEmpty(settings.RecordingPath) ? new DirectoryInfo(settings.RecordingPath) : null;
-            SelectedRecordingFormat = settings.RecordingFormat.ToString();
+            SelectedRecordingFormat = DropDownKey.For(settings.RecordingFormat.ToWireValue(), RecordingFormatItems, DropDownItemsFactory.DefaultRecordingFormat);
             SelectedTranscodeVideoCodec = settings.RecordAsH264 ? "H264" : "None";
             EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
             EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
@@ -460,7 +460,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             SelectedTimelapseInterval = settings.TimelapseInterval ?? DropDownItemsFactory.DefaultTimelapseInterval;
 
             // Storage
-            SelectedCleanupSchedule = settings.CleanupSchedule.ToString();
+            SelectedCleanupSchedule = DropDownKey.For(settings.CleanupSchedule.ToWireValue(), CleanupScheduleItems, DropDownItemsFactory.DefaultMediaCleanupSchedule);
             SelectedRecordingRetention = settings.RecordingRetentionDays.ToString(CultureInfo.InvariantCulture);
             IncludeSnapshotsInCleanup = settings.CleanupIncludeSnapshots;
             SelectedSnapshotRetention = settings.SnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
