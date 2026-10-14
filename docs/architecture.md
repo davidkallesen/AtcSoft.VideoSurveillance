@@ -235,7 +235,7 @@ sequenceDiagram
 
 | Assembly | Target | Description |
 |----------|--------|-------------|
-| **AtcSoft.VideoSurveillance.Api.Contracts** | net10.0 | Auto-generated from `VideoSurveillance.yaml` via atc-rest-api-source-generator. Contains request/response DTOs, handler interfaces (IListCamerasHandler, ICreateCameraHandler, etc.), and error models. Shared contract between server and client. |
+| **AtcSoft.VideoSurveillance.Api.Contracts** | net10.0 | Auto-generated from `VideoSurveillance.yaml` via atc-rest-api-source-generator. Contains request/response DTOs, handler interfaces (IListCamerasHandler, ICreateCameraHandler, etc.), and the host wiring (`AddVideoSurveillanceApi()` / `MapVideoSurveillanceApi()`). Errors are RFC 9457 ProblemDetails. Shared contract between server and client. |
 | **AtcSoft.VideoSurveillance.Api.Domain** | net10.0 | Handler implementations for all API endpoints. 16 handlers covering Cameras CRUD (8), Layouts CRUD + Apply (5), Recordings (1), Settings (2). Includes mapping extensions for domain-to-DTO conversions. |
 | **AtcSoft.VideoSurveillance.Api** | net10.0 | ASP.NET Core host application. Registers all services (JsonCameraStorageService, JsonApplicationSettingsService, ServerRecordingService, ServerMotionDetectionService, VideoPlayerFactory, StreamingService). Configures CORS, SignalR hub at `/hubs/surveillance`, static file serving for HLS streams (`/streams`) and recordings (`/recordings-files`), OpenAPI docs via Scalar. Runs `CameraConnectionService` and `SurveillanceEventBroadcaster` as hosted services. |
 
@@ -273,7 +273,7 @@ sequenceDiagram
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Web UI | Blazor WebAssembly with MudBlazor |
 | Server | ASP.NET Core, SignalR |
-| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator) |
+| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator v3) |
 | Video Engine | AtcSoft.VideoEngine (in-process FFmpeg via Flyleaf.FFmpeg.Bindings) |
 | GPU Acceleration | Direct3D 11 (D3D11VA) via Vortice bindings |
 | Rendering | DirectComposition swap chain |

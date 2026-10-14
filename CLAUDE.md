@@ -13,7 +13,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
 - `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceHubService, OpenAPI-generated client)
 - `AtcSoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
-- `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator)
+- `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator v3; until v3 is on nuget.org it comes from a local package, see `nuget.config` and `plans/roadmap-rest-api-sg.md`)
 - `AtcSoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
@@ -60,6 +60,7 @@ The REST API + SignalR server enables headless video surveillance:
 - **Data folder:** the server takes the location of `settings.json` / `cameras.json` from `ServerDataPaths` (`Storage:DataPath`). Never read `ApplicationPaths.Default*` directly in the server.
 - **Settings contract:** every setting a client can change has to survive Core -> API model -> Core. `SettingsRoundTripTests` checks all of them by reflection; a setting left out of the API on purpose is listed there with the reason.
 - **One vocabulary:** values shared between clients are written the same way everywhere — video quality through `VideoQualityHelper`, colours by name.
+- **Errors:** every error response is a ProblemDetails (`application/problem+json`), the `ProblemDetails` schema in the spec. Handlers return the generated factories with the reason: `NotFound("…")`, `Conflict("…")`, `ServiceUnavailable("…")`; a 400 takes `new ProblemDetails { Detail = "…" }`. Handler tests assert the status with `ShouldBeProblem(status)`, not the result type.
 - **Secrets in logs:** camera credentials and webhook secrets never go into a log or to a client. FFmpeg command lines and output are cleaned with `HlsStreamCommand.Redact`; a webhook receiver is named by `WebhookEndpoint.LogName`.
 - **Host tests:** `test/AtcSoft.VideoSurveillance.Api.Tests/Host` runs the real server in-process (`ApiHostFixture`) against a temp data folder. Tests that need a camera start a live test stream with the FFmpeg command-line tool and skip without it.
 - See `docs/server.md`.

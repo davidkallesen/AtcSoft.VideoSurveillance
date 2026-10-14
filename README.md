@@ -98,7 +98,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 | Framework | .NET 10.0 / .NET 10.0-windows |
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Server | ASP.NET Core, SignalR |
-| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator) |
+| API Definition | OpenAPI 3.2 (atc-rest-api-source-generator v3) |
 | Video Engine | AtcSoft.VideoEngine (desktop + server, in-process FFmpeg) |
 | Orchestration | .NET Aspire |
 | MVVM | Atc.XamlToolkit |

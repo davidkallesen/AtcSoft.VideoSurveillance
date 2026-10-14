@@ -29,6 +29,23 @@ The log folder is decided before the rest of the configuration is read. For the 
 
 ---
 
+## ❗ Errors
+
+Every error the server answers is an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem, `application/problem+json`, as `src/VideoSurveillance.yaml` declares:
+
+```json
+{ "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5", "title": "Not Found", "status": 404, "detail": "Camera 6f0c… not found." }
+```
+
+- `detail` says what went wrong, in words a person can read. A client shows it as it is.
+- The framework's own errors are problems too: an address the server does not have (404) and a body that is no JSON (400).
+- An unhandled exception is a 500 problem without the exception's text. In Development the developer exception page shows it instead.
+- A snapshot of a camera that exists but gives no picture is 503; 404 is a camera the server does not know.
+
+In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` take the message, `BadRequest` takes a `ProblemDetails` (`new ProblemDetails { Detail = "…" }`).
+
+---
+
 ## 📼 Recordings and thumbnails
 
 `GET /recordings` lists the recordings, newest first. Each entry has:

@@ -17,6 +17,8 @@ public sealed class ApiHostErrorTests(ApiHostFixture host)
 
         var problem = await ReadProblemAsync(response, HttpStatusCode.NotFound);
         problem.GetProperty("detail").GetString().Should().NotBeNullOrWhiteSpace();
+        problem.GetProperty("title").GetString().Should().Be("Not Found");
+        problem.GetProperty("type").GetString().Should().Be("https://tools.ietf.org/html/rfc9110#section-15.5.5");
     }
 
     [Fact]
