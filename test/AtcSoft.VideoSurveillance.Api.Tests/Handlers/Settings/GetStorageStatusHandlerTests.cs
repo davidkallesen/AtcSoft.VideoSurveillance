@@ -45,4 +45,16 @@ public sealed class GetStorageStatusHandlerTests
 
         ((IStatusCodeHttpResult)result.Result).StatusCode.Should().Be(503);
     }
+
+    [Fact]
+    public async Task An_Unreadable_Disk_Says_When_To_Ask_Again()
+    {
+        recording.RecordingPath = "Q:\\does-not-exist\\recordings";
+
+        var result = await new GetStorageStatusHandler(settings).ExecuteAsync(TestContext.Current.CancellationToken);
+
+        var response = await result.Result.ExecuteAsync();
+        response.StatusCode.Should().Be(503);
+        response.Headers.RetryAfter.ToString().Should().Be("30");
+    }
 }

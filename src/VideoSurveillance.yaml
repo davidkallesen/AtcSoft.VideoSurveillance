@@ -166,6 +166,11 @@ paths:
                 $ref: "#/components/schemas/ProblemDetails"
         '503':
           description: Camera not connected
+          headers:
+            Retry-After:
+              description: Seconds to wait before asking again.
+              schema:
+                type: integer
           content:
             application/problem+json:
               schema:
@@ -577,6 +582,11 @@ paths:
                 $ref: "#/components/schemas/StorageStatus"
         '503':
           description: The disk of the recording folder cannot be read (a share that is offline, a drive that is gone).
+          headers:
+            Retry-After:
+              description: Seconds to wait before asking again.
+              schema:
+                type: integer
           content:
             application/problem+json:
               schema:

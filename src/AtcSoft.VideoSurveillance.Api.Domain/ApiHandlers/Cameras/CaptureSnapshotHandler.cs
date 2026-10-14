@@ -14,6 +14,9 @@ public sealed class CaptureSnapshotHandler(
     IApplicationSettingsService settingsService,
     ICameraPipelineHost? pipelineHost = null) : ICaptureSnapshotHandler
 {
+    // A camera that is still connecting usually has a picture a few seconds later.
+    private const int RetryAfterSeconds = 5;
+
     // Same envelope as StartRecording — long enough for a typical RTSP open
     // (1-3s), short enough that a stuck client gets a definite answer.
     private static readonly TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(15);
@@ -47,7 +50,7 @@ public sealed class CaptureSnapshotHandler(
         if (!connected)
         {
             return CaptureSnapshotResult.ServiceUnavailable(
-                $"Camera {parameters.CameraId} did not reach Connected within {ConnectionTimeout.TotalSeconds:N0}s.");
+                $"Camera {parameters.CameraId} did not reach Connected within {ConnectionTimeout.TotalSeconds:N0}s.", retryAfter: RetryAfterSeconds);
         }
 
         return await CaptureAndSaveAsync(pipeline, camera, cancellationToken).ConfigureAwait(false);
@@ -62,7 +65,7 @@ public sealed class CaptureSnapshotHandler(
         if (pipeline is null)
         {
             return CaptureSnapshotResult.ServiceUnavailable(
-                "This USB camera cannot be opened right now: it is unplugged, or the server is still connecting to it. Try again in a moment.");
+                "This USB camera cannot be opened right now: it is unplugged, or the server is still connecting to it. Try again in a moment.", retryAfter: RetryAfterSeconds);
         }
 
         // The pipeline is given back, never closed.
@@ -74,7 +77,7 @@ public sealed class CaptureSnapshotHandler(
             if (!playing)
             {
                 return CaptureSnapshotResult.ServiceUnavailable(
-                    $"Camera {camera.Id} delivered no picture within {ConnectionTimeout.TotalSeconds:N0}s.");
+                    $"Camera {camera.Id} delivered no picture within {ConnectionTimeout.TotalSeconds:N0}s.", retryAfter: RetryAfterSeconds);
             }
 
             return await CaptureAndSaveAsync(pipeline, camera, cancellationToken).ConfigureAwait(false);
@@ -93,7 +96,7 @@ public sealed class CaptureSnapshotHandler(
         var frame = await pipeline.CaptureFrameAsync(cancellationToken);
         if (frame is null)
         {
-            return CaptureSnapshotResult.ServiceUnavailable("Failed to capture frame from camera stream.");
+            return CaptureSnapshotResult.ServiceUnavailable("Failed to capture frame from camera stream.", retryAfter: RetryAfterSeconds);
         }
 
         var snapshotPath = settingsService.CameraDisplay.SnapshotPath;

@@ -54,6 +54,10 @@ public class CaptureSnapshotHandlerTests
         pipelineFactory.Received(1).Create(camera);
         await pipeline.Received(1).CaptureFrameAsync(Arg.Any<CancellationToken>());
         result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+
+        // A camera that is still connecting is worth asking again shortly.
+        var response = await result.Result.ExecuteAsync();
+        response.Headers.RetryAfter.ToString().Should().Be("5");
     }
 
     [Fact]
