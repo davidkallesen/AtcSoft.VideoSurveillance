@@ -1,5 +1,6 @@
 ﻿global using System.Diagnostics.CodeAnalysis;
 
+global using AtcSoft.VideoSurveillance.Blazor.App.Logic;
 global using AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;
 
 global using Microsoft.Extensions.DependencyInjection;
