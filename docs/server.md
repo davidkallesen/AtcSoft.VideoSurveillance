@@ -44,7 +44,7 @@ Every error the server answers is an [RFC 9457](https://www.rfc-editor.org/rfc/r
 
 In a handler, the generated factories make the problem: `NotFound("…")`, `Conflict("…")` and `ServiceUnavailable("…")` and `BadRequest("…")` take the message.
 
-An enum is written as the specification writes it: `rtsp`, `topLeft`, `rotate90`. Clients built on generator 2.x sent the C# member name (`Rtsp`, `TopLeft`), so the server reads that too (`"readEnumMemberNames": true` in the server marker); the clients read a member name from a 2.x server the same way. This is for the rollout, and goes once every client and server is on v3.
+An enum is written and read as the specification writes it: `rtsp`, `topLeft`, `rotate90`. Clients built on generator 2.x sent the C# member name (`Rtsp`, `TopLeft`); the server refuses that with a 400, so update the server and the desktop client together.
 
 ---
 

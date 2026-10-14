@@ -107,28 +107,16 @@ public sealed class ApiHostErrorTests(ApiHostFixture host)
     }
 
     [Fact]
-    public async Task A_Camera_From_A_Client_Built_On_Generator_V2_Is_Read_By_Its_Member_Names()
+    public async Task A_Camera_From_A_Client_Built_On_Generator_V2_Is_A_Bad_Request()
     {
         using var client = host.CreateClient();
+
         using var created = await client.PostAsJsonAsync(
             "/cameras",
             new { displayName = "Member names " + Guid.NewGuid().ToString("N")[..8], ipAddress = "192.0.2.12", port = 554, protocol = "Rtsp", rotation = "Rotate90", overlayPosition = "TopLeft" },
             TestContext.Current.CancellationToken);
-        created.StatusCode.Should().Be(HttpStatusCode.Created);
-        var id = (await created.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("id").GetGuid();
 
-        try
-        {
-            var camera = await client.GetFromJsonAsync<JsonElement>($"/cameras/{id}", TestContext.Current.CancellationToken);
-
-            camera.GetProperty("protocol").GetString().Should().Be("rtsp");
-            camera.GetProperty("rotation").GetString().Should().Be("rotate90");
-            camera.GetProperty("overlayPosition").GetString().Should().Be("topLeft");
-        }
-        finally
-        {
-            using var deleted = await client.DeleteAsync(new Uri($"/cameras/{id}", UriKind.Relative), TestContext.Current.CancellationToken);
-        }
+        await ReadProblemAsync(created, HttpStatusCode.BadRequest);
     }
 
     [Fact]
