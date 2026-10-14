@@ -662,13 +662,13 @@ public partial class SettingsDialogViewModel : ViewModelBase
         var apiLanguage = CultureManager.UiCulture.LCID.ToString(CultureInfo.InvariantCulture);
 
         // Parse enum values from string selections
-        _ = Enum.TryParse<AppSettingsThemeBase>(apiThemeBase, out var themeBase);
-        _ = Enum.TryParse<AppSettingsOverlayPosition>(SelectedOverlayPosition, out var overlayPosition);
-        _ = Enum.TryParse<AppSettingsConnectionTypeIconPlacement>(SelectedConnectionTypeIconPlacement, out var iconPlacement);
-        _ = Enum.TryParse<AppSettingsDefaultProtocol>(SelectedDefaultProtocol, out var protocol);
-        _ = Enum.TryParse<AppSettingsRtspTransport>(SelectedRtspTransport, out var rtspTransport);
-        _ = Enum.TryParse<AppSettingsRecordingFormat>(SelectedRecordingFormat, out var recordingFormat);
-        _ = Enum.TryParse<AppSettingsCleanupSchedule>(SelectedCleanupSchedule, out var cleanupSchedule);
+        var themeBase = KnownValue.FromName(AppSettingsThemeBase.KnownValues, apiThemeBase, AppSettingsThemeBase.Dark);
+        var overlayPosition = KnownValue.FromName(AppSettingsOverlayPosition.KnownValues, SelectedOverlayPosition, AppSettingsOverlayPosition.TopLeft);
+        var iconPlacement = KnownValue.FromName(AppSettingsConnectionTypeIconPlacement.KnownValues, SelectedConnectionTypeIconPlacement, AppSettingsConnectionTypeIconPlacement.SameRow);
+        var protocol = KnownValue.FromName(AppSettingsDefaultProtocol.KnownValues, SelectedDefaultProtocol, AppSettingsDefaultProtocol.Rtsp);
+        var rtspTransport = KnownValue.FromName(AppSettingsRtspTransport.KnownValues, SelectedRtspTransport, AppSettingsRtspTransport.Tcp);
+        var recordingFormat = KnownValue.FromName(AppSettingsRecordingFormat.KnownValues, SelectedRecordingFormat, AppSettingsRecordingFormat.Mp4);
+        var cleanupSchedule = KnownValue.FromName(AppSettingsCleanupSchedule.KnownValues, SelectedCleanupSchedule, AppSettingsCleanupSchedule.Disabled);
         _ = double.TryParse(SelectedOverlayOpacity, NumberStyles.Float, CultureInfo.InvariantCulture, out var opacity);
         _ = int.TryParse(SelectedMaxRecordingDuration, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxRecordingDuration);
         _ = int.TryParse(SelectedThumbnailTileCount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var thumbnailTileCount);

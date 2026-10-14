@@ -232,7 +232,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
         try
         {
             var detected = await detectConnectionType!(cameraId!.Value).ConfigureAwait(true);
-            if (detected is CameraConnectionType.Lan or CameraConnectionType.Wifi)
+            if (detected?.Value is CameraConnectionType.Names.Lan or CameraConnectionType.Names.Wifi)
             {
                 SelectedConnectionType = detected.Value;
                 ConnectionTypeDetectionStatus = "Detected: " + ConnectionTypeItems[detected.Value.ToString()];

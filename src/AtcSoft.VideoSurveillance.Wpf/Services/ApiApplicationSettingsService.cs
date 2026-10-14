@@ -428,12 +428,12 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     internal static UpdateSettingsRequest BuildApiSettings(
         ApplicationSettings settings)
     {
-        _ = Enum.TryParse<AppSettingsThemeBase>(settings.General.ThemeBase, out var themeBase);
-        _ = Enum.TryParse<AppSettingsOverlayPosition>(settings.CameraDisplay.OverlayPosition.ToString(), out var overlayPosition);
-        _ = Enum.TryParse<AppSettingsDefaultProtocol>(settings.Connection.DefaultProtocol.ToString(), out var protocol);
-        _ = Enum.TryParse<AppSettingsRtspTransport>(settings.Performance.RtspTransport, true, out var rtspTransport);
-        _ = Enum.TryParse<AppSettingsRecordingFormat>(settings.Recording.RecordingFormat, true, out var recordingFormat);
-        _ = Enum.TryParse<AppSettingsCleanupSchedule>(settings.Recording.Cleanup.Schedule.ToString(), out var cleanupSchedule);
+        var themeBase = KnownValue.FromName(AppSettingsThemeBase.KnownValues, settings.General.ThemeBase, AppSettingsThemeBase.Dark);
+        var overlayPosition = KnownValue.FromName(AppSettingsOverlayPosition.KnownValues, settings.CameraDisplay.OverlayPosition.ToString(), AppSettingsOverlayPosition.TopLeft);
+        var protocol = KnownValue.FromName(AppSettingsDefaultProtocol.KnownValues, settings.Connection.DefaultProtocol.ToString(), AppSettingsDefaultProtocol.Rtsp);
+        var rtspTransport = KnownValue.FromName(AppSettingsRtspTransport.KnownValues, settings.Performance.RtspTransport, AppSettingsRtspTransport.Tcp);
+        var recordingFormat = KnownValue.FromName(AppSettingsRecordingFormat.KnownValues, settings.Recording.RecordingFormat, AppSettingsRecordingFormat.Mp4);
+        var cleanupSchedule = KnownValue.FromName(AppSettingsCleanupSchedule.KnownValues, settings.Recording.Cleanup.Schedule.ToString(), AppSettingsCleanupSchedule.Disabled);
 
         return new UpdateSettingsRequest(
             ThemeBase: themeBase,
@@ -447,7 +447,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             ShowOverlayConnectionStatus: settings.CameraDisplay.ShowOverlayConnectionStatus,
             ShowOverlayQuickActions: settings.CameraDisplay.ShowOverlayQuickActions,
             ShowOverlayConnectionTypeIcon: settings.CameraDisplay.ShowOverlayConnectionTypeIcon,
-            ConnectionTypeIconPlacement: ParseEnumOrDefault(settings.CameraDisplay.ConnectionTypeIconPlacement.ToString(), AppSettingsConnectionTypeIconPlacement.SameRow),
+            ConnectionTypeIconPlacement: KnownValue.FromName(AppSettingsConnectionTypeIconPlacement.KnownValues, settings.CameraDisplay.ConnectionTypeIconPlacement.ToString(), AppSettingsConnectionTypeIconPlacement.SameRow),
             OverlayOpacity: settings.CameraDisplay.OverlayOpacity,
             OverlayPosition: overlayPosition,
             AllowDragAndDropReorder: settings.CameraDisplay.AllowDragAndDropReorder,

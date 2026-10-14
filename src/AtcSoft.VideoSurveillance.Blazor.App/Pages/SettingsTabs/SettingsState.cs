@@ -373,8 +373,8 @@ public sealed class SettingsState
     public string GetConnectionTypeIconPlacementLabel(
         AppSettingsConnectionTypeIconPlacement placement)
     {
-        var isTop = OverlayPosition is AppSettingsOverlayPosition.TopLeft or AppSettingsOverlayPosition.TopRight;
-        var isLeft = OverlayPosition is AppSettingsOverlayPosition.TopLeft or AppSettingsOverlayPosition.BottomLeft;
+        var isTop = OverlayPosition.Value is AppSettingsOverlayPosition.Names.TopLeft or AppSettingsOverlayPosition.Names.TopRight;
+        var isLeft = OverlayPosition.Value is AppSettingsOverlayPosition.Names.TopLeft or AppSettingsOverlayPosition.Names.BottomLeft;
 
         if (placement == AppSettingsConnectionTypeIconPlacement.SameColumn)
         {

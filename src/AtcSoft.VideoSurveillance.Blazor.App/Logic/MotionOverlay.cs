@@ -26,7 +26,7 @@ public static class MotionOverlay
             return null;
         }
 
-        return rotation is CameraRotation.Rotate90 or CameraRotation.Rotate270
+        return rotation?.Value is CameraRotation.Names.Rotate90 or CameraRotation.Names.Rotate270
             ? (videoHeight, videoWidth)
             : (videoWidth, videoHeight);
     }

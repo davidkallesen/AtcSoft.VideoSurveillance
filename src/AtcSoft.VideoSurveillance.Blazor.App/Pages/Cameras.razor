@@ -266,11 +266,11 @@ else
     }
 
     private static Color GetConnectionColor(CameraConnectionState? state)
-        => state switch
+        => state?.Value switch
         {
-            CameraConnectionState.Connected => Color.Success,
-            CameraConnectionState.Connecting or CameraConnectionState.Reconnecting => Color.Warning,
-            CameraConnectionState.Error => Color.Error,
+            CameraConnectionState.Names.Connected => Color.Success,
+            CameraConnectionState.Names.Connecting or CameraConnectionState.Names.Reconnecting => Color.Warning,
+            CameraConnectionState.Names.Error => Color.Error,
             _ => Color.Default,
         };
 

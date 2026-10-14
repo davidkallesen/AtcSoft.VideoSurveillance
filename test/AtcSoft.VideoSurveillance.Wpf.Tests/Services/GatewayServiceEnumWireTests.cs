@@ -1,9 +1,9 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
-/// The client reads an enum only by the specification's value (<c>rtsp</c>).
-/// A server built on generator 2.x wrote the C# member name (<c>Rtsp</c>),
-/// so the server and the desktop client are released together.
+/// The client's enums are extensible: a listed value is read in any casing,
+/// and a value the client does not know yet is kept instead of failing the
+/// whole response.
 /// </summary>
 public sealed class GatewayServiceEnumWireTests
 {
@@ -23,14 +23,30 @@ public sealed class GatewayServiceEnumWireTests
     }
 
     [Fact]
-    public async Task A_Camera_From_A_Server_Built_On_Generator_V2_Is_Not_Read()
+    public async Task A_Camera_From_A_Server_Built_On_Generator_V2_Is_Read_Too()
     {
+        // A 2.x server wrote the C# member names: the listed values in another casing.
         using var body = CameraBody("Rtsp", "Rotate90", "TopLeft", "Connected");
         using var server = new GatewayTestServer(HttpStatusCode.OK, body, "application/json");
 
-        var read = () => server.Gateway.GetCameraByIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+        var camera = await server.Gateway.GetCameraByIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
-        await read.Should().ThrowAsync<Atc.Rest.Client.RestClientDeserializationException>();
+        camera!.Protocol.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraProtocol.Rtsp);
+        camera.ConnectionState.Should().Be(global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionState.Connected);
+    }
+
+    [Fact]
+    public async Task A_State_The_Client_Does_Not_Know_Yet_Is_Kept_And_The_Camera_Is_Read()
+    {
+        using var body = CameraBody("rtsp", "none", "topLeft", "rebooting");
+        using var server = new GatewayTestServer(HttpStatusCode.OK, body, "application/json");
+
+        var camera = await server.Gateway.GetCameraByIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        camera.Should().NotBeNull();
+        camera!.DisplayName.Should().Be("Gate");
+        camera.ConnectionState!.Value.IsKnown.Should().BeFalse();
+        camera.ConnectionState.Value.Value.Should().Be("rebooting");
     }
 
     private static StringContent CameraBody(

@@ -398,7 +398,7 @@ else
         try
         {
             var detected = await Gateway.DetectConnectionTypeAsync(CameraId!.Value);
-            if (detected is CameraConnectionType.Lan or CameraConnectionType.Wifi)
+            if (detected?.Value is CameraConnectionType.Names.Lan or CameraConnectionType.Names.Wifi)
             {
                 connectionType = detected.Value;
                 detectionStatus = detected == CameraConnectionType.Lan ? "Detected: Wired (LAN)" : "Detected: Wi-Fi";

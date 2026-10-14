@@ -39,7 +39,7 @@ public sealed class SettingsStateTests
         sut.UseDailySubfolders.Should().Be(recording.UseDailySubfolders);
         sut.SeparateThumbnailFolder.Should().Be(recording.SeparateThumbnailFolder);
         sut.TimelapseInterval.Should().Be(recording.TimelapseInterval);
-        sut.CleanupSchedule.ToString().Should().Be(recording.Cleanup.Schedule.ToString());
+        sut.CleanupSchedule.ToString().Should().BeEquivalentTo(recording.Cleanup.Schedule.ToString());
         sut.RecordingRetentionDays.Should().Be(recording.Cleanup.RecordingRetentionDays);
         sut.SnapshotRetentionDays.Should().Be(recording.Cleanup.SnapshotRetentionDays);
         sut.MinFreeSpaceMb.Should().Be(recording.Cleanup.MinFreeSpaceMb);

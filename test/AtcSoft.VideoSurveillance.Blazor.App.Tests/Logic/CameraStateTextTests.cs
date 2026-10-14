@@ -14,6 +14,15 @@ public sealed class CameraStateTextTests
     public void A_State_In_The_Wire_Spelling_Is_Read_Too()
         => CameraStateText.Parse("reconnecting").Should().Be(CameraConnectionState.Reconnecting);
 
+    [Fact]
+    public void A_State_The_Client_Does_Not_Know_Yet_Is_Kept()
+    {
+        var state = CameraStateText.Parse("Rebooting");
+
+        state!.Value.IsKnown.Should().BeFalse();
+        state.Value.Value.Should().Be("Rebooting");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

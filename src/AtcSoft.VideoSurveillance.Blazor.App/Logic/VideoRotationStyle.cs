@@ -15,11 +15,11 @@ public static class VideoRotationStyle
     /// positioned, because a quarter turn sizes the element from the tile.
     /// </summary>
     public static string For(CameraRotation? rotation)
-        => rotation switch
+        => rotation?.Value switch
         {
-            CameraRotation.Rotate90 => QuarterTurn(90),
-            CameraRotation.Rotate270 => QuarterTurn(270),
-            CameraRotation.Rotate180 => Fill + " transform: rotate(180deg);",
+            CameraRotation.Names.Rotate90 => QuarterTurn(90),
+            CameraRotation.Names.Rotate270 => QuarterTurn(270),
+            CameraRotation.Names.Rotate180 => Fill + " transform: rotate(180deg);",
             _ => Fill,
         };
 
@@ -29,7 +29,7 @@ public static class VideoRotationStyle
     /// left out then.
     /// </summary>
     public static bool IsRotated(CameraRotation? rotation)
-        => rotation is CameraRotation.Rotate90 or CameraRotation.Rotate180 or CameraRotation.Rotate270;
+        => rotation?.Value is CameraRotation.Names.Rotate90 or CameraRotation.Names.Rotate180 or CameraRotation.Names.Rotate270;
 
     // Laid out with the tile's height as its width and the other way round,
     // centred, then turned: after the turn it covers the tile exactly.

@@ -444,12 +444,12 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
 
     private static ConnectionState MapApiConnectionState(
         CameraConnectionState? apiState)
-        => apiState switch
+        => apiState?.Value switch
         {
-            CameraConnectionState.Connected => ConnectionState.Connected,
-            CameraConnectionState.Connecting => ConnectionState.Connecting,
-            CameraConnectionState.Reconnecting => ConnectionState.Reconnecting,
-            CameraConnectionState.Error => ConnectionState.ConnectionFailed,
+            CameraConnectionState.Names.Connected => ConnectionState.Connected,
+            CameraConnectionState.Names.Connecting => ConnectionState.Connecting,
+            CameraConnectionState.Names.Reconnecting => ConnectionState.Reconnecting,
+            CameraConnectionState.Names.Error => ConnectionState.ConnectionFailed,
             _ => ConnectionState.Disconnected,
         };
 }

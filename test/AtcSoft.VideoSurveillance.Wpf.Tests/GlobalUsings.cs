@@ -6,6 +6,7 @@ global using System.Text.Json;
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Factories;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 global using AtcSoft.VideoSurveillance.Wpf.Dialogs;
 global using AtcSoft.VideoSurveillance.Wpf.Extensions;

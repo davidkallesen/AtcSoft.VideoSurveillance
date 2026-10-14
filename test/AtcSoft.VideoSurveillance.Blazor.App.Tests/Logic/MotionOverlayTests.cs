@@ -10,18 +10,17 @@ public sealed class MotionOverlayTests
 {
     [Theory]
     [InlineData(null)]
-    [InlineData(CameraRotation.None)]
-    [InlineData(CameraRotation.Rotate180)]
+    [InlineData(CameraRotation.Names.None)]
+    [InlineData(CameraRotation.Names.Rotate180)]
     public void A_Picture_That_Is_Not_Turned_A_Quarter_Is_Shown_In_The_Shape_The_Camera_Sends(
-        CameraRotation? rotation)
-        => MotionOverlay.ShownSize(1280, 720, rotation).Should().Be((1280, 720));
+        string? rotation)
+        => MotionOverlay.ShownSize(1280, 720, Rotation(rotation)).Should().Be((1280, 720));
 
     [Theory]
-    [InlineData(CameraRotation.Rotate90)]
-    [InlineData(CameraRotation.Rotate270)]
-    public void A_Picture_Turned_A_Quarter_Stands_Upright(
-        CameraRotation rotation)
-        => MotionOverlay.ShownSize(1280, 720, rotation).Should().Be((720, 1280));
+    [InlineData(CameraRotation.Names.Rotate90)]
+    [InlineData(CameraRotation.Names.Rotate270)]
+    public void A_Picture_Turned_A_Quarter_Stands_Upright(string rotation)
+        => MotionOverlay.ShownSize(1280, 720, Rotation(rotation)).Should().Be((720, 1280));
 
     [Theory]
     [InlineData(0, 720)]
@@ -39,4 +38,8 @@ public sealed class MotionOverlayTests
         MotionOverlay.ShownSize([640], CameraRotation.None).Should().BeNull();
         MotionOverlay.ShownSize(null, CameraRotation.None).Should().BeNull();
     }
+
+    // A struct cannot be an attribute argument, so the cases name the value on the wire.
+    private static CameraRotation? Rotation(string? name)
+        => name is null ? null : new CameraRotation(name);
 }

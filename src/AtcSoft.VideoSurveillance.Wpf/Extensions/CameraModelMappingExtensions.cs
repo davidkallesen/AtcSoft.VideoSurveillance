@@ -122,11 +122,11 @@ public static class CameraModelMappingExtensions
     /// </summary>
     public static CoreCameraConnectionType ToCoreConnectionType(
         this ApiCameraConnectionType connectionType)
-        => connectionType switch
+        => connectionType.Value switch
         {
-            ApiCameraConnectionType.Lan => CoreCameraConnectionType.Lan,
-            ApiCameraConnectionType.Wifi => CoreCameraConnectionType.Wifi,
-            ApiCameraConnectionType.Usb => CoreCameraConnectionType.Usb,
+            ApiCameraConnectionType.Names.Lan => CoreCameraConnectionType.Lan,
+            ApiCameraConnectionType.Names.Wifi => CoreCameraConnectionType.Wifi,
+            ApiCameraConnectionType.Names.Usb => CoreCameraConnectionType.Usb,
             _ => CoreCameraConnectionType.None,
         };
 
@@ -151,11 +151,11 @@ public static class CameraModelMappingExtensions
     /// </summary>
     public static CoreCameraRotation ToCoreRotation(
         this ApiCameraRotation rotation)
-        => rotation switch
+        => rotation.Value switch
         {
-            ApiCameraRotation.Rotate90 => CoreCameraRotation.Rotate90,
-            ApiCameraRotation.Rotate180 => CoreCameraRotation.Rotate180,
-            ApiCameraRotation.Rotate270 => CoreCameraRotation.Rotate270,
+            ApiCameraRotation.Names.Rotate90 => CoreCameraRotation.Rotate90,
+            ApiCameraRotation.Names.Rotate180 => CoreCameraRotation.Rotate180,
+            ApiCameraRotation.Names.Rotate270 => CoreCameraRotation.Rotate270,
             _ => CoreCameraRotation.None,
         };
 
@@ -174,11 +174,11 @@ public static class CameraModelMappingExtensions
 
     public static CoreCameraProtocol ToCoreProtocol(
         this ApiCameraProtocol protocol)
-        => protocol switch
+        => protocol.Value switch
         {
-            ApiCameraProtocol.Rtsp => CoreCameraProtocol.Rtsp,
-            ApiCameraProtocol.Http => CoreCameraProtocol.Http,
-            ApiCameraProtocol.Https => CoreCameraProtocol.Https,
+            ApiCameraProtocol.Names.Rtsp => CoreCameraProtocol.Rtsp,
+            ApiCameraProtocol.Names.Http => CoreCameraProtocol.Http,
+            ApiCameraProtocol.Names.Https => CoreCameraProtocol.Https,
             _ => CoreCameraProtocol.Rtsp,
         };
 
@@ -200,12 +200,12 @@ public static class CameraModelMappingExtensions
     /// </summary>
     public static CoreOverlayPosition ToCoreOverlayPosition(
         this ApiCameraOverlayPosition position)
-        => position switch
+        => position.Value switch
         {
-            ApiCameraOverlayPosition.TopLeft => CoreOverlayPosition.TopLeft,
-            ApiCameraOverlayPosition.TopRight => CoreOverlayPosition.TopRight,
-            ApiCameraOverlayPosition.BottomLeft => CoreOverlayPosition.BottomLeft,
-            ApiCameraOverlayPosition.BottomRight => CoreOverlayPosition.BottomRight,
+            ApiCameraOverlayPosition.Names.TopLeft => CoreOverlayPosition.TopLeft,
+            ApiCameraOverlayPosition.Names.TopRight => CoreOverlayPosition.TopRight,
+            ApiCameraOverlayPosition.Names.BottomLeft => CoreOverlayPosition.BottomLeft,
+            ApiCameraOverlayPosition.Names.BottomRight => CoreOverlayPosition.BottomRight,
             _ => CoreOverlayPosition.TopLeft,
         };
 

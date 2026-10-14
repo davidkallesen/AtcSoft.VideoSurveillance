@@ -10,15 +10,15 @@ using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
 public class CameraRotationClientTests
 {
     [Theory]
-    [InlineData(ApiCameraRotation.None, CoreCameraRotation.None)]
-    [InlineData(ApiCameraRotation.Rotate90, CoreCameraRotation.Rotate90)]
-    [InlineData(ApiCameraRotation.Rotate180, CoreCameraRotation.Rotate180)]
-    [InlineData(ApiCameraRotation.Rotate270, CoreCameraRotation.Rotate270)]
+    [InlineData(ApiCameraRotation.Names.None, CoreCameraRotation.None)]
+    [InlineData(ApiCameraRotation.Names.Rotate90, CoreCameraRotation.Rotate90)]
+    [InlineData(ApiCameraRotation.Names.Rotate180, CoreCameraRotation.Rotate180)]
+    [InlineData(ApiCameraRotation.Names.Rotate270, CoreCameraRotation.Rotate270)]
     public void ToCameraConfiguration_Reads_The_Rotation_From_The_Server(
-        ApiCameraRotation api,
+        string api,
         CoreCameraRotation expected)
     {
-        var config = TestCameras.Network(api).ToCameraConfiguration();
+        var config = TestCameras.Network(new ApiCameraRotation(api)).ToCameraConfiguration();
 
         config.Display.Rotation.Should().Be(expected);
     }
