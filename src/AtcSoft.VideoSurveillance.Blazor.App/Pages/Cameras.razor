@@ -183,15 +183,12 @@ else
 
         if (result is { Canceled: false })
         {
-            try
-            {
-                await Gateway.DeleteCameraAsync(camera.Id);
-                Snackbar.Add($"Camera '{camera.DisplayName}' deleted.", Severity.Success);
-            }
-            catch (HttpRequestException)
-            {
-                Snackbar.Add($"Camera '{camera.DisplayName}' could not be deleted.", Severity.Error);
-            }
+            var deleted = await Gateway.DeleteCameraAsync(camera.Id);
+            Snackbar.Add(
+                deleted.IsSuccess
+                    ? $"Camera '{camera.DisplayName}' deleted."
+                    : ProblemText.WithReason($"Camera '{camera.DisplayName}' could not be deleted.", deleted.Problem),
+                deleted.IsSuccess ? Severity.Success : Severity.Error);
 
             await LoadCamerasAsync();
         }
@@ -207,14 +204,14 @@ else
         try
         {
             var status = await Gateway.StartRecordingAsync(cameraId);
-            if (status is not null)
+            if (status.IsSuccess)
             {
                 Snackbar.Add("Recording started.", Severity.Success);
                 await LoadCamerasAsync();
             }
             else
             {
-                Snackbar.Add("The recording could not be started. The camera may not be reachable.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason("The recording could not be started.", status.Problem), Severity.Error);
             }
         }
         finally
@@ -233,14 +230,14 @@ else
         try
         {
             var status = await Gateway.StopRecordingAsync(cameraId);
-            if (status is not null)
+            if (status.IsSuccess)
             {
                 Snackbar.Add("Recording stopped.", Severity.Success);
                 await LoadCamerasAsync();
             }
             else
             {
-                Snackbar.Add("The recording could not be stopped.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason("The recording could not be stopped.", status.Problem), Severity.Error);
             }
         }
         finally

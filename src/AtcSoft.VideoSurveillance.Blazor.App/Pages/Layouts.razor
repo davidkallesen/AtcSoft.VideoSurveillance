@@ -102,7 +102,7 @@ else
             Columns: newColumns);
 
         var result = await Gateway.CreateLayoutAsync(request);
-        if (result is not null)
+        if (result.IsSuccess)
         {
             Snackbar.Add($"Layout '{newLayoutName}' created.", Severity.Success);
             newLayoutName = string.Empty;
@@ -110,20 +110,20 @@ else
         }
         else
         {
-            Snackbar.Add("Failed to create layout.", Severity.Error);
+            Snackbar.Add(ProblemText.WithReason("Failed to create layout.", result.Problem), Severity.Error);
         }
     }
 
     private async Task ApplyLayoutAsync(Layout layout)
     {
         var result = await Gateway.ApplyLayoutAsync(layout.Id);
-        if (result is not null)
+        if (result.IsSuccess)
         {
             Snackbar.Add($"Layout '{layout.Name}' applied.", Severity.Success);
         }
         else
         {
-            Snackbar.Add("Failed to apply layout.", Severity.Error);
+            Snackbar.Add(ProblemText.WithReason("Failed to apply layout.", result.Problem), Severity.Error);
         }
     }
 
@@ -141,13 +141,10 @@ else
 
         if (result is { Canceled: false })
         {
-            try
+            var deleted = await Gateway.DeleteLayoutAsync(layout.Id);
+            if (!deleted.IsSuccess)
             {
-                await Gateway.DeleteLayoutAsync(layout.Id);
-            }
-            catch (HttpRequestException)
-            {
-                Snackbar.Add($"Layout '{layout.Name}' could not be deleted.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason($"Layout '{layout.Name}' could not be deleted.", deleted.Problem), Severity.Error);
                 return;
             }
 
@@ -176,7 +173,7 @@ else
         }
 
         var result = await Gateway.UpdateLayoutAsync(editingLayout.Id, request);
-        if (result is not null)
+        if (result.IsSuccess)
         {
             Snackbar.Add($"Layout '{editingLayout.Name}' saved.", Severity.Success);
             editingLayout = null;
@@ -184,7 +181,7 @@ else
         }
         else
         {
-            Snackbar.Add("Failed to save layout.", Severity.Error);
+            Snackbar.Add(ProblemText.WithReason("Failed to save layout.", result.Problem), Severity.Error);
         }
     }
 

@@ -453,14 +453,14 @@ else
                 StreamBufferDurationMs: streamBufferDurationMs);
 
             var result = await Gateway.UpdateCameraAsync(CameraId!.Value, request);
-            if (result is not null)
+            if (result.IsSuccess)
             {
                 Snackbar.Add("Camera updated.", Severity.Success);
                 Navigation.NavigateTo("/cameras");
             }
             else
             {
-                Snackbar.Add("Failed to update camera.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason("Failed to update camera.", result.Problem), Severity.Error);
             }
         }
         else
@@ -492,14 +492,14 @@ else
                 Port: port);
 
             var result = await Gateway.CreateCameraAsync(request);
-            if (result is not null)
+            if (result.IsSuccess)
             {
                 Snackbar.Add("Camera created.", Severity.Success);
                 Navigation.NavigateTo("/cameras");
             }
             else
             {
-                Snackbar.Add("Failed to create camera.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason("Failed to create camera.", result.Problem), Severity.Error);
             }
         }
 

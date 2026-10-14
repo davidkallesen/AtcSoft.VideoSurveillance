@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Camera?> CreateCameraAsync(
+    public async Task<GatewayResult<Camera>> CreateCameraAsync(
         CreateCameraRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -27,8 +27,8 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsCreated
-            ? result.CreatedContent
-            : null;
+            ? GatewayResult.Success(result.CreatedContent)
+            : GatewayResult.Refused<Camera>(result);
     }
 
     public async Task<Camera?> GetCameraByIdAsync(
@@ -64,7 +64,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Camera?> UpdateCameraAsync(
+    public async Task<GatewayResult<Camera>> UpdateCameraAsync(
         Guid cameraId,
         UpdateCameraRequest request,
         CancellationToken cancellationToken = default)
@@ -75,11 +75,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<Camera>(result);
     }
 
-    public async Task DeleteCameraAsync(
+    public async Task<GatewayResult> DeleteCameraAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -88,13 +88,12 @@ public sealed partial class GatewayService
             .ExecuteAsync(parameters, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        if (!result.IsNoContent)
-        {
-            throw new HttpRequestException($"Failed to delete camera: {result.StatusCode}");
-        }
+        return result.IsNoContent
+            ? GatewayResult.Done
+            : GatewayResult.Refused(result);
     }
 
-    public async Task<RecordingStatus?> StartRecordingAsync(
+    public async Task<GatewayResult<RecordingStatus>> StartRecordingAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -104,11 +103,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<RecordingStatus>(result);
     }
 
-    public async Task<RecordingStatus?> StopRecordingAsync(
+    public async Task<GatewayResult<RecordingStatus>> StopRecordingAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -118,8 +117,8 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<RecordingStatus>(result);
     }
 
     /// <summary>

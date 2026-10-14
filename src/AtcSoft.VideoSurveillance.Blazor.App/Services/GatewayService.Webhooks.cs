@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Webhook?> CreateWebhookAsync(
+    public async Task<GatewayResult<Webhook>> CreateWebhookAsync(
         CreateWebhookRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -27,11 +27,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsCreated
-            ? result.CreatedContent
-            : null;
+            ? GatewayResult.Success(result.CreatedContent)
+            : GatewayResult.Refused<Webhook>(result);
     }
 
-    public async Task<Webhook?> UpdateWebhookAsync(
+    public async Task<GatewayResult<Webhook>> UpdateWebhookAsync(
         Guid webhookId,
         UpdateWebhookRequest request,
         CancellationToken cancellationToken = default)
@@ -42,11 +42,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<Webhook>(result);
     }
 
-    public async Task<bool> DeleteWebhookAsync(
+    public async Task<GatewayResult> DeleteWebhookAsync(
         Guid webhookId,
         CancellationToken cancellationToken = default)
     {
@@ -55,7 +55,9 @@ public sealed partial class GatewayService
             .ExecuteAsync(parameters, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        return result.IsNoContent;
+        return result.IsNoContent
+            ? GatewayResult.Done
+            : GatewayResult.Refused(result);
     }
 
     /// <summary>

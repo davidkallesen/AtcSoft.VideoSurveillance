@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Layout?> CreateLayoutAsync(
+    public async Task<GatewayResult<Layout>> CreateLayoutAsync(
         CreateLayoutRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -27,11 +27,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsCreated
-            ? result.CreatedContent
-            : null;
+            ? GatewayResult.Success(result.CreatedContent)
+            : GatewayResult.Refused<Layout>(result);
     }
 
-    public async Task<Layout?> UpdateLayoutAsync(
+    public async Task<GatewayResult<Layout>> UpdateLayoutAsync(
         Guid layoutId,
         UpdateLayoutRequest request,
         CancellationToken cancellationToken = default)
@@ -42,11 +42,11 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<Layout>(result);
     }
 
-    public async Task DeleteLayoutAsync(
+    public async Task<GatewayResult> DeleteLayoutAsync(
         Guid layoutId,
         CancellationToken cancellationToken = default)
     {
@@ -55,13 +55,12 @@ public sealed partial class GatewayService
             .ExecuteAsync(parameters, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        if (!result.IsNoContent)
-        {
-            throw new HttpRequestException($"Failed to delete layout: {result.StatusCode}");
-        }
+        return result.IsNoContent
+            ? GatewayResult.Done
+            : GatewayResult.Refused(result);
     }
 
-    public async Task<Layout?> ApplyLayoutAsync(
+    public async Task<GatewayResult<Layout>> ApplyLayoutAsync(
         Guid layoutId,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +70,7 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<Layout>(result);
     }
 }

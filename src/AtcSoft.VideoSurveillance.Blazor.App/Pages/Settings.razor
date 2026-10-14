@@ -130,17 +130,17 @@ else
         try
         {
             var result = await Gateway.UpdateSettingsAsync(state.ToApiModel());
-            if (result is not null)
+            if (result.IsSuccess)
             {
                 // Show what the server kept, which is not always what was sent.
                 var saved = new SettingsState();
-                saved.LoadFrom(result);
+                saved.LoadFrom(result.Value!);
                 state = saved;
                 Snackbar.Add("Settings saved.", Severity.Success);
             }
             else
             {
-                Snackbar.Add("The settings could not be saved.", Severity.Error);
+                Snackbar.Add(ProblemText.WithReason("The settings could not be saved.", result.Problem), Severity.Error);
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)

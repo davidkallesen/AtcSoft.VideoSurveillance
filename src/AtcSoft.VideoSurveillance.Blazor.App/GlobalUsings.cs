@@ -3,6 +3,7 @@ global using System.Globalization;
 global using System.Text.Json;
 
 global using Atc.Rest.Api.SourceGenerator;
+global using Atc.Rest.Client;
 
 global using AtcSoft.VideoSurveillance.Blazor.App;
 global using AtcSoft.VideoSurveillance.Blazor.App.Logic;

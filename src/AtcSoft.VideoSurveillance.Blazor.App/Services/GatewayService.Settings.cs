@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<AppSettings?> UpdateSettingsAsync(
+    public async Task<GatewayResult<AppSettings>> UpdateSettingsAsync(
         UpdateSettingsRequest settings,
         CancellationToken cancellationToken = default)
     {
@@ -27,7 +27,7 @@ public sealed partial class GatewayService
             .ConfigureAwait(false);
 
         return result.IsOk
-            ? result.OkContent
-            : null;
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<AppSettings>(result);
     }
 }

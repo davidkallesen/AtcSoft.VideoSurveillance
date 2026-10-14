@@ -286,8 +286,8 @@ else
     {
         var applied = await Gateway.ApplyLayoutAsync(selectedLayoutId);
         Snackbar.Add(
-            applied is null ? "The layout could not be set as the start-up layout." : $"'{applied.Name}' is now the start-up layout.",
-            applied is null ? Severity.Error : Severity.Success);
+            !applied.IsSuccess ? ProblemText.WithReason("The layout could not be set as the start-up layout.", applied.Problem) : $"'{applied.Value!.Name}' is now the start-up layout.",
+            applied.IsSuccess ? Severity.Success : Severity.Error);
     }
 
     private Task StartAllAsync()

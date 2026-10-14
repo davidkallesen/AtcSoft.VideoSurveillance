@@ -112,8 +112,8 @@ else
             Events: [.. entered.Events]));
 
         Snackbar.Add(
-            created is null ? "The receiver could not be added." : "Receiver added.",
-            created is null ? Severity.Error : Severity.Success);
+            created.IsSuccess ? "Receiver added." : ProblemText.WithReason("The receiver could not be added.", created.Problem),
+            created.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
 
@@ -132,8 +132,8 @@ else
                 Events: [.. entered.Events]));
 
         Snackbar.Add(
-            updated is null ? "The receiver could not be saved." : "Receiver saved.",
-            updated is null ? Severity.Error : Severity.Success);
+            updated.IsSuccess ? "Receiver saved." : ProblemText.WithReason("The receiver could not be saved.", updated.Problem),
+            updated.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
 
@@ -154,8 +154,8 @@ else
 
         var removed = await Gateway.DeleteWebhookAsync(webhook.Id);
         Snackbar.Add(
-            removed ? "Receiver removed." : "The receiver could not be removed.",
-            removed ? Severity.Success : Severity.Error);
+            removed.IsSuccess ? "Receiver removed." : ProblemText.WithReason("The receiver could not be removed.", removed.Problem),
+            removed.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
 
