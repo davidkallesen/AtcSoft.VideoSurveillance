@@ -44,6 +44,10 @@ try
     // Configure OpenAPI document generation
     builder.Services.AddOpenApi();
 
+    // The generated API's services: ProblemDetails for errors raised outside
+    // the handlers, and the enums on the wire as the specification writes them.
+    builder.Services.AddVideoSurveillanceApi();
+
     // Register API handlers from the Domain project (source-generated)
     builder.Services.AddApiHandlersFromDomain();
 
@@ -239,8 +243,10 @@ try
         .MapGet("/", () => Results.Redirect("/scalar/v1"))
         .ExcludeFromDescription();
 
-    // Map all generated REST endpoints
-    app.MapEndpoints();
+    // Map all generated REST endpoints, with a ProblemDetails for every error
+    // that has no body of its own (an unknown address, a body that is no
+    // JSON) and, outside Development, for an unhandled exception.
+    app.MapVideoSurveillanceApi();
 
     // Liveness probe and recording diagnostics. Kept out of the OpenAPI
     // surface (ExcludeFromDescription) because they're operational
