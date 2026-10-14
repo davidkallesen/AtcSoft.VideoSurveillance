@@ -13,7 +13,6 @@ global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Web;
 global using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 global using Microsoft.AspNetCore.SignalR.Client;
-global using Microsoft.Extensions.Http.Resilience;
 
 global using MudBlazor;
 global using MudBlazor.Services;
@@ -35,6 +34,7 @@ global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Recordings.Client;
 global using VideoSurveillance.Generated.Recordings.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Recordings.Models;
+global using VideoSurveillance.Generated.Resilience;
 global using VideoSurveillance.Generated.Settings.Client;
 global using VideoSurveillance.Generated.Settings.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Settings.Models;

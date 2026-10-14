@@ -1,21 +1,47 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Extensions;
 
+/// <summary>
+/// The resilience is the one the specification declares (x-retry-*), run
+/// through the generated endpoints, which tell it how to send each call.
+/// </summary>
 public sealed class ApiResilienceTests
 {
-    [Theory]
-    [InlineData("POST")]
-    [InlineData("PUT")]
-    [InlineData("DELETE")]
-    public async Task A_Change_That_Fails_Is_Sent_Once(string method)
+    [Fact]
+    public async Task A_Start_That_Fails_Is_Sent_Once()
     {
         using var handler = new CountingHandler(HttpStatusCode.ServiceUnavailable);
         await using var services = BuildServices(handler);
-        using var client = services.GetRequiredService<IHttpClientFactory>().CreateClient(Constants.HttpClientName);
-        using var request = new HttpRequestMessage(new HttpMethod(method), "cameras/1/recording");
 
-        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        await services.GetRequiredService<IStartRecordingEndpoint>().ExecuteAsync(
+            new StartRecordingParameters(Guid.NewGuid()),
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        handler.Calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_Save_That_Fails_Is_Sent_Once()
+    {
+        using var handler = new CountingHandler(HttpStatusCode.ServiceUnavailable);
+        await using var services = BuildServices(handler);
+
+        await services.GetRequiredService<IUpdateLayoutEndpoint>().ExecuteAsync(
+            new UpdateLayoutParameters(Guid.NewGuid(), new UpdateLayoutRequest(Name: "Wall")),
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        handler.Calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_Delete_That_Fails_Is_Sent_Once()
+    {
+        using var handler = new CountingHandler(HttpStatusCode.ServiceUnavailable);
+        await using var services = BuildServices(handler);
+
+        await services.GetRequiredService<IDeleteCameraEndpoint>().ExecuteAsync(
+            new DeleteCameraParameters(Guid.NewGuid()),
+            cancellationToken: TestContext.Current.CancellationToken);
+
         handler.Calls.Should().Be(1);
     }
 
@@ -24,26 +50,12 @@ public sealed class ApiResilienceTests
     {
         using var handler = new CountingHandler(HttpStatusCode.ServiceUnavailable, HttpStatusCode.OK);
         await using var services = BuildServices(handler);
-        using var client = services.GetRequiredService<IHttpClientFactory>().CreateClient(Constants.HttpClientName);
 
-        using var response = await client.GetAsync(new Uri("cameras", UriKind.Relative), TestContext.Current.CancellationToken);
+        var result = await services.GetRequiredService<IListCamerasEndpoint>().ExecuteAsync(
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        result.IsOk.Should().BeTrue();
         handler.Calls.Should().Be(2);
-    }
-
-    [Fact]
-    public async Task A_Slow_Call_Gets_Minutes_Not_Seconds()
-    {
-        using var handler = new CountingHandler(HttpStatusCode.OK);
-        await using var services = BuildServices(handler);
-
-        var options = services
-            .GetRequiredService<IOptionsMonitor<HttpStandardResilienceOptions>>()
-            .Get($"{Constants.HttpClientName}-standard");
-
-        options.AttemptTimeout.Timeout.Should().Be(TimeSpan.FromMinutes(2));
-        options.TotalRequestTimeout.Timeout.Should().Be(TimeSpan.FromMinutes(5));
     }
 
     private static ServiceProvider BuildServices(CountingHandler handler)
@@ -53,6 +65,7 @@ public sealed class ApiResilienceTests
             .AddHttpClient(Constants.HttpClientName, c => c.BaseAddress = new Uri("http://server.test/"))
             .ConfigurePrimaryHttpMessageHandler(() => handler)
             .AddApiResilience();
+        collection.AddVideoSurveillanceEndpoints();
         return collection.BuildServiceProvider();
     }
 
@@ -67,7 +80,11 @@ public sealed class ApiResilienceTests
         {
             var status = answers[Math.Min(Calls, answers.Length - 1)];
             Calls++;
-            return Task.FromResult(new HttpResponseMessage(status) { RequestMessage = request });
+            return Task.FromResult(new HttpResponseMessage(status)
+            {
+                Content = new StringContent(status == HttpStatusCode.OK ? "[]" : """{"status":503}""", System.Text.Encoding.UTF8, status == HttpStatusCode.OK ? "application/json" : "application/problem+json"),
+                RequestMessage = request,
+            });
         }
     }
 }

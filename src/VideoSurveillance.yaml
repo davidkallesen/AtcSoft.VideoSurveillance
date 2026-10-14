@@ -81,6 +81,7 @@ paths:
     put:
       summary: Update a camera
       operationId: updateCamera
+      x-retry-enabled: false
       tags:
         - cameras
       parameters:
@@ -118,6 +119,7 @@ paths:
     delete:
       summary: Delete a camera
       operationId: deleteCamera
+      x-retry-enabled: false
       tags:
         - cameras
       parameters:
@@ -243,6 +245,7 @@ paths:
     delete:
       summary: Stop recording a camera
       operationId: stopRecording
+      x-retry-enabled: false
       tags:
         - cameras
       parameters:
@@ -337,6 +340,7 @@ paths:
     put:
       summary: Update a layout
       operationId: updateLayout
+      x-retry-enabled: false
       tags:
         - layouts
       parameters:
@@ -374,6 +378,7 @@ paths:
     delete:
       summary: Delete a layout
       operationId: deleteLayout
+      x-retry-enabled: false
       tags:
         - layouts
       parameters:
@@ -447,6 +452,7 @@ paths:
       summary: Delete a recording
       description: Deletes one finished recording together with its thumbnail. A recording that is still being made cannot be deleted.
       operationId: deleteRecording
+      x-retry-enabled: false
       tags:
         - recordings
       parameters:
@@ -545,6 +551,7 @@ paths:
     put:
       summary: Update application settings
       operationId: updateSettings
+      x-retry-enabled: false
       tags:
         - settings
       requestBody:
@@ -641,6 +648,7 @@ paths:
     put:
       summary: Change a receiver
       operationId: updateWebhook
+      x-retry-enabled: false
       tags:
         - webhooks
       parameters:
@@ -684,6 +692,7 @@ paths:
     delete:
       summary: Remove a receiver
       operationId: deleteWebhook
+      x-retry-enabled: false
       tags:
         - webhooks
       parameters:
@@ -735,6 +744,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+
+# The clients' resilience. Some calls are slow by nature (starting a recording
+# waits for the camera, saving a changed folder layout moves the recordings), so
+# an attempt has two minutes; the breaker samples at least twice that. Only reads
+# are repeated: POST and PATCH never are, and every PUT and DELETE says so below.
+x-retry-policy: standard
+x-retry-max-attempts: 3
+x-retry-delay-seconds: 2
+x-retry-backoff: exponential
+x-retry-use-jitter: true
+x-retry-timeout-seconds: 120
+x-retry-circuit-breaker: true
+x-retry-cb-sampling-duration-seconds: 240
+x-retry-handle-429: true
 
 x-signalr-hubs:
   surveillance:
