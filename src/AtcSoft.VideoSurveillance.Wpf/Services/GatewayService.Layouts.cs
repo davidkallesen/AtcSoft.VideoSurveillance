@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Layout?> CreateLayoutAsync(
+    public async Task<Layout> CreateLayoutAsync(
         CreateLayoutRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -28,10 +28,10 @@ public sealed partial class GatewayService
 
         return result.IsCreated
             ? result.CreatedContent
-            : null;
+            : throw Refused(result);
     }
 
-    public async Task<Layout?> UpdateLayoutAsync(
+    public async Task<Layout> UpdateLayoutAsync(
         Guid layoutId,
         UpdateLayoutRequest request,
         CancellationToken cancellationToken = default)
@@ -43,7 +43,7 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 
     public async Task DeleteLayoutAsync(
@@ -57,11 +57,11 @@ public sealed partial class GatewayService
 
         if (!result.IsNoContent)
         {
-            throw new HttpRequestException($"Failed to delete layout: {result.StatusCode}");
+            throw Refused(result);
         }
     }
 
-    public async Task<Layout?> ApplyLayoutAsync(
+    public async Task<Layout> ApplyLayoutAsync(
         Guid layoutId,
         CancellationToken cancellationToken = default)
     {
@@ -72,6 +72,6 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 }

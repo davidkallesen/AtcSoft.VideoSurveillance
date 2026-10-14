@@ -21,6 +21,7 @@ global using System.Windows.Threading;
 
 global using Atc;
 global using Atc.Rest.Api.SourceGenerator;
+global using Atc.Rest.Client;
 global using Atc.Wpf.Components.Dialogs;
 global using Atc.Wpf.Forms.Dialogs;
 global using Atc.Wpf.Notifications;
@@ -48,6 +49,7 @@ global using Microsoft.AspNetCore.SignalR.Client;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Http.Resilience;
 global using Microsoft.Extensions.Logging;
+global using VideoSurveillance.Generated;
 global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Cameras.Models;

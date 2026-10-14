@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Camera?> CreateCameraAsync(
+    public async Task<Camera> CreateCameraAsync(
         CreateCameraRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -28,7 +28,7 @@ public sealed partial class GatewayService
 
         return result.IsCreated
             ? result.CreatedContent
-            : null;
+            : throw Refused(result);
     }
 
     public async Task<Camera?> GetCameraByIdAsync(
@@ -64,7 +64,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<Camera?> UpdateCameraAsync(
+    public async Task<Camera> UpdateCameraAsync(
         Guid cameraId,
         UpdateCameraRequest request,
         CancellationToken cancellationToken = default)
@@ -76,7 +76,7 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 
     public async Task DeleteCameraAsync(
@@ -90,11 +90,11 @@ public sealed partial class GatewayService
 
         if (!result.IsNoContent)
         {
-            throw new HttpRequestException($"Failed to delete camera: {result.StatusCode}");
+            throw Refused(result);
         }
     }
 
-    public async Task<RecordingStatus?> StartRecordingAsync(
+    public async Task<RecordingStatus> StartRecordingAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -105,10 +105,10 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 
-    public async Task<RecordingStatus?> StopRecordingAsync(
+    public async Task<RecordingStatus> StopRecordingAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
@@ -119,7 +119,7 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 
     /// <summary>

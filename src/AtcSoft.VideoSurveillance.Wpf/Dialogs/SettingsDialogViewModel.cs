@@ -501,6 +501,16 @@ public partial class SettingsDialogViewModel : ViewModelBase
                 .UpdateSettingsAsync(settings)
                 .ConfigureAwait(true);
         }
+        catch (HttpRequestException ex)
+        {
+            // The server refused the settings (a value out of range): say why,
+            // and keep the dialog open so the value can be corrected.
+            UserDialog.ShowError(string.Format(
+                CultureInfo.CurrentCulture,
+                Translations.FailedToSaveSettings1,
+                ex.Message));
+            return;
+        }
         catch
         {
             // Save failed - could show error but settings dialog will close

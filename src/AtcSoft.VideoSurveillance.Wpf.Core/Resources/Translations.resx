@@ -1398,4 +1398,7 @@
   <data name="RecordingInProgressInfo" xml:space="preserve">
     <value>This file is still being recorded. It can be played and deleted when the recording has ended.</value>
   </data>
+  <data name="FailedToSaveSettings1" xml:space="preserve">
+    <value>The settings could not be saved: {0}</value>
+  </data>
 </root>

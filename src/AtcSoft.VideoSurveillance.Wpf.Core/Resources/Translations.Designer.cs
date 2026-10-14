@@ -2536,6 +2536,15 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The settings could not be saved: {0}.
+        /// </summary>
+        public static string FailedToSaveSettings1 {
+            get {
+                return ResourceManager.GetString("FailedToSaveSettings1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Recording….
         /// </summary>
         public static string RecordingInProgress {

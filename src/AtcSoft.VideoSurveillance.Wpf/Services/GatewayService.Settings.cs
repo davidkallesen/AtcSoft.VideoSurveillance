@@ -17,7 +17,7 @@ public sealed partial class GatewayService
             : null;
     }
 
-    public async Task<AppSettings?> UpdateSettingsAsync(
+    public async Task<AppSettings> UpdateSettingsAsync(
         UpdateSettingsRequest settings,
         CancellationToken cancellationToken = default)
     {
@@ -28,6 +28,6 @@ public sealed partial class GatewayService
 
         return result.IsOk
             ? result.OkContent
-            : null;
+            : throw Refused(result);
     }
 }

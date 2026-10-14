@@ -19,4 +19,10 @@ public sealed partial class GatewayService
     private readonly JsonSerializerOptions jsonOptions = Atc.Serialization.JsonSerializerOptionsFactory.Create();
 
     public string ApiBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// A change the server refused: the error the view models show, in the server's own words.
+    /// </summary>
+    private static HttpRequestException Refused(EndpointResponse result)
+        => new(ProblemText.From(result), inner: null, result.StatusCode);
 }
