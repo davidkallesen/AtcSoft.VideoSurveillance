@@ -818,6 +818,8 @@ components:
       properties:
         displayName:
           type: string
+          minLength: 1
+          maxLength: 256
         description:
           type: string
         source:
@@ -838,6 +840,8 @@ components:
           type: integer
           format: int32
           default: 554
+          minimum: 1
+          maximum: 65535
         protocol:
           type: string
           enum: [rtsp, http, https]
@@ -855,12 +859,18 @@ components:
         usbWidth:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         usbHeight:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         usbFrameRate:
           type: number
           format: double
+          minimum: 0.1
+          maximum: 1000
         usbPixelFormat:
           type: string
         usbCaptureAudio:
@@ -888,6 +898,8 @@ components:
       properties:
         displayName:
           type: string
+          minLength: 1
+          maxLength: 256
         description:
           type: string
         source:
@@ -906,6 +918,8 @@ components:
         port:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 65535
         protocol:
           type: string
           enum: [rtsp, http, https]
@@ -922,12 +936,18 @@ components:
         usbWidth:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         usbHeight:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         usbFrameRate:
           type: number
           format: double
+          minimum: 0.1
+          maximum: 1000
         usbPixelFormat:
           type: string
         usbCaptureAudio:
@@ -1010,26 +1030,34 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 256
         rows:
           type: integer
           format: int32
           default: 2
+          minimum: 1
         columns:
           type: integer
           format: int32
           default: 2
+          minimum: 1
 
     UpdateLayoutRequest:
       type: object
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 256
         rows:
           type: integer
           format: int32
+          minimum: 1
         columns:
           type: integer
           format: int32
+          minimum: 1
         cameras:
           type: array
           items:
@@ -1182,6 +1210,8 @@ components:
         overlayOpacity:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
         overlayPosition:
           $ref: "#/components/schemas/AppSettingsOverlayPosition"
         allowDragAndDropReorder:
@@ -1196,12 +1226,16 @@ components:
         defaultPort:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 65535
         connectionTimeoutSeconds:
           type: integer
           format: int32
+          minimum: 1
         reconnectDelaySeconds:
           type: integer
           format: int32
+          minimum: 1
         autoReconnectOnFailure:
           type: boolean
         showNotificationOnDisconnect:
@@ -1221,33 +1255,46 @@ components:
         bufferDurationMs:
           type: integer
           format: int32
+          minimum: 1
         rtspTransport:
           $ref: "#/components/schemas/AppSettingsRtspTransport"
         maxLatencyMs:
           type: integer
           format: int32
+          minimum: 1
         # Motion Detection
         motionSensitivity:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
         minimumChangePercent:
           type: number
           format: double
+          minimum: 0
+          maximum: 100
         analysisFrameRate:
           type: integer
           format: int32
+          minimum: 1
         analysisWidth:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         analysisHeight:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         postMotionDurationSeconds:
           type: integer
           format: int32
+          minimum: 1
         cooldownSeconds:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxShowInGrid:
           type: boolean
         boundingBoxShowInFullScreen:
@@ -1257,15 +1304,20 @@ components:
         boundingBoxThickness:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxMinArea:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxPadding:
           type: integer
           format: int32
+          minimum: 0
         boundingBoxSmoothing:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
         # Recording
         recordingPath:
           type: string
@@ -1283,9 +1335,11 @@ components:
         maxRecordingDurationMinutes:
           type: integer
           format: int32
+          minimum: 1
         thumbnailTileCount:
           type: integer
           format: int32
+          minimum: 1
         useDailySubfolders:
           type: boolean
           description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings.
@@ -1301,11 +1355,13 @@ components:
         recordingRetentionDays:
           type: integer
           format: int32
+          minimum: 1
         cleanupIncludeSnapshots:
           type: boolean
         snapshotRetentionDays:
           type: integer
           format: int32
+          minimum: 1
         enableDiskSpaceGuard:
           type: boolean
           description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb.
@@ -1363,6 +1419,8 @@ components:
         overlayOpacity:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
         overlayPosition:
           $ref: "#/components/schemas/AppSettingsOverlayPosition"
         allowDragAndDropReorder:
@@ -1377,12 +1435,16 @@ components:
         defaultPort:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 65535
         connectionTimeoutSeconds:
           type: integer
           format: int32
+          minimum: 1
         reconnectDelaySeconds:
           type: integer
           format: int32
+          minimum: 1
         autoReconnectOnFailure:
           type: boolean
         showNotificationOnDisconnect:
@@ -1402,33 +1464,46 @@ components:
         bufferDurationMs:
           type: integer
           format: int32
+          minimum: 1
         rtspTransport:
           $ref: "#/components/schemas/AppSettingsRtspTransport"
         maxLatencyMs:
           type: integer
           format: int32
+          minimum: 1
         # Motion Detection
         motionSensitivity:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
         minimumChangePercent:
           type: number
           format: double
+          minimum: 0
+          maximum: 100
         analysisFrameRate:
           type: integer
           format: int32
+          minimum: 1
         analysisWidth:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         analysisHeight:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 8192
         postMotionDurationSeconds:
           type: integer
           format: int32
+          minimum: 1
         cooldownSeconds:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxShowInGrid:
           type: boolean
         boundingBoxShowInFullScreen:
@@ -1438,15 +1513,20 @@ components:
         boundingBoxThickness:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxMinArea:
           type: integer
           format: int32
+          minimum: 1
         boundingBoxPadding:
           type: integer
           format: int32
+          minimum: 0
         boundingBoxSmoothing:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
         # Recording
         recordingPath:
           type: string
@@ -1464,9 +1544,11 @@ components:
         maxRecordingDurationMinutes:
           type: integer
           format: int32
+          minimum: 1
         thumbnailTileCount:
           type: integer
           format: int32
+          minimum: 1
         useDailySubfolders:
           type: boolean
           description: Put each day's recordings in their own yyyy-MM-dd folder below the camera folder. On by default. Changing it moves the existing recordings.
@@ -1482,11 +1564,13 @@ components:
         recordingRetentionDays:
           type: integer
           format: int32
+          minimum: 1
         cleanupIncludeSnapshots:
           type: boolean
         snapshotRetentionDays:
           type: integer
           format: int32
+          minimum: 1
         enableDiskSpaceGuard:
           type: boolean
           description: Delete the oldest recordings when free disk space drops below minFreeSpaceMb.
@@ -1586,6 +1670,7 @@ components:
       properties:
         url:
           type: string
+          minLength: 1
         secret:
           type: string
           description: Signs each request (X-AtcSoft-Signature). Leave out for unsigned requests.
@@ -1601,6 +1686,7 @@ components:
       properties:
         url:
           type: string
+          minLength: 1
         secret:
           type: string
           description: Leave out to keep the secret as it is; send an empty text to remove it.

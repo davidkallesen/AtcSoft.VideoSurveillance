@@ -91,7 +91,9 @@ internal static class SettingsMappingExtensions
 
     /// <summary>
     /// Applies the settings the request has. A setting it leaves out keeps its value,
-    /// so a client that does not know a setting yet does not reset it.
+    /// so a client that does not know a setting yet does not reset it. The limits
+    /// (a port from 1, a timeout of at least a second) are in the specification and
+    /// checked before the handler runs.
     /// </summary>
     public static void ApplyToCore(
         this UpdateSettingsRequest api,
@@ -193,19 +195,19 @@ internal static class SettingsMappingExtensions
             connection.DefaultProtocol = ToCoreProtocol(api.DefaultProtocol.Value);
         }
 
-        if (api.DefaultPort > 0)
+        if (api.DefaultPort is { } defaultPort)
         {
-            connection.DefaultPort = api.DefaultPort.Value;
+            connection.DefaultPort = defaultPort;
         }
 
-        if (api.ConnectionTimeoutSeconds > 0)
+        if (api.ConnectionTimeoutSeconds is { } connectionTimeoutSeconds)
         {
-            connection.ConnectionTimeoutSeconds = api.ConnectionTimeoutSeconds.Value;
+            connection.ConnectionTimeoutSeconds = connectionTimeoutSeconds;
         }
 
-        if (api.ReconnectDelaySeconds > 0)
+        if (api.ReconnectDelaySeconds is { } reconnectDelaySeconds)
         {
-            connection.ReconnectDelaySeconds = api.ReconnectDelaySeconds.Value;
+            connection.ReconnectDelaySeconds = reconnectDelaySeconds;
         }
 
         if (api.AutoReconnectOnFailure is { } autoReconnectOnFailure)
@@ -244,9 +246,9 @@ internal static class SettingsMappingExtensions
             performance.LowLatencyMode = lowLatencyMode;
         }
 
-        if (api.BufferDurationMs > 0)
+        if (api.BufferDurationMs is { } bufferDurationMs)
         {
-            performance.BufferDurationMs = api.BufferDurationMs.Value;
+            performance.BufferDurationMs = bufferDurationMs;
         }
 
         if (api.RtspTransport is not null)
@@ -254,44 +256,44 @@ internal static class SettingsMappingExtensions
             performance.RtspTransport = api.RtspTransport.Value.ToString().ToLowerInvariant();
         }
 
-        if (api.MaxLatencyMs > 0)
+        if (api.MaxLatencyMs is { } maxLatencyMs)
         {
-            performance.MaxLatencyMs = api.MaxLatencyMs.Value;
+            performance.MaxLatencyMs = maxLatencyMs;
         }
 
-        if (api.MotionSensitivity > 0)
+        if (api.MotionSensitivity is { } motionSensitivity)
         {
-            motionDetection.Sensitivity = api.MotionSensitivity.Value;
+            motionDetection.Sensitivity = motionSensitivity;
         }
 
-        if (api.MinimumChangePercent > 0)
+        if (api.MinimumChangePercent is { } minimumChangePercent)
         {
-            motionDetection.MinimumChangePercent = api.MinimumChangePercent.Value;
+            motionDetection.MinimumChangePercent = minimumChangePercent;
         }
 
-        if (api.AnalysisFrameRate > 0)
+        if (api.AnalysisFrameRate is { } analysisFrameRate)
         {
-            motionDetection.AnalysisFrameRate = api.AnalysisFrameRate.Value;
+            motionDetection.AnalysisFrameRate = analysisFrameRate;
         }
 
-        if (api.AnalysisWidth > 0)
+        if (api.AnalysisWidth is { } analysisWidth)
         {
-            motionDetection.AnalysisWidth = api.AnalysisWidth.Value;
+            motionDetection.AnalysisWidth = analysisWidth;
         }
 
-        if (api.AnalysisHeight > 0)
+        if (api.AnalysisHeight is { } analysisHeight)
         {
-            motionDetection.AnalysisHeight = api.AnalysisHeight.Value;
+            motionDetection.AnalysisHeight = analysisHeight;
         }
 
-        if (api.PostMotionDurationSeconds > 0)
+        if (api.PostMotionDurationSeconds is { } postMotionDurationSeconds)
         {
-            motionDetection.PostMotionDurationSeconds = api.PostMotionDurationSeconds.Value;
+            motionDetection.PostMotionDurationSeconds = postMotionDurationSeconds;
         }
 
-        if (api.CooldownSeconds > 0)
+        if (api.CooldownSeconds is { } cooldownSeconds)
         {
-            motionDetection.CooldownSeconds = api.CooldownSeconds.Value;
+            motionDetection.CooldownSeconds = cooldownSeconds;
         }
 
         if (api.BoundingBoxShowInGrid is { } boundingBoxShowInGrid)
@@ -309,24 +311,24 @@ internal static class SettingsMappingExtensions
             motionDetection.BoundingBox.Color = api.BoundingBoxColor;
         }
 
-        if (api.BoundingBoxThickness > 0)
+        if (api.BoundingBoxThickness is { } boundingBoxThickness)
         {
-            motionDetection.BoundingBox.Thickness = api.BoundingBoxThickness.Value;
+            motionDetection.BoundingBox.Thickness = boundingBoxThickness;
         }
 
-        if (api.BoundingBoxMinArea > 0)
+        if (api.BoundingBoxMinArea is { } boundingBoxMinArea)
         {
-            motionDetection.BoundingBox.MinArea = api.BoundingBoxMinArea.Value;
+            motionDetection.BoundingBox.MinArea = boundingBoxMinArea;
         }
 
-        if (api.BoundingBoxPadding >= 0)
+        if (api.BoundingBoxPadding is { } boundingBoxPadding)
         {
-            motionDetection.BoundingBox.Padding = api.BoundingBoxPadding.Value;
+            motionDetection.BoundingBox.Padding = boundingBoxPadding;
         }
 
-        if (api.BoundingBoxSmoothing >= 0)
+        if (api.BoundingBoxSmoothing is { } boundingBoxSmoothing)
         {
-            motionDetection.BoundingBox.Smoothing = api.BoundingBoxSmoothing.Value;
+            motionDetection.BoundingBox.Smoothing = boundingBoxSmoothing;
         }
 
         if (!string.IsNullOrEmpty(api.RecordingPath))
@@ -371,14 +373,14 @@ internal static class SettingsMappingExtensions
             recording.SeparateThumbnailFolder = api.SeparateThumbnailFolder.Value;
         }
 
-        if (api.MaxRecordingDurationMinutes > 0)
+        if (api.MaxRecordingDurationMinutes is { } maxRecordingDurationMinutes)
         {
-            recording.MaxRecordingDurationMinutes = api.MaxRecordingDurationMinutes.Value;
+            recording.MaxRecordingDurationMinutes = maxRecordingDurationMinutes;
         }
 
-        if (api.ThumbnailTileCount > 0)
+        if (api.ThumbnailTileCount is { } thumbnailTileCount)
         {
-            recording.ThumbnailTileCount = api.ThumbnailTileCount.Value;
+            recording.ThumbnailTileCount = thumbnailTileCount;
         }
 
         if (api.EnableTimelapse is { } enableTimelapse)
@@ -396,9 +398,9 @@ internal static class SettingsMappingExtensions
             recording.Cleanup.Schedule = ToCoreCleanupSchedule(api.CleanupSchedule.Value);
         }
 
-        if (api.RecordingRetentionDays > 0)
+        if (api.RecordingRetentionDays is { } recordingRetentionDays)
         {
-            recording.Cleanup.RecordingRetentionDays = api.RecordingRetentionDays.Value;
+            recording.Cleanup.RecordingRetentionDays = recordingRetentionDays;
         }
 
         if (api.CleanupIncludeSnapshots is { } cleanupIncludeSnapshots)
@@ -406,9 +408,9 @@ internal static class SettingsMappingExtensions
             recording.Cleanup.IncludeSnapshots = cleanupIncludeSnapshots;
         }
 
-        if (api.SnapshotRetentionDays > 0)
+        if (api.SnapshotRetentionDays is { } snapshotRetentionDays)
         {
-            recording.Cleanup.SnapshotRetentionDays = api.SnapshotRetentionDays.Value;
+            recording.Cleanup.SnapshotRetentionDays = snapshotRetentionDays;
         }
 
         if (api.EnableDiskSpaceGuard is not null)
