@@ -168,14 +168,6 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             Path: Path,
             Username: Username,
             Password: string.IsNullOrEmpty(Password) ? null! : Password,
-            UsbDeviceId: string.Empty,
-            UsbFriendlyName: string.Empty,
-            UsbWidth: 0,
-            UsbHeight: 0,
-            UsbFrameRate: 0,
-            UsbPixelFormat: string.Empty,
-            UsbCaptureAudio: false,
-            UsbAudioDeviceName: string.Empty,
             OverlayPosition: SelectedOverlayPosition,
             StreamUseLowLatencyMode: StreamUseLowLatencyMode,
             StreamMaxLatencyMs: StreamMaxLatencyMs,
@@ -186,11 +178,15 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Builds an <see cref="UpdateCameraRequest"/> from the form fields.
     /// </summary>
+    /// <remarks>
+    /// The dialog edits a network camera's fields. What it does not edit (the
+    /// source, the USB settings, a password that was not typed again) is left
+    /// out, so the server keeps it.
+    /// </remarks>
     public UpdateCameraRequest BuildUpdateRequest()
         => new(
             DisplayName: DisplayName,
             Description: Description,
-            Source: CameraSource.Network,
             ConnectionType: SelectedConnectionType,
             Rotation: SelectedRotation,
             IpAddress: IpAddress,
@@ -199,14 +195,6 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             Path: Path,
             Username: Username,
             Password: string.IsNullOrEmpty(Password) ? null! : Password,
-            UsbDeviceId: string.Empty,
-            UsbFriendlyName: string.Empty,
-            UsbWidth: 0,
-            UsbHeight: 0,
-            UsbFrameRate: 0,
-            UsbPixelFormat: string.Empty,
-            UsbCaptureAudio: false,
-            UsbAudioDeviceName: string.Empty,
             OverlayPosition: SelectedOverlayPosition,
             StreamUseLowLatencyMode: StreamUseLowLatencyMode,
             StreamMaxLatencyMs: StreamMaxLatencyMs,

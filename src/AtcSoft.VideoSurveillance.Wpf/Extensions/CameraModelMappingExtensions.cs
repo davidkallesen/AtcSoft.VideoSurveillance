@@ -36,6 +36,7 @@ public static class CameraModelMappingExtensions
         config.Connection.IpAddress = camera.IpAddress ?? string.Empty;
         config.Connection.Port = camera.Port ?? 0;
         config.Connection.Protocol = camera.Protocol?.ToCoreProtocol() ?? CoreCameraProtocol.Rtsp;
+        config.Connection.Path = camera.Path;
         config.Connection.ConnectionType = camera.ConnectionType?.ToCoreConnectionType() ?? CoreCameraConnectionType.None;
 
         config.Authentication.UserName = camera.Username ?? string.Empty;
@@ -66,10 +67,6 @@ public static class CameraModelMappingExtensions
             ? string.Empty
             : config.Authentication.UserName;
 
-        var pwd = string.IsNullOrEmpty(password)
-            ? string.Empty
-            : password;
-
         return new CreateCameraRequest(
             DisplayName: config.Display.DisplayName,
             Description: config.Display.Description ?? string.Empty,
@@ -78,17 +75,9 @@ public static class CameraModelMappingExtensions
             Rotation: config.Display.Rotation.ToApiRotation(),
             IpAddress: config.Connection.IpAddress,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
-            Path: string.Empty,
+            Path: config.Connection.Path,
             Username: username,
-            Password: pwd,
-            UsbDeviceId: string.Empty,
-            UsbFriendlyName: string.Empty,
-            UsbWidth: 0,
-            UsbHeight: 0,
-            UsbFrameRate: 0,
-            UsbPixelFormat: string.Empty,
-            UsbCaptureAudio: false,
-            UsbAudioDeviceName: string.Empty,
+            Password: string.IsNullOrEmpty(password) ? null : password,
             OverlayPosition: config.Display.OverlayPosition.ToApiOverlayPosition(),
             StreamUseLowLatencyMode: config.Stream.UseLowLatencyMode,
             StreamMaxLatencyMs: config.Stream.MaxLatencyMs,
@@ -110,30 +99,17 @@ public static class CameraModelMappingExtensions
             ? string.Empty
             : config.Authentication.UserName;
 
-        var pwd = string.IsNullOrEmpty(password)
-            ? string.Empty
-            : password;
-
         return new UpdateCameraRequest(
             DisplayName: config.Display.DisplayName,
             Description: config.Display.Description ?? string.Empty,
-            Source: ApiCameraSource.Network,
             ConnectionType: config.Connection.ConnectionType.ToApiConnectionType(),
             Rotation: config.Display.Rotation.ToApiRotation(),
             IpAddress: config.Connection.IpAddress,
             Port: config.Connection.Port,
             Protocol: config.Connection.Protocol.ToApiProtocol(),
-            Path: string.Empty,
+            Path: config.Connection.Path,
             Username: username,
-            Password: pwd,
-            UsbDeviceId: string.Empty,
-            UsbFriendlyName: string.Empty,
-            UsbWidth: 0,
-            UsbHeight: 0,
-            UsbFrameRate: 0,
-            UsbPixelFormat: string.Empty,
-            UsbCaptureAudio: false,
-            UsbAudioDeviceName: string.Empty,
+            Password: string.IsNullOrEmpty(password) ? null : password,
             OverlayPosition: config.Display.OverlayPosition.ToApiOverlayPosition(),
             StreamUseLowLatencyMode: config.Stream.UseLowLatencyMode,
             StreamMaxLatencyMs: config.Stream.MaxLatencyMs,
