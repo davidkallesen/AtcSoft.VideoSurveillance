@@ -71,6 +71,19 @@ public sealed class ApiHostFixture : IDisposable
     }
 
     /// <summary>
+    /// Gets a service of the running server.
+    /// </summary>
+    /// <typeparam name="T">The service.</typeparam>
+    public T GetService<T>()
+        where T : notnull
+    {
+        // Makes sure the server is running in the test data folder.
+        using var client = CreateClient();
+
+        return factory.Value.Services.GetRequiredService<T>();
+    }
+
+    /// <summary>
     /// Gets a SignalR connection to the running server's hub.
     /// </summary>
     public HubConnection CreateHubConnection()

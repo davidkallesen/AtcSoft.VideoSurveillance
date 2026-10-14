@@ -2,7 +2,9 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Background service that subscribes to Core service events and broadcasts them
-/// to connected SignalR clients via the <see cref="SurveillanceHub"/>.
+/// to connected SignalR clients via the <see cref="SurveillanceHub"/>, and to the
+/// readers of GET /events via the <see cref="SurveillanceEventFeed"/>: one mapping
+/// (<see cref="HubEventMapping"/>) for both, so they say the same.
 /// <br/><br/>
 /// Built on <see cref="BackgroundServiceBase{T}"/> for consistency with the
 /// other hosted workers (shared start/stop logging and health-running state),
@@ -23,6 +25,7 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     private readonly ServerRecordingService serverRecordingService;
     private readonly IMotionDetectionService motionDetectionService;
     private readonly IUsbCameraLifecycleCoordinator usbLifecycle;
+    private readonly SurveillanceEventFeed feed;
 
     public SurveillanceEventBroadcaster(
         ILogger<SurveillanceEventBroadcaster> logger,
@@ -31,7 +34,8 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
         IRecordingService recordingService,
         ServerRecordingService serverRecordingService,
         IMotionDetectionService motionDetectionService,
-        IUsbCameraLifecycleCoordinator usbLifecycle)
+        IUsbCameraLifecycleCoordinator usbLifecycle,
+        SurveillanceEventFeed feed)
         : base(logger, options)
     {
         this.hubContext = hubContext;
@@ -39,6 +43,7 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
         this.serverRecordingService = serverRecordingService;
         this.motionDetectionService = motionDetectionService;
         this.usbLifecycle = usbLifecycle;
+        this.feed = feed;
     }
 
     /// <inheritdoc />
@@ -101,8 +106,10 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
+            var hubEvent = e.ToHubEvent();
+            feed.Publish(hubEvent.ToStreamEvent());
             await hubContext.Clients.All
-                .RecordingStateChanged(e.ToHubEvent())
+                .RecordingStateChanged(hubEvent)
                 .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
@@ -118,8 +125,10 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
+            var hubEvent = HubEventMapping.ToHubEvent(cameraId, newState, DateTimeOffset.UtcNow);
+            feed.Publish(hubEvent.ToStreamEvent());
             await hubContext.Clients.All
-                .ConnectionStateChanged(HubEventMapping.ToHubEvent(cameraId, newState, DateTimeOffset.UtcNow))
+                .ConnectionStateChanged(hubEvent)
                 .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
@@ -134,8 +143,10 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
+            var hubEvent = e.ToHubEvent(DateTimeOffset.UtcNow);
+            feed.Publish(hubEvent.ToStreamEvent());
             await hubContext.Clients.All
-                .UsbCameraLifecycleChanged(e.ToHubEvent(DateTimeOffset.UtcNow))
+                .UsbCameraLifecycleChanged(hubEvent)
                 .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }
@@ -149,8 +160,10 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     {
         try
         {
+            var hubEvent = e.ToHubEvent();
+            feed.Publish(hubEvent.ToStreamEvent());
             await hubContext.Clients.All
-                .MotionDetected(e.ToHubEvent())
+                .MotionDetected(hubEvent)
                 .WaitAsync(BroadcastTimeout)
                 .ConfigureAwait(false);
         }

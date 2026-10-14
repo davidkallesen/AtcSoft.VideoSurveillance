@@ -171,6 +171,8 @@ try
     // BackgroundServiceBase for consistency with the other workers (it
     // subscribes/unsubscribes in Start/Stop; DoWorkAsync is a no-op and the
     // idle loop parks on a long delay).
+    // The camera events of GET /events: the broadcaster publishes what it sends over the hub.
+    builder.Services.AddSingleton<SurveillanceEventFeed>();
     builder.Services.AddSingleton(new SurveillanceEventBroadcasterOptions());
     builder.Services.AddHostedService<SurveillanceEventBroadcaster>();
 

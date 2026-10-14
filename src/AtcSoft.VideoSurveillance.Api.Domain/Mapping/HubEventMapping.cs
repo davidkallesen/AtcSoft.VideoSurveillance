@@ -71,4 +71,51 @@ public static class HubEventMapping
     public static SwapDirection ToApiSwapDirection(
         this CoreSwapDirection direction)
         => direction == CoreSwapDirection.Right ? SwapDirection.Right : SwapDirection.Left;
+
+    public static SurveillanceEvent ToStreamEvent(
+        this ConnectionStateChangedEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new SurveillanceEvent(
+            Type: StreamEventTypes.ConnectionStateChanged,
+            CameraId: e.CameraId,
+            Timestamp: e.Timestamp,
+            Connection: e);
+    }
+
+    public static SurveillanceEvent ToStreamEvent(
+        this RecordingStateChangedEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new SurveillanceEvent(
+            Type: StreamEventTypes.RecordingStateChanged,
+            CameraId: e.CameraId,
+            Timestamp: e.Timestamp,
+            Recording: e);
+    }
+
+    public static SurveillanceEvent ToStreamEvent(this MotionDetectedEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new SurveillanceEvent(
+            Type: StreamEventTypes.MotionDetected,
+            CameraId: e.CameraId,
+            Timestamp: e.Timestamp,
+            Motion: e);
+    }
+
+    public static SurveillanceEvent ToStreamEvent(
+        this UsbCameraLifecycleEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new SurveillanceEvent(
+            Type: StreamEventTypes.UsbCameraLifecycleChanged,
+            CameraId: e.CameraId,
+            Timestamp: e.Timestamp,
+            Usb: e);
+    }
 }

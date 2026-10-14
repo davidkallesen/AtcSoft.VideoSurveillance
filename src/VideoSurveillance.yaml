@@ -463,6 +463,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /events:
+    # No retry: a live stream is not sent again from the start; the client resumes with Last-Event-ID.
+    x-retry-enabled: false
+    get:
+      summary: The camera events as they happen, as Server-Sent Events
+      operationId: listEvents
+      tags:
+        - events
+      description: |
+        One stream of what the hub sends to every client: connection, recording, motion and USB events, each with
+        an id. A client that sends the last id it read as Last-Event-ID gets the events after it from a buffer of the
+        latest ones (X-Events-Missed says how many the buffer no longer had), then the live ones. When nothing
+        happens for heartbeatSeconds, a named event "ping" - which the generated clients read past - keeps a proxy
+        from closing the idle connection. A reader that falls behind is cut off, and resumes.
+      parameters:
+        - name: cameraId
+          in: query
+          required: false
+          description: Only the events of this camera.
+          schema:
+            type: string
+            format: uuid
+        - name: heartbeatSeconds
+          in: query
+          required: false
+          description: Seconds without an event before a ping event (15 when left out).
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60
+        - name: Last-Event-ID
+          in: header
+          required: false
+          description: The id of the last event read; the stream goes on after it.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The events, one at a time.
+          headers:
+            X-Events-Missed:
+              description: How many events after Last-Event-ID the buffer no longer had (0 when it had them all).
+              schema:
+                type: integer
+                format: int64
+          content:
+            text/event-stream:
+              itemSchema:
+                $ref: "#/components/schemas/SurveillanceEvent"
+
   /settings:
     get:
       summary: Get application settings
@@ -1992,3 +2043,31 @@ components:
         message:
           type: string
           description: webhook.test - what the test is.
+
+    SurveillanceEvent:
+      type: object
+      description: >-
+        One event of GET /events. type names the part that is filled, as the hub names the event; a type this
+        client does not know yet can be read past.
+      required:
+        - type
+        - cameraId
+        - timestamp
+      properties:
+        type:
+          type: string
+          description: connectionStateChanged, recordingStateChanged, motionDetected or usbCameraLifecycleChanged.
+        cameraId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        connection:
+          $ref: "#/components/schemas/ConnectionStateChangedEvent"
+        recording:
+          $ref: "#/components/schemas/RecordingStateChangedEvent"
+        motion:
+          $ref: "#/components/schemas/MotionDetectedEvent"
+        usb:
+          $ref: "#/components/schemas/UsbCameraLifecycleEvent"

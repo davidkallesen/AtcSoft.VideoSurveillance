@@ -64,11 +64,11 @@ public sealed class HubEventMappingTests
     }
 
     [Theory]
-    [InlineData(AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase.Unplugged, global::VideoSurveillance.Generated.Models.UsbCameraLifecyclePhase.Unplugged)]
-    [InlineData(AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase.Replugged, global::VideoSurveillance.Generated.Models.UsbCameraLifecyclePhase.Replugged)]
+    [InlineData(AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase.Unplugged, global::VideoSurveillance.Generated.Events.Models.UsbCameraLifecyclePhase.Unplugged)]
+    [InlineData(AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase.Replugged, global::VideoSurveillance.Generated.Events.Models.UsbCameraLifecyclePhase.Replugged)]
     public void A_Usb_Camera_Change_Carries_Its_Phase_And_Device(
         AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase phase,
-        global::VideoSurveillance.Generated.Models.UsbCameraLifecyclePhase expected)
+        global::VideoSurveillance.Generated.Events.Models.UsbCameraLifecyclePhase expected)
     {
         var device = new AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor(@"\\?\usb#vid_046d", friendlyName: "Logitech BRIO");
         var e = new UsbCameraLifecycleChangedEventArgs(CameraId, phase, device);
