@@ -143,6 +143,13 @@ paths:
     get:
       summary: Capture a snapshot from a camera
       operationId: captureSnapshot
+      # A snapshot opens the camera's stream; a client in a loop would keep the
+      # server opening streams. Twenty per ten seconds is more than a person clicks.
+      x-ratelimit-policy: snapshots
+      x-ratelimit-permit-limit: 20
+      x-ratelimit-window-seconds: 10
+      x-ratelimit-algorithm: fixed
+      x-ratelimit-partition: ip
       tags:
         - cameras
       parameters:
@@ -162,6 +169,17 @@ paths:
                 format: binary
         '404':
           description: Camera not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '429':
+          description: Too many calls from this client; Retry-After says when to call again.
+          headers:
+            Retry-After:
+              description: Seconds to wait before calling again.
+              schema:
+                type: integer
           content:
             application/problem+json:
               schema:
@@ -729,6 +747,12 @@ paths:
     post:
       summary: Send a test event to a receiver
       operationId: testWebhook
+      # A test sends a request to someone else's server.
+      x-ratelimit-policy: webhook-tests
+      x-ratelimit-permit-limit: 10
+      x-ratelimit-window-seconds: 60
+      x-ratelimit-algorithm: fixed
+      x-ratelimit-partition: ip
       tags:
         - webhooks
       parameters:
@@ -747,6 +771,17 @@ paths:
                 $ref: "#/components/schemas/WebhookTestResult"
         '404':
           description: Receiver not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '429':
+          description: Too many calls from this client; Retry-After says when to call again.
+          headers:
+            Retry-After:
+              description: Seconds to wait before calling again.
+              schema:
+                type: integer
           content:
             application/problem+json:
               schema:

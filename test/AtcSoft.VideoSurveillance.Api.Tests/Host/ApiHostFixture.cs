@@ -84,6 +84,18 @@ public sealed class ApiHostFixture : IDisposable
     }
 
     /// <summary>
+    /// Sends one request to the running server, shaped on its context: for
+    /// what a client cannot set, such as the address it calls from.
+    /// </summary>
+    public async Task<HttpContext> SendAsync(Action<HttpContext> configure)
+    {
+        // Makes sure the server is running in the test data folder.
+        using var client = CreateClient();
+
+        return await factory.Value.Server.SendAsync(configure);
+    }
+
+    /// <summary>
     /// Gets a SignalR connection to the running server's hub.
     /// </summary>
     public HubConnection CreateHubConnection()
