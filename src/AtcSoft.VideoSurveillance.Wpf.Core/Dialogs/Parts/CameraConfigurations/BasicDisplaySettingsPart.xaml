@@ -15,21 +15,21 @@
     <StackPanel>
         <atc:LabelTextBox
             IsMandatory="True"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=DisplayName}"
             Text="{Binding Path=Camera.Display.DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Description}" Text="{Binding Path=Camera.Display.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Description}" Text="{Binding Path=Camera.Display.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <atc:LabelComboBox
             Items="{Binding Path=OverlayPositionItems}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=OverlayPosition}"
             SelectedKey="{Binding Path=SelectedOverlayPositionKey, Mode=TwoWay}" />
 
         <atc:LabelComboBox
             Items="{Binding Path=RotationItems}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=Rotation}"
             SelectedKey="{Binding Path=SelectedRotationKey, Mode=TwoWay}" />
     </StackPanel>

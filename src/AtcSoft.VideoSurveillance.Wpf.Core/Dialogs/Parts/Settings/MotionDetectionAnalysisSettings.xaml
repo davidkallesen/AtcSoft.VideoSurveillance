@@ -12,13 +12,13 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=MotionDetectionSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MotionDetectionSettings}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=MotionSensitivityInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=MotionSensitivity}"
                 Maximum="100"
                 Minimum="0"
@@ -26,9 +26,9 @@
                 Value="{Binding Path=MotionSensitivity, Mode=TwoWay}" />
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=PostMotionDurationInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=PostMotionDuration}"
                 Maximum="300"
                 Minimum="1"
@@ -36,9 +36,9 @@
                 Value="{Binding Path=PostMotionDurationSeconds, Mode=TwoWay}" />
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=AnalysisFrameRateInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=AnalysisFrameRate}"
                 Maximum="30"
                 Minimum="1"
@@ -46,18 +46,18 @@
                 Value="{Binding Path=AnalysisFrameRate, Mode=TwoWay}" />
 
             <atc:LabelComboBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=AnalysisResolutionInfo}"
                 Items="{Binding Path=AnalysisResolutionItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=AnalysisResolution}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedAnalysisResolution, Mode=TwoWay}" />
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=CooldownSecondsInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=CooldownSeconds}"
                 Maximum="60"
                 Minimum="0"

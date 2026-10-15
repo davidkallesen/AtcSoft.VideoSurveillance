@@ -12,28 +12,28 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=StreamingSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StreamingSettings}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelComboBox
                 Items="{Binding Path=RtspTransportItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=RtspTransport}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedRtspTransport, Mode=TwoWay}" />
 
             <atc:LabelToggleSwitch
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=UseLowLatencyModeInfo}"
                 IsOn="{Binding Path=LowLatencyMode, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=LowLatencyMode}" />
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=MaxLatencyMsInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=MaxLatencyMs}"
                 Maximum="10000"
                 Minimum="0"
@@ -41,9 +41,9 @@
                 Value="{Binding Path=MaxLatencyMs, Mode=TwoWay}" />
 
             <atc:LabelIntegerBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=BufferDurationMsInfo}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=BufferDurationMs}"
                 Maximum="5000"
                 Minimum="0"

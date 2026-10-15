@@ -13,36 +13,36 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RecordingSettings}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelDirectoryPicker
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=RecordingPath}"
                 Orientation="Vertical"
-                WatermarkText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                WatermarkText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=SelectRecordingFolder}"
                 Value="{Binding Path=RecordingPath, Mode=TwoWay}" />
 
             <atc:LabelComboBox
                 Items="{Binding Path=RecordingFormatItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=RecordingFormat}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedRecordingFormat, Mode=TwoWay}" />
 
             <atc:LabelComboBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=TranscodeVideoCodecInfo}"
                 Items="{Binding Path=TranscodeVideoCodecItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=TranscodeVideoCodec}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedTranscodeVideoCodec, Mode=TwoWay}" />
 
             <atc:LabelComboBox
                 Items="{Binding Path=ThumbnailTileCountItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ThumbnailTileCount}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedThumbnailTileCount, Mode=TwoWay}" />
@@ -52,14 +52,14 @@
                 InformationText="{Binding Path=UseDailySubfoldersHint}"
                 IsOn="{Binding Path=UseDailySubfolders, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=UseDailySubfolders}" />
 
             <atc:LabelToggleSwitch
                 InformationText="{Binding Path=SeparateThumbnailFolderHint}"
                 IsOn="{Binding Path=SeparateThumbnailFolder, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=SeparateThumbnailFolder}" />
 
             <atcDataDisplay:Alert
@@ -79,13 +79,13 @@
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=EnableRecordingOnMotion, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableRecordingOnMotion}" />
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=EnableRecordingOnConnect, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableRecordingOnConnect}" />
 
         </StackPanel>

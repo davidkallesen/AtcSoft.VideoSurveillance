@@ -12,24 +12,24 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=VideoSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=VideoSettings}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelComboBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=VideoQualityInfo}"
                 Items="{Binding Path=VideoQualityItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=VideoQuality}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedVideoQuality, Mode=TwoWay}" />
 
             <atc:LabelToggleSwitch
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=HardwareAccelerationInfo}"
                 IsOn="{Binding Path=HardwareAcceleration, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=HardwareAcceleration}" />
 
         </StackPanel>

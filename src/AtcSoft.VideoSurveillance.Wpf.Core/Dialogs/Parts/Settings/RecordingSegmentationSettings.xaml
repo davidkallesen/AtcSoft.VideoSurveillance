@@ -12,7 +12,7 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingSegmentation}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RecordingSegmentation}">
         <StackPanel Margin="0,5,0,-20" Orientation="Vertical">
 
             <atc:LabelToggleSwitch
@@ -20,13 +20,13 @@
                 HideAreas="Validation"
                 IsOn="{Binding Path=EnableHourlySegmentation, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableHourlySegmentation}" />
 
             <atc:LabelComboBox
                 IsEnabled="{Binding Path=EnableHourlySegmentation}"
                 Items="{Binding Path=MaxRecordingDurationItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=MaxRecordingDuration}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedMaxRecordingDuration, Mode=TwoWay}" />

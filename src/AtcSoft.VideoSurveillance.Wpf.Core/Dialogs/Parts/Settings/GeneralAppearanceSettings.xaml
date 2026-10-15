@@ -12,7 +12,7 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=ApplicationAppearance}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ApplicationAppearance}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
             <atc:LabelThemeSelector Orientation="Vertical" />
 

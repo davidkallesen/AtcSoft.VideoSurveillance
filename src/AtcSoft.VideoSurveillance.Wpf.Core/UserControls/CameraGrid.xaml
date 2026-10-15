@@ -214,7 +214,7 @@
             VerticalAlignment="Center"
             FontSize="16"
             Foreground="{DynamicResource AtcApps.Brushes.Gray5}"
-            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                        Key=NoCamerasConfigured}"
             Visibility="Collapsed" />
     </Grid>

@@ -16,7 +16,7 @@
     <atc:GroupBoxExpander
         Margin="0,0,0,20"
         Padding="0,20,0,0"
-        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                      Key=NetworkScannerHeader}">
         <atc:GridEx Rows="Auto,Auto,*">
             <!--  Scanner Settings  -->

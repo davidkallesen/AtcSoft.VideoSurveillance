@@ -61,6 +61,9 @@ public partial class App
     {
         ArgumentNullException.ThrowIfNull(e);
 
+        // Atc.Wpf finds the texts only in assemblies already loaded; load them before the first window binds to them.
+        _ = Translations.ResourceManager;
+
         AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
         Current.DispatcherUnhandledException += ApplicationOnDispatcherUnhandledException;
         base.OnStartup(e);

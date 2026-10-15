@@ -1,4 +1,6 @@
 ﻿global using System.Diagnostics.CodeAnalysis;
+global using System.Globalization;
+global using System.Runtime.CompilerServices;
 
 global using AtcSoft.VideoSurveillance.Blazor.App.Logic;
 global using AtcSoft.VideoSurveillance.Blazor.App.Pages.SettingsTabs;

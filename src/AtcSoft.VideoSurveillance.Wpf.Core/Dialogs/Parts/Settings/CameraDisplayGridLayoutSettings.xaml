@@ -12,19 +12,19 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=GridLayout}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GridLayout}">
         <StackPanel Margin="0,5,0,-30" Orientation="Vertical">
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=AllowDragAndDropReorder, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=AllowDragAndDropReorder}" />
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=AutoSaveLayoutChanges, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=AutoSaveLayoutChanges}" />
 
         </StackPanel>

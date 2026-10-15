@@ -12,11 +12,11 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=ConnectionSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectionSettings}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelIntegerBox
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ConnectionTimeoutSeconds}"
                 Maximum="60"
                 Minimum="1"
@@ -24,7 +24,7 @@
                 Value="{Binding Path=ConnectionTimeoutSeconds, Mode=TwoWay}" />
 
             <atc:LabelIntegerBox
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ReconnectDelaySeconds}"
                 Maximum="300"
                 Minimum="1"
@@ -34,7 +34,7 @@
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=AutoReconnectOnFailure, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=AutoReconnectOnFailure}" />
 
         </StackPanel>

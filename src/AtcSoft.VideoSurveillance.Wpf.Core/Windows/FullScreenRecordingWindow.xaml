@@ -254,7 +254,7 @@
                 FontSize="12"
                 Foreground="#66FFFFFF"
                 Opacity="{Binding Path=IsOverlayVisible, Converter={x:Static atcValueConverters:BoolToOpacityValueConverter.Instance}}"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                            Key=PressEscToExit}" />
         </Grid>
     </Grid>

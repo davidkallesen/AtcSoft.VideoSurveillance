@@ -12,7 +12,7 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=TimelapseSettings}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=TimelapseSettings}">
         <StackPanel Margin="0,5,0,-20" Orientation="Vertical">
 
             <atc:LabelToggleSwitch
@@ -20,13 +20,13 @@
                 HideAreas="Validation"
                 IsOn="{Binding Path=EnableTimelapse, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableTimelapse}" />
 
             <atc:LabelComboBox
                 IsEnabled="{Binding Path=IsTimelapseIntervalEnabled}"
                 Items="{Binding Path=TimelapseIntervalItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=TimelapseInterval}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedTimelapseInterval, Mode=TwoWay}" />

@@ -13,8 +13,8 @@
     mc:Ignorable="d">
 
     <StackPanel>
-        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Username}" Text="{Binding Path=Camera.Authentication.UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Username}" Text="{Binding Path=Camera.Authentication.UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-        <atc:LabelPasswordBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Password}" Text="{Binding Path=Camera.Authentication.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <atc:LabelPasswordBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Password}" Text="{Binding Path=Camera.Authentication.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
     </StackPanel>
 </UserControl>

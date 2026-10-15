@@ -31,7 +31,7 @@
     <atc:BusyOverlay IsBusy="{Binding Path=IsApplyingRecordingLayout}">
         <!--  A TextBlock, not a string: the control replaces string content with its own "Please wait..."  -->
         <atc:BusyOverlay.BusyContent>
-            <TextBlock Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingLayoutMoving}" />
+            <TextBlock Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RecordingLayoutMoving}" />
         </atc:BusyOverlay.BusyContent>
     <atc:GridEx Margin="16" Rows="*,Auto">
 
@@ -42,7 +42,7 @@
             TabStripPlacement="Left">
 
             <!--  General Tab  -->
-            <TabItem Width="180" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=General}">
+            <TabItem Width="180" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=General}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:GeneralAppearanceSettings />
@@ -52,7 +52,7 @@
             </TabItem>
 
             <!--  Camera Display Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CameraDisplay}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CameraDisplay}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:CameraDisplayOverlaySettings />
@@ -63,7 +63,7 @@
             </TabItem>
 
             <!--  Connection Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Connection}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Connection}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:ConnectionDefaultCameraSettings />
@@ -74,7 +74,7 @@
             </TabItem>
 
             <!--  Performance Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Performance}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Performance}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:PerformanceVideoSettings />
@@ -84,7 +84,7 @@
             </TabItem>
 
             <!--  Motion Detection Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=MotionDetection}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MotionDetection}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:MotionDetectionAnalysisSettings />
@@ -94,7 +94,7 @@
             </TabItem>
 
             <!--  Capture Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Capture}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Capture}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:CaptureRecordingSettings />
@@ -103,7 +103,7 @@
             </TabItem>
 
             <!--  Timelapse Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Timelapse}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Timelapse}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:TimelapseSettings />
@@ -112,7 +112,7 @@
             </TabItem>
 
             <!--  Storage Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Storage}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Storage}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:RecordingSegmentationSettings />
@@ -124,7 +124,7 @@
             </TabItem>
 
             <!--  Advanced Tab  -->
-            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Advanced}">
+            <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Advanced}">
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <atc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
                         <settings:AdvancedLoggingSettings />
@@ -145,14 +145,14 @@
                 MinWidth="80"
                 Padding="16,8"
                 Command="{Binding Path=SaveCommand}"
-                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                               Key=Save}"
                 IsDefault="True" />
             <Button
                 MinWidth="80"
                 Padding="16,8"
                 Command="{Binding Path=CancelCommand}"
-                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                               Key=Cancel}"
                 IsCancel="True" />
         </atc:UniformSpacingPanel>

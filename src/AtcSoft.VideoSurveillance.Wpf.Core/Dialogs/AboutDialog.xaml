@@ -6,7 +6,7 @@
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+    Title="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                 Key=AboutAtcSoftCameraWall}"
     Width="420"
     ResizeMode="NoResize"
@@ -40,7 +40,7 @@
             Grid.Row="2"
             Margin="0,16,0,0"
             FontSize="14">
-            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Version}" />
+            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Version}" />
             <Run Text=": " />
             <Run x:Name="VersionRun" />
         </TextBlock>
@@ -50,7 +50,7 @@
             Grid.Row="3"
             Margin="0,16,0,0"
             FontSize="13"
-            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                        Key=ApplicationDescription}"
             TextWrapping="Wrap" />
 
@@ -59,11 +59,11 @@
             Grid.Row="4"
             Margin="0,16,0,0"
             FontSize="12">
-            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Copyright}" />
+            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Copyright}" />
             <Run Text=" " />
             <Run x:Name="YearRun" />
             <Run Text=" AtcSoft. " />
-            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=AllRightsReserved}" />
+            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=AllRightsReserved}" />
         </TextBlock>
 
         <!--  OK Button  -->
@@ -74,7 +74,7 @@
             Padding="16,8"
             HorizontalAlignment="Center"
             Click="OnOkClick"
-            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                           Key=Ok}"
             IsDefault="True" />
     </atc:GridEx>

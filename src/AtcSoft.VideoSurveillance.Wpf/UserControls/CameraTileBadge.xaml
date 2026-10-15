@@ -117,7 +117,7 @@
                                 FontSize="9"
                                 FontWeight="SemiBold"
                                 Foreground="#FFB347"
-                                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                             Key=UsbDeviceUnplugged}" />
                         </StackPanel>
 

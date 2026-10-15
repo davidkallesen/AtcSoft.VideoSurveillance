@@ -133,7 +133,7 @@
                         <fluent:BackstageTabControl>
                             <fluent:Button
                                 Command="{Binding Path=ShowSettingsCommand}"
-                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                              Key=Settings}"
                                 KeyTip="S">
                                 <fluent:Button.Icon>
@@ -143,7 +143,7 @@
                             <fluent:SeparatorTabItem />
                             <fluent:Button
                                 Command="{Binding Path=ShowAboutCommand}"
-                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                              Key=About}"
                                 KeyTip="A">
                                 <fluent:Button.Icon>
@@ -152,7 +152,7 @@
                             </fluent:Button>
                             <fluent:Button
                                 Command="{Binding Path=CheckForUpdatesCommand}"
-                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                              Key=CheckForUpdates}"
                                 KeyTip="C">
                                 <fluent:Button.Icon>
@@ -162,7 +162,7 @@
                             <fluent:SeparatorTabItem />
                             <fluent:Button
                                 Command="{Binding Path=ExitCommand}"
-                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                              Key=Exit}"
                                 KeyTip="X">
                                 <fluent:Button.Icon>
@@ -174,34 +174,34 @@
                 </fluent:Ribbon.Menu>
 
                 <!--  Layouts Tab  -->
-                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Layouts}">
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CurrentLayoutGroup}">
+                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Layouts}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CurrentLayoutGroup}">
                         <atcTheming:LabelComboBox
                             Width="250"
                             Margin="5,25,5,25"
                             HideAreas="All"
                             Items="{Binding Path=LayoutItems}"
-                            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                             Key=Layout}"
                             LabelWidthNumber="50"
                             SelectedKey="{Binding Path=SelectedLayoutId}" />
                     </fluent:RibbonGroupBox>
 
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=GridSizeGroup}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GridSizeGroup}">
                         <atcTheming:LabelComboBox
                             Width="250"
                             Margin="5,25,5,25"
                             HideAreas="All"
                             Items="{Binding Path=GridPresetItems}"
-                            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                             Key=GridSize}"
                             LabelWidthNumber="50"
                             SelectedKey="{Binding Path=SelectedGridPreset}"
-                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=GridSizeInfo}" />
                         <fluent:Button
                             Command="{Binding Path=PreviousPageCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=PreviousPage}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -210,7 +210,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=NextPageCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=NextPage}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -219,10 +219,10 @@
                         </fluent:Button>
                     </fluent:RibbonGroupBox>
 
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Actions}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Actions}">
                         <fluent:Button
                             Command="{Binding Path=NewLayoutCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=NewLayout}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -231,7 +231,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=RenameLayoutCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=RenameLayout}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -240,7 +240,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=AssignCameraCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=AssignCamera}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -249,7 +249,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=DeleteLayoutCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=DeleteLayout}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -258,7 +258,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=SetAsStartupCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=SetAsStartup}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -269,11 +269,11 @@
                 </fluent:RibbonTabItem>
 
                 <!--  Cameras Tab  -->
-                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Cameras}">
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Camera}">
+                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Cameras}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Camera}">
                         <fluent:Button
                             Command="{Binding Path=AddCameraCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=AddCamera}"
                             Size="Large">
                             <fluent:Button.LargeIcon>
@@ -282,7 +282,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=AddUsbCameraCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=AddUsbCamera}"
                             Size="Large">
                             <fluent:Button.LargeIcon>
@@ -296,10 +296,10 @@
                         </fluent:Button>
                     </fluent:RibbonGroupBox>
 
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Actions}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Actions}">
                         <fluent:Button
                             Command="{Binding Path=ReconnectAllCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=ReconnectAll}"
                             Size="Middle">
                             <fluent:Button.Icon>
@@ -310,11 +310,11 @@
                 </fluent:RibbonTabItem>
 
                 <!--  View Tab  -->
-                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=View}">
-                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Recordings}">
+                <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=View}">
+                    <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Recordings}">
                         <fluent:Button
                             Command="{Binding Path=ShowRecordingsBrowserCommand}"
-                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                          Key=BrowseRecordings}"
                             Size="Large">
                             <fluent:Button.LargeIcon>
@@ -344,19 +344,19 @@
                 <Separator />
                 <StatusBarItem>
                     <TextBlock>
-                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CamerasLabel}" />
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CamerasLabel}" />
                         <Run Text=" " /><Run Text="{Binding Path=CameraCount, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
                 <Separator />
                 <StatusBarItem>
                     <TextBlock>
-                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=ConnectedLabel}" />
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectedLabel}" />
                         <Run Text=" " /><Run Text="{Binding Path=ConnectedCount, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
                 <Separator Visibility="{Binding Path=HasDiskSpace, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
-                <StatusBarItem ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=DiskSpaceInfo}" Visibility="{Binding Path=HasDiskSpace, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                <StatusBarItem ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=DiskSpaceInfo}" Visibility="{Binding Path=HasDiskSpace, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                     <TextBlock>
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -368,14 +368,14 @@
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
-                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=DiskSpaceLabel}" />
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=DiskSpaceLabel}" />
                         <Run Text=" " /><Run Text="{Binding Path=DiskSpaceText, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
                 <Separator Visibility="{Binding Path=HasPages, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
                 <StatusBarItem Visibility="{Binding Path=HasPages, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                     <TextBlock>
-                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=PageLabel}" />
+                        <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=PageLabel}" />
                         <Run Text=" " /><Run Text="{Binding Path=PageLabel, Mode=OneWay}" />
                     </TextBlock>
                 </StatusBarItem>
@@ -398,7 +398,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Hyperlink.Style>
-                            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=UpdateAvailable}" />
+                            <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=UpdateAvailable}" />
                             <Run Text=": v" />
                             <Run Text="{Binding Path=UpdateVersion, Mode=OneWay}" />
                         </Hyperlink>

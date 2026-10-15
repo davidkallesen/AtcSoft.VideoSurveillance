@@ -131,7 +131,7 @@
                         FontSize="9"
                         FontWeight="SemiBold"
                         Foreground="#FFB347"
-                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                    Key=UsbDeviceUnplugged}" />
                 </StackPanel>
 
@@ -155,7 +155,7 @@
                         FontSize="9"
                         FontWeight="SemiBold"
                         Foreground="#FFB347"
-                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                    Key=UsbDeviceBusy}" />
                 </StackPanel>
 
@@ -228,7 +228,7 @@
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
-                    <TextBlock FontSize="9" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Motion}">
+                    <TextBlock FontSize="9" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Motion}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#44AAAAAA" />

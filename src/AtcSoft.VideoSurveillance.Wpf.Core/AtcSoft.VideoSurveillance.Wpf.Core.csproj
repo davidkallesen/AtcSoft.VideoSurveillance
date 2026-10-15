@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Resources\AtcSoft.VideoSurveillance.Resources.csproj" />
     <ProjectReference Include="..\AtcSoft.VideoPlayer.Wpf\AtcSoft.VideoPlayer.Wpf.csproj" />
   </ItemGroup>
 
@@ -48,27 +49,6 @@
     <PackageReference Include="Atc.XamlToolkit.Wpf" Version="3.2.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.13" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Translations.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Translations.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Translations.da-DK.resx">
-      <DependentUpon>Translations.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Translations.de-DE.resx">
-      <DependentUpon>Translations.resx</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources\Translations.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Translations.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>

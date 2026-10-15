@@ -12,39 +12,39 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=BoundingBoxDisplay}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=BoundingBoxDisplay}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=ShowBoundingBoxInGrid, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ShowBoundingBoxInGrid}" />
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=ShowBoundingBoxInFullScreen, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ShowBoundingBoxInFullScreen}" />
 
             <atc:LabelWellKnownColorSelector
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=BoundingBoxColor}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedBoundingBoxColor, Mode=TwoWay}" />
 
             <atc:LabelComboBox
                 Items="{Binding Path=BoundingBoxThicknessItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=BoundingBoxThickness}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedBoundingBoxThickness, Mode=TwoWay}" />
 
             <atc:LabelComboBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=BoundingBoxMinAreaInfo}"
                 Items="{Binding Path=BoundingBoxMinAreaItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=BoundingBoxMinArea}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedBoundingBoxMinArea, Mode=TwoWay}" />

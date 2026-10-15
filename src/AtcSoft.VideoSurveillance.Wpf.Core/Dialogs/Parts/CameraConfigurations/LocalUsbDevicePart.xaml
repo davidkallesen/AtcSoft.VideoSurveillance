@@ -27,7 +27,7 @@
             AutoRefreshOnDeviceChange="True"
             AutoSelectFirstAvailable="False"
             ClearValueOnDisconnect="False"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=SelectUsbDevice}"
             PreviewHeight="240"
             ShowLivePreview="True"
@@ -43,7 +43,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                            Key=UsbResolution}" />
 
             <ComboBox
@@ -57,7 +57,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                            Key=UsbFrameRate}" />
 
             <ComboBox
@@ -71,7 +71,7 @@
 
             <TextBlock
                 Margin="0,0,0,4"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                            Key=UsbPixelFormat}" />
 
             <ComboBox
@@ -83,7 +83,7 @@
         <CheckBox
             Grid.Row="4"
             Margin="0,8,0,0"
-            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                           Key=UsbCaptureAudio}"
             IsChecked="{Binding Path=UsbCaptureAudio, Mode=TwoWay}" />
 
@@ -102,7 +102,7 @@
             AutoSelectFirstAvailable="False"
             ClearValueOnDisconnect="False"
             IsEnabled="{Binding Path=UsbCaptureAudio}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=UsbAudioDeviceName}"
             ShowRefreshButton="True"
             Value="{Binding Path=SelectedAudioInput, Mode=TwoWay}" />

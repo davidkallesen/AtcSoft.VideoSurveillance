@@ -17,7 +17,7 @@
         <ResourceDictionary Source="/AtcSoft.VideoSurveillance.Wpf.Core;component/Themes/OverrideStyles.xaml" />
     </UserControl.Resources>
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=TimelapseOverrides}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=TimelapseOverrides}">
 
         <atc:UniformSpacingPanel
             Margin="10"
@@ -27,28 +27,28 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultEnableTimelapse, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelToggleSwitch
                     IsEnabled="{Binding Path=UseDefaultEnableTimelapse, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     IsOn="{Binding Path=OverrideEnableTimelapse, Mode=TwoWay}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=EnableTimelapse}" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultTimelapseInterval, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelComboBox
                     IsEnabled="{Binding Path=UseDefaultTimelapseInterval, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     Items="{Binding Path=TimelapseIntervalItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=TimelapseInterval}"
                     SelectedKey="{Binding Path=OverrideTimelapseInterval, Mode=TwoWay}" />
             </StackPanel>

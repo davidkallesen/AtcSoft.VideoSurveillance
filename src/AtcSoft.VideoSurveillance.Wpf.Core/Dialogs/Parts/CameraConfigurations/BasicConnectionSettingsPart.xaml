@@ -18,14 +18,14 @@
             IsEnabled="{Binding Path=CanEditConnectionSettings}"
             IsMandatory="True"
             Items="{Binding Path=ProtocolItems}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=Protocol}"
             SelectedKey="{Binding Path=SelectedProtocolKey, Mode=TwoWay}" />
 
         <atc:LabelTextBox
             IsEnabled="{Binding Path=CanEditConnectionSettings}"
             IsMandatory="True"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=IpAddress}"
             Text="{Binding Path=Camera.Connection.IpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             ValidationFormat="IPv4Address"
@@ -34,18 +34,18 @@
         <atc:LabelIntegerBox
             IsEnabled="{Binding Path=CanEditConnectionSettings}"
             IsMandatory="True"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=Port}"
             Maximum="65535"
             Minimum="1"
             Value="{Binding Path=Camera.Connection.Port, Mode=TwoWay}" />
 
-        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Path}" Text="{Binding Path=Camera.Connection.Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <atc:LabelTextBox LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Path}" Text="{Binding Path=Camera.Connection.Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <!--  Connection type (LAN / Wi-Fi) for the connection-type icon. Editable even for existing cameras: it is display-only.  -->
         <atc:LabelComboBox
             Items="{Binding Path=ConnectionTypeItems}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=ConnectionType}"
             SelectedKey="{Binding Path=SelectedConnectionTypeKey, Mode=TwoWay}" />
 
@@ -57,7 +57,7 @@
             <Button
                 Padding="10,2"
                 Command="{Binding Path=DetectConnectionTypeCommand}"
-                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                               Key=DetectConnectionType}" />
             <TextBlock
                 Margin="8,0,0,0"

@@ -17,7 +17,7 @@
         <ResourceDictionary Source="/AtcSoft.VideoSurveillance.Wpf.Core;component/Themes/OverrideStyles.xaml" />
     </UserControl.Resources>
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=CaptureOverrides}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CaptureOverrides}">
 
         <atc:UniformSpacingPanel
             Margin="10"
@@ -27,15 +27,15 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultRecordingPath, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelDirectoryPicker
                     IsEnabled="{Binding Path=UseDefaultRecordingPath, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=RecordingPath}"
-                    WatermarkText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    WatermarkText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                         Key=SelectRecordingFolder}"
                     Value="{Binding Path=OverrideRecordingPath, Mode=TwoWay}" />
             </StackPanel>
@@ -43,14 +43,14 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultRecordingFormat, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelComboBox
                     IsEnabled="{Binding Path=UseDefaultRecordingFormat, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     Items="{Binding Path=RecordingFormatItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=RecordingFormat}"
                     SelectedKey="{Binding Path=OverrideRecordingFormat, Mode=TwoWay}" />
             </StackPanel>
@@ -58,16 +58,16 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultTranscodeVideoCodec, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelComboBox
-                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=TranscodeVideoCodecInfo}"
                     IsEnabled="{Binding Path=UseDefaultTranscodeVideoCodec, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     Items="{Binding Path=TranscodeVideoCodecItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=TranscodeVideoCodec}"
                     SelectedKey="{Binding Path=OverrideTranscodeVideoCodec, Mode=TwoWay}" />
             </StackPanel>
@@ -75,14 +75,14 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultThumbnailTileCount, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelComboBox
                     IsEnabled="{Binding Path=UseDefaultThumbnailTileCount, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     Items="{Binding Path=ThumbnailTileCountItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=ThumbnailTileCount}"
                     SelectedKey="{Binding Path=OverrideThumbnailTileCount, Mode=TwoWay}" />
             </StackPanel>
@@ -90,28 +90,28 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultRecordingOnMotion, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelToggleSwitch
                     IsEnabled="{Binding Path=UseDefaultRecordingOnMotion, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     IsOn="{Binding Path=OverrideRecordingOnMotion, Mode=TwoWay}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=EnableRecordingOnMotion}" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultRecordingOnConnect, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelToggleSwitch
                     IsEnabled="{Binding Path=UseDefaultRecordingOnConnect, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     IsOn="{Binding Path=OverrideRecordingOnConnect, Mode=TwoWay}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=EnableRecordingOnConnect}" />
             </StackPanel>
 

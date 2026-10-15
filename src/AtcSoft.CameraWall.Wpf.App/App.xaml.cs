@@ -139,6 +139,9 @@ public partial class CameraWallApp
     {
         ArgumentNullException.ThrowIfNull(e);
 
+        // Atc.Wpf finds the texts only in assemblies already loaded; load them before the first window binds to them.
+        _ = Translations.ResourceManager;
+
         LogAppInitializing();
 
         // Hook on error before app really starts

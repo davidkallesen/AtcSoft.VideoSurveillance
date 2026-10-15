@@ -12,25 +12,25 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Notifications}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Notifications}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=ShowNotificationOnDisconnect, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ShowNotificationOnDisconnect}" />
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=ShowNotificationOnReconnect, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=ShowNotificationOnReconnect}" />
 
             <atc:LabelToggleSwitch
                 IsOn="{Binding Path=PlayNotificationSound, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=PlayNotificationSound}" />
 
         </StackPanel>

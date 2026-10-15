@@ -12,12 +12,12 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=MediaCleanup}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MediaCleanup}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <atc:LabelComboBox
                 Items="{Binding Path=CleanupScheduleItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=CleanupSchedule}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedCleanupSchedule, Mode=TwoWay}" />
@@ -25,7 +25,7 @@
             <atc:LabelComboBox
                 IsEnabled="{Binding Path=IsCleanupEnabled}"
                 Items="{Binding Path=RecordingRetentionItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=RecordingRetention}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedRecordingRetention, Mode=TwoWay}" />
@@ -36,13 +36,13 @@
                 IsEnabled="{Binding Path=IsCleanupEnabled}"
                 IsOn="{Binding Path=IncludeSnapshotsInCleanup, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=IncludeSnapshotsInCleanup}" />
 
             <atc:LabelComboBox
                 IsEnabled="{Binding Path=IsSnapshotRetentionEnabled}"
                 Items="{Binding Path=SnapshotRetentionItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=SnapshotRetention}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedSnapshotRetention, Mode=TwoWay}" />
@@ -53,13 +53,13 @@
                 IsEnabled="{Binding Path=IsCleanupEnabled}"
                 IsOn="{Binding Path=IsDiskSpaceGuardEnabled, Mode=TwoWay}"
                 LabelPosition="Right"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableDiskSpaceGuard}" />
 
             <atc:LabelComboBox
                 IsEnabled="{Binding Path=IsDiskSpaceGuardControlEnabled}"
                 Items="{Binding Path=MinFreeSpaceItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=MinFreeSpace}"
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedMinFreeSpace, Mode=TwoWay}" />

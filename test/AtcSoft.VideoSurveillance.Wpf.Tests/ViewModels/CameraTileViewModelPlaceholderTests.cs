@@ -29,7 +29,7 @@ public sealed class CameraTileViewModelPlaceholderTests
 
         tile.IsDeviceUnplugged = true;
 
-        tile.PlaceholderText.Should().Be(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.UsbDeviceUnplugged);
+        tile.PlaceholderText.Should().Be(AtcSoft.VideoSurveillance.Resources.Translations.UsbDeviceUnplugged);
         changed.Should().Contain(nameof(CameraTileViewModel.PlaceholderText), "the tile has to show the new text");
 
         tile.IsDeviceUnplugged = false;

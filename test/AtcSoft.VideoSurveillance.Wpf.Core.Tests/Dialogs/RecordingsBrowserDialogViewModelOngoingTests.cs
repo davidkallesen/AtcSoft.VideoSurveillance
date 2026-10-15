@@ -44,7 +44,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
 
         var entry = sut.Recordings.Single(r => r.FilePath == ongoing);
         entry.IsBeingRecorded.Should().BeTrue();
-        entry.FormattedDuration.Should().Be(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.RecordingInProgress, "it has no length to show yet");
+        entry.FormattedDuration.Should().Be(AtcSoft.VideoSurveillance.Resources.Translations.RecordingInProgress, "it has no length to show yet");
         sut.Recordings.Single(r => r.FilePath == finished).IsBeingRecorded.Should().BeFalse();
     }
 
@@ -142,7 +142,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
         sut.Recordings.Single(r => r.FilePath == ongoing).Should().BeSameAs(entry, "the row stays where it is");
         entry.IsBeingRecorded.Should().BeFalse();
         entry.FileSizeBytes.Should().Be(2049, "the size is that of the finished file");
-        entry.FormattedDuration.Should().NotBe(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.RecordingInProgress);
+        entry.FormattedDuration.Should().NotBe(AtcSoft.VideoSurveillance.Resources.Translations.RecordingInProgress);
         changedOnEntry.Should().Contain([nameof(entry.IsBeingRecorded), nameof(entry.FormattedDuration), nameof(entry.FormattedFileSize)]);
         listRebuilt.Should().BeFalse("rebuilding the list would lose the scroll position");
         sut.SelectedRecording.Should().BeSameAs(other);

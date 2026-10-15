@@ -36,6 +36,7 @@
     <Project Path="src/AtcSoft.VideoEngine/AtcSoft.VideoEngine.csproj" />
     <Project Path="src/AtcSoft.VideoPlayer.Wpf/AtcSoft.VideoPlayer.Wpf.csproj" />
     <Project Path="src/AtcSoft.VideoSurveillance.Core/AtcSoft.VideoSurveillance.Core.csproj" />
+    <Project Path="src/AtcSoft.VideoSurveillance.Resources/AtcSoft.VideoSurveillance.Resources.csproj" />
     <Project Path="src/AtcSoft.VideoSurveillance.Wpf.Core/AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
     <Project Path="src/AtcSoft.VideoSurveillance.Wpf/AtcSoft.VideoSurveillance.Wpf.csproj" />
   </Folder>
@@ -53,6 +54,7 @@
     <Project Path="test/AtcSoft.VideoSurveillance.Api.Tests/AtcSoft.VideoSurveillance.Api.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Blazor.App.Tests/AtcSoft.VideoSurveillance.Blazor.App.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Core.Tests/AtcSoft.VideoSurveillance.Core.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Resources.Tests/AtcSoft.VideoSurveillance.Resources.Tests.csproj" />
     <Project Path="test/AtcSoft.CameraWall.Wpf.Tests/AtcSoft.CameraWall.Wpf.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Core.Tests/AtcSoft.VideoSurveillance.Wpf.Core.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Tests/AtcSoft.VideoSurveillance.Wpf.Tests.csproj" />

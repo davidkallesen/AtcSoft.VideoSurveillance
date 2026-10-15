@@ -29,11 +29,11 @@ global using AtcSoft.VideoEngine.DirectX;
 
 global using AtcSoft.VideoSurveillance.Models.Settings;
 
+global using AtcSoft.VideoSurveillance.Resources;
 global using AtcSoft.VideoSurveillance.Wpf.Core;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Events;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Models;
-global using AtcSoft.VideoSurveillance.Wpf.Core.Resources;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 

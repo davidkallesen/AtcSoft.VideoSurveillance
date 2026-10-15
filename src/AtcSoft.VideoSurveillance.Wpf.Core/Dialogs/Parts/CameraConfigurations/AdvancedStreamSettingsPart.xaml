@@ -16,19 +16,19 @@
         <atc:LabelCheckBox
             Grid.Column="0"
             HideAreas="All"
-            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=UseLowLatencyModeInfo}"
             IsChecked="{Binding Path=Camera.Stream.UseLowLatencyMode, Mode=TwoWay}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=UseLowLatencyMode}"
             LabelWidthNumber="180" />
 
         <atc:LabelIntegerBox
             Grid.Column="2"
             HideAreas="Asterisk"
-            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=MaxLatencyMsInfo}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=MaxLatencyMs}"
             Maximum="10000"
             Minimum="0"
@@ -37,19 +37,19 @@
         <atc:LabelComboBox
             Grid.Column="4"
             HideAreas="All"
-            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=RtspTransportInfo}"
             Items="{Binding Path=RtspTransportItems}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=RtspTransport}"
             SelectedKey="{Binding Path=SelectedRtspTransportKey, Mode=TwoWay}" />
 
         <atc:LabelIntegerBox
             Grid.Column="6"
             HideAreas="Asterisk"
-            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=BufferDurationMsInfo}"
-            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                             Key=BufferDurationMs}"
             Maximum="10000"
             Minimum="0"

@@ -19,13 +19,13 @@
             Margin="0,0,15,0"
             VerticalAlignment="Center"
             FontWeight="SemiBold"
-            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                        Key=Source}" />
 
         <RadioButton
             Margin="0,0,20,0"
             VerticalAlignment="Center"
-            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                           Key=SourceTypeNetwork}"
             GroupName="CameraSource"
             IsChecked="{Binding Path=IsNetworkSource, Mode=TwoWay}"
@@ -33,7 +33,7 @@
 
         <RadioButton
             VerticalAlignment="Center"
-            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                           Key=SourceTypeUsb}"
             GroupName="CameraSource"
             IsChecked="{Binding Path=IsUsbSource, Mode=TwoWay}"

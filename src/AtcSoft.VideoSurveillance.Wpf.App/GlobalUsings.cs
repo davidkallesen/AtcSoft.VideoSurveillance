@@ -30,12 +30,12 @@ global using Atc.XamlToolkit.Mvvm;
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoEngine.DirectX;
 
+global using AtcSoft.VideoSurveillance.Resources;
 global using AtcSoft.VideoSurveillance.Services;
 global using AtcSoft.VideoSurveillance.Wpf.App.Models;
 global using AtcSoft.VideoSurveillance.Wpf.App.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Core;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
-global using AtcSoft.VideoSurveillance.Wpf.Core.Resources;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Extensions;
 global using AtcSoft.VideoSurveillance.Wpf.Helpers;

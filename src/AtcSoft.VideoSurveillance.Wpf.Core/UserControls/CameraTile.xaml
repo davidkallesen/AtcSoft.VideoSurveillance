@@ -110,14 +110,14 @@
                         Orientation="Vertical">
 
                         <Button
-                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=ShowInFullScreen}"
                             x:Name="FullScreenQuickButton"
                             Margin="0,0,0,4"
                             HorizontalAlignment="{Binding QuickActionsHorizontalAlignment, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Command="{Binding FullScreenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Style="{StaticResource OverlayQuickActionButtonStyle}"
-                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=ShowInFullScreen}"
                             Visibility="Hidden">
                             <Path
@@ -129,14 +129,14 @@
                         </Button>
 
                         <Button
-                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=ResetZoom}"
                             x:Name="ZoomResetQuickButton"
                             Margin="0,0,0,4"
                             HorizontalAlignment="{Binding QuickActionsHorizontalAlignment, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Command="{Binding ZoomResetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Style="{StaticResource OverlayQuickActionButtonStyle}"
-                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=ResetZoom}"
                             Visibility="Collapsed">
                             <TextBlock

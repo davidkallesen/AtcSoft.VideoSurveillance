@@ -33,7 +33,7 @@
                     Grid.Column="0"
                     Margin="0,0,8,0"
                     VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                Key=Camera}" />
                 <ComboBox
                     Grid.Column="1"
@@ -45,7 +45,7 @@
                     Grid.Column="2"
                     Margin="16,0,8,0"
                     VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                Key=Day}" />
                 <ComboBox
                     Grid.Column="3"
@@ -57,7 +57,7 @@
                     Grid.Column="4"
                     Margin="16,0,8,0"
                     VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                Key=Time}" />
                 <ComboBox
                     Grid.Column="5"
@@ -69,7 +69,7 @@
                     Grid.Column="7"
                     Padding="16,6"
                     Command="{Binding Path=RefreshCommand}"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=Refresh}" />
             </atc:GridEx>
 
@@ -93,13 +93,13 @@
                                 <Setter Property="IsEnabled" Value="False" />
                                 <Setter Property="Opacity" Value="0.55" />
                                 <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-                                <Setter Property="ToolTip" Value="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=RecordingInProgressInfo}" />
+                                <Setter Property="ToolTip" Value="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RecordingInProgressInfo}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="90" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Thumbnail}">
+                    <DataGridTemplateColumn Width="90" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Thumbnail}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button
@@ -157,27 +157,27 @@
                     <DataGridTextColumn
                         Width="150"
                         Binding="{Binding Path=CameraName}"
-                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=RecordingCamera}" />
                     <DataGridTextColumn
                         Width="160"
                         Binding="{Binding Path=FormattedRecordingTime}"
-                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=RecordingDateTime}" />
                     <DataGridTextColumn
                         Width="80"
                         Binding="{Binding Path=FormattedDuration}"
-                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=RecordingDuration}" />
                     <DataGridTextColumn
                         Width="100"
                         Binding="{Binding Path=FormattedFileSize}"
-                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=RecordingSize}" />
                     <DataGridTextColumn
                         Width="*"
                         Binding="{Binding Path=FileName}"
-                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=FileName}" />
                 </DataGrid.Columns>
                 <DataGrid.InputBindings>
@@ -203,25 +203,25 @@
                     MinWidth="80"
                     Padding="16,8"
                     Command="{Binding Path=PlayCommand}"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=PlayRecording}" />
                 <Button
                     MinWidth="80"
                     Padding="16,8"
                     Command="{Binding Path=DeleteCommand}"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=DeleteRecording}" />
                 <Button
                     MinWidth="80"
                     Padding="16,8"
                     Command="{Binding Path=OpenFolderCommand}"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=OpenRecordingsFolder}" />
                 <Button
                     MinWidth="80"
                     Padding="16,8"
                     Command="{Binding Path=CloseCommand}"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=Close}"
                     IsCancel="True" />
             </atc:UniformSpacingPanel>
@@ -262,7 +262,7 @@
                             VerticalAlignment="Center"
                             FontSize="14"
                             FontWeight="SemiBold"
-                            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                        Key=Thumbnail}" />
                         <Button
                             Padding="8,4"

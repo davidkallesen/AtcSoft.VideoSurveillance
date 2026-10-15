@@ -1,4 +1,6 @@
+global using System.Globalization;
 global using System.IO;
+global using System.Runtime.CompilerServices;
 
 global using Atc.Wpf.Notifications;
 global using AtcSoft.VideoEngine;

@@ -164,7 +164,7 @@ public class CameraConfigurationDialogViewModelSourceTests
         await vm.DetectConnectionTypeCommand.ExecuteAsync(null);
 
         vm.Camera.Connection.ConnectionType.Should().Be(CameraConnectionType.Lan);
-        vm.ConnectionTypeDetectionStatus.Should().Be(AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations.ConnectionTypeDetectFailed);
+        vm.ConnectionTypeDetectionStatus.Should().Be(AtcSoft.VideoSurveillance.Resources.Translations.ConnectionTypeDetectFailed);
     }
 
     [Fact]

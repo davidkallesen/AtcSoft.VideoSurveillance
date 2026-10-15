@@ -17,7 +17,7 @@
         <ResourceDictionary Source="/AtcSoft.VideoSurveillance.Wpf.Core;component/Themes/OverrideStyles.xaml" />
     </UserControl.Resources>
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=ConnectionOverrides}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectionOverrides}">
 
         <atc:UniformSpacingPanel
             Margin="10"
@@ -27,13 +27,13 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultConnectionTimeout, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelIntegerBox
                     IsEnabled="{Binding Path=UseDefaultConnectionTimeout, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=ConnectionTimeoutSeconds}"
                     Maximum="300"
                     Minimum="1"
@@ -43,13 +43,13 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultReconnectDelay, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelIntegerBox
                     IsEnabled="{Binding Path=UseDefaultReconnectDelay, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=ReconnectDelaySeconds}"
                     Maximum="300"
                     Minimum="1"
@@ -59,14 +59,14 @@
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
                     IsOn="{Binding Path=UseDefaultAutoReconnect, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelToggleSwitch
                     IsEnabled="{Binding Path=UseDefaultAutoReconnect, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     IsOn="{Binding Path=OverrideAutoReconnect, Mode=TwoWay}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=AutoReconnectOnFailure}" />
             </StackPanel>
 

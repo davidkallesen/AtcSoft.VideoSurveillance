@@ -11,7 +11,7 @@
     d:DesignWidth="600"
     mc:Ignorable="d">
 
-    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations, Key=Maintenance}">
+    <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Maintenance}">
         <StackPanel Margin="0,0,0,-20" Orientation="Vertical">
 
             <Button
@@ -19,7 +19,7 @@
                 Padding="16,8"
                 HorizontalAlignment="Left"
                 Command="{Binding Path=RestoreDefaultsCommand}"
-                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Wpf.Core.Resources.Translations,
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                               Key=RestoreDefaults}" />
 
         </StackPanel>
