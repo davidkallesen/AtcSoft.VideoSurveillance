@@ -206,6 +206,16 @@ public partial class MainWindowViewModel : ViewModelBase
         dialog.ShowDialog();
     }
 
+    /// <summary>
+    /// Gets whether the users dialog is offered: to an admin only.
+    /// </summary>
+    public Visibility ShowManageUsers
+        => session.IsAdmin ? Visibility.Visible : Visibility.Collapsed;
+
+    [RelayCommand]
+    private void ManageUsers()
+        => AtcSoft.VideoSurveillance.Wpf.Dialogs.UsersDialog.Show(gatewayService, Application.Current.MainWindow);
+
     // Signed out, the client signs in again (as someone else, perhaps) or closes.
     [RelayCommand("SignOut")]
     private async Task SignOutAsync()
@@ -218,6 +228,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         RaisePropertyChanged(nameof(SignedInText));
+        RaisePropertyChanged(nameof(ShowManageUsers));
     }
 
     [RelayCommand("ShowSettings")]

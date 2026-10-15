@@ -128,6 +128,15 @@
                             Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}"
                             Text="{Binding Path=SignedInText}" />
                         <fluent:Button
+                            Command="{Binding Path=ManageUsersCommand}"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Users}"
+                            KeyTip="M"
+                            Visibility="{Binding Path=ShowManageUsers}">
+                            <fluent:Button.Icon>
+                                <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="UsersCog" />
+                            </fluent:Button.Icon>
+                        </fluent:Button>
+                        <fluent:Button
                             Command="{Binding Path=ChangePasswordCommand}"
                             Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ChangePassword}"
                             KeyTip="P">
