@@ -129,14 +129,6 @@ public sealed partial class SurveillanceHub : Hub<ISurveillanceHubClient>, ISurv
     }
 
     /// <summary>
-    /// Swaps two adjacent cameras in the current layout.
-    /// </summary>
-    public Task SwapCameras(
-        Guid cameraId,
-        HubSwapDirection direction)
-        => Clients.All.CameraSwapRequested(new CameraSwapRequestedEvent(cameraId, direction));
-
-    /// <summary>
     /// Starts HLS streaming for a camera. Returns the playlist URL.
     /// Cancellation comes from <see cref="HubCallerContext.ConnectionAborted"/>
     /// directly rather than via a method parameter — SignalR's JSON binder

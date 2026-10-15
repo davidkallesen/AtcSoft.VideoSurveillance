@@ -91,10 +91,9 @@ The specification is validated `Strict`. Where a rule does not fit one operation
 | `MotionDetected` | `MotionDetectedEvent`: the camera, active or not, how much changed, the boxes in the analysed picture |
 | `UsbCameraLifecycleChanged` | `UsbCameraLifecycleEvent`: a USB camera on the server unplugged or plugged in again |
 | `StreamStarted` | `StreamStartedEvent`, to the caller of `StartStream`: the playlist |
-| `CameraSwapRequested` | `CameraSwapRequestedEvent`: a camera and the neighbour to swap with |
 | `Error` | a text, to the caller of `StartRecording` that failed |
 
-Methods (client to server): `StartRecording`, `StopRecording`, `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id) and `SwapCameras(cameraId, direction)`.
+Methods (client to server): `StartRecording`, `StopRecording`, `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id).
 
 The states are written as the REST API writes them: `connected`, `deviceUnplugged`, `recordingMotion`, `replugged`, `right`. The server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`; both clients use the generated `SurveillanceHubClient`.
 

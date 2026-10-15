@@ -80,15 +80,4 @@ public sealed class HubEventMappingTests
         hubEvent.FriendlyName.Should().Be("Logitech BRIO");
         hubEvent.Timestamp.Should().Be(Now);
     }
-
-    [Theory]
-    [InlineData(global::VideoSurveillance.Generated.Models.SwapDirection.Left, AtcSoft.VideoSurveillance.Enums.SwapDirection.Left)]
-    [InlineData(global::VideoSurveillance.Generated.Models.SwapDirection.Right, AtcSoft.VideoSurveillance.Enums.SwapDirection.Right)]
-    public void A_Swap_Direction_Is_The_Same_Either_Way(
-        global::VideoSurveillance.Generated.Models.SwapDirection api,
-        AtcSoft.VideoSurveillance.Enums.SwapDirection core)
-    {
-        api.ToCoreSwapDirection().Should().Be(core);
-        core.ToApiSwapDirection().Should().Be(api);
-    }
 }

@@ -1,5 +1,4 @@
 using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
-using CoreSwapDirection = AtcSoft.VideoSurveillance.Enums.SwapDirection;
 using CoreUsbCameraLifecyclePhase = AtcSoft.VideoSurveillance.Enums.UsbCameraLifecyclePhase;
 
 namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
@@ -63,14 +62,6 @@ public static class HubEventMapping
             FriendlyName: e.Device.FriendlyName,
             Timestamp: timestamp);
     }
-
-    public static CoreSwapDirection ToCoreSwapDirection(
-        this SwapDirection direction)
-        => direction == SwapDirection.Right ? CoreSwapDirection.Right : CoreSwapDirection.Left;
-
-    public static SwapDirection ToApiSwapDirection(
-        this CoreSwapDirection direction)
-        => direction == CoreSwapDirection.Right ? SwapDirection.Right : SwapDirection.Left;
 
     public static SurveillanceEvent ToStreamEvent(
         this ConnectionStateChangedEvent e)

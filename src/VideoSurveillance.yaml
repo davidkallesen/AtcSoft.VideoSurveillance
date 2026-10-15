@@ -821,8 +821,6 @@ x-signalr-hubs:
         payload: UsbCameraLifecycleEvent
       - name: StreamStarted
         payload: StreamStartedEvent
-      - name: CameraSwapRequested
-        payload: CameraSwapRequestedEvent
       - name: Error
         payload: string
     methods:
@@ -834,12 +832,6 @@ x-signalr-hubs:
         arguments:
           - name: cameraId
             payload: { type: string, format: uuid }
-      - name: SwapCameras
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
-          - name: direction
-            payload: SwapDirection
       - name: StartStream
         arguments:
           - name: cameraId
@@ -1966,11 +1958,6 @@ components:
       description: A USB camera on the server was unplugged, or plugged in again.
       enum: [unplugged, replugged]
 
-    SwapDirection:
-      type: string
-      description: Which neighbour a camera swaps places with.
-      enum: [left, right]
-
     ConnectionStateChangedEvent:
       title: ConnectionStateChangedEvent
       type: object
@@ -2110,20 +2097,6 @@ components:
         playlistUrl:
           type: string
           description: The HLS playlist, from the server's root (/streams/...).
-
-    CameraSwapRequestedEvent:
-      title: CameraSwapRequestedEvent
-      type: object
-      description: Hub event - a client asked to swap a camera with its neighbour in the layout.
-      required:
-        - cameraId
-        - direction
-      properties:
-        cameraId:
-          type: string
-          format: uuid
-        direction:
-          $ref: "#/components/schemas/SwapDirection"
 
     WebhookPayload:
       title: WebhookPayload
