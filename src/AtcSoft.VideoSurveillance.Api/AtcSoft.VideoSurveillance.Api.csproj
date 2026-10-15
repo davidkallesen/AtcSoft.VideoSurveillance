@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Atc.Hosting" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
     <!-- Pinned above the 2.0.0 that Microsoft.AspNetCore.OpenApi 10.0.8 pulls in transitively (NU1903 / GHSA-v5pm-xwqc-g5wc). -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.12.2" />

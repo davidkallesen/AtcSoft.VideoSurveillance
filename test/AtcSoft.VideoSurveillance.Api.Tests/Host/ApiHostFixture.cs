@@ -12,7 +12,18 @@ public sealed class ApiHostFixture : IDisposable
     /// </summary>
     public const string WebhookSecret = "host-test-secret";
 
+    /// <summary>
+    /// The first admin the host tests create with the setup code.
+    /// </summary>
+    public const string AdminName = "admin";
+
+    /// <summary>
+    /// The first admin's password.
+    /// </summary>
+    public const string AdminPassword = "host-test-password";
+
     private readonly Lazy<WebApplicationFactory<Program>> factory;
+    private readonly SemaphoreSlim setup = new(1, 1);
 
     public ApiHostFixture()
     {
@@ -71,6 +82,41 @@ public sealed class ApiHostFixture : IDisposable
     }
 
     /// <summary>
+    /// Makes sure the server has its first admin (<see cref="AdminName"/>),
+    /// made with the setup code the server wrote into its data folder.
+    /// </summary>
+    public async Task EnsureAdminAsync()
+    {
+        using var client = CreateClient();
+        var acquired = false;
+        try
+        {
+            await setup.WaitAsync(TestContext.Current.CancellationToken);
+            acquired = true;
+
+            var status = await client.GetFromJsonAsync<JsonElement>("/auth/setup", TestContext.Current.CancellationToken);
+            if (!status.GetProperty("setupRequired").GetBoolean())
+            {
+                return;
+            }
+
+            var code = await File.ReadAllTextAsync(Path.Combine(DataPath, "setup-code.txt"), TestContext.Current.CancellationToken);
+            var created = await client.PostAsJsonAsync(
+                "/auth/setup",
+                new { setupCode = code.Trim(), userName = AdminName, password = AdminPassword },
+                TestContext.Current.CancellationToken);
+            created.EnsureSuccessStatusCode();
+        }
+        finally
+        {
+            if (acquired)
+            {
+                setup.Release();
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets a service of the running server.
     /// </summary>
     /// <typeparam name="T">The service.</typeparam>
@@ -106,6 +152,7 @@ public sealed class ApiHostFixture : IDisposable
         Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Url", null);
         Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Secret", null);
         Webhooks.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        setup.Dispose();
 
         try
         {

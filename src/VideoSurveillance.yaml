@@ -7,6 +7,205 @@ info:
     name: MIT
 
 paths:
+  /auth/setup:
+    get:
+      summary: Whether the server still needs its first admin
+      operationId: getSetupStatus
+      security: []
+      tags:
+        - auth
+      responses:
+        '200':
+          description: The setup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+    post:
+      summary: Create the first admin
+      description: >-
+        Only while the server has no user. The setup code is in the file setup-code.txt in the server's data folder,
+        so only someone who can read the server's disk can create the first admin.
+      operationId: completeSetup
+      security: []
+      x-retry-enabled: false
+      # Guessing passwords or the setup code: ten tries a minute from one address.
+      x-ratelimit-policy: sign-in
+      x-ratelimit-permit-limit: 10
+      x-ratelimit-window-seconds: 60
+      x-ratelimit-algorithm: fixed
+      x-ratelimit-partition: ip
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteSetupRequest"
+      responses:
+        '200':
+          description: The first admin is created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          description: The setup code is not right
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: The server has users already
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '429':
+          description: Too many tries from this address; Retry-After says when to try again.
+          headers:
+            Retry-After:
+              description: Seconds to wait before trying again.
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /auth/token:
+    post:
+      summary: Sign in
+      operationId: createSession
+      security: []
+      x-retry-enabled: false
+      # Guessing passwords or the setup code: ten tries a minute from one address.
+      x-ratelimit-policy: sign-in
+      x-ratelimit-permit-limit: 10
+      x-ratelimit-window-seconds: 60
+      x-ratelimit-algorithm: fixed
+      x-ratelimit-partition: ip
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          description: The user name or the password is not right (which of them is not said)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '429':
+          description: Too many tries from this address; Retry-After says when to try again.
+          headers:
+            Retry-After:
+              description: Seconds to wait before trying again.
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /auth/refresh:
+    post:
+      summary: Renew a session
+      description: Gives a new access token and a new refresh token for a refresh token, which can then not be used again.
+      operationId: refreshSession
+      security: []
+      x-retry-enabled: false
+      # Guessing passwords or the setup code: ten tries a minute from one address.
+      x-ratelimit-policy: sign-in
+      x-ratelimit-permit-limit: 10
+      x-ratelimit-window-seconds: 60
+      x-ratelimit-algorithm: fixed
+      x-ratelimit-partition: ip
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshSessionRequest"
+      responses:
+        '200':
+          description: The session is renewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          description: The refresh token is not known, or has run out; sign in again
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '429':
+          description: Too many tries from this address; Retry-After says when to try again.
+          headers:
+            Retry-After:
+              description: Seconds to wait before trying again.
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /auth/sign-out:
+    post:
+      summary: Sign out
+      description: Ends the session the refresh token belongs to. One that is already gone is no error.
+      operationId: endSession
+      security: []
+      x-retry-enabled: false
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshSessionRequest"
+      responses:
+        '204':
+          description: Signed out
+
+  /auth/me:
+    get:
+      summary: The signed-in user
+      operationId: getCurrentUser
+      security:
+        - bearer: []
+      tags:
+        - auth
+      responses:
+        '200':
+          description: The signed-in user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /cameras:
     get:
       summary: List all cameras
@@ -908,7 +1107,117 @@ x-retry-cb-sampling-duration-seconds: 240
 x-retry-handle-429: true
 
 components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: The access token from createSession, completeSetup or refreshSession.
+
   schemas:
+    UserRole:
+      type: string
+      description: >-
+        viewer watches and reads; operator also records, takes snapshots and edits cameras and layouts; admin also
+        changes the settings, the webhooks, the users and the API keys.
+      enum: [viewer, operator, admin]
+
+    SetupStatus:
+      title: SetupStatus
+      type: object
+      required:
+        - setupRequired
+      properties:
+        setupRequired:
+          type: boolean
+          description: True while the server has no user; completeSetup creates the first admin.
+
+    CompleteSetupRequest:
+      title: CompleteSetupRequest
+      type: object
+      required:
+        - setupCode
+        - userName
+        - password
+      properties:
+        setupCode:
+          type: string
+          minLength: 1
+          description: The code in setup-code.txt in the server's data folder.
+        userName:
+          type: string
+          minLength: 1
+          maxLength: 64
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+
+    SignInRequest:
+      title: SignInRequest
+      type: object
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+          minLength: 1
+          maxLength: 64
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    RefreshSessionRequest:
+      title: RefreshSessionRequest
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
+
+    Session:
+      title: Session
+      type: object
+      description: >-
+        A signed-in session. The access token is sent as "Authorization: Bearer <token>" until it runs out, then
+        refreshSession gives a new one for the refresh token.
+      required:
+        - accessToken
+        - expiresInSeconds
+        - refreshToken
+        - userName
+        - role
+      properties:
+        accessToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int32
+          description: How long the access token is valid.
+        refreshToken:
+          type: string
+          description: Renews the session (refreshSession) or ends it (endSession). It is valid for 30 days after its last use.
+        userName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    CurrentUser:
+      title: CurrentUser
+      type: object
+      required:
+        - userName
+        - role
+      properties:
+        userName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+
     Camera:
       title: Camera
       type: object

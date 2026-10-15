@@ -3,18 +3,26 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.Net.ServerSentEvents;
 global using System.Runtime.CompilerServices;
+global using System.Security.Claims;
 global using System.Threading;
 global using System.Threading.Channels;
 global using System.Threading.Tasks;
 
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Security;
 global using AtcSoft.VideoSurveillance.Api.Domain.Streaming;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Services;
 
+global using Microsoft.AspNetCore.Http;
+
+global using VideoSurveillance.Generated.Auth.Handlers;
+global using VideoSurveillance.Generated.Auth.Models;
+global using VideoSurveillance.Generated.Auth.Parameters;
+global using VideoSurveillance.Generated.Auth.Results;
 global using VideoSurveillance.Generated.Cameras.Handlers;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Cameras.Parameters;

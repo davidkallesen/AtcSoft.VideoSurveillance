@@ -227,6 +227,27 @@ try
     builder.Services.AddSingleton(new WebhookDispatcherServiceOptions());
     builder.Services.AddHostedService<WebhookDispatcherService>();
 
+    // The users and their sessions (accounts.json in the data folder), and
+    // the bearer handler that checks the server's own access tokens. While
+    // the server has no user, setup-code.txt next to it creates the first admin.
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton(sp => new AccountService(
+        sp.GetRequiredService<ServerDataPaths>(),
+        sp.GetRequiredService<TimeProvider>(),
+        sp.GetRequiredService<ILogger<AccountService>>()));
+    builder.Services.AddSingleton<IAccountService>(sp => sp.GetRequiredService<AccountService>());
+    builder.Services.AddHttpContextAccessor();
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer();
+    builder.Services
+        .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+        .Configure<AccountService>((options, accounts) =>
+        {
+            options.MapInboundClaims = false;
+            options.TokenValidationParameters = accounts.Tokens.ValidationParameters;
+        });
+
     // Periodic liveness beacon so a 4-day soak log shows steady process /
     // recording-state metrics rather than going silent between disruptions.
     builder.Services.AddSingleton(new ServerHeartbeatServiceOptions());

@@ -30,7 +30,11 @@ public sealed class ServerDataPaths
             ? ApplicationPaths.DefaultCameraDataPath
             : Path.Combine(DataPath, Path.GetFileName(ApplicationPaths.DefaultCameraDataPath));
 
-        WebhooksPath = Path.Combine(Path.GetDirectoryName(SettingsPath)!, "webhooks.json");
+        var folder = Path.GetDirectoryName(SettingsPath)!;
+        WebhooksPath = Path.Combine(folder, "webhooks.json");
+        AccountsPath = Path.Combine(folder, "accounts.json");
+        SetupCodePath = Path.Combine(folder, "setup-code.txt");
+        SigningKeyPath = Path.Combine(folder, "signing.key");
     }
 
     /// <summary>
@@ -53,6 +57,23 @@ public sealed class ServerDataPaths
     /// the API. It lies next to the settings file.
     /// </summary>
     public string WebhooksPath { get; }
+
+    /// <summary>
+    /// Gets the path of the file with the users, their API keys and their
+    /// sessions. It lies next to the settings file.
+    /// </summary>
+    public string AccountsPath { get; }
+
+    /// <summary>
+    /// Gets the path of the file with the one-time code that creates the
+    /// first admin, while the server has no user.
+    /// </summary>
+    public string SetupCodePath { get; }
+
+    /// <summary>
+    /// Gets the path of the key the server signs its access tokens with.
+    /// </summary>
+    public string SigningKeyPath { get; }
 
     /// <summary>
     /// Moves the recording, snapshot and log folders into the data folder
