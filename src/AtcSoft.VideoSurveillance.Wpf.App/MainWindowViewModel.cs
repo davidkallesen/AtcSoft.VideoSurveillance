@@ -138,6 +138,16 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         this.eventService.OnConnectionStateChanged += OnConnectionStateChanged;
+
+        // Another user, or the same one with a new role after a renewal.
+        this.session.Changed += () =>
+        {
+            _ = Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                RaisePropertyChanged(nameof(SignedInText));
+                RaisePropertyChanged(nameof(ShowManageUsers));
+            });
+        };
         this.eventService.OnRecordingStateChanged += OnRecordingStateChanged;
 
         // The language changes live; CultureManager holds the handler weakly.
@@ -224,11 +234,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!await signInFlow.ShowDialogAsync(Application.Current.MainWindow).ConfigureAwait(true))
         {
             Application.Current.Shutdown();
-            return;
         }
-
-        RaisePropertyChanged(nameof(SignedInText));
-        RaisePropertyChanged(nameof(ShowManageUsers));
     }
 
     [RelayCommand("ShowSettings")]
