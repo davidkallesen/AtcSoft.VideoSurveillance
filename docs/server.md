@@ -27,6 +27,68 @@ $env:Storage__DataPath = "D:\Surveillance"
 
 The log folder is decided before the rest of the configuration is read. For the debug log to follow the data folder, give `Storage:DataPath` as an environment variable or on the command line, not only in `appsettings.json`.
 
+The data folder also holds the server's security files. Keep them with the rest of it, and out of reach of anyone who should not run the server:
+
+| File | What it is |
+|---|---|
+| `accounts.json` | The users (passwords hashed), their sessions (refresh tokens hashed) and the API keys (hashed) |
+| `signing.key` | The key the access tokens are signed with. Deleting it signs everyone out |
+| `keys\` | The keys the camera passwords and webhook secrets are encrypted with. Without it they cannot be read: the server logs which camera or receiver lost its secret, and it has to be entered again |
+| `setup-code.txt` | The one-time code that creates the first admin. Only there while the server has no user |
+| `audit.log` | Who changed what |
+
+---
+
+## 🔐 Sign-in and access
+
+Every operation needs a signed-in user or an API key; only the sign-in itself (`/auth/setup`, `/auth/token`, `/auth/refresh`, `/auth/sign-out`) and `GET /health` do not. `GET /health/recordings` is for an admin.
+
+### The first admin
+
+A server without users writes a one-time code to `setup-code.txt` in its data folder and logs where it is (never the code). The first client to connect asks for it: whoever can read the server's data folder makes the first admin (`POST /auth/setup`). The file is deleted once the admin exists.
+
+### Sessions
+
+`POST /auth/token` with a user name and password answers a session:
+
+| Token | Lifetime | Used for |
+|---|---|---|
+| `accessToken` | 1 hour | `Authorization: Bearer ...` on every call |
+| `refreshToken` | 30 days, renewed with every use | `POST /auth/refresh` gets a new session; each refresh token works once |
+| `mediaToken` | 12 hours | `?media=...` on the addresses a player or an `<img>` fetches itself: `/recordings-files/...` (a recording, a thumbnail) |
+
+`POST /auth/sign-out` with the refresh token signs out. Wrong credentials answer 400, as OAuth's `invalid_grant` does; sign-ins are limited to 10 a minute per address.
+
+Both clients keep the session across a restart: the web client in the browser's local storage, the desktop client in a file under `%LOCALAPPDATA%\AtcSoft\VideoSurveillance\sessions`, encrypted for the Windows user. They renew the access token a minute before it runs out, and once after a 401.
+
+For an unattended desktop client (a wall screen), `Auth:UserName` and `Auth:Password` in its configuration sign it in without the dialog.
+
+### Roles
+
+| Role | May |
+|---|---|
+| `viewer` | Watch, list, read the events, play recordings |
+| `operator` | Also add, change and delete cameras and layouts, take snapshots, start and stop recordings, delete recordings |
+| `admin` | Also change the settings, the webhooks, the users and the API keys, and read the audit log |
+
+The roles are declared per operation in `src/VideoSurveillance.yaml` (`x-authorize-roles`). An admin manages the users and the API keys in either client (the web client's *Users* page, the desktop client's *Users* in the backstage); the last admin cannot be removed or made something else.
+
+### API keys
+
+For a program that calls the server (Home Assistant, a script): an admin makes a key with a name and a role, and it is shown **once**. Send it as `X-API-Key: vsk_...`. The server keeps only its hash.
+
+### Audit log
+
+Every change that succeeded (anything but a read, a sign-in or a lease renewal) is written to `audit.log` with the time, the user or key, the operation and what it was done to. Refused sign-ins and setup attempts are written too. `GET /audit` reads the latest entries.
+
+### Secrets at rest
+
+The camera passwords in `cameras.json` and the webhook secrets in `webhooks.json` are encrypted with ASP.NET Core Data Protection (`enc:v1:...`), with the keys in `keys\`. A file written before this is encrypted the first time the server reads it, its backup included. The keys are not encrypted themselves, so the folder can move to another machine: a copy of `cameras.json` alone gives no password away, a copy of the whole data folder does. The cameras in memory keep their passwords as they are, since the streams need them; no password or secret goes to a client or into a log.
+
+### HTTPS
+
+Give the server an HTTPS address (`--urls https://+:5001`, a Kestrel endpoint with a certificate, or `https_port` behind a proxy that ends HTTPS) and it sends plain HTTP on to HTTPS and tells browsers to stay there (HSTS; not for `localhost`). Not in Development, where Aspire also hands the clients the plain address. Give the clients the `https://` address: an HTTP client does not send the `Authorization` header on to a redirected address. Without HTTPS, the tokens, and the media token in the addresses, cross the network readable.
+
 ---
 
 ## ❗ Errors
@@ -72,6 +134,7 @@ All three are declared in `src/VideoSurveillance.yaml`, and the generator builds
   |---|---|---|
   | `GET /cameras/{id}/snapshot` | 20 per 10 s | a snapshot opens the camera's stream |
   | `POST /webhooks/{id}/test` | 10 per minute | a test sends a request to someone else's server |
+  | `POST /auth/setup`, `POST /auth/token` | 10 per minute | guessing a password or the setup code |
 
 - **Output cache** (`x-cache-*`): `GET /devices/usb` is kept 5 seconds, since enumerating the devices takes a moment. A USB camera plugged in or pulled out drops it at once (`UsbDeviceCacheEvictor`), so the next read has the new list. A cached answer has an `Age` header.
 - **Retries in the clients** (`x-retry-*`): both clients call the generated `AddApiResilience()`. An attempt has two minutes and all attempts together five, since some calls are slow by nature (starting a recording waits for the camera; saving a changed folder layout moves the recordings). A failed read (5xx, 408, a timeout, a 429 that asks for a short wait) is tried up to 3 more times, after the wait a 503 or 429 asks for in `Retry-After`. A change is sent once: POST and PATCH are never repeated, and every PUT and DELETE has `x-retry-enabled: false`. A new PUT or DELETE needs it too. `GET /events` is not repeated either: its reader resumes on its own.
@@ -116,7 +179,7 @@ The web client's pages read it with `EventStreamService` and the desktop client 
 | `inProgress` | `true` while it is still being recorded |
 | `id` | The same for a file every time it is listed |
 
-The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`. Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request.
+The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`, signed in, with an API key, or with the session's media token as `?media=` (a video player or an `<img>` cannot send a header). Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request.
 
 `DELETE /recordings?filePath={filePath}` deletes one finished recording, its thumbnail, and the day folder it leaves empty. `filePath` is the path the listing returned. The answers:
 
@@ -126,8 +189,6 @@ The files themselves are fetched from `/recordings-files/{filePath}` and `/recor
 | `409` | It is still being made, by the server or by another program that has the file open |
 | `404` | There is no such recording |
 | `400` | The path does not name a recording: it leads out of the recording folder, is a full path, or is a thumbnail or any other file. Nothing is touched |
-
-The server has no login yet, so whoever can reach it can delete recordings, as they can already delete cameras and change the retention.
 
 The server makes a thumbnail for every recording file, the way the standalone app does: one picture or a 2 x 2 grid (the *Thumbnail tiles* setting), stored next to the video or in `thumbnails\` (the *Keep thumbnails in a separate folder* setting). Thumbnails are drawn with GDI+, so a server that is not running on Windows records without them.
 
