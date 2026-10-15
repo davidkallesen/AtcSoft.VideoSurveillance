@@ -1,6 +1,6 @@
 @page "/cameras"
 @inject GatewayService Gateway
-@inject SurveillanceHubService Hub
+@inject EventStreamService EventStream
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
@@ -102,16 +102,32 @@ else
     // Cameras with a start or stop under way: starting waits for the camera
     // to connect, and a second click meanwhile would start it twice.
     private readonly HashSet<Guid> busy = new();
+    private readonly CancellationTokenSource leaving = new();
     private Camera[]? cameras;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        Hub.OnConnectionStateChanged += OnConnectionStateChanged;
-        Hub.OnRecordingStateChanged += OnRecordingStateChanged;
-
-        await Hub.ConnectAsync();
         await LoadCamerasAsync();
+
+        // The states come from the server's event stream (GET /events) until
+        // the page is left; it resumes by itself after a drop.
+        _ = EventStream.RunAsync(OnEventAsync, leaving.Token);
+    }
+
+    private Task OnEventAsync(SurveillanceEvent surveillanceEvent)
+    {
+        if (surveillanceEvent.Connection is { } connection)
+        {
+            OnConnectionStateChanged(connection);
+        }
+
+        if (surveillanceEvent.Recording is { } recording)
+        {
+            OnRecordingStateChanged(recording);
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task LoadCamerasAsync()
@@ -273,7 +289,7 @@ else
 
     public void Dispose()
     {
-        Hub.OnConnectionStateChanged -= OnConnectionStateChanged;
-        Hub.OnRecordingStateChanged -= OnRecordingStateChanged;
+        leaving.Cancel();
+        leaving.Dispose();
     }
 }

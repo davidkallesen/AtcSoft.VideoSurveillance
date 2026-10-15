@@ -1,6 +1,7 @@
 @page "/live"
 @inject GatewayService Gateway
 @inject SurveillanceHubService Hub
+@inject EventStreamService EventStream
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @implements IAsyncDisposable
@@ -212,16 +213,18 @@ else
     // What each playing video's picture measures, as the browser reports it.
     private readonly Dictionary<Guid, int[]> pictureSizes = new();
     private readonly CancellationTokenSource heartbeatCancellation = new();
+    private readonly CancellationTokenSource leaving = new();
 
     private bool HasStoppedTiles
         => LayoutCameraIds().Any(id => !streamUrls.ContainsKey(id) && !starting.Contains(id));
 
     protected override async Task OnInitializedAsync()
     {
+        // The streams go over the hub; the camera states and motion come
+        // from the server's event stream (GET /events) until the page is left.
         Hub.OnStreamStarted += OnStreamStarted;
-        Hub.OnConnectionStateChanged += OnConnectionStateChanged;
-        Hub.OnMotionDetected += OnMotionDetected;
         Hub.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
+        _ = EventStream.RunAsync(OnEventAsync, leaving.Token);
 
         await Hub.ConnectAsync();
 
@@ -413,6 +416,21 @@ else
         });
     }
 
+    private Task OnEventAsync(SurveillanceEvent surveillanceEvent)
+    {
+        if (surveillanceEvent.Connection is { } connection)
+        {
+            OnConnectionStateChanged(connection);
+        }
+
+        if (surveillanceEvent.Motion is { } motion)
+        {
+            OnMotionDetected(motion);
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void OnHubConnectionStateChanged(string state)
         => InvokeAsync(StateHasChanged);
 
@@ -445,9 +463,9 @@ else
     public async ValueTask DisposeAsync()
     {
         Hub.OnStreamStarted -= OnStreamStarted;
-        Hub.OnConnectionStateChanged -= OnConnectionStateChanged;
-        Hub.OnMotionDetected -= OnMotionDetected;
         Hub.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
+        await leaving.CancelAsync();
+        leaving.Dispose();
 
         await heartbeatCancellation.CancelAsync();
         heartbeatCancellation.Dispose();

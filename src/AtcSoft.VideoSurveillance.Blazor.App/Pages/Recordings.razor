@@ -1,6 +1,6 @@
 @page "/recordings"
 @inject GatewayService Gateway
-@inject SurveillanceHubService Hub
+@inject EventStreamService EventStream
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -139,6 +139,7 @@
     private bool isLoading = true;
     private bool loadFailed;
     private bool reloadPending;
+    private readonly CancellationTokenSource leaving = new();
 
     private string StatusText
         => visible.Count == recordings.Length
@@ -147,10 +148,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Hub.OnRecordingStateChanged += OnRecordingStateChanged;
-
-        await Hub.ConnectAsync();
         await LoadRecordingsAsync();
+
+        // A recording that starts or stops comes from the server's event
+        // stream (GET /events) until the page is left.
+        _ = EventStream.RunAsync(OnEventAsync, leaving.Token);
+    }
+
+    private Task OnEventAsync(SurveillanceEvent surveillanceEvent)
+    {
+        if (surveillanceEvent.Recording is not null)
+        {
+            OnRecordingStateChanged();
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task LoadRecordingsAsync()
@@ -193,7 +205,7 @@
     private void ApplyFilter()
         => visible = [.. filter.Apply(recordings, DateTimeOffset.Now)];
 
-    private void OnRecordingStateChanged(RecordingStateChangedEvent e)
+    private void OnRecordingStateChanged()
     {
         // A recording started, stopped or began a new file: the list changed.
         // Several events arrive together at a segment switch; reload once.
@@ -288,6 +300,7 @@
 
     public void Dispose()
     {
-        Hub.OnRecordingStateChanged -= OnRecordingStateChanged;
+        leaving.Cancel();
+        leaving.Dispose();
     }
 }
