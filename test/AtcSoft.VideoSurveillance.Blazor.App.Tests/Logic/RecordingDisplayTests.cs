@@ -75,4 +75,20 @@ public sealed class RecordingDisplayTests
     [InlineData("")]
     public void FileUrl_Is_Null_Without_A_Path(string? path)
         => RecordingDisplay.FileUrl("http://server:5000", path).Should().BeNull();
+
+    [Fact]
+    public void FormatSize_Writes_The_Number_The_Chosen_Way()
+    {
+        var previous = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("da-DK");
+
+            RecordingDisplay.FormatSize(1_468_675).Should().Be("1,4 MB");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
+    }
 }

@@ -48,10 +48,10 @@ public static class RecordingDisplay
         return bytes switch
         {
             <= 0 => Unknown,
-            >= gb => string.Create(CultureInfo.InvariantCulture, $"{bytes / (double)gb:F2} GB"),
-            >= mb => string.Create(CultureInfo.InvariantCulture, $"{bytes / (double)mb:F1} MB"),
-            >= kb => string.Create(CultureInfo.InvariantCulture, $"{bytes / (double)kb:F1} KB"),
-            _ => string.Create(CultureInfo.InvariantCulture, $"{bytes} B"),
+            >= gb => string.Create(CultureInfo.CurrentCulture, $"{bytes / (double)gb:F2} GB"),
+            >= mb => string.Create(CultureInfo.CurrentCulture, $"{bytes / (double)mb:F1} MB"),
+            >= kb => string.Create(CultureInfo.CurrentCulture, $"{bytes / (double)kb:F1} KB"),
+            _ => string.Create(CultureInfo.CurrentCulture, $"{bytes} B"),
         };
     }
 
