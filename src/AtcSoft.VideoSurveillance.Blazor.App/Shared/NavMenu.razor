@@ -1,3 +1,4 @@
+@inject BrowserSession Session
 <MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Translations.Home</MudNavLink>
     <MudNavGroup Title="@Translations.Cameras" Icon="@Icons.Material.Filled.Videocam" Expanded="true">
@@ -11,4 +12,8 @@
     <MudNavLink Href="/recordings" Icon="@Icons.Material.Filled.FiberManualRecord">@Translations.Recordings</MudNavLink>
     <MudNavLink Href="/webhooks" Icon="@Icons.Material.Filled.Webhook">@Translations.Webhooks</MudNavLink>
     <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">@Translations.Settings</MudNavLink>
+    @if (Session.IsAdmin)
+    {
+        <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People">@Translations.Users</MudNavLink>
+    }
 </MudNavMenu>

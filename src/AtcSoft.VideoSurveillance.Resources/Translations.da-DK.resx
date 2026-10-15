@@ -2574,4 +2574,31 @@ Miniature:
   <data name="NoUsersAccess" xml:space="preserve">
     <value>Kun en administrator kan styre brugere, API-nøgler og revisionsloggen.</value>
   </data>
+  <data name="UserSaved" xml:space="preserve">
+    <value>Brugeren er gemt.</value>
+  </data>
+  <data name="UserRemoved" xml:space="preserve">
+    <value>Brugeren er fjernet.</value>
+  </data>
+  <data name="UserCouldNotBeSaved" xml:space="preserve">
+    <value>Brugeren kunne ikke gemmes.</value>
+  </data>
+  <data name="UserCouldNotBeRemoved" xml:space="preserve">
+    <value>Brugeren kunne ikke fjernes.</value>
+  </data>
+  <data name="ApiKeyMade" xml:space="preserve">
+    <value>API-nøglen er oprettet.</value>
+  </data>
+  <data name="ApiKeyRemoved" xml:space="preserve">
+    <value>API-nøglen er fjernet.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeMade" xml:space="preserve">
+    <value>API-nøglen kunne ikke oprettes.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeRemoved" xml:space="preserve">
+    <value>API-nøglen kunne ikke fjernes.</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>API-nøgle</value>
+  </data>
 </root>

@@ -2574,4 +2574,31 @@ Vorschaubild:
   <data name="NoUsersAccess" xml:space="preserve">
     <value>Nur ein Administrator kann Benutzer, API-Schlüssel und das Prüfprotokoll verwalten.</value>
   </data>
+  <data name="UserSaved" xml:space="preserve">
+    <value>Der Benutzer wurde gespeichert.</value>
+  </data>
+  <data name="UserRemoved" xml:space="preserve">
+    <value>Der Benutzer wurde entfernt.</value>
+  </data>
+  <data name="UserCouldNotBeSaved" xml:space="preserve">
+    <value>Der Benutzer konnte nicht gespeichert werden.</value>
+  </data>
+  <data name="UserCouldNotBeRemoved" xml:space="preserve">
+    <value>Der Benutzer konnte nicht entfernt werden.</value>
+  </data>
+  <data name="ApiKeyMade" xml:space="preserve">
+    <value>Der API-Schlüssel wurde erstellt.</value>
+  </data>
+  <data name="ApiKeyRemoved" xml:space="preserve">
+    <value>Der API-Schlüssel wurde entfernt.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeMade" xml:space="preserve">
+    <value>Der API-Schlüssel konnte nicht erstellt werden.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeRemoved" xml:space="preserve">
+    <value>Der API-Schlüssel konnte nicht entfernt werden.</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>API-Schlüssel</value>
+  </data>
 </root>

@@ -2574,4 +2574,31 @@ Thumbnail:
   <data name="NoUsersAccess" xml:space="preserve">
     <value>Only an admin can manage users, API keys and the audit log.</value>
   </data>
+  <data name="UserSaved" xml:space="preserve">
+    <value>The user is saved.</value>
+  </data>
+  <data name="UserRemoved" xml:space="preserve">
+    <value>The user is removed.</value>
+  </data>
+  <data name="UserCouldNotBeSaved" xml:space="preserve">
+    <value>The user could not be saved.</value>
+  </data>
+  <data name="UserCouldNotBeRemoved" xml:space="preserve">
+    <value>The user could not be removed.</value>
+  </data>
+  <data name="ApiKeyMade" xml:space="preserve">
+    <value>The API key is made.</value>
+  </data>
+  <data name="ApiKeyRemoved" xml:space="preserve">
+    <value>The API key is removed.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeMade" xml:space="preserve">
+    <value>The API key could not be made.</value>
+  </data>
+  <data name="ApiKeyCouldNotBeRemoved" xml:space="preserve">
+    <value>The API key could not be removed.</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
 </root>
