@@ -7,19 +7,25 @@ public static class ProblemText
 {
     /// <summary>
     /// Gets the text to show: the message of each field a 400 names, else the
-    /// problem's <c>detail</c>, else its <c>title</c>, else the status.
+    /// problem's <c>detail</c>, else the <c>title</c> of a
+    /// problem body (one made up from the status alone is the status's enum name), else the status.
     /// </summary>
     public static string From(EndpointResponse response)
     {
         ArgumentNullException.ThrowIfNull(response);
 
-        switch (response.ContentObject)
+        // Every generated result is an IEndpointResult with the problem already read.
+        var problem = response is IEndpointResult result
+            ? result.Problem
+            : response.ContentObject as ProblemDetails;
+
+        switch (problem)
         {
             case ValidationProblemDetails { Errors.Count: > 0 } validation:
                 return string.Join(" ", validation.Errors.SelectMany(field => field.Value));
             case ProblemDetails { Detail: { Length: > 0 } detail }:
                 return detail;
-            case ProblemDetails { Title: { Length: > 0 } title }:
+            case ProblemDetails { Title: { Length: > 0 } title } when response.ContentObject is ProblemDetails:
                 return title;
             default:
                 return string.Format(
