@@ -13,8 +13,6 @@ public sealed class SettingsState
 
     public string ThemeAccent { get; set; } = "Blue";
 
-    public string Language { get; set; } = "1033";
-
     public bool ConnectOnStartup { get; set; } = true;
 
     public bool StartMaximized { get; set; }
@@ -210,7 +208,6 @@ public sealed class SettingsState
 
         ThemeBase = settings.ThemeBase;
         ThemeAccent = settings.ThemeAccent ?? "Blue";
-        Language = settings.Language ?? "1033";
         ConnectOnStartup = settings.ConnectOnStartup;
         StartMaximized = settings.StartMaximized;
 
@@ -293,7 +290,6 @@ public sealed class SettingsState
         => new(
             ThemeBase: ThemeBase,
             ThemeAccent: ThemeAccent,
-            Language: Language,
             ConnectOnStartup: ConnectOnStartup,
             StartMaximized: StartMaximized,
             ShowOverlayTitle: ShowOverlayTitle,

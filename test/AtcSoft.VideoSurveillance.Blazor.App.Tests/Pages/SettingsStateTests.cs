@@ -55,7 +55,18 @@ public sealed class SettingsStateTests
 
         sut.LoadFrom(loaded);
 
-        sut.ToApiModel().Should().BeEquivalentTo(loaded);
+        // The language is each client's own, not the server's.
+        sut.ToApiModel().Should().BeEquivalentTo(loaded, options => options.Excluding(settings => settings.Language));
+    }
+
+    [Fact]
+    public void The_Web_Client_Leaves_The_Servers_Language_Alone()
+    {
+        var sut = new SettingsState();
+        sut.LoadFrom(CreateSettings());
+
+        // Absent = unchanged; the web client's language is the browser's.
+        sut.ToApiModel().Language.Should().BeNull();
     }
 
     [Fact]

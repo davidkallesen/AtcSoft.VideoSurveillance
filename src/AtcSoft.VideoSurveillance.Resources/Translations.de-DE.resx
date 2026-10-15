@@ -1680,4 +1680,7 @@
   <data name="DiagnosticsExportFailed1" xml:space="preserve">
     <value>Diagnoseexport fehlgeschlagen: {0}</value>
   </data>
+  <data name="Language" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
 </root>

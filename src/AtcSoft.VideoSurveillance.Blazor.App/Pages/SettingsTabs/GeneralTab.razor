@@ -5,12 +5,6 @@
     <MudSelectItem Value="AppSettingsThemeBase.Light">Light</MudSelectItem>
 </MudSelect>
 <MudTextField @bind-Value="State.ThemeAccent" Label="Accent colour" Class="mt-2" />
-<MudSelect @bind-Value="State.Language" Label="Language" Class="mt-2">
-    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.Languages, State.Language, v => v))
-    {
-        <MudSelectItem Value="@value">@label</MudSelectItem>
-    }
-</MudSelect>
 
 <MudDivider Class="my-4" />
 

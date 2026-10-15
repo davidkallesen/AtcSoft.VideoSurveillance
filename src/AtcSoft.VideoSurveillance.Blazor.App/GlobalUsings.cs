@@ -8,11 +8,13 @@ global using Atc.Rest.Client;
 global using AtcSoft.VideoSurveillance.Blazor.App;
 global using AtcSoft.VideoSurveillance.Blazor.App.Logic;
 global using AtcSoft.VideoSurveillance.Blazor.App.Services;
+global using AtcSoft.VideoSurveillance.Resources;
 
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Web;
 global using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 global using Microsoft.AspNetCore.SignalR.Client;
+global using Microsoft.JSInterop;
 
 global using MudBlazor;
 global using MudBlazor.Services;

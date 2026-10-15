@@ -16,13 +16,6 @@ public static class SettingsOptions
         ("360p", "360p"),
     ];
 
-    public static IReadOnlyList<(string Value, string Label)> Languages { get; } =
-    [
-        ("1033", "English"),
-        ("1030", "Danish"),
-        ("1031", "German"),
-    ];
-
     public static IReadOnlyList<(double Value, string Label)> OverlayOpacities { get; } =
         [.. Enumerable.Range(0, 11).Select(i => (i / 10.0, $"{i * 10}%"))];
 

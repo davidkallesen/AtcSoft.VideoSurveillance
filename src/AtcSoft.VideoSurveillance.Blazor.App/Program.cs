@@ -41,7 +41,17 @@ builder.Services.AddScoped(_ => new SurveillanceHubService(apiBaseAddress));
 // The server's event stream (GET /events), one reader per page that runs it
 builder.Services.AddTransient<EventStreamService>();
 
-await builder
-    .Build()
+var host = builder.Build();
+
+// Blazor WebAssembly fixes the culture at startup: the language chosen in this
+// browser, else the browser's own (see LanguageChoice). A change reloads the page.
+var js = host.Services.GetRequiredService<IJSRuntime>();
+var culture = CultureInfo.GetCultureInfo(LanguageChoice.Resolve(
+    await js.InvokeAsync<string?>("atcLanguage.get").ConfigureAwait(false),
+    await js.InvokeAsync<string?>("atcLanguage.browser").ConfigureAwait(false)));
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+await host
     .RunAsync()
     .ConfigureAwait(false);

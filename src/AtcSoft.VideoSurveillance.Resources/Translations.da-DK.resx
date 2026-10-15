@@ -1680,4 +1680,7 @@
   <data name="DiagnosticsExportFailed1" xml:space="preserve">
     <value>Eksport af diagnostik fejlede: {0}</value>
   </data>
+  <data name="Language" xml:space="preserve">
+    <value>Sprog</value>
+  </data>
 </root>

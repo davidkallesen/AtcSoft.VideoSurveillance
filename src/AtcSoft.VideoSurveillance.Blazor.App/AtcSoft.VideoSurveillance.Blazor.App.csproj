@@ -3,7 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- The satellite assemblies of the four languages, and their date and number formats -->
+    <SatelliteResourceLanguages>en-GB;da-DK;de-DE</SatelliteResourceLanguages>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AtcSoft.VideoSurveillance.Resources\AtcSoft.VideoSurveillance.Resources.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Atc" Version="3.0.186" />
