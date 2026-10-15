@@ -94,6 +94,7 @@ try
         sp.GetRequiredService<ICameraStorageService>(),
         sp.GetRequiredService<ILogger<StreamingService>>(),
         sp));
+    builder.Services.AddSingleton<ILiveStreamService>(sp => sp.GetRequiredService<StreamingService>());
     builder.Services.AddSingleton<ICameraConnectionStateSink>(sp => sp.GetRequiredService<ServerRecordingService>());
 
     // USB-camera support — Null fallback first so non-Windows hosts

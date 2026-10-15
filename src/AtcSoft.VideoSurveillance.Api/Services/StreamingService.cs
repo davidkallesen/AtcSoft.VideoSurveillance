@@ -7,7 +7,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// for it, because Windows gives a USB camera to one program at a time: a
 /// process of its own would shut out every recording of the camera.
 /// </summary>
-public sealed partial class StreamingService : IDisposable
+public sealed partial class StreamingService : ILiveStreamService, IDisposable
 {
     // A client that drops its socket without calling StopStream leaves the
     // viewer count > 0 and the FFmpeg transcoder running. With CPU-heavy
@@ -20,10 +20,24 @@ public sealed partial class StreamingService : IDisposable
     // drives ReapIdleSessions); worst-case lag from drop to reap is ~70s.
     private static readonly TimeSpan InactivityTimeout = TimeSpan.FromSeconds(60);
 
+    // A viewer renews its lease this often; a lease not renewed for twice as
+    // long has run out (one renewal may be lost to a blip).
+    private static readonly TimeSpan LeaseRenewInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan LeaseTimeout = LeaseRenewInterval * 2;
+
+    // How long a viewer waits for the playlist and its first segment. 60s
+    // leaves room for cameras with long GOPs and slow RTSP handshakes.
+    private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan StartPollInterval = TimeSpan.FromMilliseconds(500);
+
     private readonly ICameraStorageService storage;
     private readonly ILogger<StreamingService> logger;
     private readonly IServiceProvider? services;
     private readonly ConcurrentDictionary<Guid, StreamSession> sessions = new();
+
+    // leaseId -> the viewer's lease, on the session it was taken on.
+    private readonly ConcurrentDictionary<Guid, StreamLeaseEntry> leases = new();
+    private readonly TimeProvider time;
 
     // connectionId → set of cameraIds that connection started. Used by the
     // SignalR hub's OnDisconnectedAsync to actively reap streams the
@@ -39,8 +53,9 @@ public sealed partial class StreamingService : IDisposable
     public StreamingService(
         ICameraStorageService storage,
         ILogger<StreamingService> logger,
-        ICameraPipelineHost pipelineHost)
-        : this(storage, logger)
+        ICameraPipelineHost pipelineHost,
+        TimeProvider? time = null)
+        : this(storage, logger, time)
         => this.pipelineHost = pipelineHost;
 
     /// <summary>
@@ -52,15 +67,17 @@ public sealed partial class StreamingService : IDisposable
         ICameraStorageService storage,
         ILogger<StreamingService> logger,
         IServiceProvider services)
-        : this(storage, logger)
+        : this(storage, logger, time: null)
         => this.services = services;
 
     private StreamingService(
         ICameraStorageService storage,
-        ILogger<StreamingService> logger)
+        ILogger<StreamingService> logger,
+        TimeProvider? time)
     {
         this.storage = storage;
         this.logger = logger;
+        this.time = time ?? TimeProvider.System;
 
         hlsOutputRoot = Path.Combine(Path.GetTempPath(), "linksoft-hls");
         Directory.CreateDirectory(hlsOutputRoot);
@@ -70,6 +87,137 @@ public sealed partial class StreamingService : IDisposable
     /// Gets the HLS output directory root path.
     /// </summary>
     public string HlsOutputRoot => hlsOutputRoot;
+
+    /// <inheritdoc />
+    public TimeSpan RenewInterval => LeaseRenewInterval;
+
+    /// <inheritdoc />
+    public async Task<LiveStreamStart> StartAsync(
+        Guid cameraId,
+        CancellationToken cancellationToken)
+    {
+        if (storage.GetCameraById(cameraId) is null)
+        {
+            return LiveStreamStart.CameraNotFound(cameraId);
+        }
+
+        StreamSession session;
+        try
+        {
+            session = AddViewer(cameraId);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException)
+        {
+            // The camera cannot be opened right now (a USB camera that is
+            // unplugged, FFmpeg missing); nothing was started.
+            return LiveStreamStart.Failed(ex.Message);
+        }
+
+        var started = time.GetUtcNow();
+        try
+        {
+            while (!IsReadyToPlay(session.PlaylistPath))
+            {
+                // Waiting is watching: the reaper leaves the stream alone.
+                session.TouchActivity();
+
+                if (session.HasExited)
+                {
+                    var errors = session.GetRecentErrors();
+                    RemoveViewer(cameraId, session);
+                    return LiveStreamStart.Failed(string.IsNullOrWhiteSpace(errors)
+                        ? "The camera could not be opened."
+                        : $"The stream ended before it had started. Output: {errors}");
+                }
+
+                if (time.GetUtcNow() - started > StartTimeout)
+                {
+                    var errors = session.GetRecentErrors();
+                    RemoveViewer(cameraId, session);
+                    return LiveStreamStart.Failed(
+                        $"The stream did not produce its HLS playlist within {StartTimeout.TotalSeconds:F0}s. " +
+                        "The most common cause is a very long camera GOP (keyframe interval); " +
+                        "reduce it in the camera's encoder settings if possible. " +
+                        $"Last output: {errors}");
+                }
+
+                await Task.Delay(StartPollInterval, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The viewer left before it could watch.
+            RemoveViewer(cameraId, session);
+            throw;
+        }
+
+        var leaseId = Guid.NewGuid();
+        leases[leaseId] = new StreamLeaseEntry(cameraId, session, time.GetUtcNow());
+
+        var relativePath = Path.GetRelativePath(hlsOutputRoot, session.PlaylistPath).Replace('\\', '/');
+        return LiveStreamStart.Started(leaseId, $"/streams/{relativePath}");
+    }
+
+    /// <inheritdoc />
+    public bool Renew(
+        Guid cameraId,
+        Guid leaseId)
+    {
+        if (!leases.TryGetValue(leaseId, out var lease) || lease.CameraId != cameraId)
+        {
+            return false;
+        }
+
+        lease.Renew(time.GetUtcNow());
+        lease.Session.TouchActivity();
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void Release(
+        Guid cameraId,
+        Guid leaseId)
+    {
+        if (!leases.TryGetValue(leaseId, out var lease) ||
+            lease.CameraId != cameraId ||
+            !leases.TryRemove(leaseId, out _))
+        {
+            return;
+        }
+
+        RemoveViewer(cameraId, lease.Session);
+    }
+
+    private static bool IsReadyToPlay(string playlistPath)
+        => File.Exists(playlistPath) &&
+           Directory.EnumerateFiles(Path.GetDirectoryName(playlistPath)!, "*.ts").Any();
+
+    private StreamSession AddViewer(Guid cameraId)
+    {
+        var session = sessions.GetOrAdd(cameraId, id => CreateSession(id));
+        session.IncrementViewers();
+        session.TouchActivity();
+        return session;
+    }
+
+    // A viewer of this session goes; one of a session that has since ended
+    // (reaped, or replaced by a later one) changes nothing.
+    private void RemoveViewer(
+        Guid cameraId,
+        StreamSession session)
+    {
+        if (!sessions.TryGetValue(cameraId, out var current) || !ReferenceEquals(current, session))
+        {
+            return;
+        }
+
+        if (session.DecrementViewers() <= 0 &&
+            sessions.TryRemove(new KeyValuePair<Guid, StreamSession>(cameraId, session)))
+        {
+            session.Dispose();
+            LogHlsStreamStopped(cameraId);
+        }
+    }
 
     /// <summary>
     /// Starts HLS streaming for a camera. Returns the playlist path.
@@ -86,10 +234,7 @@ public sealed partial class StreamingService : IDisposable
         Guid cameraId,
         string? connectionId = null)
     {
-        var session = sessions.GetOrAdd(cameraId, id => CreateSession(id));
-
-        session.IncrementViewers();
-        session.TouchActivity();
+        var session = AddViewer(cameraId);
 
         if (!string.IsNullOrEmpty(connectionId))
         {
@@ -271,7 +416,17 @@ public sealed partial class StreamingService : IDisposable
             return;
         }
 
-        var cutoff = DateTime.UtcNow - InactivityTimeout;
+        // A lease that was not renewed has run out: its viewer went without a word.
+        var now = time.GetUtcNow();
+        foreach (var (leaseId, lease) in leases)
+        {
+            if (now - lease.RenewedUtc > LeaseTimeout && leases.TryRemove(leaseId, out _))
+            {
+                RemoveViewer(lease.CameraId, lease.Session);
+            }
+        }
+
+        var cutoff = now.UtcDateTime - InactivityTimeout;
         foreach (var (cameraId, session) in sessions)
         {
             if (session.LastActivityUtc < cutoff)
@@ -331,6 +486,7 @@ public sealed partial class StreamingService : IDisposable
             var host = pipelineHost!;
             LogHlsStreamStartedFromPipeline(cameraId, playlistPath);
             return new StreamSession(
+                time,
                 pipeline,
                 () => host.Release(cameraId, CameraPipelineUse.Viewing),
                 playlistPath,
@@ -356,7 +512,7 @@ public sealed partial class StreamingService : IDisposable
         var process = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start FFmpeg HLS process.");
 
-        var session = new StreamSession(process, playlistPath, outputDir);
+        var session = new StreamSession(time, process, playlistPath, outputDir);
 
         // Log stderr asynchronously for diagnostics
         process.ErrorDataReceived += (_, e) =>
@@ -385,6 +541,7 @@ public sealed partial class StreamingService : IDisposable
         // delivers pictures yet.
         private static readonly TimeSpan PipelinePollInterval = TimeSpan.FromMilliseconds(200);
 
+        private readonly TimeProvider time;
         private readonly Process? process;
         private readonly IMediaPipeline? pipeline;
         private readonly Action? releasePipeline;
@@ -398,14 +555,16 @@ public sealed partial class StreamingService : IDisposable
         private long lastActivityUtcTicks;
 
         public StreamSession(
+            TimeProvider time,
             Process process,
             string playlistPath,
             string outputDir)
         {
+            this.time = time;
             this.process = process;
             this.outputDir = outputDir;
             PlaylistPath = playlistPath;
-            lastActivityUtcTicks = DateTime.UtcNow.Ticks;
+            lastActivityUtcTicks = time.GetUtcNow().UtcTicks;
         }
 
         /// <summary>
@@ -416,16 +575,18 @@ public sealed partial class StreamingService : IDisposable
         /// yet; the stream starts when it delivers pictures.
         /// </summary>
         public StreamSession(
+            TimeProvider time,
             IMediaPipeline pipeline,
             Action releasePipeline,
             string playlistPath,
             string outputDir)
         {
+            this.time = time;
             this.pipeline = pipeline;
             this.releasePipeline = releasePipeline;
             this.outputDir = outputDir;
             PlaylistPath = playlistPath;
-            lastActivityUtcTicks = DateTime.UtcNow.Ticks;
+            lastActivityUtcTicks = time.GetUtcNow().UtcTicks;
 
             pipeline.ConnectionStateChanged += OnPipelineStateChanged;
             if (!TryStartPipelineStream())
@@ -461,7 +622,7 @@ public sealed partial class StreamingService : IDisposable
             => new(Interlocked.Read(ref lastActivityUtcTicks), DateTimeKind.Utc);
 
         public void TouchActivity()
-            => Interlocked.Exchange(ref lastActivityUtcTicks, DateTime.UtcNow.Ticks);
+            => Interlocked.Exchange(ref lastActivityUtcTicks, time.GetUtcNow().UtcTicks);
 
         public void AddErrorLine(string line)
         {
@@ -637,5 +798,23 @@ public sealed partial class StreamingService : IDisposable
                 process.Dispose();
             }
         }
+    }
+
+    private sealed class StreamLeaseEntry(
+        Guid cameraId,
+        StreamSession session,
+        DateTimeOffset renewedUtc)
+    {
+        private long renewedUtcTicks = renewedUtc.UtcTicks;
+
+        public Guid CameraId { get; } = cameraId;
+
+        public StreamSession Session { get; } = session;
+
+        public DateTimeOffset RenewedUtc
+            => new(Interlocked.Read(ref renewedUtcTicks), TimeSpan.Zero);
+
+        public void Renew(DateTimeOffset now)
+            => Interlocked.Exchange(ref renewedUtcTicks, now.UtcTicks);
     }
 }

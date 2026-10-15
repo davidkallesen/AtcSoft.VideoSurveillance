@@ -25,11 +25,30 @@ public sealed class SurveillanceEventFeed
     private readonly Lock gate = new();
     private readonly Queue<SequencedEvent> replay = new();
     private readonly List<ChannelWriter<SequencedEvent>> subscribers = [];
+
+    // The ids start from the time the feed was made, so those of an earlier
+    // run of the server are all lower than the first of this one.
+    private readonly long firstSequence;
     private long sequence;
+
+    public SurveillanceEventFeed()
+        : this(TimeProvider.System)
+    {
+    }
+
+    public SurveillanceEventFeed(TimeProvider time)
+    {
+        ArgumentNullException.ThrowIfNull(time);
+
+        firstSequence = (time.GetUtcNow().ToUnixTimeMilliseconds() * 1000) + 1;
+        sequence = firstSequence - 1;
+    }
 
     /// <summary>
     /// Subscribes to the feed: what the replay buffer has after <paramref name="lastSequence"/>,
     /// how many events after it it no longer has, and every event from then on.
+    /// An id this run of the feed did not give (the server restarted) gets everything
+    /// the buffer has, and at least one missed: what happened meanwhile is not known.
     /// </summary>
     /// <param name="lastSequence">The sequence of the last event the client read, or <see langword="null"/> for a new client.</param>
     public SurveillanceEventSubscription Subscribe(long? lastSequence)
@@ -43,11 +62,25 @@ public sealed class SurveillanceEventFeed
         // Under the lock that publishes: the replay ends where the live events start, nothing twice, nothing lost.
         lock (gate)
         {
-            var replayed = lastSequence is { } last
-                ? replay.Where(e => e.Sequence > last).ToList()
-                : [];
             var oldest = replay.Count > 0 ? replay.Peek().Sequence : sequence + 1;
-            var missed = lastSequence is { } after ? Math.Max(0, oldest - 1 - after) : 0;
+            List<SequencedEvent> replayed;
+            long missed;
+            if (lastSequence is not { } last)
+            {
+                replayed = [];
+                missed = 0;
+            }
+            else if (last < firstSequence - 1 || last > sequence)
+            {
+                replayed = [.. replay];
+                missed = Math.Max(1, oldest - firstSequence);
+            }
+            else
+            {
+                replayed = [.. replay.Where(e => e.Sequence > last)];
+                missed = Math.Max(0, oldest - 1 - last);
+            }
+
             subscribers.Add(channel.Writer);
             return new SurveillanceEventSubscription(replayed, missed, channel.Reader, () => Unsubscribe(channel.Writer));
         }

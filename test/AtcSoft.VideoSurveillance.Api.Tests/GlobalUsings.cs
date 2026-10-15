@@ -14,6 +14,7 @@ global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Settings;
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Streaming;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Events;

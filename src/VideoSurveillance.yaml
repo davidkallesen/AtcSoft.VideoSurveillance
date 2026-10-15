@@ -291,6 +291,106 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /cameras/{cameraId}/stream:
+    post:
+      summary: Start watching a camera live
+      description: >-
+        Takes a lease on the camera's HLS stream and answers when the stream can be played (up to a minute for a
+        camera that is slow to deliver its first segment). The viewer renews the lease every renewSeconds and gives
+        it back when it stops watching; a lease that is not renewed ends by itself, and the stream stops when the
+        last lease on it is gone.
+      operationId: startStream
+      x-retry-enabled: false
+      tags:
+        - cameras
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The stream can be played
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamLease"
+        '404':
+          description: Camera not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '503':
+          description: The stream could not be started (the camera cannot be opened, or gave no picture in time)
+          headers:
+            Retry-After:
+              description: Seconds to wait before asking again.
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /cameras/{cameraId}/stream/{leaseId}:
+    put:
+      summary: Renew a stream lease
+      description: A viewer still watching renews its lease; a lease the server does not have (it ended, or the server restarted) is not found, and the viewer starts the stream again.
+      operationId: renewStreamLease
+      # A PUT named renew: it changes nothing in the lease but how long it lasts.
+      x-atc-suppress: ATC_API_OPR005
+      x-retry-enabled: false
+      tags:
+        - cameras
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: leaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Renewed
+        '404':
+          description: Lease not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      summary: Give a stream lease back
+      description: The viewer stopped watching. A lease that is already gone is given back all the same.
+      operationId: deleteStreamLease
+      x-retry-enabled: false
+      tags:
+        - cameras
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: leaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Given back
+
   /devices/usb:
     get:
       summary: List USB cameras visible to the server host
@@ -555,7 +655,7 @@ paths:
           description: The events, one at a time.
           headers:
             X-Events-Missed:
-              description: How many events after Last-Event-ID the buffer no longer had (0 when it had them all).
+              description: How many events after Last-Event-ID the buffer no longer had (0 when it had them all; at least 1 for an id of an earlier run of the server, whose events since are not known).
               schema:
                 type: integer
                 format: int64
@@ -1141,6 +1241,30 @@ components:
         streamBufferDurationMs:
           type: integer
           format: int32
+
+    StreamLease:
+      title: StreamLease
+      type: object
+      description: A viewer's lease on a camera's live stream.
+      required:
+        - leaseId
+        - cameraId
+        - playlistUrl
+        - renewSeconds
+      properties:
+        leaseId:
+          type: string
+          format: uuid
+        cameraId:
+          type: string
+          format: uuid
+        playlistUrl:
+          type: string
+          description: The HLS playlist, relative to the server (/streams/...).
+        renewSeconds:
+          type: integer
+          format: int32
+          description: How often the viewer renews the lease; one that is not renewed for twice as long ends.
 
     RecordingStatus:
       title: RecordingStatus

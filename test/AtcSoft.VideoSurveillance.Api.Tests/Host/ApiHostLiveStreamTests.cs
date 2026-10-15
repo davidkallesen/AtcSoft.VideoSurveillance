@@ -93,7 +93,6 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
         using var client = host.CreateClient();
         var port = GetFreePort();
         using var stream = StartTestStream(ffmpeg!, port);
-        await using var hub = host.CreateHubConnection();
         Guid? cameraId = null;
 
         try
@@ -115,13 +114,13 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
             created.StatusCode.Should().Be(HttpStatusCode.Created);
             cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
 
-            var started = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-            hub.On<JsonElement>("StreamStarted", e => started.TrySetResult(e.GetProperty("playlistUrl").GetString()!));
-            await hub.StartAsync(cancellationToken);
-
-            // Act
-            await hub.InvokeAsync("StartStream", cameraId.Value, cancellationToken);
-            var playlistUrl = await started.Task.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            // Act — a viewer takes a lease on the stream; the answer comes when it can be played
+            var started = await client.PostAsync(new Uri($"/cameras/{cameraId}/stream", UriKind.Relative), content: null, cancellationToken);
+            started.StatusCode.Should().Be(HttpStatusCode.OK, await started.Content.ReadAsStringAsync(cancellationToken));
+            var lease = await started.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            var leaseId = lease.GetProperty("leaseId").GetGuid();
+            var playlistUrl = lease.GetProperty("playlistUrl").GetString()!;
+            lease.GetProperty("renewSeconds").GetInt32().Should().BePositive();
 
             // Assert — the playlist and its first segment can be fetched
             var playlist = await client.GetAsync(new Uri(playlistUrl, UriKind.Relative), cancellationToken);
@@ -133,7 +132,15 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
             var segmentUrl = playlistUrl[..(playlistUrl.LastIndexOf('/') + 1)] + segment;
             (await client.GetAsync(new Uri(segmentUrl, UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.OK);
 
-            await hub.InvokeAsync("StopStream", cameraId.Value, cancellationToken);
+            // The viewer renews its lease while it watches, and gives it back when it is done
+            var leaseUri = new Uri($"/cameras/{cameraId}/stream/{leaseId}", UriKind.Relative);
+            (await client.PutAsync(leaseUri, content: null, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+            (await client.DeleteAsync(leaseUri, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // A lease that is gone cannot be renewed: the viewer starts again
+            var renewedLate = await client.PutAsync(leaseUri, content: null, cancellationToken);
+            renewedLate.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            renewedLate.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
         }
         finally
         {

@@ -9,6 +9,7 @@ global using System.Threading.Tasks;
 
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Streaming;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Helpers;

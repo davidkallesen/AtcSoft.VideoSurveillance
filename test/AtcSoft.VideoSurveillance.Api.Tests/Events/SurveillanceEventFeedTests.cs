@@ -50,6 +50,35 @@ public sealed class SurveillanceEventFeedTests
     }
 
     [Fact]
+    public void A_Subscriber_That_Resumes_After_The_Server_Restarted_Gets_All_The_Feed_Has_And_Is_Told_It_Missed_Some()
+    {
+        var before = new Microsoft.Extensions.Time.Testing.FakeTimeProvider(DateTimeOffset.Parse("2026-10-15T12:00:00Z", CultureInfo.InvariantCulture));
+        var lastBeforeRestart = new SurveillanceEventFeed(before).Publish(Event(1));
+        before.Advance(TimeSpan.FromMinutes(1));
+        var feed = new SurveillanceEventFeed(before);
+        feed.Publish(Event(2));
+        feed.Publish(Event(3));
+
+        using var subscription = feed.Subscribe(lastSequence: lastBeforeRestart);
+
+        // What happened while the server was down is not known: the client reloads.
+        subscription.Replayed.Select(e => e.Event).Should().Equal(Event(2), Event(3));
+        subscription.Missed.Should().BePositive();
+    }
+
+    [Fact]
+    public void An_Id_The_Feed_Has_Not_Given_Yet_Is_From_Another_Run_Of_The_Server()
+    {
+        var feed = new SurveillanceEventFeed();
+        var last = feed.Publish(Event(1));
+
+        using var subscription = feed.Subscribe(lastSequence: last + 1000);
+
+        subscription.Replayed.Select(e => e.Event).Should().Equal(Event(1));
+        subscription.Missed.Should().BePositive();
+    }
+
+    [Fact]
     public async Task A_Subscriber_That_Falls_Behind_Is_Cut_Off_And_The_Others_Go_On()
     {
         var feed = new SurveillanceEventFeed();

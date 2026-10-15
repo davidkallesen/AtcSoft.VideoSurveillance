@@ -9,6 +9,7 @@ global using Atc.Hosting;
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Streaming;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
 global using AtcSoft.VideoSurveillance.Api.Hubs;
 global using AtcSoft.VideoSurveillance.Api.Services;
