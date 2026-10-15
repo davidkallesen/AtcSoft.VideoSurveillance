@@ -7,6 +7,7 @@ public sealed class ResourceFileTests
     [Theory]
     [InlineData("da-DK")]
     [InlineData("de-DE")]
+    [InlineData("en-GB")]
     public void Every_Text_Is_Translated(string culture)
     {
         var translated = ResxFile.Read(culture);
@@ -27,15 +28,10 @@ public sealed class ResourceFileTests
             .Should().BeEmpty();
 
     [Fact]
-    public void British_English_Only_Overrides()
-    {
-        var british = ResxFile.Read("en-GB");
-
-        british.Should().NotBeEmpty();
-        british.Keys.Except(Neutral.Keys, StringComparer.Ordinal).Should().BeEmpty("en-GB only changes texts that exist");
-        british.Where(entry => entry.Value == Neutral[entry.Key]).Select(entry => entry.Key)
-            .Should().BeEmpty("a text equal to US English belongs only in the neutral file");
-    }
+    public void British_English_Has_Its_Own_Spellings()
+        => ResxFile.Read("en-GB")
+            .Count(entry => entry.Value != Neutral[entry.Key])
+            .Should().BePositive("en-GB has every key, and its own text where British English differs");
 
     [Theory]
     [InlineData("")]
