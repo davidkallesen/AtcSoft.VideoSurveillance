@@ -47,16 +47,12 @@ public static class HubStates
         };
 
     /// <summary>
-    /// Gets the hub connection's own state (<see cref="SurveillanceHubService.ConnectionState"/>,
-    /// <c>Connected</c>, <c>Reconnecting...</c>) in the chosen language; another is shown as it is.
+    /// Gets whether the client has the server's live updates
+    /// (<see cref="SurveillanceEventService.IsConnected"/>), in the chosen language.
     /// </summary>
-    public static string HubText(string state)
-        => state switch
-        {
-            "Connected" => Translations.Connected,
-            "Connecting" => Translations.Connecting,
-            "Disconnected" => Translations.Disconnected,
-            "Reconnecting" or "Reconnecting..." => Translations.Reconnecting,
-            _ => state,
-        };
+    public static string ServerText(bool connected)
+        => string.Format(
+            CultureInfo.CurrentCulture,
+            Translations.LiveUpdates1,
+            connected ? Translations.LiveUpdatesOn : Translations.LiveUpdatesConnecting);
 }

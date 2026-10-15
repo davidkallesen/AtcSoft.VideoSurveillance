@@ -80,23 +80,9 @@ The specification is validated `Strict`. Where a rule does not fit one operation
 
 ---
 
-## 📡 The SignalR hub
-
-`/hubs/surveillance` is declared in the specification (`x-signalr-hubs` in `src/VideoSurveillance.yaml`), with what each event and method carries as a component schema:
-
-| Events (server to client) | Carries |
-|---|---|
-| `StreamStarted` | `StreamStartedEvent`, to the caller of `StartStream`: the playlist |
-
-Methods (client to server): `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id). Recordings are started and stopped over REST only, and the camera events come from `GET /events` (below).
-
-The states are written as the REST API writes them: `connected`, `deviceUnplugged`, `recordingMotion`, `replugged`, `right`. The server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`; both clients use the generated `SurveillanceHubClient`.
-
----
-
 ## 🌊 Events
 
-`GET /events` carries the camera events - connection, recording, motion and USB - as one stream of Server-Sent Events. Both clients read them here (the WPF client with `SurveillanceEventService`, the web client with `EventStreamService`):
+`GET /events` carries the camera events - connection, recording, motion and USB - as one stream of Server-Sent Events. It is how the server tells the clients what happens. Both clients read them here (the WPF client with `SurveillanceEventService`, the web client with `EventStreamService`):
 
 ```bash
 curl -N "http://localhost:5000/events?cameraId=47c2d0ad-b1c1-424f-91de-70d7ef99b279"
@@ -107,13 +93,13 @@ id: 412
 data: {"type":"recordingStateChanged","cameraId":"47c2d0ad-...","timestamp":"2026-10-15T09:00:00+00:00","recording":{"cameraId":"47c2d0ad-...","newState":"recording","oldState":"idle","filePath":"...","timestamp":"..."}}
 ```
 
-- **One model:** `SurveillanceEvent` has a `type` (`connectionStateChanged`, `recordingStateChanged`, `motionDetected`, `usbCameraLifecycleChanged` - the hub's names) and the matching part (`connection`, `recording`, `motion`, `usb`), the hub's own payload.
-- **Resume:** every event has an id. Send the last one you read as `Last-Event-ID` and the stream goes on after it, from a buffer of the latest 256 events; `X-Events-Missed` says how many the buffer no longer had.
+- **One model:** `SurveillanceEvent` has a `type` (`connectionStateChanged`, `recordingStateChanged`, `motionDetected`, `usbCameraLifecycleChanged`) and the matching part (`connection`, `recording`, `motion`, `usb`). The states are written as the REST API writes them (`connected`, `deviceUnplugged`, `recordingMotion`, `replugged`). A client reads the part that is filled; a type it does not know has none it knows, and is read past.
+- **Resume:** every event has an id. Send the last one you read as `Last-Event-ID` and the stream goes on after it, from a buffer of the latest 256 events; `X-Events-Missed` says how many the buffer no longer had. The ids start from the time the server started, so an id from before a restart gets the whole buffer and `X-Events-Missed` of at least 1: what happened while the server was down is not known, and a client loads what it shows again (the WPF client's `OnMissedEvents`).
 - **Heartbeat:** the response headers come at once; then a named `ping` event after `heartbeatSeconds` (15) without an event, so a proxy does not close the idle connection. The generated clients read past it.
 - **A slow reader** is cut off and resumes; it never holds up the others.
 - **Filter:** `?cameraId=` for one camera.
 
-The web client's dashboard reads it (`EventStreamService`, which resumes by itself); the other pages and the desktop client use the hub.
+The web client's pages read it with `EventStreamService` and the desktop client with `SurveillanceEventService`; both resume by themselves. The desktop client's status bar and its "connection lost" toast follow it too.
 
 ---
 
@@ -149,14 +135,22 @@ The server makes a thumbnail for every recording file, the way the standalone ap
 
 ## 📺 Live streaming
 
-The web client watches a camera through HLS. A client asks for a stream over the SignalR hub (`/hubs/surveillance`, `StartStream`) and gets back the address of a playlist below `/streams/`.
+Both clients watch a camera through HLS, on a **lease**:
+
+| Call | What it does |
+|---|---|
+| `POST /cameras/{id}/stream` | Takes a lease on the camera's stream. Answers `200` with `leaseId`, `playlistUrl` (below `/streams/`) and `renewSeconds` once the stream can be played (up to a minute for a camera slow to give its first segment); `404` for an unknown camera; `503` with the reason and `Retry-After` when the stream could not be started |
+| `PUT /cameras/{id}/stream/{leaseId}` | Renews the lease, every `renewSeconds` (30) while the viewer watches. `404` when the server no longer has it (it ran out, or the server restarted): the viewer starts the stream again |
+| `DELETE /cameras/{id}/stream/{leaseId}` | Gives the lease back; one that is already gone is no error |
+
+The stream runs while one lease on it is alive: viewers share it, and it stops with the last lease.
 
 - A network camera's stream is made by the FFmpeg command-line tool. It is taken from the folder the video engine loads its FFmpeg libraries from, so it needs no entry in the `PATH`; without it there, the `PATH` is searched.
 - A network camera's video is passed on as it is (no re-encoding), so a rotated camera is **not** rotated in the stream. A client turns the picture itself, from the camera's `rotation`.
 - **A USB camera has one pipeline for everything.** Windows lets one program at a time open a USB camera: a second opener connects and gets no pictures. So the server keeps the camera's one pipeline (`ICameraPipelineHost`, implemented by `CameraConnectionService`), and a live view, a recording someone starts, a snapshot, record-on-connect and motion watching all use it. Watching and recording work in either order, and stopping one leaves the other running. The camera is opened for the first of them and closed when nothing needs it any more.
 - A USB camera is therefore not streamed by the FFmpeg tool: the server's video engine writes the playlist and segments itself, from the same encoder as the recording (a USB camera sends uncompressed pictures, so both are encoded to H.264; that costs processor time for every USB camera in use). A camera that captures sound is streamed with it (AAC, from the same sound encoder as the recording); the tile starts muted and the viewer turns the sound on.
 - A USB camera that cannot be opened (unplugged, or the server is reconnecting to it for its own recording) answers the live view and `POST /cameras/{id}/recording` with the reason (`409 Conflict` for the recording).
-- A stream nobody asks about is stopped after a minute. A client that is watching calls `StreamHeartbeat` regularly (the web client does so every 20 seconds).
+- A lease that is not renewed for two intervals (a minute) runs out, so a viewer that goes without a word (a closed tab, a laptop that sleeps) does not keep the camera's transcoder running. `HlsStreamReaperService` sweeps the leases and the streams.
 - A camera's user name and password are removed from everything the server logs or sends back about a stream.
 
 ---
@@ -167,7 +161,7 @@ A camera with *record on motion* on (the application's setting, or the camera's 
 
 - **What counts as a motion:** from the first picture in which something moved until the scene has been quiet for the post-motion time. Something that pauses for a moment does not end it.
 - **Recording:** a motion starts a recording and its end stops it. After a motion recording, the next one waits for the cooldown. A camera that is *recorded on connect* as well is recording anyway; watching it only makes the motion events.
-- **Events:** clients get `MotionDetected` over SignalR for every analysed picture with movement (with the boxes, for overlays) and once when the motion is over. Webhooks get `motion.started` and `motion.stopped`, once each.
+- **Events:** clients get `motionDetected` on `GET /events` for every analysed picture with movement (with the boxes, for overlays) and once when the motion is over. Webhooks get `motion.started` and `motion.stopped`, once each.
 - **How it looks:** up to four pictures a second, compared with the same analysis as the desktop app, at the analysis size from the settings. A higher analysis frame rate in the settings is capped at four.
 - **Cost:** each analysed picture is captured as a PNG and decoded again. Two USB cameras at 1280x720, both watched and recorded (which for a USB camera includes encoding), used about 1.4 processor cores.
 - **Windows only:** the pictures are decoded with GDI+. On another platform the server logs that motion detection is not available and runs without it.

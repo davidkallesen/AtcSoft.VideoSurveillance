@@ -16,16 +16,6 @@ public sealed class ConnectionStateTextTests
     public void No_Camera_State_Is_Unknown()
         => ConnectionStateText.ForCamera(state: null).Should().Be("Unknown");
 
-    [Theory]
-    [InlineData("Connected", "Connected")]
-    [InlineData("Reconnecting", "Reconnecting...")]
-    [InlineData("Disconnected", "Disconnected")]
-    [InlineData("Unknown", "Unknown")]
-    public void The_Hub_State_Is_Shown_In_Words(
-        string state,
-        string expected)
-        => ConnectionStateText.ForHub(state).Should().Be(expected);
-
     [Fact]
     public void A_State_Is_In_The_Chosen_Language()
     {

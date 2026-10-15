@@ -10,7 +10,6 @@ namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
 {
     private readonly GatewayService gatewayService;
-    private readonly SurveillanceHubService hubService;
     private readonly SurveillanceEventService eventService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly IUsbCameraWatcher usbCameraWatcher;
@@ -161,7 +160,6 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
 
     public LiveViewViewModel(
         GatewayService gatewayService,
-        SurveillanceHubService hubService,
         SurveillanceEventService eventService,
         IVideoPlayerFactory videoPlayerFactory,
         IUsbCameraWatcher usbCameraWatcher,
@@ -169,13 +167,11 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         AtcSoft.VideoSurveillance.Services.IApplicationSettingsService? settingsService = null)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
-        ArgumentNullException.ThrowIfNull(hubService);
         ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(videoPlayerFactory);
         ArgumentNullException.ThrowIfNull(usbCameraWatcher);
 
         this.gatewayService = gatewayService;
-        this.hubService = hubService;
         this.eventService = eventService;
         this.videoPlayerFactory = videoPlayerFactory;
         this.usbCameraWatcher = usbCameraWatcher;
@@ -190,17 +186,17 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
             settingsService?.General.GridSize.ToString(CultureInfo.InvariantCulture))).ToString(CultureInfo.InvariantCulture);
 
         // Subscribe immediately so unplug events that arrive before the
-        // first LoadAsync (e.g. SignalR backlog replay) are still
+        // first LoadAsync (e.g. events the server sends again after a drop) are still
         // applied once the matching tile materializes.
         SubscribeToUsbWatcher();
 
-        hubService.OnReconnected += OnHubReconnected;
+        eventService.OnMissedEvents += OnMissedEvents;
     }
 
-    // The server stopped this client's streams when the connection went,
-    // and cameras may have been added or removed meanwhile: the view is
-    // loaded again. A view nobody has opened yet stays unloaded.
-    private void OnHubReconnected()
+    // The server was away (it may have restarted), and cameras may have been
+    // added or removed meanwhile: the view is loaded again. A view nobody has
+    // opened yet stays unloaded.
+    private void OnMissedEvents()
     {
         if (disposed || !loadedOnce || IsLoading)
         {
@@ -242,7 +238,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // RemoteUsbCameraWatcher forwards SignalR payloads on whatever
+        // RemoteUsbCameraWatcher forwards event payloads on whatever
         // thread the hub fires them on — marshal to the UI dispatcher
         // before mutating observable properties bound to the WPF view.
         // When there's no Application.Current (unit-test scenario) run
@@ -319,7 +315,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                 // Create a tile per camera
                 foreach (var camera in cameras)
                 {
-                    var tile = new CameraTileViewModel(videoPlayerFactory, hubService, eventService, apiBaseAddress)
+                    var tile = new CameraTileViewModel(videoPlayerFactory, gatewayService, eventService, apiBaseAddress)
                     {
                         CameraId = camera.Id,
                         DisplayName = camera.DisplayName,
@@ -347,18 +343,16 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                 {
                     await tile.StartStreamAsync().ConfigureAwait(false);
                 }
-                catch (Exception ex) when (ex is HttpRequestException or Microsoft.AspNetCore.SignalR.HubException)
+                catch (HttpRequestException)
                 {
-                    // Per-tile stream start failed — tile shows "No Stream".
-                    // HubException covers SignalR-side failures (e.g. the
-                    // server-side FFmpeg playlist-ready timeout we throw
-                    // from SurveillanceHub.StartStream); HttpRequestException
-                    // covers transport-level failures. A single tile failing
-                    // must not abort the rest of the live-view load.
+                    // Per-tile stream start failed (the server refused it, with
+                    // its reason, or could not be reached) — the tile shows
+                    // "No Stream". A single tile failing must not abort the rest
+                    // of the live-view load.
                 }
             }
         }
-        catch (Exception ex) when (ex is HttpRequestException or Microsoft.AspNetCore.SignalR.HubException)
+        catch (HttpRequestException)
         {
             var app = Application.Current;
             if (app is not null)
@@ -432,7 +426,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         }
 
         disposed = true;
-        hubService.OnReconnected -= OnHubReconnected;
+        eventService.OnMissedEvents -= OnMissedEvents;
 
         if (usbWatcherSubscribed)
         {

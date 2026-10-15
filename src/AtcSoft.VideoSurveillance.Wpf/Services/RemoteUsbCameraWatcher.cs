@@ -7,7 +7,7 @@ using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor
 /// <summary>
 /// API-client implementation of <see cref="IUsbCameraWatcher"/>.
 /// Subscribes to <see cref="IUsbLifecycleChannel"/> (which fronts
-/// the SignalR <c>UsbCameraLifecycleChanged</c> message) and translates
+/// the <c>usbCameraLifecycleChanged</c> event of GET /events) and translates
 /// server-side <c>Replugged</c> / <c>Unplugged</c> phases into the
 /// arrival / removal events local consumers already understand.
 /// </summary>
@@ -82,7 +82,7 @@ public sealed class RemoteUsbCameraWatcher : IUsbCameraWatcher
 
     private void OnLifecycleChanged(UsbCameraLifecycleEvent e)
     {
-        // Synthesize a descriptor from the SignalR payload so consumers
+        // Synthesize a descriptor from the event payload so consumers
         // get a fully-qualified UsbDeviceDescriptor matching the same
         // shape the local Windows watcher would produce. The descriptor
         // intentionally has no Capabilities — the API client never

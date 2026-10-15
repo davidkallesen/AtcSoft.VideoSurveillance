@@ -4,7 +4,7 @@ namespace AtcSoft.VideoSurveillance.Events;
 /// Fired by <see cref="Services.IUsbCameraLifecycleCoordinator"/> when
 /// a stored USB camera transitions between <c>Unplugged</c> and
 /// <c>Replugged</c>. Carries both the camera id (for routing into
-/// <c>CameraConnectionService</c> / <c>SurveillanceHub</c>) and the
+/// <c>CameraConnectionService</c> and the clients' events) and the
 /// device descriptor (for diagnostic logging).
 /// </summary>
 public sealed class UsbCameraLifecycleChangedEventArgs : EventArgs

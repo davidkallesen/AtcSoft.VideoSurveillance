@@ -1,7 +1,7 @@
 # AtcSoft.VideoSurveillance - Claude Code Guidelines
 
 ## Project Overview
-A multi-assembly video surveillance platform with a WPF desktop app and a headless REST API + SignalR server, sharing a common Core library. Uses RTSP/HTTP protocols with AtcSoft.VideoEngine (in-process FFmpeg) for video on both WPF and server.
+A multi-assembly video surveillance platform with a WPF desktop app and a headless REST API server (live events over Server-Sent Events), sharing a common Core library. Uses RTSP/HTTP protocols with AtcSoft.VideoEngine (in-process FFmpeg) for video on both WPF and server.
 
 ## Solution Structure
 - `AtcSoft.VideoSurveillance.Core` - Shared library: models, enums, events, service interfaces, helpers (net10.0, no WPF)
@@ -12,11 +12,11 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoPlayer.Wpf` - WPF VideoHost control with DComp surface + XAML overlay (net10.0-windows)
 - `AtcSoft.CameraWall.Wpf` - WPF library with the complete camera wall: UI, dialogs, VideoEngine integration (not published; consumed by the CameraWall app)
 - `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
-- `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceHubService, OpenAPI-generated client)
+- `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceEventService, OpenAPI-generated client)
 - `AtcSoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
 - `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator v3; until v3 is on nuget.org it comes from a local package, see `nuget.config` and `plans/roadmap-rest-api-sg.md`)
 - `AtcSoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
-- `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host with SignalR hub
+- `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host (REST, `GET /events`, HLS streams)
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
 - `AtcSoft.VideoSurveillance.Blazor.App` - Blazor WebAssembly client for the API server (MudBlazor). Its logic lives in plain classes under `Logic/`, tested in `AtcSoft.VideoSurveillance.Blazor.App.Tests`
 - `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App)
@@ -46,17 +46,17 @@ The solution follows a layered architecture with Core at the base:
 - **VideoEngine.Windows** provides USB / DirectShow source support: Media Foundation device enumeration, WMI hot-plug events, and the dshow demuxer wiring needed by the engine to open `video=Friendly Name` sources.
 - **CameraWall WPF library** references Core and VideoEngine, adds UI controls, dialogs, VideoHost-based media pipeline
 - **CameraWall WPF App** is a standalone thin shell with Ribbon UI delegating to `ICameraWallManager` (connects directly to cameras)
-- **VideoSurveillance WPF library** references Core and VideoPlayer, provides `GatewayService` (OpenAPI REST client) and `SurveillanceHubService` (SignalR client)
-- **VideoSurveillance WPF App** is an API client thin shell with Ribbon UI, connects to the REST API + SignalR hub (not directly to cameras)
-- **API** references Core and provides REST endpoints + SignalR real-time events
+- **VideoSurveillance WPF library** references Core and VideoPlayer, provides `GatewayService` (OpenAPI REST client) and `SurveillanceEventService` (the `GET /events` reader)
+- **VideoSurveillance WPF App** is an API client thin shell with Ribbon UI, connects to the REST API and its event stream (not directly to cameras)
+- **API** references Core and provides REST endpoints and real-time events (`GET /events`)
 - **Aspire** orchestrates the API, Blazor.App, and Wpf.App with a developer dashboard
 
 ## Server Edition
-The REST API + SignalR server enables headless video surveillance:
+The REST API server enables headless video surveillance:
 - **OpenAPI-first**: `src/VideoSurveillance.yaml` defines all endpoints; `Atc.Rest.Api.SourceGenerator` generates contracts
 - **Endpoints**: Cameras CRUD, Layouts CRUD, Recordings list, Settings get/update, Snapshot capture, Recording start/stop
-- **SignalR hub**: `/hubs/surveillance` starts and stops the live streams (`StreamStarted` to the caller); it no longer carries camera events. It is declared in the spec (`x-signalr-hubs`): the server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`, both clients use the generated `SurveillanceHubClient`, and a new event or method goes into the spec first. Its states use the REST values (`connected`); the WPF client reads them through `HubStates`
-- **Event stream**: `GET /events` streams the camera events (connection, recording, motion, USB) as Server-Sent Events, fed by the broadcaster (`HubEventMapping` -> `ToStreamEvent`) through `SurveillanceEventFeed` (replay buffer, bounded queue per reader). A new camera event goes into the stream. The WPF client reads it with `SurveillanceEventService`, the web client with `EventStreamService`
+- **Live streams**: a viewer takes a lease (`POST /cameras/{id}/stream` -> `leaseId`, `playlistUrl`, `renewSeconds`), renews it (`PUT .../stream/{leaseId}`; `404` means start again) and gives it back (`DELETE`). The stream stops with its last lease; a lease not renewed for two intervals runs out (`StreamingService`, swept by `HlsStreamReaperService`). There is no SignalR hub any more: a new kind of live message is an event on `GET /events` or a REST call
+- **Event stream**: `GET /events` streams the camera events (connection, recording, motion, USB) as Server-Sent Events, fed by the broadcaster (`HubEventMapping` -> `ToStreamEvent`) through `SurveillanceEventFeed` (replay buffer, bounded queue per reader). A new camera event goes into the stream. The WPF client reads it with `SurveillanceEventService` (its `IsConnected` drives the server status, `OnMissedEvents` a reload), the web client with `EventStreamService`. The states use the REST values (`connected`); the WPF client reads them through `HubStates`. The ids start from the server's start time, so a client resuming after a restart is told it missed events
 - **Run with Aspire**: `dotnet run --project src/AtcSoft.VideoSurveillance.Aspire` starts the API with the Aspire dashboard
 
 ### Server rules

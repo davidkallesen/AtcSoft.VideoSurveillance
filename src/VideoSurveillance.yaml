@@ -907,26 +907,6 @@ x-retry-circuit-breaker: true
 x-retry-cb-sampling-duration-seconds: 240
 x-retry-handle-429: true
 
-x-signalr-hubs:
-  surveillance:
-    url: /hubs/surveillance
-    events:
-      - name: StreamStarted
-        payload: StreamStartedEvent
-    methods:
-      - name: StartStream
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
-      - name: StopStream
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
-      - name: StreamHeartbeat
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
-
 components:
   schemas:
     Camera:
@@ -2188,21 +2168,6 @@ components:
         timestamp:
           type: string
           format: date-time
-
-    StreamStartedEvent:
-      title: StreamStartedEvent
-      type: object
-      description: Hub event, to the caller of StartStream - the stream is ready to play.
-      required:
-        - cameraId
-        - playlistUrl
-      properties:
-        cameraId:
-          type: string
-          format: uuid
-        playlistUrl:
-          type: string
-          description: The HLS playlist, from the server's root (/streams/...).
 
     WebhookPayload:
       title: WebhookPayload

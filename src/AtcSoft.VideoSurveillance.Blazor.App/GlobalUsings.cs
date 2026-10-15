@@ -13,7 +13,6 @@ global using AtcSoft.VideoSurveillance.Resources;
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Web;
 global using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-global using Microsoft.AspNetCore.SignalR.Client;
 global using Microsoft.Extensions.Localization;
 global using Microsoft.JSInterop;
 
@@ -29,7 +28,6 @@ global using VideoSurveillance.Generated.Devices.Models;
 global using VideoSurveillance.Generated.Events.Client;
 global using VideoSurveillance.Generated.Events.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Events.Models;
-global using VideoSurveillance.Generated.Hubs;
 global using VideoSurveillance.Generated.Layouts.Client;
 global using VideoSurveillance.Generated.Layouts.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Layouts.Models;

@@ -94,6 +94,68 @@ public sealed partial class GatewayService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<StreamLease> StartStreamAsync(
+        Guid cameraId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new StartStreamParameters(CameraId: cameraId);
+        var result = await startStreamEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsOk
+            ? result.OkContent
+            : throw Refused(result);
+    }
+
+    /// <inheritdoc />
+    public async Task<StreamLeaseRenewal> RenewStreamLeaseAsync(
+        Guid cameraId,
+        Guid leaseId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new RenewStreamLeaseParameters(CameraId: cameraId, LeaseId: leaseId);
+            var result = await renewStreamLeaseEndpoint
+                .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (result.IsNoContent)
+            {
+                return StreamLeaseRenewal.Renewed;
+            }
+
+            return result.IsNotFound
+                ? StreamLeaseRenewal.Gone
+                : StreamLeaseRenewal.Unreachable;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return StreamLeaseRenewal.Unreachable;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task StopStreamAsync(
+        Guid cameraId,
+        Guid leaseId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var parameters = new DeleteStreamLeaseParameters(CameraId: cameraId, LeaseId: leaseId);
+            await deleteStreamLeaseEndpoint
+                .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            // The lease runs out by itself.
+        }
+    }
+
     public async Task<RecordingStatus> StartRecordingAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)

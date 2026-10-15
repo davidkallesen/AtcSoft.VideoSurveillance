@@ -9,8 +9,8 @@ var earlyConfiguration = new ConfigurationBuilder()
 var advancedSettings = LoadAdvancedSettingsForLogging(
     new ServerDataPaths(earlyConfiguration[ServerDataPaths.ConfigurationKey]).SettingsPath);
 
-// Drop framework Debug noise (Kestrel connection lifecycle, SignalR protocol
-// negotiation, request matching, static file middleware) but keep AtcSoft.*
+// Drop framework Debug noise (Kestrel connection lifecycle, request matching,
+// static file middleware) but keep AtcSoft.*
 // at Debug and keep Microsoft.* Information+ events (request finished,
 // hosting lifetime, etc) for ops visibility.
 var loggerConfig = new LoggerConfiguration()
@@ -132,7 +132,7 @@ try
         new OnvifConnectionTypeDetector(sp.GetRequiredService<ILogger<OnvifConnectionTypeDetector>>()));
     builder.Services.AddSingleton<CameraConnectionTypeAutoDetector>();
 
-    // Configure CORS for Blazor client (AllowCredentials required for SignalR WebSocket transport).
+    // Configure CORS for the Blazor client.
     // Origins are loaded from configuration (Cors:AllowedOrigins). With AllowCredentials,
     // wildcard origins are forbidden — populate the section explicitly when fronting the
     // API from a non-loopback host.
@@ -158,9 +158,6 @@ try
         });
     });
 
-    // Register SignalR for real-time events
-    builder.Services.AddSignalR();
-
     // Shared health tracker for all BackgroundServiceBase-derived workers.
     // Each worker reports its running state around every DoWorkAsync tick and
     // sets its own max-staleness window; the /health endpoint reads this to
@@ -168,11 +165,11 @@ try
     builder.Services.AddSingleton<ITimeProvider, SystemTimeProvider>();
     builder.Services.AddSingleton<IBackgroundServiceHealthService, BackgroundServiceHealthService>();
 
-    // Event broadcaster: forwards Core events to SignalR. Built on
+    // Event broadcaster: publishes Core events to GET /events. Built on
     // BackgroundServiceBase for consistency with the other workers (it
     // subscribes/unsubscribes in Start/Stop; DoWorkAsync is a no-op and the
     // idle loop parks on a long delay).
-    // The camera events of GET /events: the broadcaster publishes what it sends over the hub.
+    // The camera events of GET /events, which the broadcaster publishes.
     builder.Services.AddSingleton<SurveillanceEventFeed>();
     builder.Services.AddSingleton(new SurveillanceEventBroadcasterOptions());
     builder.Services.AddHostedService<SurveillanceEventBroadcaster>();
@@ -364,9 +361,6 @@ try
             }
         },
     });
-
-    // Map SignalR hub for real-time surveillance events
-    app.MapHub<SurveillanceHub>(SurveillanceHubContract.Url);
 
     // Bring the recording folder in line with the layout settings, in the
     // background: this catches a layout changed while the server was down and

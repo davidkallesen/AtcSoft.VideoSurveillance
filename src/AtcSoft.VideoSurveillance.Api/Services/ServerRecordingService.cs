@@ -65,7 +65,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     /// <summary>
     /// Raised when the connection state of an actively-recording camera's
     /// pipeline changes. Server-only — used by SurveillanceEventBroadcaster
-    /// to forward connection events over SignalR. Cameras that aren't
+    /// to publish connection events to GET /events. Cameras that aren't
     /// recording (e.g. one-shot snapshot pipelines) are not represented.
     /// </summary>
     public event Action<Guid, ConnectionState>? CameraConnectionStateChanged;
@@ -215,7 +215,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
 
         // The recording service owns the pipeline once StartRecording accepts
         // it (the dictionary entry IS the ownership). Dispose here so manual
-        // Stop via REST/SignalR cleans up the underlying VideoPlayer's RTSP
+        // Stop via REST cleans up the underlying VideoPlayer's RTSP
         // connection, decoder thread, and GPU resources. Without this, every
         // Start/Stop cycle leaks an entire pipeline.
         // A motion recording ran on the pipeline that watches the camera:

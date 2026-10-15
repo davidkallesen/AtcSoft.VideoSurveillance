@@ -121,7 +121,7 @@ public sealed class UsbCameraLifecycleCoordinator : IUsbCameraLifecycleCoordinat
         // Only fire on the first transition to Unplugged — duplicate
         // removal events (the WMI watcher can occasionally double-fire
         // on driver reset) shouldn't generate a stream of identical
-        // SignalR notifications.
+        // client notifications.
         if (!unpluggedCameras.TryAdd(cameraId.Value, 0))
         {
             return;

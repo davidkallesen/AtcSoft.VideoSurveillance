@@ -1,6 +1,5 @@
 @page "/live"
 @inject GatewayService Gateway
-@inject SurveillanceHubService Hub
 @inject EventStreamService EventStream
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -69,7 +68,7 @@ else
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.PlayArrow"
                    OnClick="StartAllAsync"
-                   Disabled="@(!Hub.IsConnected || !HasStoppedTiles)">
+                   Disabled="@(!HasStoppedTiles)">
             @Translations.StartAll
         </MudButton>
         <MudButton Variant="Variant.Outlined"
@@ -82,15 +81,15 @@ else
             <MudButton Variant="Variant.Text" OnClick="SetAsStartupLayoutAsync">@Translations.SetAsStartUpLayout</MudButton>
         </MudTooltip>
         <MudSpacer />
-        <MudChip T="string" Size="Size.Small" Color="@(Hub.IsConnected ? Color.Success : Color.Warning)">
-            @(Hub.IsConnected ? Translations.ConnectedToTheServer : string.Format(CultureInfo.CurrentCulture, Translations.ServerState1, ConnectionStateText.ForHub(Hub.ConnectionState)))
+        <MudChip T="string" Size="Size.Small" Color="@(EventStream.IsReading ? Color.Success : Color.Warning)">
+            @(EventStream.IsReading ? Translations.ConnectedToTheServer : Translations.ConnectingToServer)
         </MudChip>
     </MudStack>
 
-    @if (!Hub.IsConnected)
+    @if (serverWasReached && !EventStream.IsReading)
     {
         <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">
-            @Translations.NoLiveConnection
+            @Translations.ServerConnectionLostMessage
         </MudAlert>
     }
 
@@ -146,7 +145,6 @@ else
                                            Color="Color.Primary"
                                            Size="Size.Small"
                                            StartIcon="@Icons.Material.Filled.PlayArrow"
-                                           Disabled="!Hub.IsConnected"
                                            OnClick="@(() => StartStreamAsync(camera.Id))">
                                     @(errors.ContainsKey(camera.Id) ? Translations.TryAgain : Translations.Start)
                                 </MudButton>
@@ -195,9 +193,6 @@ else
 }
 
 @code {
-    // The server stops a stream nobody has asked about for a minute.
-    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(20);
-
     private Layout[] layouts = [];
     private Camera[] cameras = [];
     private Layout? activeLayout;
@@ -205,6 +200,10 @@ else
     private bool isLoading = true;
     private bool loadFailed;
     private readonly Dictionary<Guid, string> streamUrls = new();
+
+    // The page's lease on each stream it shows, renewed while it is open.
+    private readonly StreamLeases leases = new();
+    private bool serverWasReached;
     private readonly HashSet<Guid> starting = new();
     private readonly Dictionary<Guid, string> errors = new();
     private readonly HashSet<Guid> pendingStreamInits = new();
@@ -220,13 +219,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // The streams go over the hub; the camera states and motion come
-        // from the server's event stream (GET /events) until the page is left.
-        Hub.OnStreamStarted += OnStreamStarted;
-        Hub.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
+        // The camera states and motion come from the server's event stream
+        // (GET /events) until the page is left; it also says whether the
+        // server can be reached.
+        EventStream.ReadingChanged += OnReadingChanged;
         _ = EventStream.RunAsync(OnEventAsync, leaving.Token);
-
-        await Hub.ConnectAsync();
 
         // No answer is not the same as no layouts.
         var loadedLayouts = await Gateway.GetLayoutsAsync();
@@ -309,7 +306,7 @@ else
 
     private async Task StartStreamAsync(Guid cameraId)
     {
-        if (!Hub.IsConnected || !starting.Add(cameraId))
+        if (!starting.Add(cameraId))
         {
             return;
         }
@@ -317,20 +314,29 @@ else
         errors.Remove(cameraId);
         StateHasChanged();
 
-        try
+        // Answered when the stream can be played, or with the server's reason.
+        var started = await Gateway.StartStreamAsync(cameraId);
+        if (started.Value is { } lease)
         {
-            // Returns when the stream is ready; OnStreamStarted shows it.
-            await Hub.StartStreamAsync(cameraId);
+            if (starting.Contains(cameraId))
+            {
+                leases.Add(cameraId, lease.LeaseId, lease.RenewSeconds);
+                streamUrls[cameraId] = $"{Gateway.ApiBaseUrl.TrimEnd('/')}{lease.PlaylistUrl}";
+                pendingStreamInits.Add(cameraId);
+            }
+            else
+            {
+                // Stopped while it was starting.
+                await Gateway.StopStreamAsync(cameraId, lease.LeaseId);
+            }
         }
-        catch (Exception ex)
+        else if (starting.Contains(cameraId))
         {
-            errors[cameraId] = StreamErrorText.For(ex.Message);
+            errors[cameraId] = started.Problem ?? Translations.StreamCouldNotBeStarted;
         }
-        finally
-        {
-            starting.Remove(cameraId);
-            StateHasChanged();
-        }
+
+        starting.Remove(cameraId);
+        StateHasChanged();
     }
 
     private async Task StopStreamAsync(Guid cameraId)
@@ -343,13 +349,10 @@ else
         // taken for a stream that broke.
         var wasShown = streamUrls.Remove(cameraId);
 
-        try
+        if (leases.TryTake(cameraId, out var leaseId))
         {
-            await Hub.StopStreamAsync(cameraId);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.StreamCouldNotBeStopped1, ex.Message), Severity.Error);
+            // A server that is away lets the lease run out by itself.
+            await Gateway.StopStreamAsync(cameraId, leaseId);
         }
 
         if (wasShown)
@@ -361,27 +364,27 @@ else
     }
 
     /// <summary>
-    /// Tells the server, for as long as the page is open, that the streams
-    /// are being watched. Without it the server takes a stream for abandoned
-    /// and stops it after a minute.
+    /// Renews the page's stream leases for as long as it is open; without it
+    /// the server takes a stream for abandoned and stops it. A stream whose
+    /// lease the server no longer has (it restarted) is started again.
     /// </summary>
     private async Task RunHeartbeatAsync(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(HeartbeatInterval);
         try
         {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
+            while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var cameraId in streamUrls.Keys.ToList())
+                await Task.Delay(leases.RenewInterval, cancellationToken);
+
+                var gone = await leases.RenewAllAsync((cameraId, leaseId) => Gateway.RenewStreamLeaseAsync(cameraId, leaseId, cancellationToken));
+                foreach (var cameraId in gone)
                 {
-                    try
+                    if (streamUrls.Remove(cameraId))
                     {
-                        await Hub.StreamHeartbeatAsync(cameraId);
+                        await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
                     }
-                    catch (Exception)
-                    {
-                        // The connection dropped; the next tick tries again.
-                    }
+
+                    await StartStreamAsync(cameraId);
                 }
             }
         }
@@ -391,16 +394,12 @@ else
         }
     }
 
-    private void OnStreamStarted(StreamStartedEvent e)
-    {
-        InvokeAsync(() =>
+    private void OnReadingChanged()
+        => InvokeAsync(() =>
         {
-            streamUrls[e.CameraId] = $"{Gateway.ApiBaseUrl.TrimEnd('/')}{e.PlaylistUrl}";
-            errors.Remove(e.CameraId);
-            pendingStreamInits.Add(e.CameraId);
+            serverWasReached |= EventStream.IsReading;
             StateHasChanged();
         });
-    }
 
     private void OnConnectionStateChanged(ConnectionStateChangedEvent e)
     {
@@ -409,6 +408,11 @@ else
             if ((e.NewState == CameraConnectionState.Disconnected || e.NewState == CameraConnectionState.Error)
                 && streamUrls.Remove(e.CameraId))
             {
+                if (leases.TryTake(e.CameraId, out var leaseId))
+                {
+                    await Gateway.StopStreamAsync(e.CameraId, leaseId);
+                }
+
                 await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{e.CameraId}");
                 errors[e.CameraId] = Translations.TheCameraDisconnected;
                 StateHasChanged();
@@ -430,9 +434,6 @@ else
 
         return Task.CompletedTask;
     }
-
-    private void OnHubConnectionStateChanged(string state)
-        => InvokeAsync(StateHasChanged);
 
     private async Task ReadPictureSizeAsync(Guid cameraId)
     {
@@ -462,8 +463,7 @@ else
 
     public async ValueTask DisposeAsync()
     {
-        Hub.OnStreamStarted -= OnStreamStarted;
-        Hub.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
+        EventStream.ReadingChanged -= OnReadingChanged;
         await leaving.CancelAsync();
         leaving.Dispose();
 
@@ -475,12 +475,16 @@ else
         {
             try
             {
-                await Hub.StopStreamAsync(cameraId);
+                if (leases.TryTake(cameraId, out var leaseId))
+                {
+                    await Gateway.StopStreamAsync(cameraId, leaseId);
+                }
+
                 await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{cameraId}");
             }
             catch (Exception)
             {
-                // The connection or the page is already gone.
+                // The server or the page is already gone.
             }
         }
     }

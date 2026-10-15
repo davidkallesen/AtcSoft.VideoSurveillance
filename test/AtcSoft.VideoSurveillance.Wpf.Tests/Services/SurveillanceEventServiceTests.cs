@@ -112,6 +112,105 @@ public sealed class SurveillanceEventServiceTests
         changes.Should().Equal(true, false);
     }
 
+    [Fact]
+    public async Task A_Stream_That_Resumes_After_A_Short_Drop_Has_Missed_Nothing()
+    {
+        var calls = 0;
+        using var server = new GatewayTestServer(_ => ++calls == 1
+            ? Stream(ConnectionEvent(1))
+            : Stream(ConnectionEvent(2)));
+        using var sut = CreateSut(server);
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var missed = 0;
+        sut.OnMissedEvents += () => missed++;
+        sut.OnConnectionStateChanged += e =>
+        {
+            if (e.NewState == CameraConnectionState.Connected)
+            {
+                done.Cancel();
+            }
+        };
+
+        await sut.RunAsync(done.Token);
+
+        missed.Should().Be(0, "the server sent again what came while the stream was down");
+    }
+
+    [Fact]
+    public async Task A_Stream_The_Server_Could_Not_Resume_Has_Missed_Events()
+    {
+        // The server restarted: the events since the client's last one are not known.
+        var calls = 0;
+        using var server = new GatewayTestServer(_ => ++calls == 1
+            ? Stream(ConnectionEvent(1))
+            : Stream(ConnectionEvent(2), missed: 1));
+        using var sut = CreateSut(server);
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var missed = 0;
+        sut.OnMissedEvents += () =>
+        {
+            missed++;
+            done.Cancel();
+        };
+
+        await sut.RunAsync(done.Token);
+
+        missed.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_Server_That_Was_Away_At_The_Start_Has_Events_The_Client_Missed()
+    {
+        var calls = 0;
+        using var server = new GatewayTestServer(_ => ++calls == 1
+            ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            {
+                Content = new StringContent("""{"status":503,"detail":"Starting."}""", System.Text.Encoding.UTF8, "application/problem+json"),
+            }
+            : Stream(ConnectionEvent(1)));
+        using var sut = CreateSut(server);
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var missed = 0;
+        sut.OnMissedEvents += () => missed++;
+        sut.OnConnectionStateChanged += _ => done.Cancel();
+
+        await sut.RunAsync(done.Token);
+
+        missed.Should().Be(1, "what the client showed until now came from this computer alone");
+    }
+
+    [Fact]
+    public async Task The_Server_Is_Connected_While_It_Answers_And_A_Stream_That_Is_Opened_Again_At_Once_Stays_Connected()
+    {
+        // Open, dropped and opened again at once, then the server is away, then back.
+        var calls = 0;
+        using var server = new GatewayTestServer(_ => ++calls switch
+        {
+            1 => Stream(ConnectionEvent(1)),
+            2 => Stream(ConnectionEvent(2)),
+            3 => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            {
+                Content = new StringContent("""{"status":503,"detail":"Stopping."}""", System.Text.Encoding.UTF8, "application/problem+json"),
+            },
+            _ => Stream(ConnectionEvent(3)),
+        });
+        using var sut = CreateSut(server);
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var changes = new List<bool>();
+        sut.ConnectedChanged += () => changes.Add(sut.IsConnected);
+        sut.OnConnectionStateChanged += e =>
+        {
+            if (e.NewState == CameraConnectionState.Disconnected)
+            {
+                done.Cancel();
+            }
+        };
+
+        await sut.RunAsync(done.Token);
+
+        changes.Should().Equal(true, false, true);
+    }
+
     private static SurveillanceEventService CreateSut(GatewayTestServer server)
         => new(
             server.Get<IListEventsEndpoint>(),
@@ -121,11 +220,17 @@ public sealed class SurveillanceEventServiceTests
             Delay = (_, _) => Task.CompletedTask,
         };
 
-    private static HttpResponseMessage Stream(string body)
-        => new(HttpStatusCode.OK)
+    private static HttpResponseMessage Stream(
+        string body,
+        int missed = 0)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(body, System.Text.Encoding.UTF8, "text/event-stream"),
         };
+        response.Headers.Add("X-Events-Missed", missed.ToString(CultureInfo.InvariantCulture));
+        return response;
+    }
 
     private static string ConnectionEvent(int id)
     {

@@ -19,17 +19,4 @@ public static class ConnectionStateText
             CameraConnectionState.Names.DeviceUnplugged => Translations.UsbDeviceUnplugged,
             var value => string.Concat(value[..1].ToUpperInvariant(), value[1..]),
         };
-
-    /// <summary>
-    /// Gets the hub connection's own state (SignalR's <c>HubConnectionState</c> name) in words.
-    /// </summary>
-    public static string ForHub(string state)
-        => state switch
-        {
-            "Connected" => Translations.Connected,
-            "Connecting" => Translations.Connecting,
-            "Disconnected" => Translations.Disconnected,
-            "Reconnecting" => Translations.Reconnecting,
-            _ => state,
-        };
 }

@@ -257,7 +257,7 @@
             <Separator />
             <StatusBarItem>
                 <TextBlock>
-                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=HubStatusLabel}" /><Run Text="{Binding Path=HubConnectionState, Mode=OneWay}" />
+                    <Run Text="{Binding Path=LiveUpdatesText, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />

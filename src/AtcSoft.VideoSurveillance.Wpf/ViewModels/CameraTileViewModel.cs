@@ -5,16 +5,20 @@ namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
 /// Per-camera view model for a single tile in the live view grid.
-/// Manages HLS streaming via the API server and hub events.
+/// Watches its camera's HLS stream on a lease it renews, and shows the
+/// server's camera events.
 /// </summary>
 public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 {
     private const int MaxStreamRetries = 5;
     private static readonly TimeSpan StreamRetryDelay = TimeSpan.FromSeconds(5);
 
-    private readonly SurveillanceHubService hubService;
+    private readonly IStreamLeaseGateway streams;
     private readonly SurveillanceEventService eventService;
+    private readonly Lock leaseLock = new();
     private readonly string apiBaseAddress;
+    private Guid? leaseId;
+    private TimeSpan renewInterval = TimeSpan.FromSeconds(30);
     private bool disposed;
 
     [ObservableProperty]
@@ -138,15 +142,15 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
     public CameraTileViewModel(
         IVideoPlayerFactory videoPlayerFactory,
-        SurveillanceHubService hubService,
+        IStreamLeaseGateway streams,
         SurveillanceEventService eventService,
         string apiBaseAddress)
     {
         ArgumentNullException.ThrowIfNull(videoPlayerFactory);
-        ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(streams);
         ArgumentNullException.ThrowIfNull(eventService);
 
-        this.hubService = hubService;
+        this.streams = streams;
         this.eventService = eventService;
         this.apiBaseAddress = apiBaseAddress;
 
@@ -154,7 +158,6 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         Player.StateChanged += OnPlayerStateChanged;
         ApplyRotation();
 
-        hubService.OnStreamStarted += OnStreamStarted;
         eventService.OnConnectionStateChanged += OnHubConnectionStateChanged;
         eventService.OnRecordingStateChanged += OnHubRecordingStateChanged;
         eventService.OnMotionDetected += OnHubMotionDetected;
@@ -192,8 +195,35 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public Task StartStreamAsync()
-        => hubService.StartStreamAsync(CameraId);
+    /// <summary>
+    /// Takes a lease on the camera's stream and plays it.
+    /// </summary>
+    /// <exception cref="HttpRequestException">The server refused, with its reason, or could not be reached.</exception>
+    public async Task StartStreamAsync()
+    {
+        var lease = await streams
+            .StartStreamAsync(CameraId)
+            .ConfigureAwait(false);
+
+        Guid? previous;
+        lock (leaseLock)
+        {
+            previous = leaseId;
+            leaseId = lease.LeaseId;
+            if (lease.RenewSeconds > 0)
+            {
+                renewInterval = TimeSpan.FromSeconds(lease.RenewSeconds);
+            }
+        }
+
+        // Started twice: one lease is enough.
+        if (previous is { } old && old != lease.LeaseId)
+        {
+            await streams.StopStreamAsync(CameraId, old).ConfigureAwait(false);
+        }
+
+        Play(lease.PlaylistUrl);
+    }
 
     public Task StopStreamAsync()
     {
@@ -203,8 +233,64 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
         _ = Application.Current?.Dispatcher.InvokeAsync(() => IsStreaming = false);
 
-        return hubService.StopStreamAsync(CameraId);
+        return TakeLease() is { } lease
+            ? streams.StopStreamAsync(CameraId, lease)
+            : Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Renews the stream lease while the tile watches; one the server no
+    /// longer has (it restarted, or the lease ran out) starts the stream again.
+    /// </summary>
+    internal async Task RenewLeaseAsync()
+    {
+        Guid? current;
+        lock (leaseLock)
+        {
+            current = leaseId;
+        }
+
+        if (current is not { } lease || disposed)
+        {
+            return;
+        }
+
+        var renewal = await streams
+            .RenewStreamLeaseAsync(CameraId, lease)
+            .ConfigureAwait(false);
+
+        if (renewal != StreamLeaseRenewal.Gone || !TakeLease(lease))
+        {
+            return;
+        }
+
+        try
+        {
+            await StartStreamAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            _ = Application.Current?.Dispatcher.InvokeAsync(ScheduleStreamRetry);
+        }
+    }
+
+    private Guid? TakeLease(Guid? only = null)
+    {
+        lock (leaseLock)
+        {
+            var taken = leaseId;
+            if (taken is null || (only is { } expected && taken != expected))
+            {
+                return null;
+            }
+
+            leaseId = null;
+            return taken;
+        }
+    }
+
+    private bool TakeLease(Guid lease)
+        => TakeLease(only: lease) is not null;
 
     public void Dispose()
     {
@@ -215,10 +301,16 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
 
         disposed = true;
 
-        hubService.OnStreamStarted -= OnStreamStarted;
         eventService.OnConnectionStateChanged -= OnHubConnectionStateChanged;
         eventService.OnRecordingStateChanged -= OnHubRecordingStateChanged;
         eventService.OnMotionDetected -= OnHubMotionDetected;
+
+        // A tile that goes gives its lease back; the server stops a stream
+        // nobody else watches.
+        if (TakeLease() is { } lease)
+        {
+            _ = streams.StopStreamAsync(CameraId, lease);
+        }
 
         if (recordingTimer is not null)
         {
@@ -249,14 +341,9 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnStreamStarted(StreamStartedEvent e)
+    private void Play(string playlistUrl)
     {
-        if (e.CameraId != CameraId)
-        {
-            return;
-        }
-
-        var fullUrl = $"{apiBaseAddress.TrimEnd('/')}{e.PlaylistUrl}";
+        var fullUrl = $"{apiBaseAddress.TrimEnd('/')}{playlistUrl}";
         var uri = new Uri(fullUrl);
         var options = new StreamOptions
         {
@@ -372,12 +459,10 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         RecordingDurationText = elapsed.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture);
     }
 
-    // Server-side StreamingService reaps an HLS session after 60s of inactivity
-    // unless the hub method StreamHeartbeat is invoked. HLS playlist/segment HTTP
-    // requests go through StaticFileMiddleware and do NOT touch the session
-    // timestamp, so without this timer the FFmpeg transcoder is killed under us
-    // and the tile flips to Disconnected. 30s heartbeat = 30s margin (safe across
-    // a single dropped tick from a Wi-Fi blip or GC pause).
+    // The server ends a stream lease that is not renewed for two renewal
+    // intervals. The HLS playlist and segment requests do not renew it, so
+    // without this timer the stream is stopped under us and the tile flips
+    // to Disconnected. One missed renewal (a Wi-Fi blip, a GC pause) is safe.
     private void UpdateHeartbeatTimer(bool nowStreaming)
     {
         if (nowStreaming)
@@ -386,7 +471,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
             {
                 heartbeatTimer = new DispatcherTimer
                 {
-                    Interval = TimeSpan.FromSeconds(30),
+                    Interval = renewInterval,
                 };
                 heartbeatTimer.Tick += OnHeartbeatTimerTick;
             }
@@ -402,21 +487,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     private void OnHeartbeatTimerTick(
         object? sender,
         EventArgs e)
-        => _ = SendHeartbeatAsync();
-
-    private async Task SendHeartbeatAsync()
-    {
-        try
-        {
-            await hubService.StreamHeartbeatAsync(CameraId).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is Microsoft.AspNetCore.SignalR.HubException or InvalidOperationException or HttpRequestException)
-        {
-            // Hub temporarily unavailable; the SignalR auto-reconnect will recover
-            // and the next 30s tick will refresh activity. Reaper margin is 30s
-            // so a single missed heartbeat is fine.
-        }
-    }
+        => _ = RenewLeaseAsync();
 
     private void ScheduleStreamRetry()
     {
@@ -465,9 +536,9 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         {
             await StartStreamAsync().ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is Microsoft.AspNetCore.SignalR.HubException or InvalidOperationException or HttpRequestException)
+        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException)
         {
-            // Hub or transport down — schedule another attempt directly,
+            // The server refused or is down: schedule another attempt directly,
             // since the player won't transition state without our doing.
             _ = Application.Current?.Dispatcher.InvokeAsync(ScheduleStreamRetry);
         }

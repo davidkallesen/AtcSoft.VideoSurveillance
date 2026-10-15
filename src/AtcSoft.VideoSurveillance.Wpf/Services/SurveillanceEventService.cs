@@ -49,6 +49,15 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     public event Action<UsbCameraLifecycleEvent>? OnUsbCameraLifecycleChanged;
 
     /// <summary>
+    /// Raised when the stream opens and the client may have missed events:
+    /// the server was not there at the start (what the client showed came from
+    /// this computer alone), or it could not send again all that came while
+    /// the stream was down (it restarted). Whoever shows the server's state
+    /// loads it again.
+    /// </summary>
+    public event Action? OnMissedEvents;
+
+    /// <summary>
     /// Raised when <see cref="IsReading"/> changes.
     /// </summary>
     public event Action? ReadingChanged;
@@ -57,6 +66,18 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     /// Gets a value indicating whether the stream is open now.
     /// </summary>
     public bool IsReading { get; private set; }
+
+    /// <summary>
+    /// Raised when <see cref="IsConnected"/> changes.
+    /// </summary>
+    public event Action? ConnectedChanged;
+
+    /// <summary>
+    /// Gets a value indicating whether the server answered the last time it
+    /// was asked. A stream that drops and is opened again at once does not
+    /// change it; a server that cannot be reached does.
+    /// </summary>
+    public bool IsConnected { get; private set; }
 
     /// <summary>
     /// Gets or sets how the service waits before it asks again (tests replace it).
@@ -74,18 +95,31 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     {
         string? lastEventId = null;
         var failures = 0;
+        var opened = false;
         while (!cancellationToken.IsCancellationRequested)
         {
             var read = false;
+            var answered = false;
             try
             {
                 using var result = await endpoint
                     .ExecuteAsync(new ListEventsParameters(CameraId: null, HeartbeatSeconds: null, LastEventId: lastEventId), cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
+                answered = result.IsOk;
+                SetConnected(result.IsOk);
                 if (result.IsOk)
                 {
+                    var missed = opened
+                        ? result.XEventsMissedHeader is > 0
+                        : failures > 0;
+                    opened = true;
                     SetReading(true);
+                    if (missed)
+                    {
+                        OnMissedEvents?.Invoke();
+                    }
+
                     try
                     {
                         await foreach (var surveillanceEvent in result.Content!.WithCancellation(cancellationToken).ConfigureAwait(false))
@@ -110,7 +144,12 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
             }
             catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or JsonException)
             {
-                // The stream dropped: asked again below, after the last event read.
+                // The stream dropped, or the server could not be reached: asked
+                // again below, after the last event read.
+                if (!answered)
+                {
+                    SetConnected(connected: false);
+                }
             }
 
             // A stream that gave events is asked again at once; one that gave none waits.
@@ -154,6 +193,17 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
         {
             OnUsbCameraLifecycleChanged?.Invoke(usb);
         }
+    }
+
+    private void SetConnected(bool connected)
+    {
+        if (IsConnected == connected)
+        {
+            return;
+        }
+
+        IsConnected = connected;
+        ConnectedChanged?.Invoke();
     }
 
     private void SetReading(bool reading)

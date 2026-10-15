@@ -13,8 +13,8 @@ public partial class App
     [LoggerMessage(Level = LogLevel.Information, Message = "App starting")]
     private partial void LogAppStarting();
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to connect to SignalR hub during startup")]
-    private partial void LogSignalRConnectionFailed(Exception ex);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to read the settings from the server again")]
+    private partial void LogSettingsReloadFailed(Exception ex);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "App started")]
     private partial void LogAppStarted();

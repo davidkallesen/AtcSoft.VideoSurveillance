@@ -6,7 +6,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// straight to <see cref="BackgroundServiceBase{T}"/> via DI without colliding
 /// on the shared <see cref="IBackgroundServiceOptions"/> singleton.
 /// <br/><br/>
-/// The broadcaster is purely event-driven — it forwards Core events to SignalR
+/// The broadcaster is purely event-driven — it publishes Core events to GET /events
 /// and has no periodic workload — so <see cref="RepeatIntervalSeconds"/> is set
 /// to the maximum: the base-class idle loop parks on a long delay instead of
 /// spinning, while subscription/tear-down happens in StartAsync/StopAsync.

@@ -26,8 +26,8 @@ public partial class App
         // value — that's idempotent.
         ApplicationPaths.Configure("VideoSurveillance");
 
-        // Drop framework Debug noise (Kestrel connection lifecycle, SignalR
-        // protocol negotiation, request matching) but keep AtcSoft.* at Debug
+        // Drop framework Debug noise (connection lifecycle, request matching)
+        // but keep AtcSoft.* at Debug
         // and keep Microsoft.* Information+ events (request finished, hosting
         // lifetime, etc) for ops visibility.
         var loggerConfig = new LoggerConfiguration()
@@ -206,22 +206,11 @@ public partial class App
 
         ThemeManagerHelper.SetThemeAndAccent(Current, $"{generalSettings.ThemeBase}.{generalSettings.ThemeAccent}");
 
-        // Connect SignalR hub (70%)
-        RenderSplashMessage(Translations.ConnectingToServer, 70);
-        var hubService = host.Services.GetRequiredService<SurveillanceHubService>();
-
         // Settings read while the server was away came from this computer
-        // alone; with the server back they are read from it.
-        hubService.OnReconnected += () => _ = ReloadSettingsAsync(appSettingsService);
-
-        try
-        {
-            await hubService.ConnectAsync();
-        }
-        catch (Exception ex)
-        {
-            LogSignalRConnectionFailed(ex);
-        }
+        // alone; with the server back they are read from it. The event
+        // stream (GET /events) started with the host.
+        var eventService = host.Services.GetRequiredService<SurveillanceEventService>();
+        eventService.OnMissedEvents += () => _ = ReloadSettingsAsync(appSettingsService);
 
         // Load main window (80%)
         RenderSplashMessage(Translations.LoadingMainWindow, 80);
@@ -348,8 +337,6 @@ public partial class App
                     return svc;
                 });
 
-                services.AddSingleton(new SurveillanceHubService(apiBaseAddress));
-
                 // The camera events (GET /events), read from the start to the
                 // end of the host; one instance for the views and the host.
                 services.AddSingleton(new SurveillanceEventServiceOptions());
@@ -381,7 +368,7 @@ public partial class App
                 services.AddSingleton<IDiagnosticsExportService>(sp =>
                     new DiagnosticsExportService(
                         sp.GetRequiredService<GatewayService>(),
-                        sp.GetRequiredService<SurveillanceHubService>(),
+                        sp.GetRequiredService<SurveillanceEventService>(),
                         sp.GetRequiredService<IApplicationSettingsService>(),
                         sp.GetRequiredService<IAutoStartService>(),
                         apiBaseAddress,
@@ -397,7 +384,6 @@ public partial class App
                 services.AddSingleton<LayoutListViewModel>();
                 services.AddSingleton(sp => new LiveViewViewModel(
                     sp.GetRequiredService<GatewayService>(),
-                    sp.GetRequiredService<SurveillanceHubService>(),
                     sp.GetRequiredService<SurveillanceEventService>(),
                     sp.GetRequiredService<IVideoPlayerFactory>(),
                     sp.GetRequiredService<AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher>(),
@@ -412,7 +398,6 @@ public partial class App
                 var aspireManaged = isAspireManaged;
                 services.AddSingleton(sp => new MainWindowViewModel(
                     sp.GetRequiredService<GatewayService>(),
-                    sp.GetRequiredService<SurveillanceHubService>(),
                     sp.GetRequiredService<SurveillanceEventService>(),
                     sp.GetRequiredService<IGitHubReleaseService>(),
                     sp.GetRequiredService<IApplicationSettingsService>(),
@@ -441,7 +426,7 @@ public partial class App
         catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException)
         {
             // The server went away again; the next reconnect reads them.
-            LogSignalRConnectionFailed(ex);
+            LogSettingsReloadFailed(ex);
         }
     }
 
@@ -468,13 +453,6 @@ public partial class App
         // Stop latency monitoring
         var mainViewModel = host.Services.GetService<MainWindowViewModel>();
         mainViewModel?.StopLatencyMonitoring();
-
-        // Disconnect SignalR hub
-        var hubService = host.Services.GetService<SurveillanceHubService>();
-        if (hubService is not null)
-        {
-            await hubService.DisconnectAsync().ConfigureAwait(false);
-        }
 
         await host
             .StopAsync()

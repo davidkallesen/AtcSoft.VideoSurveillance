@@ -65,7 +65,7 @@ public sealed class StartRecordingHandler(
             }
 
             // Race window: between the IsRecording check above and here, a
-            // concurrent caller (SignalR Hub.StartRecording, another REST
+            // concurrent caller (another REST
             // request) may have already started this camera. StartRecording
             // returns false on duplicate Camera.Id and does NOT take ownership
             // of our pipeline, so dispose it here to avoid a leak.

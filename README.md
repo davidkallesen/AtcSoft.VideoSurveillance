@@ -1,6 +1,6 @@
 # 📹 AtcSoft.VideoSurveillance
 
-A professional video surveillance platform for live monitoring of multiple RTSP/HTTP camera streams. Includes a WPF desktop application with an intuitive ribbon interface, a headless REST API + SignalR server edition, and Aspire orchestration.
+A professional video surveillance platform for live monitoring of multiple RTSP/HTTP camera streams. Includes a WPF desktop application with an intuitive ribbon interface, a headless REST API server edition (live events over Server-Sent Events), and Aspire orchestration.
 
 [![Release](https://img.shields.io/github/v/release/davidkallesen/AtcSoft.VideoSurveillance?include_prereleases)](https://github.com/davidkallesen/AtcSoft.VideoSurveillance/releases)
 [![NuGet](https://img.shields.io/nuget/v/AtcSoft.VideoSurveillance.Wpf.Core)](https://www.nuget.org/packages/AtcSoft.VideoSurveillance.Wpf.Core)
@@ -97,7 +97,7 @@ A professional video surveillance platform for live monitoring of multiple RTSP/
 |-----------|------------|
 | Framework | .NET 10.0 / .NET 10.0-windows |
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
-| Server | ASP.NET Core, SignalR |
+| Server | ASP.NET Core, Server-Sent Events, HLS |
 | API Definition | OpenAPI 3.2 (atc-rest-api-source-generator v3) |
 | Video Engine | AtcSoft.VideoEngine (desktop + server, in-process FFmpeg) |
 | Orchestration | .NET Aspire |
@@ -120,12 +120,12 @@ AtcSoft.VideoSurveillance/
 │   ├── AtcSoft.VideoSurveillance.Wpf.Core/    # 🧩 Shared WPF library (dialogs, controls, services)
 │   ├── AtcSoft.CameraWall.Wpf/                # 🧱 CameraWall WPF library (used by the CameraWall app)
 │   ├── AtcSoft.CameraWall.Wpf.App/            # 🚀 Standalone WPF desktop app (Fluent.Ribbon)
-│   ├── AtcSoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, SignalR)
+│   ├── AtcSoft.VideoSurveillance.Wpf/         # 🌐 WPF library for API client (GatewayService, event stream)
 │   ├── AtcSoft.VideoSurveillance.Wpf.App/     # 🚀 WPF API client app (Fluent.Ribbon)
 │   ├── VideoSurveillance.yaml                  # 📝 OpenAPI 3.2 spec (shared contract)
 │   ├── AtcSoft.VideoSurveillance.Api.Contracts/ # 📋 Generated: endpoints, models, handler interfaces
 │   ├── AtcSoft.VideoSurveillance.Api.Domain/  # ⚙️ Handler implementations calling Core services
-│   ├── AtcSoft.VideoSurveillance.Api/         # 🌍 ASP.NET Core host with SignalR hub
+│   ├── AtcSoft.VideoSurveillance.Api/         # 🌍 ASP.NET Core host (REST, events, HLS)
 │   ├── AtcSoft.VideoSurveillance.Blazor.App/  # 🌐 Blazor WebAssembly UI (MudBlazor)
 │   └── AtcSoft.VideoSurveillance.Aspire/      # ☁️ Aspire AppHost (orchestration + dashboard)
 │
@@ -162,7 +162,7 @@ flowchart TD
         VE[AtcSoft.VideoEngine]
     end
 
-    subgraph Server["☁️ Server (REST + SignalR)"]
+    subgraph Server["☁️ Server (REST + events)"]
         Contracts[AtcSoft.VideoSurveillance.Api.Contracts]
         Domain[AtcSoft.VideoSurveillance.Api.Domain]
         Api[AtcSoft.VideoSurveillance.Api]

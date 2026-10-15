@@ -1617,9 +1617,6 @@
   <data name="ServerStatusLabel" xml:space="preserve">
     <value>Server: </value>
   </data>
-  <data name="HubStatusLabel" xml:space="preserve">
-    <value>Hub: </value>
-  </data>
   <data name="CamerasStatusLabel" xml:space="preserve">
     <value>Kameraer: </value>
   </data>
@@ -1829,9 +1826,6 @@
   </data>
   <data name="NoLayoutsConfigured" xml:space="preserve">
     <value>Ingen layouts er sat op. Opret et ovenfor.</value>
-  </data>
-  <data name="NoLiveConnection" xml:space="preserve">
-    <value>Ingen live forbindelse til serveren, så streams kan ikke startes. Siden forbinder igen af sig selv.</value>
   </data>
   <data name="NoReceiversYet" xml:space="preserve">
     <value>Ingen modtagere endnu. Klik på "Tilføj modtager" for at sende serverens hændelser et sted hen.</value>
@@ -2202,9 +2196,6 @@
   <data name="ConnectedToTheServer" xml:space="preserve">
     <value>Forbundet til serveren</value>
   </data>
-  <data name="ServerState1" xml:space="preserve">
-    <value>Server: {0}</value>
-  </data>
   <data name="Start" xml:space="preserve">
     <value>Start</value>
   </data>
@@ -2213,9 +2204,6 @@
   </data>
   <data name="IsNowTheStartUpLayout1" xml:space="preserve">
     <value>'{0}' er nu opstartslayoutet.</value>
-  </data>
-  <data name="StreamCouldNotBeStopped1" xml:space="preserve">
-    <value>Streamen kunne ikke stoppes: {0}</value>
   </data>
   <data name="TheCameraDisconnected" xml:space="preserve">
     <value>Kameraet blev afbrudt.</value>

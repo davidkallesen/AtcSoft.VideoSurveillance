@@ -9,7 +9,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// </summary>
 public sealed partial class StreamingService : ILiveStreamService, IDisposable
 {
-    // A client that drops its socket without calling StopStream leaves the
+    // A viewer that goes without giving its lease back would leave the
     // viewer count > 0 and the FFmpeg transcoder running. With CPU-heavy
     // libx264 transcoding per camera, even a few orphaned streams can
     // saturate a multi-camera server.
@@ -39,13 +39,6 @@ public sealed partial class StreamingService : ILiveStreamService, IDisposable
     private readonly ConcurrentDictionary<Guid, StreamLeaseEntry> leases = new();
     private readonly TimeProvider time;
 
-    // connectionId → set of cameraIds that connection started. Used by the
-    // SignalR hub's OnDisconnectedAsync to actively reap streams the
-    // disconnecting client owned without waiting for the inactivity timer.
-    private readonly ConcurrentDictionary<string, HashSet<Guid>> ownership =
-        new(StringComparer.Ordinal);
-
-    private readonly Lock ownershipLock = new();
     private readonly string hlsOutputRoot;
     private ICameraPipelineHost? pipelineHost;
     private bool disposed;
@@ -220,131 +213,21 @@ public sealed partial class StreamingService : ILiveStreamService, IDisposable
     }
 
     /// <summary>
-    /// Starts HLS streaming for a camera. Returns the playlist path.
-    /// If already streaming, increments the viewer count and returns existing path.
+    /// Adds a viewer of a camera's stream without a lease, starting the stream
+    /// when it is the first. Returns the playlist path.
     /// </summary>
-    /// <param name="cameraId">Camera to start streaming.</param>
-    /// <param name="connectionId">
-    /// Optional SignalR connection identifier; when provided, the stream is
-    /// registered as owned by that connection so a subsequent
-    /// <see cref="OnConnectionDisconnected"/> can immediately decrement the
-    /// viewer count without waiting for the inactivity timer.
-    /// </param>
-    public string StartStream(
-        Guid cameraId,
-        string? connectionId = null)
-    {
-        var session = AddViewer(cameraId);
-
-        if (!string.IsNullOrEmpty(connectionId))
-        {
-            RegisterOwnership(connectionId, cameraId);
-        }
-
-        return session.PlaylistPath;
-    }
+    public string StartStream(Guid cameraId)
+        => AddViewer(cameraId).PlaylistPath;
 
     /// <summary>
-    /// Drops the per-stream viewer count for every camera the given
-    /// connection started. Called by <c>SurveillanceHub.OnDisconnectedAsync</c>
-    /// so a closing browser tab releases its FFmpeg transcoders within
-    /// seconds instead of waiting for the inactivity timeout.
+    /// Removes a viewer added by <see cref="StartStream"/>; the stream stops
+    /// with its last viewer.
     /// </summary>
-    public void OnConnectionDisconnected(string connectionId)
-    {
-        if (string.IsNullOrEmpty(connectionId))
-        {
-            return;
-        }
-
-        Guid[] cameraIds;
-        lock (ownershipLock)
-        {
-            if (!ownership.TryRemove(connectionId, out var set))
-            {
-                return;
-            }
-
-            cameraIds = [.. set];
-        }
-
-        foreach (var cameraId in cameraIds)
-        {
-            StopStream(cameraId);
-        }
-    }
-
-    private void RegisterOwnership(
-        string connectionId,
-        Guid cameraId)
-    {
-        lock (ownershipLock)
-        {
-            var set = ownership.GetOrAdd(connectionId, _ => []);
-            set.Add(cameraId);
-        }
-    }
-
-    private void RemoveOwnership(
-        string connectionId,
-        Guid cameraId)
-    {
-        lock (ownershipLock)
-        {
-            if (ownership.TryGetValue(connectionId, out var set))
-            {
-                set.Remove(cameraId);
-                if (set.Count == 0)
-                {
-                    ownership.TryRemove(connectionId, out _);
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Refreshes the last-activity timestamp for a stream so it isn't reaped
-    /// for inactivity. Clients should call this periodically (e.g. once per
-    /// HLS playlist poll) so a dropped connection eventually triggers reap.
-    /// </summary>
-    public void Heartbeat(Guid cameraId)
+    public void StopStream(Guid cameraId)
     {
         if (sessions.TryGetValue(cameraId, out var session))
         {
-            session.TouchActivity();
-        }
-    }
-
-    /// <summary>
-    /// Decrements the viewer count for a camera stream.
-    /// Stops the FFmpeg process when no viewers remain.
-    /// </summary>
-    /// <param name="cameraId">Camera to stop streaming.</param>
-    /// <param name="connectionId">
-    /// Optional SignalR connection identifier; when provided, removes this
-    /// connection's claim on the stream so it isn't reaped twice when the
-    /// connection later disconnects.
-    /// </param>
-    public void StopStream(
-        Guid cameraId,
-        string? connectionId = null)
-    {
-        if (!string.IsNullOrEmpty(connectionId))
-        {
-            RemoveOwnership(connectionId, cameraId);
-        }
-
-        if (!sessions.TryGetValue(cameraId, out var session))
-        {
-            return;
-        }
-
-        var remaining = session.DecrementViewers();
-
-        if (remaining <= 0 && sessions.TryRemove(cameraId, out var removed))
-        {
-            removed.Dispose();
-            LogHlsStreamStopped(cameraId);
+            RemoveViewer(cameraId, session);
         }
     }
 

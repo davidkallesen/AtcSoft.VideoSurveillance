@@ -1617,9 +1617,6 @@
   <data name="ServerStatusLabel" xml:space="preserve">
     <value>Server: </value>
   </data>
-  <data name="HubStatusLabel" xml:space="preserve">
-    <value>Hub: </value>
-  </data>
   <data name="CamerasStatusLabel" xml:space="preserve">
     <value>Cameras: </value>
   </data>
@@ -1829,9 +1826,6 @@
   </data>
   <data name="NoLayoutsConfigured" xml:space="preserve">
     <value>No layouts configured. Create one above.</value>
-  </data>
-  <data name="NoLiveConnection" xml:space="preserve">
-    <value>No live connection to the server, so streams cannot be started. The page reconnects by itself.</value>
   </data>
   <data name="NoReceiversYet" xml:space="preserve">
     <value>No receivers yet. Click "Add receiver" to send the server's events somewhere.</value>
@@ -2202,9 +2196,6 @@
   <data name="ConnectedToTheServer" xml:space="preserve">
     <value>Connected to the server</value>
   </data>
-  <data name="ServerState1" xml:space="preserve">
-    <value>Server: {0}</value>
-  </data>
   <data name="Start" xml:space="preserve">
     <value>Start</value>
   </data>
@@ -2213,9 +2204,6 @@
   </data>
   <data name="IsNowTheStartUpLayout1" xml:space="preserve">
     <value>'{0}' is now the start-up layout.</value>
-  </data>
-  <data name="StreamCouldNotBeStopped1" xml:space="preserve">
-    <value>The stream could not be stopped: {0}</value>
   </data>
   <data name="TheCameraDisconnected" xml:space="preserve">
     <value>The camera disconnected.</value>

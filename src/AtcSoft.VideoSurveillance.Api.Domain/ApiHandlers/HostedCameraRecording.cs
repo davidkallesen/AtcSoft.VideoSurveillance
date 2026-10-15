@@ -2,9 +2,8 @@
 
 /// <summary>
 /// Starts a recording someone asked for on a camera that has one pipeline
-/// for everything (see <see cref="ICameraPipelineHost"/>). The REST handler
-/// and the SignalR hub both start recordings; this is the one way they do
-/// it for such a camera.
+/// for everything (see <see cref="ICameraPipelineHost"/>): the one way the
+/// recording handler does it for such a camera.
 /// </summary>
 public static class HostedCameraRecording
 {

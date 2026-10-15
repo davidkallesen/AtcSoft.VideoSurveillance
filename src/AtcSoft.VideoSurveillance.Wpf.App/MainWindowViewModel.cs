@@ -6,7 +6,6 @@ namespace AtcSoft.VideoSurveillance.Wpf.App;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly GatewayService gatewayService;
-    private readonly SurveillanceHubService hubService; // Used for event subscriptions in constructor
     private readonly SurveillanceEventService eventService;
     private readonly IGitHubReleaseService gitHubReleaseService;
     private readonly IApplicationSettingsService settingsService;
@@ -32,10 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private string serverUrl;
 
     [ObservableProperty]
-    private string hubConnectionState = Translations.Disconnected;
-
-    // The hub's own state, kept so its text can follow a language change.
-    private string lastHubState = "Disconnected";
+    private string liveUpdatesText = HubStates.ServerText(connected: false);
 
     [ObservableProperty(DependentPropertyNames = [nameof(ShowChangeServer)])]
     private bool isAspireManaged;
@@ -70,7 +66,6 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public MainWindowViewModel(
         GatewayService gatewayService,
-        SurveillanceHubService hubService,
         SurveillanceEventService eventService,
         IGitHubReleaseService gitHubReleaseService,
         IApplicationSettingsService settingsService,
@@ -86,7 +81,6 @@ public partial class MainWindowViewModel : ViewModelBase
         bool isAspireManaged)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
-        ArgumentNullException.ThrowIfNull(hubService);
         ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(gitHubReleaseService);
         ArgumentNullException.ThrowIfNull(settingsService);
@@ -100,7 +94,6 @@ public partial class MainWindowViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(notificationHistoryViewModel);
 
         this.gatewayService = gatewayService;
-        this.hubService = hubService;
         this.eventService = eventService;
         this.gitHubReleaseService = gitHubReleaseService;
         this.settingsService = settingsService;
@@ -126,13 +119,10 @@ public partial class MainWindowViewModel : ViewModelBase
         // Default view
         CurrentView = liveViewViewModel;
 
-        this.hubService.OnHubConnectionStateChanged += state =>
+        this.eventService.ConnectedChanged += () =>
         {
             _ = Application.Current?.Dispatcher.InvokeAsync(() =>
-            {
-                lastHubState = state;
-                HubConnectionState = HubStates.HubText(state);
-            });
+                LiveUpdatesText = HubStates.ServerText(this.eventService.IsConnected));
         };
 
         this.eventService.OnConnectionStateChanged += OnConnectionStateChanged;
@@ -145,7 +135,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnUiCultureChanged(
         object? sender,
         UiCultureEventArgs e)
-        => HubConnectionState = HubStates.HubText(lastHubState);
+        => LiveUpdatesText = HubStates.ServerText(eventService.IsConnected);
 
     [RelayCommand]
     private void ViewLiveView()

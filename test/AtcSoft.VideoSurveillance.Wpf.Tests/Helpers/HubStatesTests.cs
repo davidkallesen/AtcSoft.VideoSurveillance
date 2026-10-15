@@ -69,13 +69,10 @@ public sealed class HubStatesTests
         => HubStates.ToText(state: null).Should().Be("Disconnected");
 
     [Theory]
-    [InlineData("Connected", "Connected")]
-    [InlineData("Disconnected", "Disconnected")]
-    [InlineData("Reconnecting...", "Reconnecting...")]
-    [InlineData("Connecting", "Connecting...")]
-    [InlineData("Unknown", "Unknown")]
-    public void The_Hub_State_Is_Shown_In_Words(
-        string state,
+    [InlineData(true, "Live updates: on")]
+    [InlineData(false, "Live updates: connecting...")]
+    public void The_Connection_To_The_Server_Is_Shown_In_Words(
+        bool connected,
         string expected)
-        => HubStates.HubText(state).Should().Be(expected);
+        => HubStates.ServerText(connected).Should().Be(expected);
 }

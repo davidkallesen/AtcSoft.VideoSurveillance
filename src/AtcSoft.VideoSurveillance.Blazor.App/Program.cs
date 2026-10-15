@@ -36,9 +36,6 @@ builder.Services.AddScoped(sp =>
     return svc;
 });
 
-// Register Surveillance Hub service for real-time updates
-builder.Services.AddScoped(_ => new SurveillanceHubService(apiBaseAddress));
-
 // The server's event stream (GET /events), one reader per page that runs it
 builder.Services.AddTransient<EventStreamService>();
 

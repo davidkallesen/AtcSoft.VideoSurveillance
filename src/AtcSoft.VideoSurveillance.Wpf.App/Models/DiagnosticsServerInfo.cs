@@ -4,7 +4,11 @@ public sealed class DiagnosticsServerInfo
 {
     public string ApiBaseAddress { get; set; } = string.Empty;
 
-    public string HubConnectionState { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets a value indicating whether the client had the server's live
+    /// updates (GET /events) when the report was made.
+    /// </summary>
+    public bool LiveUpdatesConnected { get; set; }
 
     public int ConnectedCameras { get; set; }
 

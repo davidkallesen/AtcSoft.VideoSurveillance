@@ -1,7 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
-/// Wraps a generated Camera model for DataGrid binding with in-place SignalR updates.
+/// Wraps a generated Camera model for DataGrid binding with in-place updates from the server's events.
 /// </summary>
 public partial class CameraItemViewModel : ViewModelBase
 {

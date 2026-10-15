@@ -122,6 +122,58 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
+    /// Takes a lease on a camera's live stream; answered when it can be played.
+    /// </summary>
+    public async Task<GatewayResult<StreamLease>> StartStreamAsync(
+        Guid cameraId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new StartStreamParameters(CameraId: cameraId);
+        var result = await startStreamEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsOk
+            ? GatewayResult.Success(result.OkContent)
+            : GatewayResult.Refused<StreamLease>(result);
+    }
+
+    /// <summary>
+    /// Renews a stream lease. Gone means the stream is to be started again;
+    /// a server that is away keeps the lease for the next time.
+    /// </summary>
+    public async Task<StreamLeaseRenewal> RenewStreamLeaseAsync(
+        Guid cameraId,
+        Guid leaseId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new RenewStreamLeaseParameters(CameraId: cameraId, LeaseId: leaseId);
+        var result = await renewStreamLeaseEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.IsNoContent)
+        {
+            return StreamLeaseRenewal.Renewed;
+        }
+
+        return result.IsNotFound
+            ? StreamLeaseRenewal.Gone
+            : StreamLeaseRenewal.Unreachable;
+    }
+
+    /// <summary>
+    /// Gives a stream lease back. A server that is away lets it run out by itself.
+    /// </summary>
+    public Task StopStreamAsync(
+        Guid cameraId,
+        Guid leaseId,
+        CancellationToken cancellationToken = default)
+        => deleteStreamLeaseEndpoint.ExecuteAsync(
+            new DeleteStreamLeaseParameters(CameraId: cameraId, LeaseId: leaseId),
+            cancellationToken: cancellationToken);
+
+    /// <summary>
     /// Gets a PNG of the camera's picture now, or <see langword="null"/> when
     /// the camera is unknown or gives no picture.
     /// </summary>

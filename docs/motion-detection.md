@@ -4,7 +4,7 @@ Setup and configuration guide for the motion detection system in AtcSoft.VideoSu
 
 ## 📖 Overview
 
-The motion detection system uses frame-based pixel differencing to detect movement in camera streams. It supports multiple simultaneous motion regions with bounding box visualization, motion-triggered recording, and real-time event broadcasting via SignalR.
+The motion detection system uses frame-based pixel differencing to detect movement in camera streams. It supports multiple simultaneous motion regions with bounding box visualization, motion-triggered recording, and real-time events over `GET /events`.
 
 ```mermaid
 graph LR
@@ -17,7 +17,7 @@ graph LR
     BBox --> Event["Motion Event"]
     Event --> Recording["Motion-Triggered Recording"]
     Event --> UI["Bounding Box Overlay"]
-    Event --> SignalR["SignalR Broadcast"]
+    Event --> Events["GET /events"]
 ```
 
 ## 🧮 Detection Algorithm
@@ -253,41 +253,40 @@ The settings resource is flat. Send only the settings you change: the server kee
 
 Per-camera motion overrides are not part of the API; they are set in the desktop apps.
 
-### 3. Monitor Events via SignalR
+### 3. Monitor Events
 
-Connect to the SignalR hub at `/hubs/surveillance` and subscribe to events:
+Read the server's event stream (`GET /events`, Server-Sent Events); see `docs/server.md` for resuming after a drop:
 
 ```javascript
-const connection = new signalR.HubConnectionBuilder()
-    .withUrl("http://localhost:5000/hubs/surveillance")
-    .withAutomaticReconnect()
-    .build();
+const events = new EventSource("http://localhost:5000/events");
 
-// Motion detection events
-connection.on("MotionDetected", (event) => {
-    console.log(`Camera ${event.cameraId}: motion=${event.isMotionActive}`);
-    console.log(`Change: ${event.changePercentage}%`);
-    console.log(`Boxes: ${event.boundingBoxes.length}`);
-    // event.boundingBoxes: [{ x, y, width, height }]
-    // event.analysisWidth, event.analysisHeight for coordinate mapping
-});
+events.onmessage = (message) => {
+    const event = JSON.parse(message.data);
 
-// Recording state changes (triggered by motion)
-connection.on("RecordingStateChanged", (event) => {
-    console.log(`Camera ${event.cameraId}: ${event.oldState} → ${event.newState}`);
-    if (event.filePath) console.log(`File: ${event.filePath}`);
-});
+    // Motion detection events
+    if (event.motion) {
+        console.log(`Camera ${event.cameraId}: motion=${event.motion.isMotionActive}`);
+        console.log(`Change: ${event.motion.changePercentage}%`);
+        console.log(`Boxes: ${event.motion.boundingBoxes.length}`);
+        // event.motion.boundingBoxes: [{ x, y, width, height }]
+        // event.motion.analysisWidth, event.motion.analysisHeight for coordinate mapping
+    }
 
-await connection.start();
+    // Recording state changes (triggered by motion)
+    if (event.recording) {
+        console.log(`Camera ${event.cameraId}: ${event.recording.oldState} → ${event.recording.newState}`);
+        if (event.recording.filePath) console.log(`File: ${event.recording.filePath}`);
+    }
+};
 ```
 
-### SignalR Events
+### Events
 
-| Event | Payload | Description |
+| `type` | Part | Description |
 |-------|---------|-------------|
-| `MotionDetected` | `{ CameraId, IsMotionActive, ChangePercentage, BoundingBoxes[], AnalysisWidth, AnalysisHeight, Timestamp }` | Fired when motion state changes or bounding boxes update |
-| `RecordingStateChanged` | `{ CameraId, NewState, OldState, FilePath }` | Fired when recording starts/stops (including motion-triggered) |
-| `ConnectionStateChanged` | `{ CameraId, NewState, Timestamp }` | Fired when camera connection state changes |
+| `motionDetected` | `motion`: `{ cameraId, isMotionActive, changePercentage, boundingBoxes[], analysisWidth, analysisHeight, timestamp }` | Fired when motion state changes or bounding boxes update |
+| `recordingStateChanged` | `recording`: `{ cameraId, newState, oldState, filePath, timestamp }` | Fired when recording starts/stops (including motion-triggered) |
+| `connectionStateChanged` | `connection`: `{ cameraId, newState, timestamp }` | Fired when camera connection state changes |
 
 ### Bounding Box Coordinate Mapping
 

@@ -9,7 +9,7 @@ public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
     };
 
     private readonly GatewayService gatewayService;
-    private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
     private readonly IApplicationSettingsService settingsService;
     private readonly IAutoStartService autoStartService;
     private readonly string apiBaseAddress;
@@ -17,20 +17,20 @@ public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
 
     public DiagnosticsExportService(
         GatewayService gatewayService,
-        SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         IApplicationSettingsService settingsService,
         IAutoStartService autoStartService,
         string apiBaseAddress,
         ILogger<DiagnosticsExportService> logger)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
-        ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(settingsService);
         ArgumentNullException.ThrowIfNull(autoStartService);
         ArgumentNullException.ThrowIfNull(logger);
 
         this.gatewayService = gatewayService;
-        this.hubService = hubService;
+        this.eventService = eventService;
         this.settingsService = settingsService;
         this.autoStartService = autoStartService;
         this.apiBaseAddress = apiBaseAddress;
@@ -47,7 +47,7 @@ public sealed partial class DiagnosticsExportService : IDiagnosticsExportService
             Server = new DiagnosticsServerInfo
             {
                 ApiBaseAddress = apiBaseAddress,
-                HubConnectionState = hubService.ConnectionState,
+                LiveUpdatesConnected = eventService.IsConnected,
             },
         };
 

@@ -1617,9 +1617,6 @@
   <data name="ServerStatusLabel" xml:space="preserve">
     <value>Server: </value>
   </data>
-  <data name="HubStatusLabel" xml:space="preserve">
-    <value>Hub: </value>
-  </data>
   <data name="CamerasStatusLabel" xml:space="preserve">
     <value>Kameras: </value>
   </data>
@@ -1829,9 +1826,6 @@
   </data>
   <data name="NoLayoutsConfigured" xml:space="preserve">
     <value>Keine Layouts eingerichtet. Erstellen Sie oben eins.</value>
-  </data>
-  <data name="NoLiveConnection" xml:space="preserve">
-    <value>Keine Live-Verbindung zum Server, daher können keine Streams gestartet werden. Die Seite verbindet sich von selbst neu.</value>
   </data>
   <data name="NoReceiversYet" xml:space="preserve">
     <value>Noch keine Empfänger. Klicken Sie auf "Empfänger hinzufügen", um die Ereignisse des Servers irgendwohin zu senden.</value>
@@ -2202,9 +2196,6 @@
   <data name="ConnectedToTheServer" xml:space="preserve">
     <value>Mit dem Server verbunden</value>
   </data>
-  <data name="ServerState1" xml:space="preserve">
-    <value>Server: {0}</value>
-  </data>
   <data name="Start" xml:space="preserve">
     <value>Starten</value>
   </data>
@@ -2213,9 +2204,6 @@
   </data>
   <data name="IsNowTheStartUpLayout1" xml:space="preserve">
     <value>'{0}' ist jetzt das Startlayout.</value>
-  </data>
-  <data name="StreamCouldNotBeStopped1" xml:space="preserve">
-    <value>Der Stream konnte nicht beendet werden: {0}</value>
   </data>
   <data name="TheCameraDisconnected" xml:space="preserve">
     <value>Die Kamera wurde getrennt.</value>

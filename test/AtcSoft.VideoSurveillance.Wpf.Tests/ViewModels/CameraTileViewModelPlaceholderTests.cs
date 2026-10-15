@@ -10,9 +10,9 @@ public sealed class CameraTileViewModelPlaceholderTests
     [Fact]
     public async Task A_Tile_Without_A_Picture_Says_No_Stream()
     {
-        await using var hub = new SurveillanceHubService("http://localhost");
+        var streams = Substitute.For<IStreamLeaseGateway>();
         using var events = TestEvents.Service();
-        using var tile = new CameraTileViewModel(Substitute.For<IVideoPlayerFactory>(), hub, events, "http://localhost");
+        using var tile = new CameraTileViewModel(Substitute.For<IVideoPlayerFactory>(), streams, events, "http://localhost");
 
         tile.PlaceholderText.Should().Be("No Stream");
     }
@@ -20,9 +20,9 @@ public sealed class CameraTileViewModelPlaceholderTests
     [Fact]
     public async Task A_Usb_Camera_That_Was_Pulled_Out_Says_So_And_Says_No_Stream_Again_When_It_Is_Back()
     {
-        await using var hub = new SurveillanceHubService("http://localhost");
+        var streams = Substitute.For<IStreamLeaseGateway>();
         using var events = TestEvents.Service();
-        using var tile = new CameraTileViewModel(Substitute.For<IVideoPlayerFactory>(), hub, events, "http://localhost")
+        using var tile = new CameraTileViewModel(Substitute.For<IVideoPlayerFactory>(), streams, events, "http://localhost")
         {
             UsbDeviceId = "usb#1",
         };

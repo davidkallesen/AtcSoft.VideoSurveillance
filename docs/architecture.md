@@ -20,8 +20,8 @@ graph TB
         Aspire["AtcSoft.VideoSurveillance.Aspire<br/><i>.NET Aspire AppHost</i>"]
     end
 
-    VSWpf -- "REST + SignalR" --> API
-    Blazor -- "REST + SignalR" --> API
+    VSWpf -- "REST + events" --> API
+    Blazor -- "REST + events" --> API
     Aspire -- "orchestrates" --> API
     Aspire -- "orchestrates" --> Blazor
     Aspire -- "orchestrates" --> VSWpf
@@ -82,7 +82,7 @@ graph TB
         direction LR
         AppShell["CameraWall.Wpf.App<br/><i>Fluent.Ribbon, Serilog</i>"]
         VSAppShell["VideoSurveillance.Wpf.App<br/><i>Fluent.Ribbon, Serilog</i>"]
-        BlazorUI["Blazor WebAssembly<br/><i>MudBlazor, SignalR Client</i>"]
+        BlazorUI["Blazor WebAssembly<br/><i>MudBlazor, event stream reader</i>"]
     end
 
     subgraph Library["WPF Library Layer"]
@@ -100,7 +100,7 @@ graph TB
 
     subgraph APILayer["API Layer"]
         direction LR
-        APIHost["Api Host<br/><i>Kestrel, SignalR Hub</i>"]
+        APIHost["Api Host<br/><i>Kestrel, GET /events, HLS</i>"]
         DomainHandlers["Api.Domain<br/><i>Handler Implementations</i>"]
         ContractsGen["Api.Contracts<br/><i>Generated from OpenAPI</i>"]
     end
@@ -116,7 +116,7 @@ graph TB
     CWLib --> Core
     VideoPlayer --> DirectX
     DirectX --> VideoEngine
-    BlazorUI -- "HTTP + SignalR" --> APIHost
+    BlazorUI -- "HTTP + Server-Sent Events" --> APIHost
     APIHost --> DomainHandlers
     DomainHandlers --> ContractsGen
     APIHost --> Core
@@ -185,25 +185,28 @@ graph LR
 sequenceDiagram
     participant Camera as RTSP Camera
     participant API as Api Server
-    participant Hub as SignalR Hub
+    participant Feed as GET /events
     participant Blazor as Blazor Client
     participant WPF as WPF Client
 
+    Blazor ->> Feed: GET /events (Last-Event-ID)
+    WPF ->> Feed: GET /events (Last-Event-ID)
+
     Camera ->> API: Video stream
     API ->> API: Motion detection
-    API ->> Hub: MotionDetected event
-    Hub ->> Blazor: MotionDetected broadcast
-    Hub ->> WPF: MotionDetected broadcast
+    API ->> Feed: motionDetected
+    Feed ->> Blazor: event (id, data)
+    Feed ->> WPF: event (id, data)
 
     API ->> API: Recording state change
-    API ->> Hub: RecordingStateChanged event
-    Hub ->> Blazor: RecordingStateChanged broadcast
-    Hub ->> WPF: RecordingStateChanged broadcast
+    API ->> Feed: recordingStateChanged
+    Feed ->> Blazor: event
+    Feed ->> WPF: event
 
     API ->> API: Connection state change
-    API ->> Hub: ConnectionStateChanged event
-    Hub ->> Blazor: ConnectionStateChanged broadcast
-    Hub ->> WPF: ConnectionStateChanged broadcast
+    API ->> Feed: connectionStateChanged
+    Feed ->> Blazor: event
+    Feed ->> WPF: event
 ```
 
 ## 📦 Assembly Responsibilities
@@ -228,8 +231,8 @@ sequenceDiagram
 | **AtcSoft.VideoPlayer.Wpf** | net10.0-windows | WPF `VideoHost` control that displays video via DirectComposition surface with XAML overlay support. Uses native window hierarchy (Surface Window + Overlay Window as WS_CHILD). Provides `OverlayBridge` for connecting WPF XAML elements to the native overlay window. |
 | **AtcSoft.CameraWall.Wpf** | net10.0-windows | WPF library containing the complete camera wall implementation (not published to NuGet; consumed by the CameraWall app). Includes: `CameraWallManager` facade, service implementations (storage, settings, recording, motion detection, timelapse, media cleanup, segmentation, thumbnails, GitHub updates), 7+ dialog windows (CameraConfiguration, Settings, RecordingsBrowser, AssignCamera, CheckForUpdates, About, InputBox), 38+ dialog part UserControls for settings/configuration, camera grid and tile UserControls, motion bounding box overlay, and localization resources (en-US, da-DK, de-DE). |
 | **AtcSoft.CameraWall.Wpf.App** | net10.0-windows | Thin shell WPF application. Provides `MainWindow` with Fluent.Ribbon UI (Layouts, Cameras, View, Help tabs). Configures `Microsoft.Extensions.Hosting`, Serilog file logging (daily rolling, 7-day retention), and DI registration via `AddDependencyRegistrationsFromCameraWall()`. |
-| **AtcSoft.VideoSurveillance.Wpf** | net10.0-windows | WPF library for the VideoSurveillance API client. Provides `GatewayService` (OpenAPI-generated REST client split by resource: Cameras, Layouts, Recordings, Settings) and `SurveillanceHubService` (SignalR client for real-time events). Uses `Atc.Rest.Api.SourceGenerator` for typed API client generation from `VideoSurveillance.yaml`. |
-| **AtcSoft.VideoSurveillance.Wpf.App** | net10.0-windows | Thin shell WPF application for the VideoSurveillance API client. Provides `MainWindow` with Fluent.Ribbon UI (Home tab with Cameras, Layouts, Recordings buttons). Status bar shows server URL and SignalR hub connection state. Configures `Microsoft.Extensions.Hosting`, Serilog, splash screen, and DI for `GatewayService` + `SurveillanceHubService`. Reads `ApiBaseAddress` from `appsettings.json`. |
+| **AtcSoft.VideoSurveillance.Wpf** | net10.0-windows | WPF library for the VideoSurveillance API client. Provides `GatewayService` (OpenAPI-generated REST client split by resource: Cameras, Layouts, Recordings, Settings) and `SurveillanceEventService` (the `GET /events` reader for real-time events). Uses `Atc.Rest.Api.SourceGenerator` for typed API client generation from `VideoSurveillance.yaml`. |
+| **AtcSoft.VideoSurveillance.Wpf.App** | net10.0-windows | Thin shell WPF application for the VideoSurveillance API client. Provides `MainWindow` with Fluent.Ribbon UI (Home tab with Cameras, Layouts, Recordings buttons). Status bar shows the server URL and whether the live updates are on. Configures `Microsoft.Extensions.Hosting`, Serilog, splash screen, and DI for `GatewayService` + `SurveillanceEventService`. Reads `ApiBaseAddress` from `appsettings.json`. |
 
 ### 🌍 Server Layer
 
@@ -237,13 +240,13 @@ sequenceDiagram
 |----------|--------|-------------|
 | **AtcSoft.VideoSurveillance.Api.Contracts** | net10.0 | Auto-generated from `VideoSurveillance.yaml` via atc-rest-api-source-generator. Contains request/response DTOs, handler interfaces (IListCamerasHandler, ICreateCameraHandler, etc.), and the host wiring (`AddVideoSurveillanceApi()` / `MapVideoSurveillanceApi()`). Errors are RFC 9457 ProblemDetails. Shared contract between server and client. |
 | **AtcSoft.VideoSurveillance.Api.Domain** | net10.0 | Handler implementations for all API endpoints. 16 handlers covering Cameras CRUD (8), Layouts CRUD + Apply (5), Recordings (1), Settings (2). Includes mapping extensions for domain-to-DTO conversions. |
-| **AtcSoft.VideoSurveillance.Api** | net10.0 | ASP.NET Core host application. Registers all services (JsonCameraStorageService, JsonApplicationSettingsService, ServerRecordingService, ServerMotionDetectionService, VideoPlayerFactory, StreamingService). Configures CORS, SignalR hub at `/hubs/surveillance`, static file serving for HLS streams (`/streams`) and recordings (`/recordings-files`), OpenAPI docs via Scalar. Runs `CameraConnectionService` and `SurveillanceEventBroadcaster` as hosted services. |
+| **AtcSoft.VideoSurveillance.Api** | net10.0 | ASP.NET Core host application. Registers all services (JsonCameraStorageService, JsonApplicationSettingsService, ServerRecordingService, ServerMotionDetectionService, VideoPlayerFactory, StreamingService). Configures CORS, the camera events at `GET /events`, live streams on a lease (`POST /cameras/{id}/stream`), static file serving for HLS streams (`/streams`) and recordings (`/recordings-files`), OpenAPI docs via Scalar. Runs `CameraConnectionService` and `SurveillanceEventBroadcaster` as hosted services. |
 
 ### 🌐 Web UI
 
 | Assembly | Target | Description |
 |----------|--------|-------------|
-| **AtcSoft.VideoSurveillance.Blazor.App** | net10.0 | Blazor WebAssembly client with MudBlazor UI. Pages: Dashboard (live stats), Cameras (CRUD + snapshot/record), Layouts (drag-drop grid editor), Live View (HLS streaming with motion bounding boxes), Recordings (browse/playback/download), Settings (7-tab configuration). Uses `GatewayService` for API calls and `SurveillanceHubService` for SignalR real-time updates. Auto-generated API client from OpenAPI spec. |
+| **AtcSoft.VideoSurveillance.Blazor.App** | net10.0 | Blazor WebAssembly client with MudBlazor UI. Pages: Dashboard (live stats), Cameras (CRUD + snapshot/record), Layouts (drag-drop grid editor), Live View (HLS streaming with motion bounding boxes), Recordings (browse/playback/download), Settings (7-tab configuration). Uses `GatewayService` for API calls and `EventStreamService` for real-time updates from `GET /events`. Auto-generated API client from OpenAPI spec. |
 
 ### ☁️ Orchestration
 
@@ -272,7 +275,7 @@ sequenceDiagram
 | Framework | .NET 10.0 / C# 14.0 |
 | Desktop UI | WPF with Fluent.Ribbon, Atc.Wpf.Controls |
 | Web UI | Blazor WebAssembly with MudBlazor |
-| Server | ASP.NET Core, SignalR |
+| Server | ASP.NET Core, Server-Sent Events, HLS |
 | API Definition | OpenAPI 3.2 (atc-rest-api-source-generator v3) |
 | Video Engine | AtcSoft.VideoEngine (in-process FFmpeg via Flyleaf.FFmpeg.Bindings) |
 | GPU Acceleration | Direct3D 11 (D3D11VA) via Vortice bindings |

@@ -1,7 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
-/// Subscribes to all SignalR hub events and dispatches toast notifications
+/// Subscribes to the server's camera events (GET /events) and dispatches toast notifications
 /// based on user preferences. Maintains a notification history log.
 /// </summary>
 public sealed class NotificationCoordinator : IDisposable
@@ -10,28 +10,25 @@ public sealed class NotificationCoordinator : IDisposable
     private static readonly TimeSpan MotionRateLimitInterval = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ToastExpiration = TimeSpan.FromSeconds(5);
 
-    private readonly SurveillanceHubService hubService;
     private readonly SurveillanceEventService eventService;
     private readonly IToastNotificationService toastNotificationService;
     private readonly ConcurrentDictionary<Guid, string> cameraNameCache = new();
     private readonly ConcurrentDictionary<Guid, DateTimeOffset> lastMotionNotification = new();
 
     private bool isStarted;
-    private bool isHubDisconnected;
+    private bool isServerLost;
+    private bool wasConnected;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationCoordinator"/> class.
     /// </summary>
     public NotificationCoordinator(
-        SurveillanceHubService hubService,
         SurveillanceEventService eventService,
         IToastNotificationService toastNotificationService)
     {
-        ArgumentNullException.ThrowIfNull(hubService);
         ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(toastNotificationService);
 
-        this.hubService = hubService;
         this.eventService = eventService;
         this.toastNotificationService = toastNotificationService;
     }
@@ -77,7 +74,7 @@ public sealed class NotificationCoordinator : IDisposable
         eventService.OnConnectionStateChanged += OnConnectionStateChanged;
         eventService.OnRecordingStateChanged += OnRecordingStateChanged;
         eventService.OnMotionDetected += OnMotionDetected;
-        hubService.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
+        eventService.ConnectedChanged += OnServerConnectionChanged;
     }
 
     /// <inheritdoc />
@@ -91,24 +88,30 @@ public sealed class NotificationCoordinator : IDisposable
         eventService.OnConnectionStateChanged -= OnConnectionStateChanged;
         eventService.OnRecordingStateChanged -= OnRecordingStateChanged;
         eventService.OnMotionDetected -= OnMotionDetected;
-        hubService.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
+        eventService.ConnectedChanged -= OnServerConnectionChanged;
 
         isStarted = false;
     }
 
-    private void OnHubConnectionStateChanged(string state)
+    // The server could not be reached, or answers again; a stream that drops
+    // and is opened again at once says nothing.
+    private void OnServerConnectionChanged()
     {
-        if (string.Equals(state, "Disconnected", StringComparison.OrdinalIgnoreCase) && !isHubDisconnected)
+        // A server that was not there at the start was never lost.
+        var connected = eventService.IsConnected;
+        var hadBeenConnected = wasConnected;
+        wasConnected |= connected;
+        if (!connected && hadBeenConnected && !isServerLost)
         {
-            isHubDisconnected = true;
+            isServerLost = true;
             ShowNotification(
                 Translations.ServerConnectionLost,
                 Translations.ServerConnectionLostMessage,
                 NotificationEventType.CameraDisconnected);
         }
-        else if (string.Equals(state, "Connected", StringComparison.OrdinalIgnoreCase) && isHubDisconnected)
+        else if (connected && isServerLost)
         {
-            isHubDisconnected = false;
+            isServerLost = false;
             ShowNotification(
                 Translations.ServerConnected,
                 Translations.ServerConnectionRestoredMessage,

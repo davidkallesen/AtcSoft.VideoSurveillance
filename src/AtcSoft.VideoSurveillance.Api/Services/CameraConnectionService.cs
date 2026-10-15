@@ -172,7 +172,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
     public override Task DoWorkAsync(CancellationToken stoppingToken)
     {
         // Reap any session whose pipeline has died — including ones started
-        // via REST or SignalR which CCM doesn't track in managedPipelines.
+        // via REST, which CCM doesn't track in managedPipelines.
         // Without this, a single network blip on an API-started recording
         // leaves the session "Recording" forever with no recovery.
         recordingService.ReapInactiveSessions();
@@ -704,7 +704,7 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
                 return;
             }
 
-            // Another path (REST/SignalR) won the race and is already
+            // Another path (REST) won the race and is already
             // recording. Our pipeline isn't owned by the recording service
             // — drop it so we don't leak two demuxers per camera. A hosted
             // camera has only this pipeline, whoever records on it.
