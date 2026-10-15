@@ -115,7 +115,8 @@ public sealed class BearerTokenHandlerTests : IDisposable
             ExpiresInSeconds: expiresIn,
             RefreshToken: "refresh-" + accessToken,
             UserName: "admin",
-            Role: UserRole.Admin);
+            Role: UserRole.Admin,
+            MediaToken: "media-" + accessToken);
 
     private static async Task<HttpResponseMessage> CallAsync(
         HttpMessageInvoker invoker,

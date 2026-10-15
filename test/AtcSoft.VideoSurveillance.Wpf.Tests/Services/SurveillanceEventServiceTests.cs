@@ -236,7 +236,7 @@ public sealed class SurveillanceEventServiceTests
         await Task.Delay(200, TestContext.Current.CancellationToken);
         calls.Should().Be(0);
 
-        session.Apply(new Session(AccessToken: "token", ExpiresInSeconds: 3600, RefreshToken: "refresh", UserName: "admin", Role: UserRole.Admin));
+        session.Apply(new Session(AccessToken: "token", ExpiresInSeconds: 3600, RefreshToken: "refresh", UserName: "admin", Role: UserRole.Admin, MediaToken: "media"));
         await running;
 
         calls.Should().Be(1);

@@ -62,10 +62,14 @@ public sealed class ApiHostRateLimitTests(ApiHostFixture host)
         IPAddress address,
         string path,
         string? method = null)
-        => host.SendAsync(context =>
+    {
+        var token = host.GetAdminAccessToken();
+        return host.SendAsync(context =>
         {
             context.Request.Method = method ?? HttpMethods.Post;
             context.Request.Path = path;
+            context.Request.Headers.Authorization = "Bearer " + token;
             context.Connection.RemoteIpAddress = address;
         });
+    }
 }

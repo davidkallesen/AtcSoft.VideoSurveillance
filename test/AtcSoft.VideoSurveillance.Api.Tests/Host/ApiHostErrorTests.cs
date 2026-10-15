@@ -73,6 +73,7 @@ public sealed class ApiHostErrorTests(ApiHostFixture host)
             builder.ConfigureTestServices(services => services.AddSingleton(storage));
         });
         using var client = production.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", host.GetAdminAccessToken());
 
         using var response = await client.GetAsync(new Uri($"/cameras/{Guid.NewGuid()}", UriKind.Relative), TestContext.Current.CancellationToken);
 

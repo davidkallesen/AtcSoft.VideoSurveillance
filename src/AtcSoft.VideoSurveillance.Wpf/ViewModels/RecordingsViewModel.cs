@@ -10,6 +10,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
 
     private readonly GatewayService gatewayService;
     private readonly Uri apiBaseUri;
+    private readonly ClientSession? session;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnFilterChanged))]
     private string selectedCameraFilter = AllCamerasKey;
@@ -37,7 +38,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// </summary>
     public RecordingsViewModel(
         GatewayService gatewayService,
-        Uri apiBaseUri)
+        Uri apiBaseUri,
+        ClientSession? session = null)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(apiBaseUri);
@@ -47,6 +49,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
 
         this.gatewayService = gatewayService;
         this.apiBaseUri = apiBaseUri;
+        this.session = session;
     }
 
     /// <summary>
@@ -127,7 +130,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
                 {
                     Recordings = new ObservableCollection<RecordingEntryViewModel>(
                         apiRecordings
-                            .Select(r => new RecordingEntryViewModel(r, apiBaseUri))
+                            .Select(r => new RecordingEntryViewModel(r, apiBaseUri, session?.MediaToken))
                             .OrderByDescending(r => r.RecordingTime));
                 }
                 else

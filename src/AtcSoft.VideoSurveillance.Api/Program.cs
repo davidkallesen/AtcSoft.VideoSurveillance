@@ -16,6 +16,9 @@ var advancedSettings = LoadAdvancedSettingsForLogging(
 var loggerConfig = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+
+    // A stream lease or a media token is in the address of these requests.
+    .Filter.ByExcluding(MediaRequestLogFilter.IsMediaRequest)
     .WriteTo.Console(formatProvider: System.Globalization.CultureInfo.InvariantCulture);
 
 if (advancedSettings.EnableDebugLogging)
@@ -47,6 +50,13 @@ try
     // The generated API's services: ProblemDetails for errors raised outside
     // the handlers, and the enums on the wire as the specification writes them.
     builder.Services.AddVideoSurveillanceApi();
+
+    // The USB device list is cached for every caller: the generated policy keeps
+    // ASP.NET Core's default, which never caches a request that is signed in
+    // (all of them now). See the feedback to the generator, Z6.
+    builder.Services.Configure<OutputCacheOptions>(options => options.AddPolicy(
+        OutputCachePolicies.UsbDevices,
+        new SharedOutputCachePolicy(TimeSpan.FromSeconds(5), OutputCacheTags.UsbDevices)));
 
     // Register API handlers from the Domain project (source-generated)
     builder.Services.AddApiHandlersFromDomain();
@@ -240,9 +250,19 @@ try
         sp.GetRequiredService<ServerDataPaths>().AuditLogPath,
         sp.GetRequiredService<TimeProvider>()));
     builder.Services.AddHttpContextAccessor();
+
+    // The default scheme takes the API key when a request sends one, else the
+    // access token: so a role check (which names no scheme) and the media gate
+    // see either. See the feedback to the generator, Z5.
+    const string bearerOrApiKey = "BearerOrApiKey";
     builder.Services
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer();
+        .AddAuthentication(bearerOrApiKey)
+        .AddPolicyScheme(bearerOrApiKey, bearerOrApiKey, options => options.ForwardDefaultSelector = context =>
+            context.Request.Headers.ContainsKey(ApiKeyAuthenticationHandler.HeaderName)
+                ? ApiKeyAuthenticationHandler.SchemeName
+                : JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer()
+        .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, _ => { });
     builder.Services
         .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
         .Configure<AccountService>((options, accounts) =>
@@ -341,9 +361,13 @@ try
                 }),
             });
         })
+        .RequireAuthorization(policy => policy
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, ApiKeyAuthenticationHandler.SchemeName)
+            .RequireRole("admin"))
         .ExcludeFromDescription();
 
-    // Serve HLS stream segments as static files
+    // Serve HLS stream segments as static files, under the lease they are
+    // watched on (/streams/{leaseId}/...): a lease that ended opens nothing.
     var hlsContentTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider
     {
         Mappings =
@@ -355,8 +379,7 @@ try
 
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-            app.Services.GetRequiredService<StreamingService>().HlsOutputRoot),
+        FileProvider = new LeaseStreamFileProvider(app.Services.GetRequiredService<StreamingService>()),
         RequestPath = "/streams",
         ContentTypeProvider = hlsContentTypes,
     });
@@ -365,6 +388,11 @@ try
     // recording folder that is configured at the time of the request.
     Directory.CreateDirectory(
         app.Services.GetRequiredService<IApplicationSettingsService>().Recording.RecordingPath);
+
+    // Only for a signed-in caller, an API key, or the session's media token (?media=).
+    app.UseWhen(
+        context => context.Request.Path.StartsWithSegments("/recordings-files", StringComparison.OrdinalIgnoreCase),
+        branch => branch.UseMiddleware<MediaAccessMiddleware>());
 
     app.UseStaticFiles(new StaticFileOptions
     {

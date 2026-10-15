@@ -21,6 +21,11 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
 
     public string? RefreshToken { get; private set; }
 
+    /// <summary>
+    /// Gets the token a recording's or a thumbnail's address carries (?media=).
+    /// </summary>
+    public string? MediaToken { get; private set; }
+
     public string? UserName { get; private set; }
 
     public UserRole? Role { get; private set; }
@@ -48,6 +53,7 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
 
         AccessToken = session.AccessToken;
         RefreshToken = session.RefreshToken;
+        MediaToken = session.MediaToken;
         UserName = session.UserName;
         Role = session.Role;
         expiresAt = time.GetUtcNow() + TimeSpan.FromSeconds(session.ExpiresInSeconds);
@@ -70,6 +76,7 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
     {
         AccessToken = null;
         RefreshToken = null;
+        MediaToken = null;
         UserName = null;
         Role = null;
         Changed?.Invoke();

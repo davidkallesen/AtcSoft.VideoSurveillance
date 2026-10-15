@@ -418,7 +418,8 @@ public sealed partial class AccountService : IAccountService
             Tokens.Lifetime,
             refreshToken,
             user.UserName,
-            user.Role);
+            user.Role,
+            Tokens.CreateMediaToken(user.UserName));
     }
 
     private void EnsureSetupCode()

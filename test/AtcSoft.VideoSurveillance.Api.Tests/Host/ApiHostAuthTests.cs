@@ -11,7 +11,8 @@ public sealed class ApiHostAuthTests(ApiHostFixture host)
     public async Task The_Admin_Made_With_The_Setup_Code_Signs_In_Renews_And_Ends_A_Session()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        using var client = host.CreateClient();
+        using var client = host.CreateAnonymousClient();
+        using var anonymous = host.CreateAnonymousClient();
         await host.EnsureAdminAsync();
 
         // The server has its first admin, so it cannot be set up again.
@@ -41,7 +42,7 @@ public sealed class ApiHostAuthTests(ApiHostFixture host)
             (await answer.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("userName").GetString().Should().Be(ApiHostFixture.AdminName);
         }
 
-        (await client.GetAsync(new Uri("/auth/me", UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await anonymous.GetAsync(new Uri("/auth/me", UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         // The refresh token is used once, and signing out ends the session.
         var refreshToken = session.GetProperty("refreshToken").GetString();
@@ -58,7 +59,7 @@ public sealed class ApiHostAuthTests(ApiHostFixture host)
     public async Task A_Password_Shorter_Than_Eight_Characters_Is_Refused_By_The_Specification()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        using var client = host.CreateClient();
+        using var client = host.CreateAnonymousClient();
 
         var refused = await client.PostAsJsonAsync("/auth/setup", new { setupCode = "X", userName = "admin", password = "short" }, cancellationToken);
 

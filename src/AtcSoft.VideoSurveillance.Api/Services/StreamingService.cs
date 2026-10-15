@@ -147,8 +147,29 @@ public sealed partial class StreamingService : ILiveStreamService, IDisposable
         var leaseId = Guid.NewGuid();
         leases[leaseId] = new StreamLeaseEntry(cameraId, session, time.GetUtcNow());
 
-        var relativePath = Path.GetRelativePath(hlsOutputRoot, session.PlaylistPath).Replace('\\', '/');
-        return LiveStreamStart.Started(leaseId, $"/streams/{relativePath}");
+        // The lease is in the address: the playlist and its segments are
+        // served to whoever has it, for as long as it lives.
+        return LiveStreamStart.Started(leaseId, $"/streams/{leaseId:N}/{Path.GetFileName(session.PlaylistPath)}");
+    }
+
+    /// <summary>
+    /// Gets the folder of the stream a lease is on, while the lease and its
+    /// stream live; the stream's files are served from it.
+    /// </summary>
+    public bool TryGetLeaseFolder(
+        Guid leaseId,
+        [NotNullWhen(true)] out string? folder)
+    {
+        folder = null;
+        if (!leases.TryGetValue(leaseId, out var lease) ||
+            !sessions.TryGetValue(lease.CameraId, out var current) ||
+            !ReferenceEquals(current, lease.Session))
+        {
+            return false;
+        }
+
+        folder = Path.GetDirectoryName(lease.Session.PlaylistPath);
+        return folder is not null;
     }
 
     /// <inheritdoc />

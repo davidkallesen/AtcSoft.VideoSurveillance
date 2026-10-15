@@ -84,9 +84,13 @@ public static class RecordingDisplay
     /// its own, so a camera name with '#', '?', '&amp;', '+' or '%' in it
     /// cannot change the meaning of the address.
     /// </summary>
+    /// <param name="apiBaseUrl">The server.</param>
+    /// <param name="relativePath">The file, below the recording folder.</param>
+    /// <param name="mediaToken">The session's media token: a video or an image sends no header, so the address carries it.</param>
     public static string? FileUrl(
         string apiBaseUrl,
-        string? relativePath)
+        string? relativePath,
+        string? mediaToken = null)
     {
         if (string.IsNullOrEmpty(relativePath))
         {
@@ -99,7 +103,8 @@ public static class RecordingDisplay
                 .Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries)
                 .Select(Uri.EscapeDataString));
 
-        return $"{(apiBaseUrl ?? string.Empty).TrimEnd('/')}/{FilesPath}/{escaped}";
+        var query = string.IsNullOrEmpty(mediaToken) ? string.Empty : "?media=" + Uri.EscapeDataString(mediaToken);
+        return $"{(apiBaseUrl ?? string.Empty).TrimEnd('/')}/{FilesPath}/{escaped}{query}";
     }
 
     /// <summary>
@@ -108,9 +113,10 @@ public static class RecordingDisplay
     /// </summary>
     public static string? DownloadUrl(
         string apiBaseUrl,
-        string? relativePath)
-        => FileUrl(apiBaseUrl, relativePath) is { } url
-            ? url + "?download=1"
+        string? relativePath,
+        string? mediaToken = null)
+        => FileUrl(apiBaseUrl, relativePath, mediaToken) is { } url
+            ? url + (url.Contains('?', StringComparison.Ordinal) ? "&" : "?") + "download=1"
             : null;
 
     private static bool TryParseDuration(

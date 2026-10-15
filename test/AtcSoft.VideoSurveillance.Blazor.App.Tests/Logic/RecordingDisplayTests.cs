@@ -70,6 +70,15 @@ public sealed class RecordingDisplayTests
         => RecordingDisplay.DownloadUrl("http://server:5000", "Cam #1/a.mp4")
             .Should().Be("http://server:5000/recordings-files/Cam%20%231/a.mp4?download=1");
 
+    [Fact]
+    public void A_Signed_In_Browser_Adds_Its_Media_Token_To_The_Address()
+    {
+        RecordingDisplay.FileUrl("http://server:5000", "a/b.mp4", "token+/=")
+            .Should().Be("http://server:5000/recordings-files/a/b.mp4?media=token%2B%2F%3D");
+        RecordingDisplay.DownloadUrl("http://server:5000", "a/b.mp4", "token")
+            .Should().Be("http://server:5000/recordings-files/a/b.mp4?media=token&download=1");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

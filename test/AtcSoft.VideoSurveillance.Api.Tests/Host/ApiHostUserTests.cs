@@ -28,7 +28,7 @@ public sealed class ApiHostUserTests(ApiHostFixture host)
         using (var asViewer = new HttpRequestMessage(HttpMethod.Get, "/users"))
         {
             asViewer.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.GetProperty("accessToken").GetString());
-            using var client = host.CreateClient();
+            using var client = host.CreateAnonymousClient();
             (await client.SendAsync(asViewer, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
             (await client.GetAsync(new Uri("/users", UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }

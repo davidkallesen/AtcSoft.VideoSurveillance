@@ -11,6 +11,11 @@ public sealed class AccessTokens
     /// </summary>
     public const string Issuer = "AtcSoft.VideoSurveillance";
 
+    /// <summary>
+    /// The audience of a media token: it opens the recordings and nothing else.
+    /// </summary>
+    public const string MediaAudience = "AtcSoft.VideoSurveillance.Media";
+
     private const int KeyLength = 64;
 
     private readonly TimeProvider time;
@@ -48,6 +53,12 @@ public sealed class AccessTokens
     public TimeSpan Lifetime { get; } = TimeSpan.FromHours(1);
 
     /// <summary>
+    /// Gets how long a media token is valid: long enough for a recording to be
+    /// played to its end.
+    /// </summary>
+    public TimeSpan MediaLifetime { get; } = TimeSpan.FromHours(12);
+
+    /// <summary>
     /// Gets what a token must be to be valid here (for the bearer handler).
     /// </summary>
     public TokenValidationParameters ValidationParameters { get; }
@@ -76,6 +87,44 @@ public sealed class AccessTokens
             },
             SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
         });
+    }
+
+    /// <summary>
+    /// Makes a media token: read-only access to the recordings, for an address a
+    /// player or an image opens without a header (?media=).
+    /// </summary>
+    public string CreateMediaToken(string userName)
+    {
+        var now = time.GetUtcNow().UtcDateTime;
+        return handler.CreateToken(new SecurityTokenDescriptor
+        {
+            Issuer = Issuer,
+            Audience = MediaAudience,
+            IssuedAt = now,
+            NotBefore = now,
+            Expires = now + MediaLifetime,
+            Claims = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                [CallerIdentity.NameClaim] = userName,
+            },
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
+        });
+    }
+
+    /// <summary>
+    /// Checks a media token; an access token is not one.
+    /// </summary>
+    public async Task<bool> IsValidMediaTokenAsync(string? token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            return false;
+        }
+
+        var parameters = ValidationParameters.Clone();
+        parameters.ValidAudience = MediaAudience;
+        var result = await handler.ValidateTokenAsync(token, parameters).ConfigureAwait(false);
+        return result.IsValid;
     }
 
     private static byte[] LoadOrCreateKey(string keyPath)

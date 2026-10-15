@@ -6,6 +6,13 @@ info:
   license:
     name: MIT
 
+# Every operation needs a signed-in user (the access token) or an API key; the
+# sign-in operations say security: [] themselves. x-authorize-roles narrows an
+# operation to operators or admins.
+security:
+  - bearer: []
+  - apiKey: []
+
 paths:
   /auth/setup:
     get:
@@ -188,8 +195,6 @@ paths:
     get:
       summary: The signed-in user
       operationId: getCurrentUser
-      security:
-        - bearer: []
       tags:
         - auth
       responses:
@@ -212,8 +217,6 @@ paths:
       description: Needs the current password. The user's sessions end, so other devices sign in again.
       operationId: updateOwnPassword
       x-retry-enabled: false
-      security:
-        - bearer: []
       tags:
         - auth
       requestBody:
@@ -242,8 +245,6 @@ paths:
     get:
       summary: List the users
       operationId: listUsers
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -273,8 +274,6 @@ paths:
       summary: Add a user
       operationId: createUser
       x-retry-enabled: false
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -322,8 +321,6 @@ paths:
       description: What the request leaves out stays. A new password ends the user's sessions. The last admin keeps the role.
       operationId: updateUser
       x-retry-enabled: false
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -377,8 +374,6 @@ paths:
       description: Their sessions end. The last admin cannot be removed.
       operationId: deleteUser
       x-retry-enabled: false
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -423,8 +418,6 @@ paths:
       summary: List the API keys
       description: Their names and roles; a key itself is shown only when it is made.
       operationId: listApiKeys
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -455,8 +448,6 @@ paths:
       description: For an integration (Home Assistant, a script). The key is in the answer once; the server keeps only its hash.
       operationId: createApiKey
       x-retry-enabled: false
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -497,8 +488,6 @@ paths:
       summary: Remove an API key
       operationId: deleteApiKey
       x-retry-enabled: false
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -537,8 +526,6 @@ paths:
       summary: What was changed, by whom
       description: The latest changes first. Sign-ins, refused ones too, are in it; watching and renewing a stream are not.
       operationId: listAuditEntries
-      security:
-        - bearer: []
       x-authorize-roles:
         - admin
       tags:
@@ -593,6 +580,9 @@ paths:
     post:
       summary: Add a new camera
       operationId: createCamera
+      x-authorize-roles:
+        - operator
+        - admin
       tags:
         - cameras
       requestBody:
@@ -649,6 +639,9 @@ paths:
     put:
       summary: Update a camera
       operationId: updateCamera
+      x-authorize-roles:
+        - operator
+        - admin
       x-retry-enabled: false
       tags:
         - cameras
@@ -687,6 +680,9 @@ paths:
     delete:
       summary: Delete a camera
       operationId: deleteCamera
+      x-authorize-roles:
+        - operator
+        - admin
       x-retry-enabled: false
       tags:
         - cameras
@@ -711,6 +707,9 @@ paths:
     get:
       summary: Capture a snapshot from a camera
       operationId: captureSnapshot
+      x-authorize-roles:
+        - operator
+        - admin
       # A GET named capture: it also saves the picture, which "capture" says.
       x-atc-suppress: ATC_API_OPR003
       # A snapshot opens the camera's stream; a client in a loop would keep the
@@ -775,6 +774,9 @@ paths:
         it. Returns none when the camera does not support ONVIF, rejects the
         credentials, or reports an unknown interface type.
       operationId: detectConnectionType
+      x-authorize-roles:
+        - operator
+        - admin
       tags:
         - cameras
       parameters:
@@ -802,6 +804,9 @@ paths:
     post:
       summary: Start recording a camera
       operationId: startRecording
+      x-authorize-roles:
+        - operator
+        - admin
       tags:
         - cameras
       parameters:
@@ -833,6 +838,9 @@ paths:
     delete:
       summary: Stop recording a camera
       operationId: stopRecording
+      x-authorize-roles:
+        - operator
+        - admin
       # A DELETE named stop: it stops a recording; deleteRecording deletes a file.
       x-atc-suppress: ATC_API_OPR007
       x-retry-enabled: false
@@ -963,6 +971,9 @@ paths:
     get:
       summary: List USB cameras visible to the server host
       operationId: listUsbDevices
+      x-authorize-roles:
+        - operator
+        - admin
       # Enumerating the devices takes a moment; the list is kept 5 seconds, and
       # the server drops it as soon as a USB camera is plugged in or pulled out.
       x-cache-type: output
@@ -1006,6 +1017,9 @@ paths:
     post:
       summary: Create a new layout
       operationId: createLayout
+      x-authorize-roles:
+        - operator
+        - admin
       tags:
         - layouts
       requestBody:
@@ -1037,6 +1051,9 @@ paths:
     put:
       summary: Update a layout
       operationId: updateLayout
+      x-authorize-roles:
+        - operator
+        - admin
       x-retry-enabled: false
       tags:
         - layouts
@@ -1075,6 +1092,9 @@ paths:
     delete:
       summary: Delete a layout
       operationId: deleteLayout
+      x-authorize-roles:
+        - operator
+        - admin
       x-retry-enabled: false
       tags:
         - layouts
@@ -1099,6 +1119,9 @@ paths:
     post:
       summary: Apply a layout as the active layout
       operationId: applyLayout
+      x-authorize-roles:
+        - operator
+        - admin
       tags:
         - layouts
       parameters:
@@ -1149,6 +1172,9 @@ paths:
       summary: Delete a recording
       description: Deletes one finished recording together with its thumbnail. A recording that is still being made cannot be deleted.
       operationId: deleteRecording
+      x-authorize-roles:
+        - operator
+        - admin
       x-retry-enabled: false
       tags:
         - recordings
@@ -1248,6 +1274,8 @@ paths:
     put:
       summary: Update application settings
       operationId: updateSettings
+      x-authorize-roles:
+        - admin
       x-retry-enabled: false
       tags:
         - settings
@@ -1300,6 +1328,8 @@ paths:
     get:
       summary: List the receivers the server posts its events to
       operationId: listWebhooks
+      x-authorize-roles:
+        - admin
       tags:
         - webhooks
       responses:
@@ -1314,6 +1344,8 @@ paths:
     post:
       summary: Add a receiver
       operationId: createWebhook
+      x-authorize-roles:
+        - admin
       tags:
         - webhooks
       requestBody:
@@ -1345,6 +1377,8 @@ paths:
     put:
       summary: Change a receiver
       operationId: updateWebhook
+      x-authorize-roles:
+        - admin
       x-retry-enabled: false
       tags:
         - webhooks
@@ -1389,6 +1423,8 @@ paths:
     delete:
       summary: Remove a receiver
       operationId: deleteWebhook
+      x-authorize-roles:
+        - admin
       x-retry-enabled: false
       tags:
         - webhooks
@@ -1419,6 +1455,8 @@ paths:
     post:
       summary: Send a test event to a receiver
       operationId: testWebhook
+      x-authorize-roles:
+        - admin
       # A test sends a request to someone else's server.
       x-ratelimit-policy: webhook-tests
       x-ratelimit-permit-limit: 10
@@ -1487,6 +1525,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: The access token from createSession, completeSetup or refreshSession.
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: An API key an admin made (createApiKey), for an integration.
 
   schemas:
     UserRole:
@@ -1565,6 +1608,7 @@ components:
         - refreshToken
         - userName
         - role
+        - mediaToken
       properties:
         accessToken:
           type: string
@@ -1575,6 +1619,11 @@ components:
         refreshToken:
           type: string
           description: Renews the session (refreshSession) or ends it (endSession). It is valid for 30 days after its last use.
+        mediaToken:
+          type: string
+          description: >-
+            Read-only access to the recordings and their thumbnails (/recordings-files), for a player or an image that
+            cannot send a header: added to the address as ?media=<token>. Valid for 12 hours; a renewed session has a new one.
         userName:
           type: string
         role:

@@ -66,10 +66,22 @@ public sealed class ApiHostFixture : IDisposable
     public string DefaultRecordingPath => Path.Combine(DataPath, "recordings");
 
     /// <summary>
-    /// Gets a client for the running server. The server needs the FFmpeg
-    /// shared libraries to start, so a machine without them skips the test.
+    /// Gets a client for the running server, signed in as its first admin.
     /// </summary>
     public HttpClient CreateClient()
+    {
+        var token = GetAdminAccessToken();
+        var client = CreateAnonymousClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
+
+    /// <summary>
+    /// Gets a client for the running server that is not signed in. The server
+    /// needs the FFmpeg shared libraries to start, so a machine without them
+    /// skips the test.
+    /// </summary>
+    public HttpClient CreateAnonymousClient()
     {
         Assert.SkipWhen(
             AtcSoft.VideoEngine.VideoEngineBootstrap.FindFFmpegPath() is null,
@@ -95,7 +107,7 @@ public sealed class ApiHostFixture : IDisposable
     /// </summary>
     public async Task EnsureAdminAsync()
     {
-        using var client = CreateClient();
+        using var client = CreateAnonymousClient();
         var acquired = false;
         try
         {
@@ -134,7 +146,7 @@ public sealed class ApiHostFixture : IDisposable
         string password)
     {
         var address = "198.51.100." + ((Interlocked.Increment(ref signInAddress) % 250) + 1).ToString(CultureInfo.InvariantCulture);
-        using var client = CreateClient();
+        using var client = CreateAnonymousClient();
         using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/token")
         {
             Content = JsonContent.Create(new { userName, password }),
@@ -148,19 +160,23 @@ public sealed class ApiHostFixture : IDisposable
     /// <summary>
     /// Gets a client for the running server that is signed in as its first admin.
     /// </summary>
-    public async Task<HttpClient> CreateAdminClientAsync()
+    public Task<HttpClient> CreateAdminClientAsync()
+        => Task.FromResult(CreateClient());
+
+    /// <summary>
+    /// Gets the first admin's access token (signed in once, then kept).
+    /// </summary>
+    public string GetAdminAccessToken()
     {
-        await EnsureAdminAsync();
         if (adminAccessToken is null)
         {
-            var (status, session) = await SignInAsync(AdminName, AdminPassword);
+            EnsureAdminAsync().GetAwaiter().GetResult();
+            var (status, session) = SignInAsync(AdminName, AdminPassword).GetAwaiter().GetResult();
             status.Should().Be(StatusCodes.Status200OK, session.ToString());
             adminAccessToken = session.GetProperty("accessToken").GetString();
         }
 
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminAccessToken);
-        return client;
+        return adminAccessToken!;
     }
 
     /// <summary>
@@ -171,7 +187,7 @@ public sealed class ApiHostFixture : IDisposable
         where T : notnull
     {
         // Makes sure the server is running in the test data folder.
-        using var client = CreateClient();
+        using var client = CreateAnonymousClient();
 
         return factory.Value.Services.GetRequiredService<T>();
     }
@@ -183,7 +199,7 @@ public sealed class ApiHostFixture : IDisposable
     public async Task<HttpContext> SendAsync(Action<HttpContext> configure)
     {
         // Makes sure the server is running in the test data folder.
-        using var client = CreateClient();
+        using var client = CreateAnonymousClient();
 
         return await factory.Value.Server.SendAsync(configure);
     }

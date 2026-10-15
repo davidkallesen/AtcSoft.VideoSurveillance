@@ -7,16 +7,25 @@ public sealed class RecordingEntryViewModel
 {
     private readonly Recording recording;
     private readonly Uri apiBaseUrl;
+    private readonly string? mediaToken;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RecordingEntryViewModel"/> class.
+    /// </summary>
+    /// <param name="recording">The recording.</param>
+    /// <param name="apiBaseUrl">The server.</param>
+    /// <param name="mediaToken">The session's media token: the player and the image send no header, so the address carries it.</param>
     public RecordingEntryViewModel(
         Recording recording,
-        Uri apiBaseUrl)
+        Uri apiBaseUrl,
+        string? mediaToken = null)
     {
         ArgumentNullException.ThrowIfNull(recording);
         ArgumentNullException.ThrowIfNull(apiBaseUrl);
 
         this.recording = recording;
         this.apiBaseUrl = apiBaseUrl;
+        this.mediaToken = mediaToken;
     }
 
     public Guid Id => recording.Id;
@@ -55,7 +64,10 @@ public sealed class RecordingEntryViewModel
         => RecordingTime.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
 
     private Uri BuildFileUrl(string relativePath)
-        => new($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(relativePath)}");
+    {
+        var query = string.IsNullOrEmpty(mediaToken) ? string.Empty : "?media=" + Uri.EscapeDataString(mediaToken);
+        return new Uri($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(relativePath)}{query}");
+    }
 
     private static TimeSpan ParseIsoDuration(string? duration)
     {

@@ -1,5 +1,6 @@
 @page "/recordings"
 @inject GatewayService Gateway
+@inject BrowserSession Session
 @inject EventStreamService EventStream
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -70,7 +71,7 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="@Translations.Thumbnail">
-            @if (RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, context.ThumbnailPath) is { } thumbnailUrl)
+            @if (RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, context.ThumbnailPath, Session.MediaToken) is { } thumbnailUrl)
             {
                 <img src="@thumbnailUrl"
                      alt="@(string.Format(CultureInfo.CurrentCulture, Translations.ThumbnailOf1, context.CameraName))"
@@ -234,8 +235,8 @@
         var name = string.IsNullOrEmpty(recording.CameraName) ? Translations.Recording : recording.CameraName;
         var parameters = new DialogParameters<RecordingPlaybackDialog>
         {
-            { x => x.VideoUrl, RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, recording.FilePath) ?? string.Empty },
-            { x => x.DownloadUrl, RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath) ?? string.Empty },
+            { x => x.VideoUrl, RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, recording.FilePath, Session.MediaToken) ?? string.Empty },
+            { x => x.DownloadUrl, RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath, Session.MediaToken) ?? string.Empty },
             { x => x.Title, $"{name} - {recording.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}" },
             { x => x.FileName, RecordingDisplay.FileName(recording.FilePath) },
             { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(recording.FilePath) },
@@ -254,7 +255,7 @@
 
     private async Task DownloadRecordingAsync(Recording recording)
     {
-        if (RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath) is { } url)
+        if (RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath, Session.MediaToken) is { } url)
         {
             await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", url, RecordingDisplay.FileName(recording.FilePath));
         }

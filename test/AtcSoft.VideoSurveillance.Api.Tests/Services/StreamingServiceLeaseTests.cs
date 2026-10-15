@@ -50,7 +50,10 @@ public sealed class StreamingServiceLeaseTests : IDisposable
 
         start.Outcome.Should().Be(LiveStreamOutcome.Started);
         start.LeaseId.Should().NotBeEmpty();
-        start.PlaylistPath.Should().Be($"/streams/{camera.Id:N}/stream.m3u8");
+        start.PlaylistPath.Should().Be($"/streams/{start.LeaseId:N}/stream.m3u8");
+        sut.TryGetLeaseFolder(start.LeaseId, out var folder).Should().BeTrue();
+        folder.Should().Be(Path.Combine(sut.HlsOutputRoot, camera.Id.ToString("N")));
+        sut.TryGetLeaseFolder(Guid.NewGuid(), out _).Should().BeFalse();
         sut.GetViewerCount(camera.Id).Should().Be(1);
     }
 

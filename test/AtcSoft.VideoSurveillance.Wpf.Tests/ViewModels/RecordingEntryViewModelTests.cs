@@ -51,9 +51,19 @@ public class RecordingEntryViewModelTests
         vm.ThumbnailUrl.Should().BeNull();
     }
 
+    [Fact]
+    public void The_Media_Token_Is_Added_To_Both_Addresses()
+    {
+        var vm = Build("Front Door/a.mkv", "thumbnails/Front Door/a.png", mediaToken: "token+/=");
+
+        vm.PlaybackUrl.Query.Should().Be("?media=token%2B%2F%3D");
+        vm.ThumbnailUrl!.Query.Should().Be("?media=token%2B%2F%3D");
+    }
+
     private static RecordingEntryViewModel Build(
         string filePath,
-        string? thumbnailPath = null)
+        string? thumbnailPath = null,
+        string? mediaToken = null)
         => new(
             new ApiRecording(
                 Id: Guid.NewGuid(),
@@ -66,5 +76,6 @@ public class RecordingEntryViewModelTests
                 HasThumbnail: thumbnailPath is not null,
                 InProgress: false,
                 ThumbnailPath: thumbnailPath),
-            ApiBaseUrl);
+            ApiBaseUrl,
+            mediaToken);
 }

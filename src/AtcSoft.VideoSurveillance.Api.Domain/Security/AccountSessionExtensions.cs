@@ -14,6 +14,7 @@ public static class AccountSessionExtensions
             ExpiresInSeconds: (int)session.AccessTokenLifetime.TotalSeconds,
             RefreshToken: session.RefreshToken,
             UserName: session.UserName,
-            Role: session.Role.ToApiRole());
+            Role: session.Role.ToApiRole(),
+            MediaToken: session.MediaToken);
     }
 }

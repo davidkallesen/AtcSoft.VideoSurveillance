@@ -420,7 +420,8 @@ public partial class App
                     sp.GetService<AtcSoft.VideoSurveillance.Services.IApplicationSettingsService>()));
                 services.AddSingleton(sp => new RecordingsViewModel(
                     sp.GetRequiredService<GatewayService>(),
-                    new Uri(apiBaseAddress)));
+                    new Uri(apiBaseAddress),
+                    sp.GetRequiredService<ClientSession>()));
                 services.AddSingleton<NotificationHistoryViewModel>();
 
                 // App
