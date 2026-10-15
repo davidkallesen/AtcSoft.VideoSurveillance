@@ -97,6 +97,32 @@ public sealed class CameraTileViewModelStreamTests : IDisposable
         await streams.DidNotReceive().RenewStreamLeaseAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Closing_The_App_Gives_Every_Tiles_Lease_Back_At_Once()
+    {
+        var otherCamera = Guid.NewGuid();
+        var otherLease = Guid.NewGuid();
+        streams
+            .StartStreamAsync(otherCamera, Arg.Any<CancellationToken>())
+            .Returns(new global::VideoSurveillance.Generated.Cameras.Models.StreamLease(LeaseId: otherLease, CameraId: otherCamera, PlaylistUrl: "/streams/back/stream.m3u8", RenewSeconds: 30));
+        var factory = Substitute.For<IVideoPlayerFactory>();
+        factory.Create().Returns(_ => Substitute.For<IVideoPlayer>());
+        using var other = new CameraTileViewModel(factory, streams, events, "http://server.test/") { CameraId = otherCamera };
+        await sut.StartStreamAsync();
+        await other.StartStreamAsync();
+
+        // The server is slow: both are given back without waiting for each other.
+        var release = new TaskCompletionSource();
+        streams.StopStreamAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(release.Task);
+        var stopping = CameraTileViewModel.StopAllAsync([sut, other]);
+
+        await streams.Received(1).StopStreamAsync(cameraId, leaseId, Arg.Any<CancellationToken>());
+        await streams.Received(1).StopStreamAsync(otherCamera, otherLease, Arg.Any<CancellationToken>());
+        stopping.IsCompleted.Should().BeFalse();
+        release.SetResult();
+        await stopping;
+    }
+
     private static async Task WaitForAsync(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow.AddSeconds(5);

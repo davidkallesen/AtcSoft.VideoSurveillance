@@ -239,6 +239,17 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Stops every tile's stream and gives the leases back, all at once (when
+    /// the app closes and has little time).
+    /// </summary>
+    public static Task StopAllAsync(IEnumerable<CameraTileViewModel> tiles)
+    {
+        ArgumentNullException.ThrowIfNull(tiles);
+
+        return Task.WhenAll(tiles.Select(tile => tile.StopStreamAsync()));
+    }
+
+    /// <summary>
     /// Renews the stream lease while the tile watches; one the server no
     /// longer has (it restarted, or the lease ran out) starts the stream again.
     /// </summary>

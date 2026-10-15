@@ -416,6 +416,20 @@ public partial class App
             .Build();
     }
 
+    // A bounded wait on the UI thread while the app closes: the calls it waits
+    // for do not need the UI thread (ConfigureAwait(false)).
+    private static void WaitBriefly(Task task)
+    {
+        try
+        {
+            task.Wait(TimeSpan.FromSeconds(2));
+        }
+        catch (AggregateException)
+        {
+            // Best effort: the leases run out by themselves.
+        }
+    }
+
     private async Task ReloadSettingsAsync(
         IApplicationSettingsService appSettingsService)
     {
@@ -449,6 +463,15 @@ public partial class App
         }
 
         LogAppClosing();
+
+        // The streams' leases are given back first, before anything is
+        // awaited: the process ends soon after this handler's first await.
+        // A server that is slow or away lets them run out by itself.
+        var liveView = host.Services.GetService<LiveViewViewModel>();
+        if (liveView is not null)
+        {
+            WaitBriefly(liveView.ReleaseStreamsAsync());
+        }
 
         // Stop latency monitoring
         var mainViewModel = host.Services.GetService<MainWindowViewModel>();
