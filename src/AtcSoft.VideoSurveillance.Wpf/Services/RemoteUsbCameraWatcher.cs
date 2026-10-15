@@ -6,7 +6,7 @@ using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor
 
 /// <summary>
 /// API-client implementation of <see cref="IUsbCameraWatcher"/>.
-/// Subscribes to <see cref="IUsbLifecycleHubChannel"/> (which fronts
+/// Subscribes to <see cref="IUsbLifecycleChannel"/> (which fronts
 /// the SignalR <c>UsbCameraLifecycleChanged</c> message) and translates
 /// server-side <c>Replugged</c> / <c>Unplugged</c> phases into the
 /// arrival / removal events local consumers already understand.
@@ -23,13 +23,13 @@ using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor
 /// </remarks>
 public sealed class RemoteUsbCameraWatcher : IUsbCameraWatcher
 {
-    private readonly IUsbLifecycleHubChannel hubChannel;
+    private readonly IUsbLifecycleChannel hubChannel;
     private readonly Lock syncRoot = new();
 
     private bool started;
     private bool disposed;
 
-    public RemoteUsbCameraWatcher(IUsbLifecycleHubChannel hubChannel)
+    public RemoteUsbCameraWatcher(IUsbLifecycleChannel hubChannel)
     {
         ArgumentNullException.ThrowIfNull(hubChannel);
         this.hubChannel = hubChannel;

@@ -6,7 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 public partial class CameraListViewModel : ViewModelBase
 {
     private readonly GatewayService gatewayService;
-    private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
 
     [ObservableProperty]
     private ObservableCollection<CameraItemViewModel> cameras = [];
@@ -22,16 +22,16 @@ public partial class CameraListViewModel : ViewModelBase
     /// </summary>
     public CameraListViewModel(
         GatewayService gatewayService,
-        SurveillanceHubService hubService)
+        SurveillanceEventService eventService)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
-        ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
 
         this.gatewayService = gatewayService;
-        this.hubService = hubService;
+        this.eventService = eventService;
 
-        this.hubService.OnConnectionStateChanged += OnConnectionStateChanged;
-        this.hubService.OnRecordingStateChanged += OnRecordingStateChanged;
+        this.eventService.OnConnectionStateChanged += OnConnectionStateChanged;
+        this.eventService.OnRecordingStateChanged += OnRecordingStateChanged;
     }
 
     /// <summary>

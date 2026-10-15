@@ -55,6 +55,7 @@ global using Serilog.Events;
 
 global using VideoSurveillance.Generated;
 global using VideoSurveillance.Generated.Cameras.Models;
+global using VideoSurveillance.Generated.Events.Models;
 global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Resilience;
 

@@ -90,8 +90,9 @@ public class CameraRotationClientTests
         var factory = Substitute.For<IVideoPlayerFactory>();
         factory.Create().Returns(player);
         await using var hub = new SurveillanceHubService("http://localhost");
+        using var events = TestEvents.Service();
 
-        using var tile = new CameraTileViewModel(factory, hub, "http://localhost");
+        using var tile = new CameraTileViewModel(factory, hub, events, "http://localhost");
         tile.Rotation = rotation;
 
         player.Received(1).SetRotation(expected);

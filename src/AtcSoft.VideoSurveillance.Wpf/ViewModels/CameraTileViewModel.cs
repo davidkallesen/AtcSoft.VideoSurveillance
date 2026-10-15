@@ -13,6 +13,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     private static readonly TimeSpan StreamRetryDelay = TimeSpan.FromSeconds(5);
 
     private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
     private readonly string apiBaseAddress;
     private bool disposed;
 
@@ -138,12 +139,15 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     public CameraTileViewModel(
         IVideoPlayerFactory videoPlayerFactory,
         SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         string apiBaseAddress)
     {
         ArgumentNullException.ThrowIfNull(videoPlayerFactory);
         ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
 
         this.hubService = hubService;
+        this.eventService = eventService;
         this.apiBaseAddress = apiBaseAddress;
 
         Player = videoPlayerFactory.Create();
@@ -151,9 +155,9 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         ApplyRotation();
 
         hubService.OnStreamStarted += OnStreamStarted;
-        hubService.OnConnectionStateChanged += OnHubConnectionStateChanged;
-        hubService.OnRecordingStateChanged += OnHubRecordingStateChanged;
-        hubService.OnMotionDetected += OnHubMotionDetected;
+        eventService.OnConnectionStateChanged += OnHubConnectionStateChanged;
+        eventService.OnRecordingStateChanged += OnHubRecordingStateChanged;
+        eventService.OnMotionDetected += OnHubMotionDetected;
     }
 
     public bool IsRecording
@@ -212,9 +216,9 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
         disposed = true;
 
         hubService.OnStreamStarted -= OnStreamStarted;
-        hubService.OnConnectionStateChanged -= OnHubConnectionStateChanged;
-        hubService.OnRecordingStateChanged -= OnHubRecordingStateChanged;
-        hubService.OnMotionDetected -= OnHubMotionDetected;
+        eventService.OnConnectionStateChanged -= OnHubConnectionStateChanged;
+        eventService.OnRecordingStateChanged -= OnHubRecordingStateChanged;
+        eventService.OnMotionDetected -= OnHubMotionDetected;
 
         if (recordingTimer is not null)
         {

@@ -42,7 +42,7 @@ public sealed class StreamEventMappingTests
     [Fact]
     public void A_Usb_Change_Is_A_UsbCameraLifecycleChanged_Event()
     {
-        var hubEvent = new UsbCameraLifecycleEvent(CameraId, global::VideoSurveillance.Generated.Models.UsbCameraLifecyclePhase.Unplugged, "device", "Logitech BRIO", Now);
+        var hubEvent = new UsbCameraLifecycleEvent(CameraId, global::VideoSurveillance.Generated.Events.Models.UsbCameraLifecyclePhase.Unplugged, "device", "Logitech BRIO", Now);
 
         var streamEvent = hubEvent.ToStreamEvent();
 

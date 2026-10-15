@@ -11,6 +11,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
 {
     private readonly GatewayService gatewayService;
     private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly IUsbCameraWatcher usbCameraWatcher;
     private readonly string apiBaseAddress;
@@ -161,6 +162,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     public LiveViewViewModel(
         GatewayService gatewayService,
         SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         IVideoPlayerFactory videoPlayerFactory,
         IUsbCameraWatcher usbCameraWatcher,
         string apiBaseAddress,
@@ -168,11 +170,13 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(videoPlayerFactory);
         ArgumentNullException.ThrowIfNull(usbCameraWatcher);
 
         this.gatewayService = gatewayService;
         this.hubService = hubService;
+        this.eventService = eventService;
         this.videoPlayerFactory = videoPlayerFactory;
         this.usbCameraWatcher = usbCameraWatcher;
         this.apiBaseAddress = apiBaseAddress;
@@ -315,7 +319,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
                 // Create a tile per camera
                 foreach (var camera in cameras)
                 {
-                    var tile = new CameraTileViewModel(videoPlayerFactory, hubService, apiBaseAddress)
+                    var tile = new CameraTileViewModel(videoPlayerFactory, hubService, eventService, apiBaseAddress)
                     {
                         CameraId = camera.Id,
                         DisplayName = camera.DisplayName,
@@ -410,7 +414,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         ArgumentNullException.ThrowIfNull(tile);
 
         var viewModel = new FullScreenCameraWindowViewModel(
-            hubService,
+            eventService,
             tile.CameraId,
             tile.Player,
             tile.DisplayName,

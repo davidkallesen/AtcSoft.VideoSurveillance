@@ -7,6 +7,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly GatewayService gatewayService;
     private readonly SurveillanceHubService hubService; // Used for event subscriptions in constructor
+    private readonly SurveillanceEventService eventService;
     private readonly IGitHubReleaseService gitHubReleaseService;
     private readonly IApplicationSettingsService settingsService;
     private readonly IAutoStartService autoStartService;
@@ -70,6 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         GatewayService gatewayService,
         SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         IGitHubReleaseService gitHubReleaseService,
         IApplicationSettingsService settingsService,
         IAutoStartService autoStartService,
@@ -85,6 +87,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(gitHubReleaseService);
         ArgumentNullException.ThrowIfNull(settingsService);
         ArgumentNullException.ThrowIfNull(autoStartService);
@@ -98,6 +101,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         this.gatewayService = gatewayService;
         this.hubService = hubService;
+        this.eventService = eventService;
         this.gitHubReleaseService = gitHubReleaseService;
         this.settingsService = settingsService;
         this.autoStartService = autoStartService;
@@ -131,8 +135,8 @@ public partial class MainWindowViewModel : ViewModelBase
             });
         };
 
-        this.hubService.OnConnectionStateChanged += OnConnectionStateChanged;
-        this.hubService.OnRecordingStateChanged += OnRecordingStateChanged;
+        this.eventService.OnConnectionStateChanged += OnConnectionStateChanged;
+        this.eventService.OnRecordingStateChanged += OnRecordingStateChanged;
 
         // The language changes live; CultureManager holds the handler weakly.
         CultureManager.UiCultureChanged += OnUiCultureChanged;

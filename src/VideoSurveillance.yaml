@@ -811,14 +811,6 @@ x-signalr-hubs:
   surveillance:
     url: /hubs/surveillance
     events:
-      - name: ConnectionStateChanged
-        payload: ConnectionStateChangedEvent
-      - name: RecordingStateChanged
-        payload: RecordingStateChangedEvent
-      - name: MotionDetected
-        payload: MotionDetectedEvent
-      - name: UsbCameraLifecycleChanged
-        payload: UsbCameraLifecycleEvent
       - name: StreamStarted
         payload: StreamStartedEvent
     methods:
@@ -1951,7 +1943,7 @@ components:
     ConnectionStateChangedEvent:
       title: ConnectionStateChangedEvent
       type: object
-      description: Hub event - the server's connection to a camera changed.
+      description: Event (GET /events) - the server's connection to a camera changed.
       required:
         - cameraId
         - newState
@@ -1969,7 +1961,7 @@ components:
     RecordingStateChangedEvent:
       title: RecordingStateChangedEvent
       type: object
-      description: Hub event - a camera started or stopped being recorded.
+      description: Event (GET /events) - a camera started or stopped being recorded.
       required:
         - cameraId
         - newState
@@ -2016,7 +2008,7 @@ components:
     MotionDetectedEvent:
       title: MotionDetectedEvent
       type: object
-      description: Hub event - motion on a camera started, goes on, or ended.
+      description: Event (GET /events) - motion on a camera started, goes on, or ended.
       required:
         - cameraId
         - isMotionActive
@@ -2052,7 +2044,7 @@ components:
     UsbCameraLifecycleEvent:
       title: UsbCameraLifecycleEvent
       type: object
-      description: Hub event - a USB camera on the server was unplugged or plugged in again.
+      description: Event (GET /events) - a USB camera on the server was unplugged or plugged in again.
       required:
         - cameraId
         - phase
@@ -2140,7 +2132,7 @@ components:
       title: SurveillanceEvent
       type: object
       description: >-
-        One event of GET /events. type names the part that is filled, as the hub names the event; a type this
+        One event of GET /events. type names the part that is filled; a type this
         client does not know yet can be read past.
       required:
         - type

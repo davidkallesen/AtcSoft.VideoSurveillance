@@ -86,13 +86,9 @@ The specification is validated `Strict`. Where a rule does not fit one operation
 
 | Events (server to client) | Carries |
 |---|---|
-| `ConnectionStateChanged` | `ConnectionStateChangedEvent`: the camera, its new state, when |
-| `RecordingStateChanged` | `RecordingStateChangedEvent`: the camera, the old and new recording state, the file |
-| `MotionDetected` | `MotionDetectedEvent`: the camera, active or not, how much changed, the boxes in the analysed picture |
-| `UsbCameraLifecycleChanged` | `UsbCameraLifecycleEvent`: a USB camera on the server unplugged or plugged in again |
 | `StreamStarted` | `StreamStartedEvent`, to the caller of `StartStream`: the playlist |
 
-Methods (client to server): `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id). Recordings are started and stopped over REST only.
+Methods (client to server): `StartStream`, `StopStream`, `StreamHeartbeat` (each takes a camera id). Recordings are started and stopped over REST only, and the camera events come from `GET /events` (below).
 
 The states are written as the REST API writes them: `connected`, `deviceUnplugged`, `recordingMotion`, `replugged`, `right`. The server implements the generated `ISurveillanceHub` on `Hub<ISurveillanceHubClient>`; both clients use the generated `SurveillanceHubClient`.
 
@@ -100,7 +96,7 @@ The states are written as the REST API writes them: `connected`, `deviceUnplugge
 
 ## 🌊 Events
 
-`GET /events` is what the hub sends to every client - connection, recording, motion and USB events - as one stream of Server-Sent Events, readable without a SignalR client:
+`GET /events` carries the camera events - connection, recording, motion and USB - as one stream of Server-Sent Events. Both clients read them here (the WPF client with `SurveillanceEventService`, the web client with `EventStreamService`):
 
 ```bash
 curl -N "http://localhost:5000/events?cameraId=47c2d0ad-b1c1-424f-91de-70d7ef99b279"

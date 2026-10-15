@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Atc.Hosting" Version="2.0.2" />
     <PackageReference Include="Atc.Rest.Client" Version="2.6.0" />
     <PackageReference Include="Atc.SourceGenerators" Version="0.1.66">
       <PrivateAssets>all</PrivateAssets>

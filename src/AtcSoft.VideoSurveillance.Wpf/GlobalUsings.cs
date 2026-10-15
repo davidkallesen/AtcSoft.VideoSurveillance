@@ -20,6 +20,7 @@ global using System.Windows.Media;
 global using System.Windows.Threading;
 
 global using Atc;
+global using Atc.Hosting;
 global using Atc.Rest.Api.SourceGenerator;
 global using Atc.Rest.Client;
 global using Atc.Wpf.Components.Dialogs;
@@ -53,6 +54,9 @@ global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Devices.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Events.Client;
+global using VideoSurveillance.Generated.Events.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Events.Models;
 global using VideoSurveillance.Generated.Hubs;
 global using VideoSurveillance.Generated.Layouts.Client;
 global using VideoSurveillance.Generated.Layouts.Endpoints.Interfaces;

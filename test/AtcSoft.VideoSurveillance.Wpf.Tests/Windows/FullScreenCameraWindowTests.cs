@@ -10,9 +10,9 @@ public class FullScreenCameraWindowTests
         // camera in full screen.
         var error = RunOnStaThread(() =>
         {
-            var hub = new SurveillanceHubService("http://localhost");
+            using var events = TestEvents.Service();
             using var viewModel = new FullScreenCameraWindowViewModel(
-                hub,
+                events,
                 Guid.NewGuid(),
                 existingPlayer: null,
                 "Cam",

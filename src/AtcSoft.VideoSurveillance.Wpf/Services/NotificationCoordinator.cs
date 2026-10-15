@@ -11,6 +11,7 @@ public sealed class NotificationCoordinator : IDisposable
     private static readonly TimeSpan ToastExpiration = TimeSpan.FromSeconds(5);
 
     private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
     private readonly IToastNotificationService toastNotificationService;
     private readonly ConcurrentDictionary<Guid, string> cameraNameCache = new();
     private readonly ConcurrentDictionary<Guid, DateTimeOffset> lastMotionNotification = new();
@@ -23,12 +24,15 @@ public sealed class NotificationCoordinator : IDisposable
     /// </summary>
     public NotificationCoordinator(
         SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         IToastNotificationService toastNotificationService)
     {
         ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
         ArgumentNullException.ThrowIfNull(toastNotificationService);
 
         this.hubService = hubService;
+        this.eventService = eventService;
         this.toastNotificationService = toastNotificationService;
     }
 
@@ -59,7 +63,7 @@ public sealed class NotificationCoordinator : IDisposable
     }
 
     /// <summary>
-    /// Subscribes to hub events. Call after <c>mainWindow.Show()</c> to ensure the visual tree is ready.
+    /// Subscribes to the camera events and the server connection. Call after <c>mainWindow.Show()</c> to ensure the visual tree is ready.
     /// </summary>
     public void Start()
     {
@@ -70,9 +74,9 @@ public sealed class NotificationCoordinator : IDisposable
 
         isStarted = true;
 
-        hubService.OnConnectionStateChanged += OnConnectionStateChanged;
-        hubService.OnRecordingStateChanged += OnRecordingStateChanged;
-        hubService.OnMotionDetected += OnMotionDetected;
+        eventService.OnConnectionStateChanged += OnConnectionStateChanged;
+        eventService.OnRecordingStateChanged += OnRecordingStateChanged;
+        eventService.OnMotionDetected += OnMotionDetected;
         hubService.OnHubConnectionStateChanged += OnHubConnectionStateChanged;
     }
 
@@ -84,9 +88,9 @@ public sealed class NotificationCoordinator : IDisposable
             return;
         }
 
-        hubService.OnConnectionStateChanged -= OnConnectionStateChanged;
-        hubService.OnRecordingStateChanged -= OnRecordingStateChanged;
-        hubService.OnMotionDetected -= OnMotionDetected;
+        eventService.OnConnectionStateChanged -= OnConnectionStateChanged;
+        eventService.OnRecordingStateChanged -= OnRecordingStateChanged;
+        eventService.OnMotionDetected -= OnMotionDetected;
         hubService.OnHubConnectionStateChanged -= OnHubConnectionStateChanged;
 
         isStarted = false;

@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
 
 /// <summary>
 /// Service for connecting to the SignalR surveillance hub.
-/// Provides real-time camera events: connection state, recording, motion, and streaming.
+/// Starts and stops the live streams; the camera events come from
+/// <see cref="SurveillanceEventService"/> (GET /events).
 /// The events, the methods and what they carry are the generated
 /// <see cref="SurveillanceHubClient"/>, from the hub in the specification.
 /// </summary>
@@ -28,15 +29,7 @@ public sealed class SurveillanceHubService : IAsyncDisposable
     private SurveillanceHubClient? hub;
     private Func<Task>? stopConnecting;
 
-    public event Action<ConnectionStateChangedEvent>? OnConnectionStateChanged;
-
-    public event Action<RecordingStateChangedEvent>? OnRecordingStateChanged;
-
-    public event Action<MotionDetectedEvent>? OnMotionDetected;
-
     public event Action<StreamStartedEvent>? OnStreamStarted;
-
-    public event Action<UsbCameraLifecycleEvent>? OnUsbCameraLifecycleChanged;
 
     public event Action<string>? OnHubConnectionStateChanged;
 
@@ -81,11 +74,7 @@ public sealed class SurveillanceHubService : IAsyncDisposable
 
         // The subscriptions live as long as the connection: both are disposed together.
         hub = new SurveillanceHubClient(hubConnection);
-        hub.OnConnectionStateChanged(e => OnConnectionStateChanged?.Invoke(e));
-        hub.OnRecordingStateChanged(e => OnRecordingStateChanged?.Invoke(e));
-        hub.OnMotionDetected(e => OnMotionDetected?.Invoke(e));
         hub.OnStreamStarted(e => OnStreamStarted?.Invoke(e));
-        hub.OnUsbCameraLifecycleChanged(e => OnUsbCameraLifecycleChanged?.Invoke(e));
 
         hubConnection.Reconnecting += _ =>
         {

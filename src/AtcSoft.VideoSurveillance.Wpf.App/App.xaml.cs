@@ -350,17 +350,23 @@ public partial class App
 
                 services.AddSingleton(new SurveillanceHubService(apiBaseAddress));
 
+                // The camera events (GET /events), read from the start to the
+                // end of the host; one instance for the views and the host.
+                services.AddSingleton(new SurveillanceEventServiceOptions());
+                services.AddSingleton<SurveillanceEventService>();
+                services.AddHostedService(sp => sp.GetRequiredService<SurveillanceEventService>());
+
                 // USB camera enumeration + hot-plug via the API server.
                 // RemoteUsbCameraEnumerator delegates to GET /devices/usb
                 // so the dialog dropdown shows devices attached to the
                 // *server* host. RemoteUsbCameraWatcher subscribes to
-                // the SignalR `UsbCameraLifecycleChanged` event the
-                // SurveillanceEventBroadcaster pushes when the server's
+                // the `usbCameraLifecycleChanged` event of GET /events the
+                // SurveillanceEventBroadcaster publishes when the server's
                 // IUsbCameraLifecycleCoordinator transitions a device
                 // between Unplugged and Replugged.
                 services.AddSingleton<IUsbCameraGateway, GatewayUsbCameraGateway>();
                 services.AddSingleton<AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator, RemoteUsbCameraEnumerator>();
-                services.AddSingleton<IUsbLifecycleHubChannel, SurveillanceHubLifecycleChannel>();
+                services.AddSingleton<IUsbLifecycleChannel, SurveillanceEventLifecycleChannel>();
                 services.AddSingleton<AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher, RemoteUsbCameraWatcher>();
 
                 // GitHub release service
@@ -392,6 +398,7 @@ public partial class App
                 services.AddSingleton(sp => new LiveViewViewModel(
                     sp.GetRequiredService<GatewayService>(),
                     sp.GetRequiredService<SurveillanceHubService>(),
+                    sp.GetRequiredService<SurveillanceEventService>(),
                     sp.GetRequiredService<IVideoPlayerFactory>(),
                     sp.GetRequiredService<AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher>(),
                     apiBaseAddress,
@@ -406,6 +413,7 @@ public partial class App
                 services.AddSingleton(sp => new MainWindowViewModel(
                     sp.GetRequiredService<GatewayService>(),
                     sp.GetRequiredService<SurveillanceHubService>(),
+                    sp.GetRequiredService<SurveillanceEventService>(),
                     sp.GetRequiredService<IGitHubReleaseService>(),
                     sp.GetRequiredService<IApplicationSettingsService>(),
                     sp.GetRequiredService<IAutoStartService>(),

@@ -10,7 +10,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Windows;
 /// </summary>
 public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDisposable
 {
-    private readonly SurveillanceHubService hubService;
+    private readonly SurveillanceEventService eventService;
     private readonly Guid cameraId;
     private DispatcherTimer? overlayHideTimer;
     private bool disposed;
@@ -50,15 +50,15 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
     private int analysisHeight = 240;
 
     public FullScreenCameraWindowViewModel(
-        SurveillanceHubService hubService,
+        SurveillanceEventService eventService,
         Guid cameraId,
         IVideoPlayer? existingPlayer,
         string cameraName,
         string cameraDescription)
     {
-        ArgumentNullException.ThrowIfNull(hubService);
+        ArgumentNullException.ThrowIfNull(eventService);
 
-        this.hubService = hubService;
+        this.eventService = eventService;
         this.cameraId = cameraId;
         CameraName = cameraName;
         CameraDescription = cameraDescription;
@@ -79,9 +79,9 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
             };
         }
 
-        hubService.OnConnectionStateChanged += OnHubConnectionStateChanged;
-        hubService.OnRecordingStateChanged += OnHubRecordingStateChanged;
-        hubService.OnMotionDetected += OnHubMotionDetected;
+        eventService.OnConnectionStateChanged += OnHubConnectionStateChanged;
+        eventService.OnRecordingStateChanged += OnHubRecordingStateChanged;
+        eventService.OnMotionDetected += OnHubMotionDetected;
 
         StartOverlayHideTimer();
     }
@@ -267,9 +267,9 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
                 recordingTimer = null;
             }
 
-            hubService.OnConnectionStateChanged -= OnHubConnectionStateChanged;
-            hubService.OnRecordingStateChanged -= OnHubRecordingStateChanged;
-            hubService.OnMotionDetected -= OnHubMotionDetected;
+            eventService.OnConnectionStateChanged -= OnHubConnectionStateChanged;
+            eventService.OnRecordingStateChanged -= OnHubRecordingStateChanged;
+            eventService.OnMotionDetected -= OnHubMotionDetected;
 
             if (Player is not null)
             {

@@ -1,10 +1,8 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// Background service that subscribes to Core service events and broadcasts them
-/// to connected SignalR clients via the <see cref="SurveillanceHub"/>, and to the
-/// readers of GET /events via the <see cref="SurveillanceEventFeed"/>: one mapping
-/// (<see cref="HubEventMapping"/>) for both, so they say the same.
+/// Background service that subscribes to Core service events and publishes them
+/// to the readers of GET /events via the <see cref="SurveillanceEventFeed"/>.
 /// <br/><br/>
 /// Built on <see cref="BackgroundServiceBase{T}"/> for consistency with the
 /// other hosted workers (shared start/stop logging and health-running state),
@@ -15,12 +13,6 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// </summary>
 public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase<SurveillanceEventBroadcaster>
 {
-    // Bound the time any single broadcast can spend sending so a
-    // slow/disconnected client cannot accumulate unbounded in-flight tasks
-    // while events keep firing from the recording / motion services.
-    private static readonly TimeSpan BroadcastTimeout = TimeSpan.FromSeconds(5);
-
-    private readonly IHubContext<SurveillanceHub, ISurveillanceHubClient> hubContext;
     private readonly IRecordingService recordingService;
     private readonly ServerRecordingService serverRecordingService;
     private readonly IMotionDetectionService motionDetectionService;
@@ -30,7 +22,6 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     public SurveillanceEventBroadcaster(
         ILogger<SurveillanceEventBroadcaster> logger,
         SurveillanceEventBroadcasterOptions options,
-        IHubContext<SurveillanceHub, ISurveillanceHubClient> hubContext,
         IRecordingService recordingService,
         ServerRecordingService serverRecordingService,
         IMotionDetectionService motionDetectionService,
@@ -38,7 +29,6 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
         SurveillanceEventFeed feed)
         : base(logger, options)
     {
-        this.hubContext = hubContext;
         this.recordingService = recordingService;
         this.serverRecordingService = serverRecordingService;
         this.motionDetectionService = motionDetectionService;
@@ -76,42 +66,15 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
     public override Task DoWorkAsync(CancellationToken stoppingToken)
         => Task.CompletedTask; // Event-driven: all work runs in the handlers wired up in StartAsync.
 
-    // Sync event handlers that fire-and-forget a Task. async void in an event
-    // handler means an unhandled synchronous-portion exception escapes onto
-    // the firing thread (the demux thread for recording / motion events) —
-    // crashing recording. Routing through a Task keeps any failure isolated
-    // to the Task's faulted state, observable via the inner try/catch.
+    // The events fire on the threads that raise them (the demux thread for
+    // recording and motion): a failure here is logged, never thrown into them.
     private void OnRecordingStateChanged(
         object? sender,
-        RecordingStateChangedEventArgs e)
-        => _ = BroadcastRecordingStateChangedAsync(e);
-
-    private void OnMotionDetected(
-        object? sender,
-        MotionDetectedEventArgs e)
-        => _ = BroadcastMotionDetectedAsync(e);
-
-    private void OnCameraConnectionStateChanged(
-        Guid cameraId,
-        ConnectionState newState)
-        => _ = BroadcastCameraConnectionStateChangedAsync(cameraId, newState);
-
-    private void OnUsbLifecycleChanged(
-        object? sender,
-        UsbCameraLifecycleChangedEventArgs e)
-        => _ = BroadcastUsbLifecycleChangedAsync(e);
-
-    private async Task BroadcastRecordingStateChangedAsync(
         RecordingStateChangedEventArgs e)
     {
         try
         {
-            var hubEvent = e.ToHubEvent();
-            feed.Publish(hubEvent.ToStreamEvent());
-            await hubContext.Clients.All
-                .RecordingStateChanged(hubEvent)
-                .WaitAsync(BroadcastTimeout)
-                .ConfigureAwait(false);
+            feed.Publish(e.ToHubEvent().ToStreamEvent());
         }
         catch (Exception ex)
         {
@@ -119,18 +82,27 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
         }
     }
 
-    private async Task BroadcastCameraConnectionStateChangedAsync(
+    private void OnMotionDetected(
+        object? sender,
+        MotionDetectedEventArgs e)
+    {
+        try
+        {
+            feed.Publish(e.ToHubEvent().ToStreamEvent());
+        }
+        catch (Exception ex)
+        {
+            LogBroadcastMotionFailed(ex, e.CameraId);
+        }
+    }
+
+    private void OnCameraConnectionStateChanged(
         Guid cameraId,
         ConnectionState newState)
     {
         try
         {
-            var hubEvent = HubEventMapping.ToHubEvent(cameraId, newState, DateTimeOffset.UtcNow);
-            feed.Publish(hubEvent.ToStreamEvent());
-            await hubContext.Clients.All
-                .ConnectionStateChanged(hubEvent)
-                .WaitAsync(BroadcastTimeout)
-                .ConfigureAwait(false);
+            feed.Publish(HubEventMapping.ToHubEvent(cameraId, newState, DateTimeOffset.UtcNow).ToStreamEvent());
         }
         catch (Exception ex)
         {
@@ -138,38 +110,17 @@ public sealed partial class SurveillanceEventBroadcaster : BackgroundServiceBase
         }
     }
 
-    private async Task BroadcastUsbLifecycleChangedAsync(
+    private void OnUsbLifecycleChanged(
+        object? sender,
         UsbCameraLifecycleChangedEventArgs e)
     {
         try
         {
-            var hubEvent = e.ToHubEvent(DateTimeOffset.UtcNow);
-            feed.Publish(hubEvent.ToStreamEvent());
-            await hubContext.Clients.All
-                .UsbCameraLifecycleChanged(hubEvent)
-                .WaitAsync(BroadcastTimeout)
-                .ConfigureAwait(false);
+            feed.Publish(e.ToHubEvent(DateTimeOffset.UtcNow).ToStreamEvent());
         }
         catch (Exception ex)
         {
             LogBroadcastUsbLifecycleFailed(ex, e.CameraId);
-        }
-    }
-
-    private async Task BroadcastMotionDetectedAsync(MotionDetectedEventArgs e)
-    {
-        try
-        {
-            var hubEvent = e.ToHubEvent();
-            feed.Publish(hubEvent.ToStreamEvent());
-            await hubContext.Clients.All
-                .MotionDetected(hubEvent)
-                .WaitAsync(BroadcastTimeout)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            LogBroadcastMotionFailed(ex, e.CameraId);
         }
     }
 }

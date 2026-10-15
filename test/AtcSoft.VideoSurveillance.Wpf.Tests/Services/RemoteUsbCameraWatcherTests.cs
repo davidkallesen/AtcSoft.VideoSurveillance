@@ -219,7 +219,7 @@ public class RemoteUsbCameraWatcherTests
             FriendlyName: "Cam",
             Timestamp: DateTimeOffset.UtcNow);
 
-    private sealed class FakeChannel : IUsbLifecycleHubChannel
+    private sealed class FakeChannel : IUsbLifecycleChannel
     {
         public event Action<UsbCameraLifecycleEvent>? UsbCameraLifecycleChanged;
 
