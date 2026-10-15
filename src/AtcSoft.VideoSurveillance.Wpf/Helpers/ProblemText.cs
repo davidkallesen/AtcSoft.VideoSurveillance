@@ -8,7 +8,7 @@ public static class ProblemText
     /// <summary>
     /// Gets the text to show: the message of each field a 400 names, else the
     /// problem's <c>detail</c>, else the <c>title</c> of a
-    /// problem body (one made up from the status alone is the status's enum name), else the status.
+    /// problem body (one made up from the status alone has the English reason phrase, so the status is said in the client's language instead), else the status.
     /// </summary>
     public static string From(EndpointResponse response)
     {

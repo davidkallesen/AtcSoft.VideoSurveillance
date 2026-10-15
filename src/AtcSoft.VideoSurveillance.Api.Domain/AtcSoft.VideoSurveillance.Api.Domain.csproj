@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.6d5b09df" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.4855d6fe" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
