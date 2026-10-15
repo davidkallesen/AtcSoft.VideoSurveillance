@@ -177,6 +177,13 @@ public partial class CameraGrid
     [DependencyProperty(DefaultValue = 0.3)]
     private double boundingBoxSmoothing;
 
+    // An app that uses this control from the package may never touch Translations, and
+    // Atc.Wpf finds the texts only in assemblies already loaded: load them before the XAML.
+    static CameraGrid()
+    {
+        _ = Translations.ResourceManager;
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraGrid"/> class.
     /// </summary>

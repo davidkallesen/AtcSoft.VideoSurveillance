@@ -450,6 +450,13 @@ public partial class CameraTile : IDisposable
     /// </summary>
     public event EventHandler<RecordingStateChangedEventArgs>? RecordingStateChangedEvent;
 
+    // An app that uses this control from the package may never touch Translations, and
+    // Atc.Wpf finds the texts only in assemblies already loaded: load them before the XAML.
+    static CameraTile()
+    {
+        _ = Translations.ResourceManager;
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraTile"/> class.
     /// </summary>
