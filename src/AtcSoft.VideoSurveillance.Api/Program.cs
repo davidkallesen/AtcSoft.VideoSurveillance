@@ -289,6 +289,15 @@ try
 
     var app = builder.Build();
 
+    // HTTPS when the server was given an HTTPS endpoint, outside development
+    // only: under Aspire the clients also reach the plain "public" endpoint,
+    // and an HTTP client drops the Authorization header on a redirect.
+    if (HttpsEndpoints.IsConfigured(app.Configuration) && !app.Environment.IsDevelopment())
+    {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+    }
+
     app.UseCors();
 
     if (app.Environment.IsDevelopment())
