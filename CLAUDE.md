@@ -5,6 +5,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 
 ## Solution Structure
 - `AtcSoft.VideoSurveillance.Core` - Shared library: models, enums, events, service interfaces, helpers (net10.0, no WPF)
+- `AtcSoft.VideoSurveillance.Resources` - The texts of every client: `Translations.resx` in US English (neutral), `en-GB`, `da-DK`, `de-DE` (net10.0, no WPF, published)
 - `AtcSoft.VideoEngine` - Cross-platform video engine (net10.0): demux, decode, record, capture via in-process FFmpeg
 - `AtcSoft.VideoEngine.DirectX` - D3D11VA GPU acceleration, Video Processor, swap chain (net10.0-windows)
 - `AtcSoft.VideoEngine.Windows` - Windows-only parts shared by the standalone app and the server, not published: USB camera enumeration (Media Foundation) + hot-plug watcher (WMI), and the recording thumbnail generator (GDI+) (net10.0-windows)
@@ -21,7 +22,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App)
 
 ## NuGet Packages
-Five projects are published to nuget.org so external WPF apps can embed live camera tiles:
+Six projects are published to nuget.org so external WPF apps can embed live camera tiles:
 
 | Package | Role |
 |---|---|
@@ -30,6 +31,7 @@ Five projects are published to nuget.org so external WPF apps can embed live cam
 | `AtcSoft.VideoPlayer.Wpf` | `VideoHost` control |
 | `AtcSoft.VideoEngine.DirectX` | D3D11VA rendering |
 | `AtcSoft.VideoEngine` | FFmpeg engine, including `VideoPlayerFactory` |
+| `AtcSoft.VideoSurveillance.Resources` | The texts in four languages, used by `Wpf.Core` |
 
 These are exactly the projects with `<IsPackable>true</IsPackable>`; every other project is `false`. They **must ship together at the same version**: packing turns each `ProjectReference` into a NuGet dependency pinned to that version, so publishing a package without its dependencies leaves it uninstallable. The release workflow packs the whole solution for that reason, then asserts every package actually appears on nuget.org, since `--skip-duplicate` can mask rejected pushes.
 
@@ -73,6 +75,14 @@ The REST API + SignalR server enables headless video surveillance:
 ### Web client rules
 - The web client does not reference Core. Where it needs the same rule (recording path example, default settings, colour names, video qualities) it has its own copy under `Logic/`, and a test in `AtcSoft.VideoSurveillance.Blazor.App.Tests` (which does reference Core) keeps the copy equal to the original.
 - Keep logic out of the `.razor` files: counts, filters, formatting and styles are plain classes with tests.
+
+### Texts and languages
+- No literal visible text in a client: XAML uses `{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=…}`, C# and Razor `Translations.X` (with `string.Format(CultureInfo.CurrentCulture, …)` for parameters). `LiteralTextTests` finds a literal left in the API clients' views; an exception (a product name, a protocol, an example value) goes into `literal-text-allowed.txt` with the reason. Literals inside Razor `@( )` expressions and `@code` are not seen by it: review them.
+- A key's last digit is its number of parameters (`LayoutRenamed2` takes `{0}` and `{1}`); a key without parameters ends in no digit (`RotationRotate90Degrees`, not `RotationRotate90`). Two keys never differ only in case: the build keeps one and drops the other. Reuse an existing text before adding a key.
+- A new key gets its da-DK and de-DE texts in the same change, and an en-GB text only when British English differs (colour, maximised, start-up). The resource tests fail otherwise.
+- Logs, developer exceptions, the server's ProblemDetails and the wire values stay English.
+- The language belongs to the client: CameraWall in `GeneralSettings.Language`, the WPF client in `ClientPreferences` (applied at startup), the web client in the browser (`LanguageChoice`, a change reloads the page). The server's `language` setting is deprecated.
+- Atc.Wpf finds the texts only in loaded assemblies: each WPF app touches `Translations.ResourceManager` first thing in `OnStartup`.
 
 ## Hosted Background Services (Atc.Hosting)
 Long-running periodic work uses `Atc.Hosting` base classes instead of hand-rolled `System.Threading.Timer` loops. The base class supplies the loop, sequential (no-overlap) ticking, exception logging via `OnExceptionAsync`, and optional health tracking.

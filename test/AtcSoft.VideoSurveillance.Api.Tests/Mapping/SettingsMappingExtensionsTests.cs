@@ -46,7 +46,9 @@ public class SettingsMappingExtensionsTests
         // Assert
         api.ThemeBase.Should().Be(AppSettingsThemeBase.Dark);
         api.ThemeAccent.Should().Be("Blue");
+#pragma warning disable CS0618 // the server still maps the deprecated language
         api.Language.Should().Be("1033");
+#pragma warning restore CS0618
         api.ConnectOnStartup.Should().BeTrue();
         api.ShowOverlayTitle.Should().BeTrue();
         api.SnapshotPath.Should().Be(@"C:\snapshots");

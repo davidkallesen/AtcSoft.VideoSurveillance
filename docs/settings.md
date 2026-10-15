@@ -31,7 +31,7 @@ UI and startup behavior. **WPF only** (not exposed via API settings endpoint).
 |---------|------|---------|-------------|
 | `ThemeBase` | string | `"Dark"` | Application theme: `"Dark"` or `"Light"` |
 | `ThemeAccent` | string | `"Blue"` | Theme accent color name |
-| `Language` | string | `"1033"` | LCID language code (1033 = en-US) |
+| `Language` | string | `"1033"` | LCID language code: 1033 en-US, 2057 en-GB, 1030 da-DK, 1031 de-DE. Each client keeps its own: the CameraWall app here, the VideoSurveillance desktop client in its `client-prefs.json`, the web client in the browser. The server's `language` setting is deprecated and no client uses it |
 | `ConnectCamerasOnStartup` | bool | `true` | Auto-connect all cameras on application start |
 | `StartMaximized` | bool | `false` | Launch application in maximized window state |
 | `StartRibbonCollapsed` | bool | `false` | Start with the Ribbon UI collapsed |

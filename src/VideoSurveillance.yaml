@@ -1383,6 +1383,8 @@ components:
           type: string
         language:
           type: string
+          deprecated: true
+          description: Not used by the clients any more; each client keeps its own language. Kept so an older client is not refused.
         connectOnStartup:
           type: boolean
         startMaximized:
@@ -1593,6 +1595,8 @@ components:
           type: string
         language:
           type: string
+          deprecated: true
+          description: Not used by the clients any more; each client keeps its own language. Kept so an older client is not refused.
         connectOnStartup:
           type: boolean
         startMaximized:

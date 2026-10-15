@@ -115,11 +115,13 @@ internal static class SettingsMappingExtensions
             general.ThemeAccent = api.ThemeAccent;
         }
 
+        // The language is deprecated in the spec but still stored for older clients.
+#pragma warning disable CS0618
         if (!string.IsNullOrEmpty(api.Language))
         {
             general.Language = api.Language;
         }
-
+#pragma warning restore CS0618
         if (api.ConnectOnStartup is { } connectOnStartup)
         {
             general.ConnectCamerasOnStartup = connectOnStartup;

@@ -29,7 +29,9 @@ public class ApiApplicationSettingsServiceTests
         var api = ApiApplicationSettingsService.BuildApiSettings(settings);
 
         // Absent = unchanged on the server; the language is this client's own.
+#pragma warning disable CS0618 // the WPF client leaves the deprecated language out
         api.Language.Should().BeNull();
+#pragma warning restore CS0618
         settings.General.Language.Should().Be("1030");
     }
 

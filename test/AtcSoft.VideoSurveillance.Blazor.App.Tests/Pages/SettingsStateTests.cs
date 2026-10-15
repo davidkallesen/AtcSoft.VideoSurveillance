@@ -56,7 +56,9 @@ public sealed class SettingsStateTests
         sut.LoadFrom(loaded);
 
         // The language is each client's own, not the server's.
+#pragma warning disable CS0618 // the web client leaves the deprecated language out
         sut.ToApiModel().Should().BeEquivalentTo(loaded, options => options.Excluding(settings => settings.Language));
+#pragma warning restore CS0618
     }
 
     [Fact]
@@ -66,7 +68,9 @@ public sealed class SettingsStateTests
         sut.LoadFrom(CreateSettings());
 
         // Absent = unchanged; the web client's language is the browser's.
+#pragma warning disable CS0618 // the web client leaves the deprecated language out
         sut.ToApiModel().Language.Should().BeNull();
+#pragma warning restore CS0618
     }
 
     [Fact]
