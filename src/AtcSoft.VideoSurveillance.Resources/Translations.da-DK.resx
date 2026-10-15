@@ -2433,4 +2433,7 @@ Miniature:
   <data name="PagerInfoFormat" xml:space="preserve">
     <value>{first_item}-{last_item} af {all_items}</value>
   </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Bekræft</value>
+  </data>
 </root>

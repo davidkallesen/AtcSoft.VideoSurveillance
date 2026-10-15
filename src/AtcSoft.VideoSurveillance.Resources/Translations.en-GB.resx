@@ -2430,4 +2430,7 @@
   <data name="PagerInfoFormat" xml:space="preserve">
     <value>{first_item}-{last_item} of {all_items}</value>
   </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
 </root>

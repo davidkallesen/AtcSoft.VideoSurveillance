@@ -4,7 +4,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Camera" : "Add Camera")</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? Translations.EditCameraTitle : Translations.AddCamera)</MudText>
 
 @if (isLoading)
 {

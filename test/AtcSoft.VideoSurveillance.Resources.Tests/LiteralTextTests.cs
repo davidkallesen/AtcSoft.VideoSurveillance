@@ -60,6 +60,14 @@ public sealed partial class LiteralTextTests
         found.Should().BeEmpty("a visible text is a key in AtcSoft.VideoSurveillance.Resources");
     }
 
+    [Fact]
+    public void A_Page_Has_No_Literal_Text_In_An_Expression()
+        => RepositoryFiles.Find("*.razor", "src/AtcSoft.VideoSurveillance.Blazor.App")
+            .SelectMany(file => ExpressionLiteral().Matches(File.ReadAllText(file))
+                .Select(match => $"{RepositoryFiles.Relative(file)}|{match.Groups["text"].Value}"))
+            .Where(entry => !Allowed.Contains(entry))
+            .Should().BeEmpty("a text inside @( ) is a key in AtcSoft.VideoSurveillance.Resources too");
+
     // A C# statement in the markup (var x = ...;) or the rest of a call's arguments over several lines.
     private static bool IsCode(string text)
         => text.EndsWith(';') || text.StartsWith(',');
@@ -89,6 +97,10 @@ public sealed partial class LiteralTextTests
 
     [GeneratedRegex(@"\p{L}{2,}", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Words();
+
+    // A capitalised word in quotes inside @( ... ): "Edit Camera" in @(IsEdit ? "Edit Camera" : ...).
+    [GeneratedRegex(@"@\((?:[^()""]|""[^""]*""|\([^()]*\))*?""(?<text>[A-Z][a-z]+(?: [A-Za-z]+)*)""", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex ExpressionLiteral();
 
     // A visible-text parameter with a literal value.
     [GeneratedRegex(@"\b(?:Label|Text|Title|Placeholder|HelperText|AriaLabel|Tooltip|ButtonText|ConfirmText|CancelText|Message|Caption|Help|RequiredError|ErrorText|DataLabel|aria-label|alt)=""(?<text>(?!@)[^""]*\p{L}[^""]*)""", RegexOptions.None, matchTimeoutMilliseconds: 1000)]

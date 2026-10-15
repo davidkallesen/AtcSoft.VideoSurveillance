@@ -24,12 +24,12 @@
     public string ContentText { get; set; } = Translations.AreYouSure;
 
     [Parameter]
-    public string ButtonText { get; set; } = "Confirm";
+    public string ButtonText { get; set; } = Translations.Confirm;
 
     [Parameter]
     public Color Color { get; set; } = Color.Primary;
 
-    private string Title => MudDialog.Title ?? "Confirm";
+    private string Title => MudDialog.Title ?? Translations.Confirm;
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(true));
     private void Cancel() => MudDialog.Cancel();
