@@ -10,6 +10,19 @@ public sealed class ApiHostEventsTests(ApiHostFixture host)
     private static readonly TimeSpan Wait = TimeSpan.FromSeconds(10);
 
     [Fact]
+    public async Task A_Stream_Answers_At_Once_Before_Any_Event()
+    {
+        using var client = host.CreateClient();
+        var opened = Stopwatch.StartNew();
+
+        // Nothing happens for a minute, yet the headers come straight away.
+        using var response = await OpenAsync(client, $"/events?cameraId={Guid.NewGuid()}&heartbeatSeconds=60");
+
+        response.Content.Headers.ContentType?.MediaType.Should().Be("text/event-stream");
+        opened.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task A_Quiet_Stream_Sends_A_Ping()
     {
         using var client = host.CreateClient();
@@ -17,7 +30,7 @@ public sealed class ApiHostEventsTests(ApiHostFixture host)
 
         response.Content.Headers.ContentType?.MediaType.Should().Be("text/event-stream");
 
-        // One on opening, one after a quiet second.
+        // One after each quiet second.
         var events = await ReadEventsAsync(response, count: 2, skipPings: false);
 
         events.Select(e => e.Name).Should().Equal("ping", "ping");

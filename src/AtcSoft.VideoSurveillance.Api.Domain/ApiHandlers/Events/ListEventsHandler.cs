@@ -53,11 +53,6 @@ public sealed class ListEventsHandler(SurveillanceEventFeed feed) : IListEventsH
     {
         using var owned = subscription;
 
-        // Nothing goes to the client - not even the response headers - until the first
-        // event is written. A ping right away answers the request, so a client that waits
-        // for the headers does not wait for the first camera event.
-        yield return new SseItem<SurveillanceEvent>(default!, Heartbeat);
-
         foreach (var replayed in subscription.Replayed.Where(e => IsFor(e, cameraId)))
         {
             yield return Event(replayed);
