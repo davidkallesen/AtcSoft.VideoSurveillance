@@ -82,7 +82,7 @@ else
         </MudTooltip>
         <MudSpacer />
         <MudChip T="string" Size="Size.Small" Color="@(Hub.IsConnected ? Color.Success : Color.Warning)">
-            @(Hub.IsConnected ? Translations.ConnectedToTheServer : string.Format(CultureInfo.CurrentCulture, Translations.ServerState1, Hub.ConnectionState))
+            @(Hub.IsConnected ? Translations.ConnectedToTheServer : string.Format(CultureInfo.CurrentCulture, Translations.ServerState1, ConnectionStateText.ForHub(Hub.ConnectionState)))
         </MudChip>
     </MudStack>
 
