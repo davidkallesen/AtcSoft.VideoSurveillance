@@ -36,7 +36,7 @@ public static class DropDownItemsFactory
     public static IDictionary<string, string> RecordingFormatItems
         => new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["mp4"] = Translations.RecordingFormatMp4,
+            ["mp4"] = Translations.RecordingFormatMp4Video,
             ["mkv"] = Translations.RecordingFormatMkv,
         };
 
@@ -79,11 +79,11 @@ public static class DropDownItemsFactory
         {
             [nameof(ConnectionTypeIconPlacement.SameRow)] = string.Format(
                 CultureInfo.CurrentCulture,
-                Translations.ConnectionTypeIconPositionSameRowFormat,
+                Translations.ConnectionTypeIconPositionSameRowFormat1,
                 cornerNames[sameRow.ToString()]),
             [nameof(ConnectionTypeIconPlacement.SameColumn)] = string.Format(
                 CultureInfo.CurrentCulture,
-                Translations.ConnectionTypeIconPositionSameColumnFormat,
+                Translations.ConnectionTypeIconPositionSameColumnFormat1,
                 cornerNames[sameColumn.ToString()]),
         };
     }
@@ -97,9 +97,9 @@ public static class DropDownItemsFactory
         => new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["None"] = Translations.RotationNone,
-            ["Rotate90"] = Translations.RotationRotate90,
-            ["Rotate180"] = Translations.RotationRotate180,
-            ["Rotate270"] = Translations.RotationRotate270,
+            ["Rotate90"] = Translations.RotationRotate90Degrees,
+            ["Rotate180"] = Translations.RotationRotate180Degrees,
+            ["Rotate270"] = Translations.RotationRotate270Degrees,
         };
 
     /// <summary>
@@ -246,8 +246,8 @@ public static class DropDownItemsFactory
     public static IDictionary<string, string> ThumbnailTileCountItems
         => new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["1"] = Translations.ThumbnailTile1,
-            ["4"] = Translations.ThumbnailTile4,
+            ["1"] = Translations.ThumbnailTileOne,
+            ["4"] = Translations.ThumbnailTileFour,
         };
 
     /// <summary>

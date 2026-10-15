@@ -37,7 +37,7 @@ public static class RecordingLayoutExamples
         string? format)
         => string.Format(
             CultureInfo.CurrentCulture,
-            Translations.RecordingLayoutOnOffHint,
+            Translations.RecordingLayoutOnOffHint2,
             Video(useDailySubfolders: true, separateThumbnailFolder, format),
             Video(useDailySubfolders: false, separateThumbnailFolder, format));
 
@@ -50,7 +50,7 @@ public static class RecordingLayoutExamples
         string? format)
         => string.Format(
             CultureInfo.CurrentCulture,
-            Translations.RecordingLayoutOnOffHint,
+            Translations.RecordingLayoutOnOffHint2,
             Thumbnail(useDailySubfolders, separateThumbnailFolder: true, format),
             Thumbnail(useDailySubfolders, separateThumbnailFolder: false, format));
 
@@ -67,7 +67,7 @@ public static class RecordingLayoutExamples
 
         return string.Format(
             CultureInfo.CurrentCulture,
-            Translations.RecordingLayoutExampleSummary,
+            Translations.RecordingLayoutExampleSummary2,
             video,
             thumbnail);
     }

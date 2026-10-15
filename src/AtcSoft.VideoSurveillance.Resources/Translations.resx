@@ -1134,13 +1134,13 @@
   <data name="RotationNone" xml:space="preserve">
     <value>0° (None)</value>
   </data>
-  <data name="RotationRotate90" xml:space="preserve">
+  <data name="RotationRotate90Degrees" xml:space="preserve">
     <value>90°</value>
   </data>
-  <data name="RotationRotate180" xml:space="preserve">
+  <data name="RotationRotate180Degrees" xml:space="preserve">
     <value>180°</value>
   </data>
-  <data name="RotationRotate270" xml:space="preserve">
+  <data name="RotationRotate270Degrees" xml:space="preserve">
     <value>270°</value>
   </data>
   <data name="MotionSensitivityLow" xml:space="preserve">
@@ -1233,13 +1233,13 @@
   <data name="Duration24Hours" xml:space="preserve">
     <value>24 hours</value>
   </data>
-  <data name="ThumbnailTile1" xml:space="preserve">
+  <data name="ThumbnailTileOne" xml:space="preserve">
     <value>1 tile (320x240)</value>
   </data>
-  <data name="ThumbnailTile4" xml:space="preserve">
+  <data name="ThumbnailTileFour" xml:space="preserve">
     <value>2x2 grid (640x480)</value>
   </data>
-  <data name="RecordingFormatMp4" xml:space="preserve">
+  <data name="RecordingFormatMp4Video" xml:space="preserve">
     <value>MP4 (H.264)</value>
   </data>
   <data name="RecordingFormatMkv" xml:space="preserve">
@@ -1311,10 +1311,10 @@
   <data name="ConnectionTypeIconPosition" xml:space="preserve">
     <value>Connection-type icon position</value>
   </data>
-  <data name="ConnectionTypeIconPositionSameRowFormat" xml:space="preserve">
+  <data name="ConnectionTypeIconPositionSameRowFormat1" xml:space="preserve">
     <value>{0} (same row as info box)</value>
   </data>
-  <data name="ConnectionTypeIconPositionSameColumnFormat" xml:space="preserve">
+  <data name="ConnectionTypeIconPositionSameColumnFormat1" xml:space="preserve">
     <value>{0} (same column as info box)</value>
   </data>
   <data name="DetectConnectionType" xml:space="preserve">
@@ -1326,7 +1326,7 @@
   <data name="ConnectionTypeDetectFailed" xml:space="preserve">
     <value>Could not detect the connection type</value>
   </data>
-  <data name="ConnectionTypeDetectedFormat" xml:space="preserve">
+  <data name="ConnectionTypeDetectedFormat1" xml:space="preserve">
     <value>Detected: {0}</value>
   </data>
   <data name="UseDailySubfolders" xml:space="preserve">
@@ -1335,10 +1335,10 @@
   <data name="SeparateThumbnailFolder" xml:space="preserve">
     <value>Keep thumbnails in a separate folder</value>
   </data>
-  <data name="RecordingLayoutOnOffHint" xml:space="preserve">
+  <data name="RecordingLayoutOnOffHint2" xml:space="preserve">
     <value>On:  {0}&#xD;&#xA;Off: {1}</value>
   </data>
-  <data name="RecordingLayoutExampleSummary" xml:space="preserve">
+  <data name="RecordingLayoutExampleSummary2" xml:space="preserve">
     <value>Video:&#xD;&#xA;  {0}&#xD;&#xA;Thumbnail:&#xD;&#xA;  {1}&#xD;&#xA;Existing recordings are moved when you save.</value>
   </data>
   <data name="RecordingLayoutMoving" xml:space="preserve">

@@ -295,7 +295,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
                 ? (isExplicit ? Translations.ConnectionTypeDetectFailed : string.Empty)
                 : string.Format(
                     CultureInfo.CurrentCulture,
-                    Translations.ConnectionTypeDetectedFormat,
+                    Translations.ConnectionTypeDetectedFormat1,
                     ConnectionTypeIconHelper.GetDisplayName(detected));
         }
         finally

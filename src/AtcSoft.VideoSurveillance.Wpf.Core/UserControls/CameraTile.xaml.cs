@@ -2224,9 +2224,9 @@ public partial class CameraTile : IDisposable
         var current = Camera?.Display.Rotation ?? CameraRotation.None;
         var menu = new MenuItem { Header = Translations.Rotate };
         AddRotateItem(menu, Translations.RotationNone, CameraRotation.None, current);
-        AddRotateItem(menu, Translations.RotationRotate90, CameraRotation.Rotate90, current);
-        AddRotateItem(menu, Translations.RotationRotate180, CameraRotation.Rotate180, current);
-        AddRotateItem(menu, Translations.RotationRotate270, CameraRotation.Rotate270, current);
+        AddRotateItem(menu, Translations.RotationRotate90Degrees, CameraRotation.Rotate90, current);
+        AddRotateItem(menu, Translations.RotationRotate180Degrees, CameraRotation.Rotate180, current);
+        AddRotateItem(menu, Translations.RotationRotate270Degrees, CameraRotation.Rotate270, current);
         return menu;
     }
 
