@@ -19,6 +19,14 @@ global using AtcSoft.VideoSurveillance.Services;
 
 global using Microsoft.AspNetCore.Http;
 
+global using VideoSurveillance.Generated.ApiKeys.Handlers;
+global using VideoSurveillance.Generated.ApiKeys.Models;
+global using VideoSurveillance.Generated.ApiKeys.Parameters;
+global using VideoSurveillance.Generated.ApiKeys.Results;
+global using VideoSurveillance.Generated.Audit.Handlers;
+global using VideoSurveillance.Generated.Audit.Models;
+global using VideoSurveillance.Generated.Audit.Parameters;
+global using VideoSurveillance.Generated.Audit.Results;
 global using VideoSurveillance.Generated.Auth.Handlers;
 global using VideoSurveillance.Generated.Auth.Models;
 global using VideoSurveillance.Generated.Auth.Parameters;
@@ -47,6 +55,10 @@ global using VideoSurveillance.Generated.Settings.Handlers;
 global using VideoSurveillance.Generated.Settings.Models;
 global using VideoSurveillance.Generated.Settings.Parameters;
 global using VideoSurveillance.Generated.Settings.Results;
+global using VideoSurveillance.Generated.Users.Handlers;
+global using VideoSurveillance.Generated.Users.Models;
+global using VideoSurveillance.Generated.Users.Parameters;
+global using VideoSurveillance.Generated.Users.Results;
 global using VideoSurveillance.Generated.Webhooks.Handlers;
 global using VideoSurveillance.Generated.Webhooks.Models;
 global using VideoSurveillance.Generated.Webhooks.Parameters;

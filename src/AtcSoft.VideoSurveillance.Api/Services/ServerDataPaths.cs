@@ -35,6 +35,7 @@ public sealed class ServerDataPaths
         AccountsPath = Path.Combine(folder, "accounts.json");
         SetupCodePath = Path.Combine(folder, "setup-code.txt");
         SigningKeyPath = Path.Combine(folder, "signing.key");
+        AuditLogPath = Path.Combine(folder, "audit.log");
     }
 
     /// <summary>
@@ -74,6 +75,11 @@ public sealed class ServerDataPaths
     /// Gets the path of the key the server signs its access tokens with.
     /// </summary>
     public string SigningKeyPath { get; }
+
+    /// <summary>
+    /// Gets the path of the audit log: what was changed, by whom.
+    /// </summary>
+    public string AuditLogPath { get; }
 
     /// <summary>
     /// Moves the recording, snapshot and log folders into the data folder

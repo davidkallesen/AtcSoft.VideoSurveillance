@@ -206,6 +206,375 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /auth/me/password:
+    put:
+      summary: Change the signed-in user's own password
+      description: Needs the current password. The user's sessions end, so other devices sign in again.
+      operationId: updateOwnPassword
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        '204':
+          description: Changed
+        '400':
+          description: The current password is not right
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /users:
+    get:
+      summary: List the users
+      operationId: listUsers
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      responses:
+        '200':
+          description: The users, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserAccount"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    post:
+      summary: Add a user
+      operationId: createUser
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        '201':
+          description: The user is added
+          headers:
+            Location:
+              description: Where the new one is.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAccount"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: A user has that name already
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /users/{userId}:
+    put:
+      summary: Change a user's role or password
+      description: What the request leaves out stays. A new password ends the user's sessions. The last admin keeps the role.
+      operationId: updateUser
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        '200':
+          description: The user is changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAccount"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: User not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: The server always keeps one admin
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      summary: Remove a user
+      description: Their sessions end. The last admin cannot be removed.
+      operationId: deleteUser
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removed
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: User not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: The server always keeps one admin
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /api-keys:
+    get:
+      summary: List the API keys
+      description: Their names and roles; a key itself is shown only when it is made.
+      operationId: listApiKeys
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      responses:
+        '200':
+          description: The API keys, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKey"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    post:
+      summary: Make an API key
+      description: For an integration (Home Assistant, a script). The key is in the answer once; the server keeps only its hash.
+      operationId: createApiKey
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApiKeyRequest"
+      responses:
+        '201':
+          description: The key is made
+          headers:
+            Location:
+              description: Where the new one is.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewApiKey"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /api-keys/{keyId}:
+    delete:
+      summary: Remove an API key
+      operationId: deleteApiKey
+      x-retry-enabled: false
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removed
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: API key not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /audit:
+    get:
+      summary: What was changed, by whom
+      description: The latest changes first. Sign-ins, refused ones too, are in it; watching and renewing a stream are not.
+      operationId: listAuditEntries
+      security:
+        - bearer: []
+      x-authorize-roles:
+        - admin
+      tags:
+        - users
+      parameters:
+        - name: take
+          in: query
+          required: false
+          description: How many (100 when left out).
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: The latest changes first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+        '401':
+          description: Not signed in
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '403':
+          description: Only an admin may
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /cameras:
     get:
       summary: List all cameras
@@ -1106,6 +1475,11 @@ x-retry-circuit-breaker: true
 x-retry-cb-sampling-duration-seconds: 240
 x-retry-handle-429: true
 
+x-authorize-roles:
+  - viewer
+  - operator
+  - admin
+
 components:
   securitySchemes:
     bearer:
@@ -1205,6 +1579,153 @@ components:
           type: string
         role:
           $ref: "#/components/schemas/UserRole"
+
+    ChangePasswordRequest:
+      title: ChangePasswordRequest
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 256
+
+    UserAccount:
+      title: UserAccount
+      type: object
+      required:
+        - id
+        - userName
+        - role
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      title: CreateUserRequest
+      type: object
+      required:
+        - userName
+        - password
+        - role
+      properties:
+        userName:
+          type: string
+          minLength: 1
+          maxLength: 64
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    UpdateUserRequest:
+      title: UpdateUserRequest
+      type: object
+      description: What is left out stays.
+      properties:
+        role:
+          $ref: "#/components/schemas/UserRole"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+
+    ApiKey:
+      title: ApiKey
+      type: object
+      required:
+        - id
+        - name
+        - role
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+          format: date-time
+
+    NewApiKey:
+      title: NewApiKey
+      type: object
+      description: A key that was just made; the key itself is shown this once.
+      required:
+        - id
+        - name
+        - role
+        - createdAt
+        - key
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+          format: date-time
+        key:
+          type: string
+          description: Sent as the X-API-Key header.
+
+    CreateApiKeyRequest:
+      title: CreateApiKeyRequest
+      type: object
+      required:
+        - name
+        - role
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    AuditEntry:
+      title: AuditEntry
+      type: object
+      required:
+        - timestamp
+        - userName
+        - action
+        - target
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        userName:
+          type: string
+          description: Who; for a sign-in the name that was given, for an API key its name.
+        action:
+          type: string
+          description: The operation (createCamera, updateSettings, createSession, createSessionRefused, ...).
+        target:
+          type: string
+          description: The address it was done on (/cameras/{id}).
 
     CurrentUser:
       title: CurrentUser

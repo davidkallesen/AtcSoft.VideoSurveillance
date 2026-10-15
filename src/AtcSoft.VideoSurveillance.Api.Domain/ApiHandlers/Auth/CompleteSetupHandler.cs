@@ -4,7 +4,9 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Auth;
 /// Handler business logic for the CompleteSetup operation: the first admin,
 /// made with the setup code from the server's data folder.
 /// </summary>
-public sealed class CompleteSetupHandler(IAccountService accounts) : ICompleteSetupHandler
+public sealed class CompleteSetupHandler(
+    IAccountService accounts,
+    IAuditLog audit) : ICompleteSetupHandler
 {
     public Task<CompleteSetupResult> ExecuteAsync(
         CompleteSetupParameters parameters,
@@ -14,6 +16,13 @@ public sealed class CompleteSetupHandler(IAccountService accounts) : ICompleteSe
 
         var request = parameters.Request;
         var (outcome, session) = accounts.CompleteSetup(request.SetupCode, request.UserName, request.Password);
+        if (outcome != SetupOutcome.AlreadySetUp)
+        {
+            audit.Record(
+                request.UserName.Trim(),
+                outcome == SetupOutcome.Done ? "completeSetup" : "completeSetupRefused",
+                "/auth/setup");
+        }
 
         return Task.FromResult(outcome switch
         {

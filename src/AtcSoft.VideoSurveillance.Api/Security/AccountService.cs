@@ -16,6 +16,9 @@ public sealed partial class AccountService : IAccountService
     // Letters and digits that cannot be taken for one another.
     private const string SetupCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+    // What an API key starts with, so one is told from other text (a log, a config file).
+    private const string ApiKeyPrefix = "vsk_";
+
     private static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(30);
 
     private static readonly JsonSerializerOptions FileOptions = new()
@@ -113,7 +116,7 @@ public sealed partial class AccountService : IAccountService
     {
         lock (sync)
         {
-            var user = file.Users.Find(u => string.Equals(u.UserName, userName.Trim(), StringComparison.OrdinalIgnoreCase));
+            var user = FindUser(userName);
             if (user is null)
             {
                 // As long as for a known user, so the time does not tell which.
@@ -169,6 +172,185 @@ public sealed partial class AccountService : IAccountService
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<AccountUser> ListUsers()
+    {
+        lock (sync)
+        {
+            return [.. file.Users.Select(ToUser)];
+        }
+    }
+
+    /// <inheritdoc />
+    public (UserChangeOutcome Outcome, AccountUser? User) CreateUser(
+        string userName,
+        string password,
+        AccountRole role)
+    {
+        lock (sync)
+        {
+            var name = userName.Trim();
+            if (FindUser(name) is not null)
+            {
+                return (UserChangeOutcome.NameTaken, null);
+            }
+
+            var user = new StoredUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = name,
+                Role = role,
+                CreatedAt = time.GetUtcNow(),
+            };
+            user.PasswordHash = hasher.HashPassword(user, password);
+            file.Users.Add(user);
+            Save();
+            return (UserChangeOutcome.Done, ToUser(user));
+        }
+    }
+
+    /// <inheritdoc />
+    public (UserChangeOutcome Outcome, AccountUser? User) UpdateUser(
+        Guid userId,
+        AccountRole? role,
+        string? password)
+    {
+        lock (sync)
+        {
+            var user = file.Users.Find(u => u.Id == userId);
+            if (user is null)
+            {
+                return (UserChangeOutcome.NotFound, null);
+            }
+
+            if (role is { } newRole && newRole != AccountRole.Admin && IsLastAdmin(user))
+            {
+                return (UserChangeOutcome.LastAdmin, null);
+            }
+
+            if (role is { } changed)
+            {
+                user.Role = changed;
+            }
+
+            if (password is not null)
+            {
+                user.PasswordHash = hasher.HashPassword(user, password);
+                file.Sessions.RemoveAll(s => s.UserId == user.Id);
+            }
+
+            Save();
+            return (UserChangeOutcome.Done, ToUser(user));
+        }
+    }
+
+    /// <inheritdoc />
+    public UserChangeOutcome DeleteUser(Guid userId)
+    {
+        lock (sync)
+        {
+            var user = file.Users.Find(u => u.Id == userId);
+            if (user is null)
+            {
+                return UserChangeOutcome.NotFound;
+            }
+
+            if (IsLastAdmin(user))
+            {
+                return UserChangeOutcome.LastAdmin;
+            }
+
+            file.Users.Remove(user);
+            file.Sessions.RemoveAll(s => s.UserId == user.Id);
+            Save();
+            return UserChangeOutcome.Done;
+        }
+    }
+
+    /// <inheritdoc />
+    public bool ChangeOwnPassword(
+        string userName,
+        string currentPassword,
+        string newPassword)
+    {
+        lock (sync)
+        {
+            var user = FindUser(userName);
+            if (user is null ||
+                hasher.VerifyHashedPassword(user, user.PasswordHash, currentPassword) == PasswordVerificationResult.Failed)
+            {
+                return false;
+            }
+
+            user.PasswordHash = hasher.HashPassword(user, newPassword);
+            file.Sessions.RemoveAll(s => s.UserId == user.Id);
+            Save();
+            return true;
+        }
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<AccountApiKey> ListApiKeys()
+    {
+        lock (sync)
+        {
+            return [.. file.ApiKeys.Select(ToApiKey)];
+        }
+    }
+
+    /// <inheritdoc />
+    public (AccountApiKey Key, string Secret) CreateApiKey(
+        string name,
+        AccountRole role)
+    {
+        lock (sync)
+        {
+            var secret = ApiKeyPrefix + Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(32));
+            var key = new StoredApiKey
+            {
+                Id = Guid.NewGuid(),
+                Name = name.Trim(),
+                Role = role,
+                KeyHash = HashToken(secret),
+                CreatedAt = time.GetUtcNow(),
+            };
+            file.ApiKeys.Add(key);
+            Save();
+            return (ToApiKey(key), secret);
+        }
+    }
+
+    /// <inheritdoc />
+    public bool DeleteApiKey(Guid keyId)
+    {
+        lock (sync)
+        {
+            if (file.ApiKeys.RemoveAll(k => k.Id == keyId) == 0)
+            {
+                return false;
+            }
+
+            Save();
+            return true;
+        }
+    }
+
+    /// <inheritdoc />
+    public AccountApiKey? FindApiKey(string secret)
+    {
+        if (string.IsNullOrEmpty(secret) || !secret.StartsWith(ApiKeyPrefix, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var hash = HashToken(secret);
+        lock (sync)
+        {
+            var key = file.ApiKeys.Find(k => FixedTimeEquals(k.KeyHash, hash));
+            return key is null ? null : ToApiKey(key);
+        }
+    }
+
+    /// <inheritdoc />
     public void SignOut(string refreshToken)
     {
         lock (sync)
@@ -180,6 +362,12 @@ public sealed partial class AccountService : IAccountService
             }
         }
     }
+
+    private static AccountUser ToUser(StoredUser user)
+        => new(user.Id, user.UserName, user.Role, user.CreatedAt);
+
+    private static AccountApiKey ToApiKey(StoredApiKey key)
+        => new(key.Id, key.Name, key.Role, key.CreatedAt);
 
     private static string DummyHash { get; } = new PasswordHasher<StoredUser>().HashPassword(new StoredUser(), "no such user");
 
@@ -202,6 +390,14 @@ public sealed partial class AccountService : IAccountService
             // The server has a user now; a code left behind opens nothing.
         }
     }
+
+    // Called under the lock.
+    private StoredUser? FindUser(string userName)
+        => file.Users.Find(u => string.Equals(u.UserName, userName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    // Called under the lock.
+    private bool IsLastAdmin(StoredUser user)
+        => user.Role == AccountRole.Admin && file.Users.Count(u => u.Role == AccountRole.Admin) == 1;
 
     // Called under the lock.
     private AccountSession StartSession(StoredUser user)
@@ -265,6 +461,22 @@ public sealed partial class AccountService : IAccountService
         public List<StoredUser> Users { get; set; } = [];
 
         public List<StoredSession> Sessions { get; set; } = [];
+
+        public List<StoredApiKey> ApiKeys { get; set; } = [];
+    }
+
+    private sealed class StoredApiKey
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; } = string.Empty;
+
+        public AccountRole Role { get; set; }
+
+        // The SHA-256 hash of the key, never the key itself.
+        public string KeyHash { get; set; } = string.Empty;
+
+        public DateTimeOffset CreatedAt { get; set; }
     }
 
     private sealed class StoredUser

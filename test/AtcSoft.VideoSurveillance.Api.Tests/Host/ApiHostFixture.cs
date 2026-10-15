@@ -22,8 +22,15 @@ public sealed class ApiHostFixture : IDisposable
     /// </summary>
     public const string AdminPassword = "host-test-password";
 
+    /// <summary>
+    /// A request header the host tests set the caller's address with (for the rate limits).
+    /// </summary>
+    public const string TestAddressHeader = "X-Test-Remote-Address";
+
     private readonly Lazy<WebApplicationFactory<Program>> factory;
     private readonly SemaphoreSlim setup = new(1, 1);
+    private string? adminAccessToken;
+    private int signInAddress;
 
     public ApiHostFixture()
     {
@@ -39,7 +46,8 @@ public sealed class ApiHostFixture : IDisposable
         Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Url", Webhooks.Address);
         Environment.SetEnvironmentVariable("Webhooks__Endpoints__0__Secret", WebhookSecret);
 
-        factory = new Lazy<WebApplicationFactory<Program>>(() => new WebApplicationFactory<Program>());
+        factory = new Lazy<WebApplicationFactory<Program>>(() => new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.ConfigureServices(s => s.AddSingleton<IStartupFilter, TestAddressStartupFilter>())));
     }
 
     /// <summary>
@@ -117,6 +125,45 @@ public sealed class ApiHostFixture : IDisposable
     }
 
     /// <summary>
+    /// Signs in through the running server, from an address of its own each
+    /// time, so the sign-ins of the tests do not use up each other's limit.
+    /// </summary>
+    /// <returns>The status and the answer's body.</returns>
+    public async Task<(int Status, JsonElement Body)> SignInAsync(
+        string userName,
+        string password)
+    {
+        var address = "198.51.100." + ((Interlocked.Increment(ref signInAddress) % 250) + 1).ToString(CultureInfo.InvariantCulture);
+        using var client = CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/token")
+        {
+            Content = JsonContent.Create(new { userName, password }),
+        };
+        request.Headers.Add(TestAddressHeader, address);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        return ((int)response.StatusCode, body);
+    }
+
+    /// <summary>
+    /// Gets a client for the running server that is signed in as its first admin.
+    /// </summary>
+    public async Task<HttpClient> CreateAdminClientAsync()
+    {
+        await EnsureAdminAsync();
+        if (adminAccessToken is null)
+        {
+            var (status, session) = await SignInAsync(AdminName, AdminPassword);
+            status.Should().Be(StatusCodes.Status200OK, session.ToString());
+            adminAccessToken = session.GetProperty("accessToken").GetString();
+        }
+
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminAccessToken);
+        return client;
+    }
+
+    /// <summary>
     /// Gets a service of the running server.
     /// </summary>
     /// <typeparam name="T">The service.</typeparam>
@@ -166,5 +213,27 @@ public sealed class ApiHostFixture : IDisposable
         {
             // Same.
         }
+    }
+
+    // Ahead of the server's own middleware: a request that names an address
+    // comes from it, as a rate limit sees it.
+    private sealed class TestAddressStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(
+            Action<IApplicationBuilder> next)
+            => app =>
+            {
+                app.Use((context, nextMiddleware) =>
+                {
+                    if (context.Request.Headers.TryGetValue(TestAddressHeader, out var value) &&
+                        IPAddress.TryParse(value.ToString(), out var address))
+                    {
+                        context.Connection.RemoteIpAddress = address;
+                    }
+
+                    return nextMiddleware(context);
+                });
+                next(app);
+            };
     }
 }

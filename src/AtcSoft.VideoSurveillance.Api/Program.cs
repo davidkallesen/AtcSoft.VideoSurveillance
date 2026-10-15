@@ -236,6 +236,9 @@ try
         sp.GetRequiredService<TimeProvider>(),
         sp.GetRequiredService<ILogger<AccountService>>()));
     builder.Services.AddSingleton<IAccountService>(sp => sp.GetRequiredService<AccountService>());
+    builder.Services.AddSingleton<IAuditLog>(sp => new AuditLog(
+        sp.GetRequiredService<ServerDataPaths>().AuditLogPath,
+        sp.GetRequiredService<TimeProvider>()));
     builder.Services.AddHttpContextAccessor();
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -267,6 +270,9 @@ try
     app
         .MapGet("/", () => Results.Redirect("/scalar/v1"))
         .ExcludeFromDescription();
+
+    // Every change a caller makes is written into the audit log (audit.log).
+    app.UseMiddleware<AuditMiddleware>();
 
     // Map all generated REST endpoints, with a ProblemDetails for every error
     // that has no body of its own (an unknown address, a body that is no
