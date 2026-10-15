@@ -262,16 +262,10 @@ try
         sp.GetRequiredService<TimeProvider>()));
     builder.Services.AddHttpContextAccessor();
 
-    // The default scheme takes the API key when a request sends one, else the
-    // access token: so a role check (which names no scheme) and the media gate
-    // see either. See the feedback to the generator, Z5.
-    const string bearerOrApiKey = "BearerOrApiKey";
+    // The access token is the default scheme; the generated role policies name
+    // both of the spec's schemes, so an API key passes a role check as well.
     builder.Services
-        .AddAuthentication(bearerOrApiKey)
-        .AddPolicyScheme(bearerOrApiKey, bearerOrApiKey, options => options.ForwardDefaultSelector = context =>
-            context.Request.Headers.ContainsKey(ApiKeyAuthenticationHandler.HeaderName)
-                ? ApiKeyAuthenticationHandler.SchemeName
-                : JwtBearerDefaults.AuthenticationScheme)
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer()
         .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, _ => { });
     builder.Services

@@ -71,6 +71,30 @@ public sealed class ApiHostSecurityTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task An_Operators_Api_Key_Makes_A_Change_And_The_Audit_Log_Names_The_Key()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var admin = host.CreateClient();
+        var keyName = "Operator integration " + Guid.NewGuid().ToString("N")[..6];
+        var made = await admin.PostAsJsonAsync("/api-keys", new { name = keyName, role = "operator" }, cancellationToken);
+        var key = (await made.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("key").GetString()!;
+        using var withKey = host.CreateAnonymousClient();
+        withKey.DefaultRequestHeaders.Add("X-API-Key", key);
+
+        var created = await withKey.PostAsJsonAsync("/cameras", new { displayName = "By a key " + Guid.NewGuid().ToString("N")[..6], ipAddress = "192.0.2.4" }, cancellationToken);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+        (await withKey.PutAsJsonAsync("/settings", new { showOverlayTitle = false }, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var audit = await admin.GetFromJsonAsync<JsonElement>("/audit?take=200", cancellationToken);
+        audit.EnumerateArray().Should().Contain(x =>
+            x.GetProperty("userName").GetString() == keyName &&
+            x.GetProperty("action").GetString() == "createCamera");
+
+        (await admin.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
     public async Task A_Recording_Is_Served_With_A_Token_Or_The_Media_Token_And_Not_To_Anyone_Else()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
