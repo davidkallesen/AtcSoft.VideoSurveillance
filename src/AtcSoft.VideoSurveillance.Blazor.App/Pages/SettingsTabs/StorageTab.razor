@@ -61,20 +61,20 @@
 
 <MudText Typo="Typo.subtitle1" Class="mb-1">@Translations.DesktopAppsPlaybackOverlay</MudText>
 <SettingSwitch @bind-Value="State.PlaybackShowFilename" Label="@Translations.ShowTheFileName" />
-<MudSelect @bind-Value="State.PlaybackFilenameColor" Label="@Translations.FileNameColour" Disabled="!State.PlaybackShowFilename" Class="mt-2">
+<MudSelect @bind-Value="State.PlaybackFilenameColor" Label="@Translations.FileNameColour" Disabled="!State.PlaybackShowFilename" ToStringFunc="ColorChoices.Label" Class="mt-2">
     @foreach (var name in ColorOptions(State.PlaybackFilenameColor))
     {
         <MudSelectItem Value="@name">
-            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@ColorChoices.Label(name)
         </MudSelectItem>
     }
 </MudSelect>
 <SettingSwitch @bind-Value="State.PlaybackShowTimestamp" Label="@Translations.ShowTheTime" Class="mt-2" />
-<MudSelect @bind-Value="State.PlaybackTimestampColor" Label="@Translations.TimeColour" Disabled="!State.PlaybackShowTimestamp" Class="mt-2">
+<MudSelect @bind-Value="State.PlaybackTimestampColor" Label="@Translations.TimeColour" Disabled="!State.PlaybackShowTimestamp" ToStringFunc="ColorChoices.Label" Class="mt-2">
     @foreach (var name in ColorOptions(State.PlaybackTimestampColor))
     {
         <MudSelectItem Value="@name">
-            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@ColorChoices.Label(name)
         </MudSelectItem>
     }
 </MudSelect>

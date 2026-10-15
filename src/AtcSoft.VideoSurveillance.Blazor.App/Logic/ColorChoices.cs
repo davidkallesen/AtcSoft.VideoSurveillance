@@ -33,6 +33,33 @@ public static class ColorChoices
     public static IReadOnlyList<string> Names { get; } = [.. Basic.Select(c => c.Name)];
 
     /// <summary>
+    /// Gets a colour's name as the page shows it, in the chosen language. The
+    /// value on the wire stays the English name; a colour set by hand (#RRGGBB)
+    /// is shown as it is.
+    /// </summary>
+    public static string Label(string name)
+        => name switch
+        {
+            "Aqua" => Translations.ColourAqua,
+            "Black" => Translations.ColourBlack,
+            "Blue" => Translations.ColourBlue,
+            "Fuchsia" => Translations.ColourFuchsia,
+            "Gray" => Translations.ColourGray,
+            "Green" => Translations.ColourGreen,
+            "Lime" => Translations.ColourLime,
+            "Maroon" => Translations.ColourMaroon,
+            "Navy" => Translations.ColourNavy,
+            "Olive" => Translations.ColourOlive,
+            "Purple" => Translations.ColourPurple,
+            "Red" => Translations.ColourRed,
+            "Silver" => Translations.ColourSilver,
+            "Teal" => Translations.ColourTeal,
+            "White" => Translations.ColourWhite,
+            "Yellow" => Translations.ColourYellow,
+            _ => name,
+        };
+
+    /// <summary>
     /// Gets a colour the way it is stored: the name of a basic colour where
     /// the value is one (by name in any casing, or by its hex value), the
     /// fallback where there is no value, and anything else unchanged.

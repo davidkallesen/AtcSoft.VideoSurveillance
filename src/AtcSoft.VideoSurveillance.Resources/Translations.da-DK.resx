@@ -532,7 +532,7 @@
     <value>Forbindelsestimeout (sekunder)</value>
   </data>
   <data name="ReconnectDelaySeconds" xml:space="preserve">
-    <value>Genoprettelsesforinkelse (sekunder)</value>
+    <value>Genoprettelsesforsinkelse (sekunder)</value>
   </data>
   <data name="MaxReconnectAttempts" xml:space="preserve">
     <value>Maksimale genoprettelsesforsøg</value>
@@ -2435,5 +2435,53 @@ Miniature:
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Bekræft</value>
+  </data>
+  <data name="ColourAqua" xml:space="preserve">
+    <value>Akvamarin</value>
+  </data>
+  <data name="ColourBlack" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="ColourBlue" xml:space="preserve">
+    <value>Blå</value>
+  </data>
+  <data name="ColourFuchsia" xml:space="preserve">
+    <value>Fuchsia</value>
+  </data>
+  <data name="ColourGray" xml:space="preserve">
+    <value>Grå</value>
+  </data>
+  <data name="ColourGreen" xml:space="preserve">
+    <value>Grøn</value>
+  </data>
+  <data name="ColourLime" xml:space="preserve">
+    <value>Limegrøn</value>
+  </data>
+  <data name="ColourMaroon" xml:space="preserve">
+    <value>Rødbrun</value>
+  </data>
+  <data name="ColourNavy" xml:space="preserve">
+    <value>Marineblå</value>
+  </data>
+  <data name="ColourOlive" xml:space="preserve">
+    <value>Oliven</value>
+  </data>
+  <data name="ColourPurple" xml:space="preserve">
+    <value>Lilla</value>
+  </data>
+  <data name="ColourRed" xml:space="preserve">
+    <value>Rød</value>
+  </data>
+  <data name="ColourSilver" xml:space="preserve">
+    <value>Sølv</value>
+  </data>
+  <data name="ColourTeal" xml:space="preserve">
+    <value>Blågrøn</value>
+  </data>
+  <data name="ColourWhite" xml:space="preserve">
+    <value>Hvid</value>
+  </data>
+  <data name="ColourYellow" xml:space="preserve">
+    <value>Gul</value>
   </data>
 </root>

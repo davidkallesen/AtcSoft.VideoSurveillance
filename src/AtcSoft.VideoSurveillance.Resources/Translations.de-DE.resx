@@ -2436,4 +2436,52 @@ Vorschaubild:
   <data name="Confirm" xml:space="preserve">
     <value>Bestätigen</value>
   </data>
+  <data name="ColourAqua" xml:space="preserve">
+    <value>Aquamarin</value>
+  </data>
+  <data name="ColourBlack" xml:space="preserve">
+    <value>Schwarz</value>
+  </data>
+  <data name="ColourBlue" xml:space="preserve">
+    <value>Blau</value>
+  </data>
+  <data name="ColourFuchsia" xml:space="preserve">
+    <value>Fuchsie</value>
+  </data>
+  <data name="ColourGray" xml:space="preserve">
+    <value>Grau</value>
+  </data>
+  <data name="ColourGreen" xml:space="preserve">
+    <value>Grün</value>
+  </data>
+  <data name="ColourLime" xml:space="preserve">
+    <value>Hellgrün</value>
+  </data>
+  <data name="ColourMaroon" xml:space="preserve">
+    <value>Kastanienbraun</value>
+  </data>
+  <data name="ColourNavy" xml:space="preserve">
+    <value>Marineblau</value>
+  </data>
+  <data name="ColourOlive" xml:space="preserve">
+    <value>Oliv</value>
+  </data>
+  <data name="ColourPurple" xml:space="preserve">
+    <value>Lila</value>
+  </data>
+  <data name="ColourRed" xml:space="preserve">
+    <value>Rot</value>
+  </data>
+  <data name="ColourSilver" xml:space="preserve">
+    <value>Silber</value>
+  </data>
+  <data name="ColourTeal" xml:space="preserve">
+    <value>Blaugrün</value>
+  </data>
+  <data name="ColourWhite" xml:space="preserve">
+    <value>Weiß</value>
+  </data>
+  <data name="ColourYellow" xml:space="preserve">
+    <value>Gelb</value>
+  </data>
 </root>

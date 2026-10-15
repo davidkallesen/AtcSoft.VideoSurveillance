@@ -2436,4 +2436,52 @@ Thumbnail:
   <data name="Confirm" xml:space="preserve">
     <value>Confirm</value>
   </data>
+  <data name="ColourAqua" xml:space="preserve">
+    <value>Aqua</value>
+  </data>
+  <data name="ColourBlack" xml:space="preserve">
+    <value>Black</value>
+  </data>
+  <data name="ColourBlue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="ColourFuchsia" xml:space="preserve">
+    <value>Fuchsia</value>
+  </data>
+  <data name="ColourGray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="ColourGreen" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="ColourLime" xml:space="preserve">
+    <value>Lime</value>
+  </data>
+  <data name="ColourMaroon" xml:space="preserve">
+    <value>Maroon</value>
+  </data>
+  <data name="ColourNavy" xml:space="preserve">
+    <value>Navy</value>
+  </data>
+  <data name="ColourOlive" xml:space="preserve">
+    <value>Olive</value>
+  </data>
+  <data name="ColourPurple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="ColourRed" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="ColourSilver" xml:space="preserve">
+    <value>Silver</value>
+  </data>
+  <data name="ColourTeal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="ColourWhite" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="ColourYellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
 </root>

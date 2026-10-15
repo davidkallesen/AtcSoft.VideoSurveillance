@@ -50,4 +50,28 @@ public sealed class ColorChoicesTests
         string value,
         string expected)
         => ColorChoices.ToCss(value).Should().Be(expected);
+
+    [Fact]
+    public void Every_Colour_Has_A_Name_In_The_Chosen_Language()
+        => ColorChoices.Names.Select(ColorChoices.Label).Should().OnlyHaveUniqueItems().And.NotContainNulls();
+
+    [Fact]
+    public void A_Colour_Is_Named_In_Danish()
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("da-DK");
+
+            ColorChoices.Label("Red").Should().Be("Rød");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [Fact]
+    public void A_Colour_Set_By_Hand_Is_Shown_As_It_Is()
+        => ColorChoices.Label("#123456").Should().Be("#123456");
 }

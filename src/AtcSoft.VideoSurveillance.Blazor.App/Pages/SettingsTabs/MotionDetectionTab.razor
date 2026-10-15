@@ -36,11 +36,11 @@
 <MudText Typo="Typo.subtitle1" Class="mb-1">@Translations.BoundingBox</MudText>
 <SettingSwitch @bind-Value="State.BoundingBoxShowInGrid" Label="@Translations.ShowInTheCameraGrid" />
 <SettingSwitch @bind-Value="State.BoundingBoxShowInFullScreen" Label="@Translations.ShowInFullScreen" />
-<MudSelect @bind-Value="State.BoundingBoxColor" Label="@Translations.Colour" Class="mt-2">
+<MudSelect @bind-Value="State.BoundingBoxColor" Label="@Translations.Colour" ToStringFunc="ColorChoices.Label" Class="mt-2">
     @foreach (var name in ColorOptions(State.BoundingBoxColor))
     {
         <MudSelectItem Value="@name">
-            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@name
+            <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #888; vertical-align: middle; margin-right: 8px; background: @ColorChoices.ToCss(name);"></span>@ColorChoices.Label(name)
         </MudSelectItem>
     }
 </MudSelect>
