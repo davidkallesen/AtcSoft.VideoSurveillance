@@ -29,6 +29,7 @@ global using Microsoft.Extensions.Primitives;
 global using Scalar.AspNetCore;
 global using Serilog;
 global using VideoSurveillance;
+global using VideoSurveillance.Generated.Caching;
 global using VideoSurveillance.Generated.Extensions;
 global using VideoSurveillance.Generated.Hubs;
 

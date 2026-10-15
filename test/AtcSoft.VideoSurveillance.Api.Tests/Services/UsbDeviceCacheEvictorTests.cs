@@ -45,7 +45,7 @@ public sealed class UsbDeviceCacheEvictorTests
 
     [Fact]
     public void The_Tag_Is_The_One_The_Specification_Gives_The_Usb_Devices()
-        => UsbDeviceCacheEvictor.Tag.Should().Be(OutputCachePolicies.UsbDevices);
+        => UsbDeviceCacheEvictor.Tag.Should().Be(OutputCacheTags.UsbDevices);
 
     private static UsbCameraEventArgs Device()
         => new(new UsbDeviceDescriptor("usb#vid_046d", "Logitech C920", isPresent: true));

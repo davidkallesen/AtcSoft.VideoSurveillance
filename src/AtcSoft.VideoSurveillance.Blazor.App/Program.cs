@@ -19,7 +19,7 @@ builder.Services
         client.BaseAddress = new Uri(apiBaseAddress);
     })
     .AddHttpMessageHandler(() => new ServerUnavailableHandler())
-    .AddApiResilience(ResiliencePolicies.Standard);
+    .AddApiResilience();
 
 // Register all generated endpoints (includes IHttpMessageFactory registration)
 builder.Services.AddVideoSurveillanceEndpoints();

@@ -793,14 +793,16 @@ paths:
 
 # The clients' resilience. Some calls are slow by nature (starting a recording
 # waits for the camera, saving a changed folder layout moves the recordings), so
-# an attempt has two minutes; the breaker samples at least twice that. Only reads
-# are repeated: POST and PATCH never are, and every PUT and DELETE says so below.
+# an attempt has two minutes and all of them together five; the breaker samples at
+# least twice an attempt. Only reads are repeated: POST and PATCH never are, and
+# every PUT and DELETE says so below.
 x-retry-policy: standard
 x-retry-max-attempts: 3
 x-retry-delay-seconds: 2
 x-retry-backoff: exponential
 x-retry-use-jitter: true
 x-retry-timeout-seconds: 120
+x-retry-total-timeout-seconds: 300
 x-retry-circuit-breaker: true
 x-retry-cb-sampling-duration-seconds: 240
 x-retry-handle-429: true

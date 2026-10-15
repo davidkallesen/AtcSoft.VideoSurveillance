@@ -16,7 +16,7 @@ public sealed partial class UsbDeviceCacheEvictor : BackgroundServiceBase<UsbDev
     /// The output cache tag of the USB device list, as the specification
     /// declares it (<c>x-cache-tags</c> of listUsbDevices).
     /// </summary>
-    public const string Tag = "usb-devices";
+    public const string Tag = OutputCacheTags.UsbDevices;
 
     private readonly IUsbCameraWatcher watcher;
     private readonly IOutputCacheStore store;

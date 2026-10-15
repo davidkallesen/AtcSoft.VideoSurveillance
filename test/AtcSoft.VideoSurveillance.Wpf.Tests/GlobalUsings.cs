@@ -24,4 +24,5 @@ global using VideoSurveillance.Generated.Layouts.Client;
 global using VideoSurveillance.Generated.Layouts.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Layouts.Models;
 global using VideoSurveillance.Generated.Models;
+global using VideoSurveillance.Generated.Resilience;
 global using VideoSurveillance.Generated.Settings.Models;
