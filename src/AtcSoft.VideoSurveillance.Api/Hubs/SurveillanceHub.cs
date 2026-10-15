@@ -1,7 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Api.Hubs;
 
 /// <summary>
-/// SignalR hub for real-time surveillance events and camera control.
+/// SignalR hub for real-time surveillance events and live streams.
 /// </summary>
 /// <remarks>
 /// The hub is declared in the specification (<c>x-signalr-hubs</c>): the events
@@ -11,30 +11,14 @@ namespace AtcSoft.VideoSurveillance.Api.Hubs;
 /// </remarks>
 public sealed partial class SurveillanceHub : Hub<ISurveillanceHubClient>, ISurveillanceHub
 {
-    // How long a USB camera that had to be opened for a recording gets to
-    // deliver its first picture.
-    private static readonly TimeSpan HostedCameraTimeout = TimeSpan.FromSeconds(15);
-
-    private readonly ICameraStorageService storage;
-    private readonly IRecordingService recordingService;
-    private readonly IMediaPipelineFactory pipelineFactory;
     private readonly StreamingService streamingService;
-    private readonly ICameraPipelineHost pipelineHost;
     private readonly ILogger<SurveillanceHub> logger;
 
     public SurveillanceHub(
-        ICameraStorageService storage,
-        IRecordingService recordingService,
-        IMediaPipelineFactory pipelineFactory,
         StreamingService streamingService,
-        ICameraPipelineHost pipelineHost,
         ILogger<SurveillanceHub> logger)
     {
-        this.storage = storage;
-        this.recordingService = recordingService;
-        this.pipelineFactory = pipelineFactory;
         this.streamingService = streamingService;
-        this.pipelineHost = pipelineHost;
         this.logger = logger;
     }
 
@@ -59,73 +43,6 @@ public sealed partial class SurveillanceHub : Hub<ISurveillanceHubClient>, ISurv
         LogClientDisconnected(connectionId);
         streamingService.OnConnectionDisconnected(connectionId);
         return base.OnDisconnectedAsync(exception);
-    }
-
-    /// <summary>
-    /// Starts recording for a camera.
-    /// </summary>
-    public async Task StartRecording(Guid cameraId)
-    {
-        var camera = storage.GetCameraById(cameraId);
-        if (camera is null)
-        {
-            await Clients.Caller
-                .Error($"Camera {cameraId} not found.")
-                .ConfigureAwait(false);
-            return;
-        }
-
-        if (recordingService.IsRecording(cameraId))
-        {
-            await Clients.Caller
-                .Error($"Camera {cameraId} is already recording.")
-                .ConfigureAwait(false);
-            return;
-        }
-
-        // A USB camera has one pipeline for everything; it is not opened here.
-        if (pipelineHost.Hosts(camera))
-        {
-            var outcome = await HostedCameraRecording
-                .StartAsync(pipelineHost, recordingService, camera, HostedCameraTimeout, Context.ConnectionAborted)
-                .ConfigureAwait(false);
-
-            if (outcome != HostedCameraRecordingOutcome.Started)
-            {
-                await Clients.Caller
-                    .Error(HostedCameraRecording.Describe(outcome, HostedCameraTimeout))
-                    .ConfigureAwait(false);
-            }
-
-            LogRecordingResult(outcome == HostedCameraRecordingOutcome.Started ? "started" : "failed to start", cameraId);
-            return;
-        }
-
-        var pipeline = pipelineFactory.Create(camera);
-        var started = recordingService.StartRecording(camera, pipeline);
-
-        // StartRecording returns false on a concurrent-start race (another
-        // caller already created the session). The recording service did
-        // NOT take ownership of our pipeline in that case — dispose it here
-        // so the RTSP connection / decoder thread / GPU don't leak.
-        if (!started)
-        {
-            pipeline.Dispose();
-        }
-
-        LogRecordingResult(started ? "started" : "failed to start", cameraId);
-    }
-
-    /// <summary>
-    /// Stops recording for a camera.
-    /// </summary>
-    public Task StopRecording(Guid cameraId)
-    {
-        recordingService.StopRecording(cameraId);
-
-        LogRecordingStopped(cameraId);
-
-        return Task.CompletedTask;
     }
 
     /// <summary>

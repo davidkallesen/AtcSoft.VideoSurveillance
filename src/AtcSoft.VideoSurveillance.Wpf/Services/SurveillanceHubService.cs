@@ -163,26 +163,6 @@ public sealed class SurveillanceHubService : IAsyncDisposable
         }
     }
 
-    public async Task StartRecordingAsync(Guid cameraId)
-    {
-        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
-        {
-            await hub
-                .StartRecordingAsync(cameraId)
-                .ConfigureAwait(false);
-        }
-    }
-
-    public async Task StopRecordingAsync(Guid cameraId)
-    {
-        if (hub is not null && hubConnection?.State == HubConnectionState.Connected)
-        {
-            await hub
-                .StopRecordingAsync(cameraId)
-                .ConfigureAwait(false);
-        }
-    }
-
     public async Task StartStreamAsync(Guid cameraId)
     {
         if (hub is not null && hubConnection?.State == HubConnectionState.Connected)

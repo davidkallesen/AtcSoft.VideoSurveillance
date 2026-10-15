@@ -7,7 +7,6 @@ global using System.Text.Json.Serialization;
 
 global using Atc.Hosting;
 global using AtcSoft.VideoEngine;
-global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers;
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;

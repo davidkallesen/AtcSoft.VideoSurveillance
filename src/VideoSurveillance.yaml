@@ -821,17 +821,7 @@ x-signalr-hubs:
         payload: UsbCameraLifecycleEvent
       - name: StreamStarted
         payload: StreamStartedEvent
-      - name: Error
-        payload: string
     methods:
-      - name: StartRecording
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
-      - name: StopRecording
-        arguments:
-          - name: cameraId
-            payload: { type: string, format: uuid }
       - name: StartStream
         arguments:
           - name: cameraId
