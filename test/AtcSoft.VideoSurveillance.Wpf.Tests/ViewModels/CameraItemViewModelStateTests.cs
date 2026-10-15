@@ -1,16 +1,16 @@
 namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 /// <summary>
-/// The camera list shows the state as the hub writes it (<c>Connected</c>),
-/// so a state from the camera list and one from a hub event look the same.
+/// The camera list shows the state in words (<c>Connected</c>), the same
+/// whether it came from the camera list or from a hub event.
 /// </summary>
 public sealed class CameraItemViewModelStateTests
 {
     [Theory]
     [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.Connected, "Connected")]
-    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.DeviceUnplugged, "DeviceUnplugged")]
+    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.DeviceUnplugged, "Device unplugged")]
     [InlineData("rebooting", "Rebooting")]
-    public void The_State_Is_Written_As_The_Hub_Writes_It(
+    public void The_State_Is_Shown_In_Words(
         string state,
         string expected)
     {

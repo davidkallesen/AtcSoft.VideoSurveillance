@@ -56,7 +56,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     /// </summary>
     public IDictionary<string, string> GridPresetItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["0"] = "Automatic (all cameras)",
+        ["0"] = Translations.GridSizeAuto,
         ["1"] = "1 \u00D7 1",
         ["2"] = "2 \u00D7 2",
         ["3"] = "3 \u00D7 3",

@@ -63,7 +63,8 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Gets the dialog title.
     /// </summary>
-    public string DialogTitle => IsEdit ? "Edit Camera" : "Add Camera";
+    public string DialogTitle
+        => IsEdit ? Translations.EditCameraTitle : Translations.AddCamera;
 
     /// <summary>
     /// Gets the protocol items for the combobox.
@@ -227,7 +228,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     private async Task DetectConnectionTypeAsync()
     {
         IsDetectingConnectionType = true;
-        ConnectionTypeDetectionStatus = "Detecting…";
+        ConnectionTypeDetectionStatus = Translations.ConnectionTypeDetecting;
 
         try
         {
@@ -235,11 +236,11 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             if (detected?.Value is CameraConnectionType.Names.Lan or CameraConnectionType.Names.Wifi)
             {
                 SelectedConnectionType = detected.Value;
-                ConnectionTypeDetectionStatus = "Detected: " + ConnectionTypeItems[detected.Value.ToString()];
+                ConnectionTypeDetectionStatus = string.Format(CultureInfo.CurrentCulture, Translations.ConnectionTypeDetectedFormat1, ConnectionTypeItems[detected.Value.ToString()]);
             }
             else
             {
-                ConnectionTypeDetectionStatus = "Could not detect the connection type";
+                ConnectionTypeDetectionStatus = Translations.ConnectionTypeDetectFailed;
             }
         }
         finally

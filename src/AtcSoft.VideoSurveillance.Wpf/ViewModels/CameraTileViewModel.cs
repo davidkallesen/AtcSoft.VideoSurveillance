@@ -95,8 +95,8 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// </summary>
     public string PlaceholderText
         => IsDeviceUnplugged
-            ? AtcSoft.VideoSurveillance.Resources.Translations.UsbDeviceUnplugged
-            : "No Stream";
+            ? Translations.UsbDeviceUnplugged
+            : Translations.NoStream;
 
     private bool isRecording;
     private DispatcherTimer? recordingTimer;

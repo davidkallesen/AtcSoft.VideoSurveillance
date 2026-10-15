@@ -1401,4 +1401,169 @@
   <data name="FailedToSaveSettings1" xml:space="preserve">
     <value>Die Einstellungen konnten nicht gespeichert werden: {0}</value>
   </data>
+  <data name="RotationClockwise" xml:space="preserve">
+    <value>Drehung (im Uhrzeigersinn)</value>
+  </data>
+  <data name="Authentication" xml:space="preserve">
+    <value>Authentifizierung</value>
+  </data>
+  <data name="StreamSettings" xml:space="preserve">
+    <value>Stream-Einstellungen</value>
+  </data>
+  <data name="LayoutName" xml:space="preserve">
+    <value>Layoutname</value>
+  </data>
+  <data name="Rows" xml:space="preserve">
+    <value>Zeilen</value>
+  </data>
+  <data name="Columns" xml:space="preserve">
+    <value>Spalten</value>
+  </data>
+  <data name="MotionBadge" xml:space="preserve">
+    <value>BEWEGUNG</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="FilterCamerasToolTip" xml:space="preserve">
+    <value>Zeigt die Kameras, die diesen Text enthalten</value>
+  </data>
+  <data name="ClearFilter" xml:space="preserve">
+    <value>Filter löschen</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="CaptureSnapshot" xml:space="preserve">
+    <value>Schnappschuss aufnehmen</value>
+  </data>
+  <data name="LoadingCameras" xml:space="preserve">
+    <value>Kameras werden geladen...</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="TotalCameras" xml:space="preserve">
+    <value>Kameras gesamt</value>
+  </data>
+  <data name="ActiveRecordings" xml:space="preserve">
+    <value>Aktive Aufnahmen</value>
+  </data>
+  <data name="AddLayout" xml:space="preserve">
+    <value>Layout hinzufügen</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GridSizeHeader" xml:space="preserve">
+    <value>Rastergröße</value>
+  </data>
+  <data name="CameraCount" xml:space="preserve">
+    <value>Anzahl Kameras</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Anwenden</value>
+  </data>
+  <data name="LoadingLayouts" xml:space="preserve">
+    <value>Layouts werden geladen...</value>
+  </data>
+  <data name="FilterCamerasByNameToolTip" xml:space="preserve">
+    <value>Zeigt die Kameras, deren Name oder Beschreibung diesen Text enthält</value>
+  </data>
+  <data name="GridSizeToolTip" xml:space="preserve">
+    <value>Automatisch zeigt alle Kameras. Eine feste Größe zeigt so viele auf einmal; die übrigen sind auf den nächsten Seiten.</value>
+  </data>
+  <data name="NoCameraMatchesFilter" xml:space="preserve">
+    <value>Keine Kamera entspricht dem Filter.</value>
+  </data>
+  <data name="NotificationHistory" xml:space="preserve">
+    <value>Benachrichtigungsverlauf</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Leeren</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Nachricht</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="NoNotificationsYet" xml:space="preserve">
+    <value>Noch keine Benachrichtigungen.</value>
+  </data>
+  <data name="LoadingRecordings" xml:space="preserve">
+    <value>Aufnahmen werden geladen...</value>
+  </data>
+  <data name="EditCameraTitle" xml:space="preserve">
+    <value>Kamera bearbeiten</value>
+  </data>
+  <data name="EditLayout" xml:space="preserve">
+    <value>Layout bearbeiten</value>
+  </data>
+  <data name="ServerAnswered2" xml:space="preserve">
+    <value>Der Server antwortete {0} ({1}).</value>
+  </data>
+  <data name="ServerConnectionLost" xml:space="preserve">
+    <value>Serververbindung verloren</value>
+  </data>
+  <data name="ServerConnectionLostMessage" xml:space="preserve">
+    <value>Die Verbindung zum Überwachungsserver wurde unterbrochen.</value>
+  </data>
+  <data name="ServerConnected" xml:space="preserve">
+    <value>Server verbunden</value>
+  </data>
+  <data name="ServerConnectionRestoredMessage" xml:space="preserve">
+    <value>Die Verbindung zum Überwachungsserver wurde wiederhergestellt.</value>
+  </data>
+  <data name="CameraDisconnectedNotification" xml:space="preserve">
+    <value>Kamera getrennt</value>
+  </data>
+  <data name="CameraConnectedNotification" xml:space="preserve">
+    <value>Kamera verbunden</value>
+  </data>
+  <data name="RecordingStartedNotification" xml:space="preserve">
+    <value>Aufnahme gestartet</value>
+  </data>
+  <data name="RecordingStoppedNotification" xml:space="preserve">
+    <value>Aufnahme beendet</value>
+  </data>
+  <data name="MotionDetectedPercent1" xml:space="preserve">
+    <value>Bewegung erkannt ({0:F1} %)</value>
+  </data>
+  <data name="CameraShortId1" xml:space="preserve">
+    <value>Kamera {0}</value>
+  </data>
+  <data name="ProbeConnected1" xml:space="preserve">
+    <value>Verbunden ({0})</value>
+  </data>
+  <data name="ProbeFailedStatus2" xml:space="preserve">
+    <value>Fehlgeschlagen: {0} {1}</value>
+  </data>
+  <data name="ProbeTimedOut" xml:space="preserve">
+    <value>Fehlgeschlagen: Zeitüberschreitung der Verbindung</value>
+  </data>
+  <data name="ProbeFailed1" xml:space="preserve">
+    <value>Fehlgeschlagen: {0}</value>
+  </data>
+  <data name="PngImageFileFilter" xml:space="preserve">
+    <value>PNG-Bild|*.png</value>
+  </data>
+  <data name="NoStream" xml:space="preserve">
+    <value>Kein Stream</value>
+  </data>
+  <data name="AllDays" xml:space="preserve">
+    <value>Alle Tage</value>
+  </data>
+  <data name="AllTimes" xml:space="preserve">
+    <value>Alle Zeiten</value>
+  </data>
+  <data name="FailedToLoadRecordings1" xml:space="preserve">
+    <value>Aufnahmen konnten nicht geladen werden: {0}</value>
+  </data>
 </root>

@@ -1,6 +1,7 @@
 <UserControl
     x:Class="AtcSoft.VideoSurveillance.Wpf.Views.NotificationHistoryView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -20,13 +21,13 @@
                 VerticalAlignment="Center"
                 FontSize="24"
                 FontWeight="SemiBold"
-                Text="Notification History" />
+                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=NotificationHistory}" />
             <Button
                 Margin="16,0,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Command="{Binding ClearHistoryCommand}"
-                Content="Clear"
+                Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Clear}"
                 Padding="12,4" />
         </DockPanel>
 
@@ -40,19 +41,19 @@
                     <GridViewColumn
                         Width="100"
                         DisplayMemberBinding="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}"
-                        Header="Time" />
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Time}" />
                     <GridViewColumn
                         Width="200"
                         DisplayMemberBinding="{Binding Title}"
-                        Header="Title" />
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Title}" />
                     <GridViewColumn
                         Width="400"
                         DisplayMemberBinding="{Binding Message}"
-                        Header="Message" />
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Message}" />
                     <GridViewColumn
                         Width="150"
                         DisplayMemberBinding="{Binding EventType}"
-                        Header="Type" />
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Type}" />
                 </GridView>
             </ListView.View>
         </ListView>
@@ -64,7 +65,7 @@
             VerticalAlignment="Center"
             FontSize="16"
             Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground2}"
-            Text="No notifications yet.">
+            Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=NoNotificationsYet}">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="Visibility" Value="Collapsed" />

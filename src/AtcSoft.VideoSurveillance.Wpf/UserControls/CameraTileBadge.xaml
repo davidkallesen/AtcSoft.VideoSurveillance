@@ -69,7 +69,7 @@
                                 FontSize="9"
                                 FontWeight="SemiBold"
                                 Foreground="#7EB8D4"
-                                Text="USB" />
+                                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectionTypeUsb}" />
                         </StackPanel>
 
                         <!--  Recording indicator (red dot, visible when IsRecording)  -->
@@ -142,7 +142,7 @@
                                 Margin="4,0,0,0"
                                 FontSize="9"
                                 Foreground="Orange"
-                                Text="MOTION" />
+                                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MotionBadge}" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

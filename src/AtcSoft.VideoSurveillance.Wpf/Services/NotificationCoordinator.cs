@@ -98,16 +98,16 @@ public sealed class NotificationCoordinator : IDisposable
         {
             isHubDisconnected = true;
             ShowNotification(
-                "Server Connection Lost",
-                "The connection to the surveillance server has been lost.",
+                Translations.ServerConnectionLost,
+                Translations.ServerConnectionLostMessage,
                 NotificationEventType.CameraDisconnected);
         }
         else if (string.Equals(state, "Connected", StringComparison.OrdinalIgnoreCase) && isHubDisconnected)
         {
             isHubDisconnected = false;
             ShowNotification(
-                "Server Connected",
-                "The connection to the surveillance server has been restored.",
+                Translations.ServerConnected,
+                Translations.ServerConnectionRestoredMessage,
                 NotificationEventType.CameraReconnected);
         }
     }
@@ -121,7 +121,7 @@ public sealed class NotificationCoordinator : IDisposable
         {
             ShowNotification(
                 cameraName,
-                "Camera disconnected",
+                Translations.CameraDisconnectedNotification,
                 NotificationEventType.CameraDisconnected);
         }
         else if (e.NewState == CameraConnectionState.Connected &&
@@ -129,7 +129,7 @@ public sealed class NotificationCoordinator : IDisposable
         {
             ShowNotification(
                 cameraName,
-                "Camera connected",
+                Translations.CameraConnectedNotification,
                 NotificationEventType.CameraReconnected);
         }
     }
@@ -145,14 +145,14 @@ public sealed class NotificationCoordinator : IDisposable
         {
             ShowNotification(
                 cameraName,
-                "Recording started",
+                Translations.RecordingStartedNotification,
                 NotificationEventType.RecordingStarted);
         }
         else if (!isNowRecording && wasRecording && Preferences.NotifyOnRecordingStopped)
         {
             ShowNotification(
                 cameraName,
-                "Recording stopped",
+                Translations.RecordingStoppedNotification,
                 NotificationEventType.RecordingStopped);
         }
     }
@@ -177,7 +177,7 @@ public sealed class NotificationCoordinator : IDisposable
         var cameraName = GetCameraName(e.CameraId);
         ShowNotification(
             cameraName,
-            $"Motion detected ({e.ChangePercentage:F1}%)",
+            string.Format(CultureInfo.CurrentCulture, Translations.MotionDetectedPercent1, e.ChangePercentage),
             NotificationEventType.MotionDetected);
     }
 
@@ -215,5 +215,5 @@ public sealed class NotificationCoordinator : IDisposable
     private string GetCameraName(Guid cameraId)
         => cameraNameCache.TryGetValue(cameraId, out var name)
             ? name
-            : $"Camera {cameraId.ToString()[..8]}";
+            : string.Format(CultureInfo.CurrentCulture, Translations.CameraShortId1, cameraId.ToString()[..8]);
 }

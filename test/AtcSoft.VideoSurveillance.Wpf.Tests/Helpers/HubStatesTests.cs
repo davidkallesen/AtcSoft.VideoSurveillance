@@ -33,9 +33,33 @@ public sealed class HubStatesTests
 
     [Theory]
     [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.Connected, "Connected")]
-    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.DeviceUnplugged, "DeviceUnplugged")]
+    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.Connecting, "Connecting...")]
+    [InlineData(global::VideoSurveillance.Generated.Models.CameraConnectionState.Names.DeviceUnplugged, "Device unplugged")]
+    public void A_Camera_State_Is_Shown_In_Words(
+        string state,
+        string expected)
+        => HubStates.ToText(new global::VideoSurveillance.Generated.Models.CameraConnectionState(state)).Should().Be(expected);
+
+    [Fact]
+    public void A_Camera_State_Is_Shown_In_The_Chosen_Language()
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("da-DK");
+
+            HubStates.ToText(global::VideoSurveillance.Generated.Models.CameraConnectionState.Disconnected)
+                .Should().Be(Translations.ResourceManager.GetString(nameof(Translations.Disconnected), CultureInfo.GetCultureInfo("da-DK")));
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [Theory]
     [InlineData("rebooting", "Rebooting")]
-    public void A_Camera_State_Is_Shown_With_A_Capital(
+    public void A_Camera_State_The_Client_Does_Not_Know_Is_Shown_With_A_Capital(
         string state,
         string expected)
         => HubStates.ToText(new global::VideoSurveillance.Generated.Models.CameraConnectionState(state)).Should().Be(expected);

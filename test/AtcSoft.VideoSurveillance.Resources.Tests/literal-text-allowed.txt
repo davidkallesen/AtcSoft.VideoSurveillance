@@ -1,0 +1,1 @@
+# relative/path|literal text|why it is not translated

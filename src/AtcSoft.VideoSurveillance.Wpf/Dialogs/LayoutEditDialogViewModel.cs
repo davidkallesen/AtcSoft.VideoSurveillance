@@ -26,7 +26,8 @@ public partial class LayoutEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Gets the dialog title.
     /// </summary>
-    public string DialogTitle => IsEdit ? "Edit Layout" : "Add Layout";
+    public string DialogTitle
+        => IsEdit ? Translations.EditLayout : Translations.AddLayout;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LayoutEditDialogViewModel"/> class for adding a new layout.

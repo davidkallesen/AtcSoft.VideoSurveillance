@@ -1401,4 +1401,169 @@
   <data name="FailedToSaveSettings1" xml:space="preserve">
     <value>Indstillingerne kunne ikke gemmes: {0}</value>
   </data>
+  <data name="RotationClockwise" xml:space="preserve">
+    <value>Rotation (med uret)</value>
+  </data>
+  <data name="Authentication" xml:space="preserve">
+    <value>Godkendelse</value>
+  </data>
+  <data name="StreamSettings" xml:space="preserve">
+    <value>Streamindstillinger</value>
+  </data>
+  <data name="LayoutName" xml:space="preserve">
+    <value>Layoutnavn</value>
+  </data>
+  <data name="Rows" xml:space="preserve">
+    <value>Rækker</value>
+  </data>
+  <data name="Columns" xml:space="preserve">
+    <value>Kolonner</value>
+  </data>
+  <data name="MotionBadge" xml:space="preserve">
+    <value>BEVÆGELSE</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="FilterCamerasToolTip" xml:space="preserve">
+    <value>Vis de kameraer, der indeholder denne tekst</value>
+  </data>
+  <data name="ClearFilter" xml:space="preserve">
+    <value>Ryd filteret</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Rediger</value>
+  </data>
+  <data name="CaptureSnapshot" xml:space="preserve">
+    <value>Tag snapshot</value>
+  </data>
+  <data name="LoadingCameras" xml:space="preserve">
+    <value>Indlæser kameraer...</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Oversigt</value>
+  </data>
+  <data name="TotalCameras" xml:space="preserve">
+    <value>Kameraer i alt</value>
+  </data>
+  <data name="ActiveRecordings" xml:space="preserve">
+    <value>Aktive optagelser</value>
+  </data>
+  <data name="AddLayout" xml:space="preserve">
+    <value>Tilføj layout</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Navn</value>
+  </data>
+  <data name="GridSizeHeader" xml:space="preserve">
+    <value>Gitterstørrelse</value>
+  </data>
+  <data name="CameraCount" xml:space="preserve">
+    <value>Antal kameraer</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Anvend</value>
+  </data>
+  <data name="LoadingLayouts" xml:space="preserve">
+    <value>Indlæser layouts...</value>
+  </data>
+  <data name="FilterCamerasByNameToolTip" xml:space="preserve">
+    <value>Vis de kameraer, hvis navn eller beskrivelse indeholder denne tekst</value>
+  </data>
+  <data name="GridSizeToolTip" xml:space="preserve">
+    <value>Automatisk viser alle kameraer. En fast størrelse viser så mange ad gangen; de øvrige er på de næste sider.</value>
+  </data>
+  <data name="NoCameraMatchesFilter" xml:space="preserve">
+    <value>Intet kamera passer til filteret.</value>
+  </data>
+  <data name="NotificationHistory" xml:space="preserve">
+    <value>Notifikationshistorik</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Ryd</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Besked</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="NoNotificationsYet" xml:space="preserve">
+    <value>Ingen notifikationer endnu.</value>
+  </data>
+  <data name="LoadingRecordings" xml:space="preserve">
+    <value>Indlæser optagelser...</value>
+  </data>
+  <data name="EditCameraTitle" xml:space="preserve">
+    <value>Rediger kamera</value>
+  </data>
+  <data name="EditLayout" xml:space="preserve">
+    <value>Rediger layout</value>
+  </data>
+  <data name="ServerAnswered2" xml:space="preserve">
+    <value>Serveren svarede {0} ({1}).</value>
+  </data>
+  <data name="ServerConnectionLost" xml:space="preserve">
+    <value>Forbindelsen til serveren er tabt</value>
+  </data>
+  <data name="ServerConnectionLostMessage" xml:space="preserve">
+    <value>Forbindelsen til overvågningsserveren er tabt.</value>
+  </data>
+  <data name="ServerConnected" xml:space="preserve">
+    <value>Forbundet til serveren</value>
+  </data>
+  <data name="ServerConnectionRestoredMessage" xml:space="preserve">
+    <value>Forbindelsen til overvågningsserveren er genoprettet.</value>
+  </data>
+  <data name="CameraDisconnectedNotification" xml:space="preserve">
+    <value>Kameraet er afbrudt</value>
+  </data>
+  <data name="CameraConnectedNotification" xml:space="preserve">
+    <value>Kameraet er forbundet</value>
+  </data>
+  <data name="RecordingStartedNotification" xml:space="preserve">
+    <value>Optagelsen er startet</value>
+  </data>
+  <data name="RecordingStoppedNotification" xml:space="preserve">
+    <value>Optagelsen er stoppet</value>
+  </data>
+  <data name="MotionDetectedPercent1" xml:space="preserve">
+    <value>Bevægelse registreret ({0:F1} %)</value>
+  </data>
+  <data name="CameraShortId1" xml:space="preserve">
+    <value>Kamera {0}</value>
+  </data>
+  <data name="ProbeConnected1" xml:space="preserve">
+    <value>Forbundet ({0})</value>
+  </data>
+  <data name="ProbeFailedStatus2" xml:space="preserve">
+    <value>Fejlede: {0} {1}</value>
+  </data>
+  <data name="ProbeTimedOut" xml:space="preserve">
+    <value>Fejlede: Forbindelsen fik timeout</value>
+  </data>
+  <data name="ProbeFailed1" xml:space="preserve">
+    <value>Fejlede: {0}</value>
+  </data>
+  <data name="PngImageFileFilter" xml:space="preserve">
+    <value>PNG-billede|*.png</value>
+  </data>
+  <data name="NoStream" xml:space="preserve">
+    <value>Ingen stream</value>
+  </data>
+  <data name="AllDays" xml:space="preserve">
+    <value>Alle dage</value>
+  </data>
+  <data name="AllTimes" xml:space="preserve">
+    <value>Alle tidspunkter</value>
+  </data>
+  <data name="FailedToLoadRecordings1" xml:space="preserve">
+    <value>Kunne ikke indlæse optagelser: {0}</value>
+  </data>
 </root>

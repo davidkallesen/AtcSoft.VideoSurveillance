@@ -25,16 +25,16 @@ public static class ServerConnectionProbe
                 .ConfigureAwait(false);
 
             return response.IsSuccessStatusCode
-                ? $"Connected ({(int)response.StatusCode})"
-                : $"Failed: {(int)response.StatusCode} {response.ReasonPhrase}";
+                ? string.Format(CultureInfo.CurrentCulture, Translations.ProbeConnected1, (int)response.StatusCode)
+                : string.Format(CultureInfo.CurrentCulture, Translations.ProbeFailedStatus2, (int)response.StatusCode, response.ReasonPhrase);
         }
         catch (TaskCanceledException)
         {
-            return "Failed: Connection timed out";
+            return Translations.ProbeTimedOut;
         }
         catch (HttpRequestException ex)
         {
-            return $"Failed: {ex.Message}";
+            return string.Format(CultureInfo.CurrentCulture, Translations.ProbeFailed1, ex.Message);
         }
     }
 }

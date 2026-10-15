@@ -56,13 +56,13 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> DayFilterItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["_ALL_"] = "All Days",
-        ["TODAY"] = "Today",
-        ["YESTERDAY"] = "Yesterday",
-        ["LAST7"] = "Last 7 Days",
-        ["LAST30"] = "Last 30 Days",
-        ["THISWEEK"] = "This Week",
-        ["THISMONTH"] = "This Month",
+        ["_ALL_"] = Translations.AllDays,
+        ["TODAY"] = Translations.FilterToday,
+        ["YESTERDAY"] = Translations.FilterYesterday,
+        ["LAST7"] = Translations.FilterLast7Days,
+        ["LAST30"] = Translations.FilterLast30Days,
+        ["THISWEEK"] = Translations.FilterThisWeek,
+        ["THISMONTH"] = Translations.FilterThisMonth,
     };
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> TimeFilterItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["_ALL_"] = "All Times",
+        ["_ALL_"] = Translations.AllTimes,
         ["0_6"] = "00:00 - 06:00",
         ["6_12"] = "06:00 - 12:00",
         ["12_18"] = "12:00 - 18:00",
@@ -140,7 +140,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             {
                 Recordings = [];
                 UpdateCameraFilters();
-                StatusMessage = $"Failed to load recordings: {ex.Message}";
+                StatusMessage = string.Format(CultureInfo.CurrentCulture, Translations.FailedToLoadRecordings1, ex.Message);
             });
         }
         finally
@@ -194,7 +194,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
         var currentSelection = SelectedCameraFilter;
 
         CameraFilters.Clear();
-        CameraFilters.Add(new KeyValuePair<string, string>(AllCamerasKey, "All Cameras"));
+        CameraFilters.Add(new KeyValuePair<string, string>(AllCamerasKey, Translations.AllCameras));
 
         var cameraNames = Recordings
             .Select(r => r.CameraName)
@@ -223,8 +223,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     {
         var count = FilteredRecordings.Count();
         StatusMessage = count == 0
-            ? "No recordings found"
-            : $"{count} recording{(count == 1 ? string.Empty : "s")} found";
+            ? Translations.NoRecordingsFound
+            : string.Format(CultureInfo.CurrentCulture, Translations.RecordingsFound1, count);
     }
 
     private IEnumerable<RecordingEntryViewModel> ApplyDayFilter(

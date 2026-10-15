@@ -292,8 +292,8 @@ public partial class CameraListViewModel : ViewModelBase
                 var saveDialog = new Microsoft.Win32.SaveFileDialog
                 {
                     FileName = $"snapshot_{item.DisplayName}_{DateTime.Now:yyyyMMdd_HHmmss}.png",
-                    Filter = "PNG Image|*.png",
-                    Title = "Save Snapshot",
+                    Filter = Translations.PngImageFileFilter,
+                    Title = Translations.SaveSnapshot,
                 };
 
                 if (saveDialog.ShowDialog() == true)

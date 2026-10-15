@@ -1401,4 +1401,169 @@
   <data name="FailedToSaveSettings1" xml:space="preserve">
     <value>The settings could not be saved: {0}</value>
   </data>
+  <data name="RotationClockwise" xml:space="preserve">
+    <value>Rotation (clockwise)</value>
+  </data>
+  <data name="Authentication" xml:space="preserve">
+    <value>Authentication</value>
+  </data>
+  <data name="StreamSettings" xml:space="preserve">
+    <value>Stream Settings</value>
+  </data>
+  <data name="LayoutName" xml:space="preserve">
+    <value>Layout Name</value>
+  </data>
+  <data name="Rows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="Columns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="MotionBadge" xml:space="preserve">
+    <value>MOTION</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="FilterCamerasToolTip" xml:space="preserve">
+    <value>Show the cameras that contain this text</value>
+  </data>
+  <data name="ClearFilter" xml:space="preserve">
+    <value>Clear the filter</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CaptureSnapshot" xml:space="preserve">
+    <value>Capture Snapshot</value>
+  </data>
+  <data name="LoadingCameras" xml:space="preserve">
+    <value>Loading cameras...</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="TotalCameras" xml:space="preserve">
+    <value>Total Cameras</value>
+  </data>
+  <data name="ActiveRecordings" xml:space="preserve">
+    <value>Active Recordings</value>
+  </data>
+  <data name="AddLayout" xml:space="preserve">
+    <value>Add Layout</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GridSizeHeader" xml:space="preserve">
+    <value>Grid Size</value>
+  </data>
+  <data name="CameraCount" xml:space="preserve">
+    <value>Camera Count</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="LoadingLayouts" xml:space="preserve">
+    <value>Loading layouts...</value>
+  </data>
+  <data name="FilterCamerasByNameToolTip" xml:space="preserve">
+    <value>Show the cameras whose name or description contains this text</value>
+  </data>
+  <data name="GridSizeToolTip" xml:space="preserve">
+    <value>Automatic shows every camera. A fixed size shows that many at a time; the others are on the next pages.</value>
+  </data>
+  <data name="NoCameraMatchesFilter" xml:space="preserve">
+    <value>No camera matches the filter.</value>
+  </data>
+  <data name="NotificationHistory" xml:space="preserve">
+    <value>Notification History</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="NoNotificationsYet" xml:space="preserve">
+    <value>No notifications yet.</value>
+  </data>
+  <data name="LoadingRecordings" xml:space="preserve">
+    <value>Loading recordings...</value>
+  </data>
+  <data name="EditCameraTitle" xml:space="preserve">
+    <value>Edit Camera</value>
+  </data>
+  <data name="EditLayout" xml:space="preserve">
+    <value>Edit Layout</value>
+  </data>
+  <data name="ServerAnswered2" xml:space="preserve">
+    <value>The server answered {0} ({1}).</value>
+  </data>
+  <data name="ServerConnectionLost" xml:space="preserve">
+    <value>Server Connection Lost</value>
+  </data>
+  <data name="ServerConnectionLostMessage" xml:space="preserve">
+    <value>The connection to the surveillance server has been lost.</value>
+  </data>
+  <data name="ServerConnected" xml:space="preserve">
+    <value>Server Connected</value>
+  </data>
+  <data name="ServerConnectionRestoredMessage" xml:space="preserve">
+    <value>The connection to the surveillance server has been restored.</value>
+  </data>
+  <data name="CameraDisconnectedNotification" xml:space="preserve">
+    <value>Camera disconnected</value>
+  </data>
+  <data name="CameraConnectedNotification" xml:space="preserve">
+    <value>Camera connected</value>
+  </data>
+  <data name="RecordingStartedNotification" xml:space="preserve">
+    <value>Recording started</value>
+  </data>
+  <data name="RecordingStoppedNotification" xml:space="preserve">
+    <value>Recording stopped</value>
+  </data>
+  <data name="MotionDetectedPercent1" xml:space="preserve">
+    <value>Motion detected ({0:F1}%)</value>
+  </data>
+  <data name="CameraShortId1" xml:space="preserve">
+    <value>Camera {0}</value>
+  </data>
+  <data name="ProbeConnected1" xml:space="preserve">
+    <value>Connected ({0})</value>
+  </data>
+  <data name="ProbeFailedStatus2" xml:space="preserve">
+    <value>Failed: {0} {1}</value>
+  </data>
+  <data name="ProbeTimedOut" xml:space="preserve">
+    <value>Failed: Connection timed out</value>
+  </data>
+  <data name="ProbeFailed1" xml:space="preserve">
+    <value>Failed: {0}</value>
+  </data>
+  <data name="PngImageFileFilter" xml:space="preserve">
+    <value>PNG Image|*.png</value>
+  </data>
+  <data name="NoStream" xml:space="preserve">
+    <value>No Stream</value>
+  </data>
+  <data name="AllDays" xml:space="preserve">
+    <value>All Days</value>
+  </data>
+  <data name="AllTimes" xml:space="preserve">
+    <value>All Times</value>
+  </data>
+  <data name="FailedToLoadRecordings1" xml:space="preserve">
+    <value>Failed to load recordings: {0}</value>
+  </data>
 </root>

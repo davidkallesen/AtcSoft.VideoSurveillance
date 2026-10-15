@@ -29,10 +29,20 @@ public static class HubStates
             or RecordingStatusState.Names.RecordingPostMotion;
 
     /// <summary>
-    /// Gets the state as the camera list shows it (<c>Connected</c>).
+    /// Gets the state as the camera list shows it, in the chosen language. A
+    /// state this client does not know yet is shown as the server writes it,
+    /// with a capital.
     /// </summary>
     public static string ToText(CameraConnectionState? state)
-        => state?.Value is { Length: > 0 } value
-            ? string.Concat(value[..1].ToUpperInvariant(), value[1..])
-            : "Disconnected";
+        => state?.Value switch
+        {
+            null or "" => Translations.Disconnected,
+            CameraConnectionState.Names.Connected => Translations.Connected,
+            CameraConnectionState.Names.Connecting => Translations.Connecting,
+            CameraConnectionState.Names.Disconnected => Translations.Disconnected,
+            CameraConnectionState.Names.Reconnecting => Translations.Reconnecting,
+            CameraConnectionState.Names.Error => Translations.Error,
+            CameraConnectionState.Names.DeviceUnplugged => Translations.UsbDeviceUnplugged,
+            var value => string.Concat(value[..1].ToUpperInvariant(), value[1..]),
+        };
 }
