@@ -665,11 +665,11 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
     private UpdateSettingsRequest BuildApiSettings()
     {
-        // Get current theme/accent/language from live state (Atc controls update these directly)
+        // Get current theme/accent from live state (Atc controls update these directly).
+        // The language is not sent: it belongs to this client (client-prefs.json).
         var currentTheme = ThemeManager.Current.DetectTheme(Application.Current);
         var apiThemeBase = currentTheme?.BaseColorScheme ?? "Dark";
         var apiThemeAccent = currentTheme?.ColorScheme ?? "Blue";
-        var apiLanguage = CultureManager.UiCulture.LCID.ToString(CultureInfo.InvariantCulture);
 
         // Parse enum values from string selections
         var themeBase = KnownValue.FromName(AppSettingsThemeBase.KnownValues, apiThemeBase, AppSettingsThemeBase.Dark);
@@ -697,7 +697,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
         return new UpdateSettingsRequest(
             ThemeBase: themeBase,
             ThemeAccent: apiThemeAccent,
-            Language: apiLanguage,
             ConnectOnStartup: ConnectCamerasOnStartup,
             StartMaximized: StartMaximized,
             ShowOverlayTitle: ShowCameraOverlayTitle,
