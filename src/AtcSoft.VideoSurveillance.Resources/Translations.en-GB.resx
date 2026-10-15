@@ -138,4 +138,7 @@
   <data name="UseLowLatencyModeInfo" xml:space="preserve">
     <value>Enables optimised settings for minimal delay. Reduces buffer size and disables some processing to achieve near real-time video playback.</value>
   </data>
+  <data name="InitializingVideoEngine" xml:space="preserve">
+    <value>Initialising video engine...</value>
+  </data>
 </root>

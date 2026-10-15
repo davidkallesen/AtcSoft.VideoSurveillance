@@ -14,6 +14,7 @@ public sealed partial class LiteralTextTests
 
     [Theory]
     [InlineData("src/AtcSoft.VideoSurveillance.Wpf")]
+    [InlineData("src/AtcSoft.VideoSurveillance.Wpf.App")]
     public void A_View_Has_No_Literal_Text(string folder)
     {
         var found = new List<string>();

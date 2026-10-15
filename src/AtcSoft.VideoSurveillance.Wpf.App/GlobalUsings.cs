@@ -17,12 +17,14 @@ global using System.Windows.Input;
 global using System.Windows.Threading;
 
 global using Atc;
+global using Atc.Helpers;
 global using Atc.Wpf.Components.Dialogs;
 global using Atc.Wpf.Components.Notifications;
 global using Atc.Wpf.DependencyObjects;
 global using Atc.Wpf.Forms.Dialogs;
 global using Atc.Wpf.Notifications;
 global using Atc.Wpf.Theming.Helpers;
+global using Atc.Wpf.Translation;
 global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;

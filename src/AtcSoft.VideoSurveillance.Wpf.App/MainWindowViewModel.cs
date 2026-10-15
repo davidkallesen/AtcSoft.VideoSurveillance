@@ -25,13 +25,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool suppressAutoStartCallback;
 
     [ObservableProperty]
-    private string statusText = "Ready";
+    private string statusText = Translations.Ready;
 
     [ObservableProperty]
     private string serverUrl;
 
     [ObservableProperty]
-    private string hubConnectionState = "Disconnected";
+    private string hubConnectionState = Translations.Disconnected;
 
     [ObservableProperty(DependentPropertyNames = [nameof(ShowChangeServer)])]
     private bool isAspireManaged;
@@ -123,7 +123,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _ = Application.Current?.Dispatcher.InvokeAsync(() =>
             {
-                HubConnectionState = state;
+                HubConnectionState = HubStates.HubText(state);
             });
         };
 
@@ -217,10 +217,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var defaultFileName = $"VideoSurveillance-Diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.json";
         var dialog = new SaveFileDialog
         {
-            Title = "Export Diagnostics",
+            Title = Translations.ExportDiagnostics,
             FileName = defaultFileName,
             DefaultExt = ".json",
-            Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*",
+            Filter = Translations.JsonFileFilter,
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
             OverwritePrompt = true,
         };
@@ -243,11 +243,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 .WriteAsync(dialog.FileName, report)
                 .ConfigureAwait(true);
 
-            StatusText = $"Diagnostics exported to {dialog.FileName}";
+            StatusText = string.Format(CultureInfo.CurrentCulture, Translations.DiagnosticsExportedTo1, dialog.FileName);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            StatusText = $"Diagnostics export failed: {ex.Message}";
+            StatusText = string.Format(CultureInfo.CurrentCulture, Translations.DiagnosticsExportFailed1, ex.Message);
         }
     }
 

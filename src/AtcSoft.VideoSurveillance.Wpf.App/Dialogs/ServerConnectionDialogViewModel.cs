@@ -14,7 +14,7 @@ public sealed partial class ServerConnectionDialogViewModel : ObservableObject
     private string serverUrl = string.Empty;
 
     [ObservableProperty]
-    private string connectionStatus = "Ready";
+    private string connectionStatus = Translations.Ready;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnIsTestingChanged))]
     private bool isTesting;
@@ -208,7 +208,7 @@ public sealed partial class ServerConnectionDialogViewModel : ObservableObject
     private async Task TestConnectionAsync()
     {
         IsTesting = true;
-        ConnectionStatus = "Testing...";
+        ConnectionStatus = Translations.Testing;
 
         try
         {
@@ -219,7 +219,7 @@ public sealed partial class ServerConnectionDialogViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ConnectionStatus = $"Failed: {ex.Message}";
+            ConnectionStatus = string.Format(CultureInfo.CurrentCulture, Translations.ProbeFailed1, ex.Message);
         }
         finally
         {

@@ -11,17 +11,17 @@ public partial class KeyboardShortcutsDialog
 
         ShortcutsList.ItemsSource = new[]
         {
-            new { Key = "Ctrl+1", Description = "Live View" },
-            new { Key = "Ctrl+2", Description = "Dashboard" },
-            new { Key = "Ctrl+3", Description = "Cameras" },
-            new { Key = "Ctrl+4", Description = "Layouts" },
-            new { Key = "Ctrl+5", Description = "Recordings" },
-            new { Key = "Ctrl+6", Description = "Notifications" },
-            new { Key = "Ctrl+N", Description = "View Cameras" },
-            new { Key = "Ctrl+,", Description = "Settings" },
-            new { Key = "F5", Description = "Refresh Current View" },
-            new { Key = "F11", Description = "Toggle Full Screen" },
-            new { Key = "F1", Description = "Keyboard Shortcuts" },
+            new { Key = "Ctrl+1", Description = Translations.LiveView },
+            new { Key = "Ctrl+2", Description = Translations.Dashboard },
+            new { Key = "Ctrl+3", Description = Translations.Cameras },
+            new { Key = "Ctrl+4", Description = Translations.Layouts },
+            new { Key = "Ctrl+5", Description = Translations.Recordings },
+            new { Key = "Ctrl+6", Description = Translations.Notifications },
+            new { Key = "Ctrl+N", Description = Translations.ViewCameras },
+            new { Key = "Ctrl+,", Description = Translations.Settings },
+            new { Key = "F5", Description = Translations.RefreshCurrentView },
+            new { Key = "F11", Description = Translations.ToggleFullScreen },
+            new { Key = "F1", Description = Translations.KeyboardShortcuts },
         };
     }
 

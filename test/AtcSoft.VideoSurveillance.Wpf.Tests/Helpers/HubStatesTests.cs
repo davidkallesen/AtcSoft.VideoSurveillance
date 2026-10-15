@@ -67,4 +67,15 @@ public sealed class HubStatesTests
     [Fact]
     public void No_Camera_State_Is_Shown_As_Disconnected()
         => HubStates.ToText(state: null).Should().Be("Disconnected");
+
+    [Theory]
+    [InlineData("Connected", "Connected")]
+    [InlineData("Disconnected", "Disconnected")]
+    [InlineData("Reconnecting...", "Reconnecting...")]
+    [InlineData("Connecting", "Connecting...")]
+    [InlineData("Unknown", "Unknown")]
+    public void The_Hub_State_Is_Shown_In_Words(
+        string state,
+        string expected)
+        => HubStates.HubText(state).Should().Be(expected);
 }

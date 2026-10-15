@@ -22,6 +22,18 @@ public class ApiApplicationSettingsServiceTests
     }
 
     [Fact]
+    public void The_Language_Stays_On_This_Machine()
+    {
+        var settings = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences { Language = "1030" }, api: null);
+
+        var api = ApiApplicationSettingsService.BuildApiSettings(settings);
+
+        // Absent = unchanged on the server; the language is this client's own.
+        api.Language.Should().BeNull();
+        settings.General.Language.Should().Be("1030");
+    }
+
+    [Fact]
     public void Every_Choice_Survives_The_Trip_To_The_Api_And_Back()
     {
         // Arrange — every choice differs from its default

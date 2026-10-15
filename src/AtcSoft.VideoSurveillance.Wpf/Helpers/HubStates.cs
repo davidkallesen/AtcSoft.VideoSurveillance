@@ -45,4 +45,18 @@ public static class HubStates
             CameraConnectionState.Names.DeviceUnplugged => Translations.UsbDeviceUnplugged,
             var value => string.Concat(value[..1].ToUpperInvariant(), value[1..]),
         };
+
+    /// <summary>
+    /// Gets the hub connection's own state (<see cref="SurveillanceHubService.ConnectionState"/>,
+    /// <c>Connected</c>, <c>Reconnecting...</c>) in the chosen language; another is shown as it is.
+    /// </summary>
+    public static string HubText(string state)
+        => state switch
+        {
+            "Connected" => Translations.Connected,
+            "Connecting" => Translations.Connecting,
+            "Disconnected" => Translations.Disconnected,
+            "Reconnecting" or "Reconnecting..." => Translations.Reconnecting,
+            _ => state,
+        };
 }

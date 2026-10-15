@@ -172,34 +172,42 @@ public partial class App
         var splashScreen = new SplashScreenWindow
         {
             Header = "AtcSoft Video Surveillance",
-            VersionText = $"Version {ApplicationHelper.GetVersion()}",
+            VersionText = string.Format(CultureInfo.CurrentCulture, Translations.VersionNumber1, ApplicationHelper.GetVersion()),
         };
 
         splashScreen.Show();
 
         // Loading configuration (0%)
-        RenderSplashMessage("Loading configuration...", 0);
+        RenderSplashMessage(Translations.LoadingConfiguration, 0);
 
         // Initialize video engine (10%)
-        RenderSplashMessage("Initializing video engine...", 10);
+        RenderSplashMessage(Translations.InitializingVideoEngine, 10);
         VideoEngineBootstrap.Initialize();
 
         // Start host (20%)
-        RenderSplashMessage("Starting services...", 20);
+        RenderSplashMessage(Translations.StartingServices, 20);
         await host.StartAsync();
 
         // Apply theme from settings (50%). Settings are pulled from the
         // API server (server-side fields) merged with local per-user
         // prefs (theme / language / window state) — the cache must be
         // populated before any consumer reads .General etc.
-        RenderSplashMessage("Applying settings...", 50);
+        RenderSplashMessage(Translations.ApplyingSettings, 50);
         var appSettingsService = host.Services.GetRequiredService<IApplicationSettingsService>();
         await appSettingsService.LoadAsync();
         var generalSettings = appSettingsService.General;
+
+        // The language is this client's own (client-prefs.json); the splash
+        // messages before this line are in the machine's language.
+        if (NumberHelper.TryParseToInt(generalSettings.Language, out var lcid))
+        {
+            CultureManager.SetCultures(new CultureInfo(lcid).Name);
+        }
+
         ThemeManagerHelper.SetThemeAndAccent(Current, $"{generalSettings.ThemeBase}.{generalSettings.ThemeAccent}");
 
         // Connect SignalR hub (70%)
-        RenderSplashMessage("Connecting to server...", 70);
+        RenderSplashMessage(Translations.ConnectingToServer, 70);
         var hubService = host.Services.GetRequiredService<SurveillanceHubService>();
 
         // Settings read while the server was away came from this computer
@@ -216,11 +224,11 @@ public partial class App
         }
 
         // Load main window (80%)
-        RenderSplashMessage("Loading main window...", 80);
+        RenderSplashMessage(Translations.LoadingMainWindow, 80);
         var mainWindow = host.Services.GetRequiredService<MainWindow>();
 
         // Complete (100%)
-        RenderSplashMessage("Ready", 100);
+        RenderSplashMessage(Translations.Ready, 100);
 
         // Show main window and close splash
         mainWindow.Show();

@@ -1566,4 +1566,118 @@
   <data name="FailedToLoadRecordings1" xml:space="preserve">
     <value>Aufnahmen konnten nicht geladen werden: {0}</value>
   </data>
+  <data name="ConnectToServer" xml:space="preserve">
+    <value>Mit Server verbinden</value>
+  </data>
+  <data name="ServerProfiles" xml:space="preserve">
+    <value>Serverprofile</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="ServerUrl" xml:space="preserve">
+    <value>Server-URL</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Verbindung testen</value>
+  </data>
+  <data name="ExitApplication" xml:space="preserve">
+    <value>Anwendung beenden</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="ServerProfile" xml:space="preserve">
+    <value>Serverprofil</value>
+  </data>
+  <data name="OptionalDescription" xml:space="preserve">
+    <value>Optionale Beschreibung</value>
+  </data>
+  <data name="LiveView" xml:space="preserve">
+    <value>Liveansicht</value>
+  </data>
+  <data name="ChangeServer" xml:space="preserve">
+    <value>Server wechseln</value>
+  </data>
+  <data name="StartWithWindows" xml:space="preserve">
+    <value>Mit Windows starten</value>
+  </data>
+  <data name="StartWithWindowsInfo" xml:space="preserve">
+    <value>Startet die App automatisch, wenn Sie sich bei Windows anmelden. Wird unter HKCU gespeichert, daher sind keine Administratorrechte nötig.</value>
+  </data>
+  <data name="ExportDiagnostics" xml:space="preserve">
+    <value>Diagnose exportieren</value>
+  </data>
+  <data name="ExportDiagnosticsInfo" xml:space="preserve">
+    <value>Speichert eine JSON-Momentaufnahme von Client-Zustand, Server-URL, Hub-Status und Kameraliste — für Support und Fehlersuche.</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ServerStatusLabel" xml:space="preserve">
+    <value>Server: </value>
+  </data>
+  <data name="HubStatusLabel" xml:space="preserve">
+    <value>Hub: </value>
+  </data>
+  <data name="CamerasStatusLabel" xml:space="preserve">
+    <value>Kameras: </value>
+  </data>
+  <data name="RecordingsStatusLabel" xml:space="preserve">
+    <value>Aufnahmen: </value>
+  </data>
+  <data name="DiskStatusInfo" xml:space="preserve">
+    <value>Die Festplatte des Servers mit den Aufnahmen. Wird rot angezeigt, wenn weniger frei ist, als die Aufnahmen brauchen; neue Aufnahmen werden dann abgelehnt.</value>
+  </data>
+  <data name="DiskStatusLabel" xml:space="preserve">
+    <value>Datenträger: </value>
+  </data>
+  <data name="LatencyStatusLabel" xml:space="preserve">
+    <value>Latenz: </value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Wird geladen...</value>
+  </data>
+  <data name="VersionNumber1" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="LoadingConfiguration" xml:space="preserve">
+    <value>Konfiguration wird geladen...</value>
+  </data>
+  <data name="InitializingVideoEngine" xml:space="preserve">
+    <value>Video-Engine wird initialisiert...</value>
+  </data>
+  <data name="StartingServices" xml:space="preserve">
+    <value>Dienste werden gestartet...</value>
+  </data>
+  <data name="ApplyingSettings" xml:space="preserve">
+    <value>Einstellungen werden angewendet...</value>
+  </data>
+  <data name="ConnectingToServer" xml:space="preserve">
+    <value>Verbindung zum Server wird hergestellt...</value>
+  </data>
+  <data name="LoadingMainWindow" xml:space="preserve">
+    <value>Hauptfenster wird geladen...</value>
+  </data>
+  <data name="ViewCameras" xml:space="preserve">
+    <value>Kameras anzeigen</value>
+  </data>
+  <data name="RefreshCurrentView" xml:space="preserve">
+    <value>Aktuelle Ansicht aktualisieren</value>
+  </data>
+  <data name="ToggleFullScreen" xml:space="preserve">
+    <value>Vollbild umschalten</value>
+  </data>
+  <data name="Testing" xml:space="preserve">
+    <value>Wird getestet...</value>
+  </data>
+  <data name="JsonFileFilter" xml:space="preserve">
+    <value>JSON-Datei (*.json)|*.json|Alle Dateien (*.*)|*.*</value>
+  </data>
+  <data name="DiagnosticsExportedTo1" xml:space="preserve">
+    <value>Diagnose exportiert nach {0}</value>
+  </data>
+  <data name="DiagnosticsExportFailed1" xml:space="preserve">
+    <value>Diagnoseexport fehlgeschlagen: {0}</value>
+  </data>
 </root>

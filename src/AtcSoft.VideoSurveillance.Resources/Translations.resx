@@ -1566,4 +1566,118 @@
   <data name="FailedToLoadRecordings1" xml:space="preserve">
     <value>Failed to load recordings: {0}</value>
   </data>
+  <data name="ConnectToServer" xml:space="preserve">
+    <value>Connect to Server</value>
+  </data>
+  <data name="ServerProfiles" xml:space="preserve">
+    <value>Server Profiles</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="ServerUrl" xml:space="preserve">
+    <value>Server URL</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Test Connection</value>
+  </data>
+  <data name="ExitApplication" xml:space="preserve">
+    <value>Exit Application</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="ServerProfile" xml:space="preserve">
+    <value>Server Profile</value>
+  </data>
+  <data name="OptionalDescription" xml:space="preserve">
+    <value>Optional description</value>
+  </data>
+  <data name="LiveView" xml:space="preserve">
+    <value>Live View</value>
+  </data>
+  <data name="ChangeServer" xml:space="preserve">
+    <value>Change Server</value>
+  </data>
+  <data name="StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="StartWithWindowsInfo" xml:space="preserve">
+    <value>Run this app automatically when you sign in to Windows. Stored under HKCU so no admin rights are required.</value>
+  </data>
+  <data name="ExportDiagnostics" xml:space="preserve">
+    <value>Export Diagnostics</value>
+  </data>
+  <data name="ExportDiagnosticsInfo" xml:space="preserve">
+    <value>Save a JSON snapshot of client state, server URL, hub status, and camera list — for support / issue triage.</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="ServerStatusLabel" xml:space="preserve">
+    <value>Server: </value>
+  </data>
+  <data name="HubStatusLabel" xml:space="preserve">
+    <value>Hub: </value>
+  </data>
+  <data name="CamerasStatusLabel" xml:space="preserve">
+    <value>Cameras: </value>
+  </data>
+  <data name="RecordingsStatusLabel" xml:space="preserve">
+    <value>Recordings: </value>
+  </data>
+  <data name="DiskStatusInfo" xml:space="preserve">
+    <value>The server's disk with the recordings. Shown in red when less is free than the recordings need; new recordings are then refused.</value>
+  </data>
+  <data name="DiskStatusLabel" xml:space="preserve">
+    <value>Disk: </value>
+  </data>
+  <data name="LatencyStatusLabel" xml:space="preserve">
+    <value>Latency: </value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="VersionNumber1" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="LoadingConfiguration" xml:space="preserve">
+    <value>Loading configuration...</value>
+  </data>
+  <data name="InitializingVideoEngine" xml:space="preserve">
+    <value>Initializing video engine...</value>
+  </data>
+  <data name="StartingServices" xml:space="preserve">
+    <value>Starting services...</value>
+  </data>
+  <data name="ApplyingSettings" xml:space="preserve">
+    <value>Applying settings...</value>
+  </data>
+  <data name="ConnectingToServer" xml:space="preserve">
+    <value>Connecting to server...</value>
+  </data>
+  <data name="LoadingMainWindow" xml:space="preserve">
+    <value>Loading main window...</value>
+  </data>
+  <data name="ViewCameras" xml:space="preserve">
+    <value>View Cameras</value>
+  </data>
+  <data name="RefreshCurrentView" xml:space="preserve">
+    <value>Refresh Current View</value>
+  </data>
+  <data name="ToggleFullScreen" xml:space="preserve">
+    <value>Toggle Full Screen</value>
+  </data>
+  <data name="Testing" xml:space="preserve">
+    <value>Testing...</value>
+  </data>
+  <data name="JsonFileFilter" xml:space="preserve">
+    <value>JSON file (*.json)|*.json|All files (*.*)|*.*</value>
+  </data>
+  <data name="DiagnosticsExportedTo1" xml:space="preserve">
+    <value>Diagnostics exported to {0}</value>
+  </data>
+  <data name="DiagnosticsExportFailed1" xml:space="preserve">
+    <value>Diagnostics export failed: {0}</value>
+  </data>
 </root>

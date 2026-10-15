@@ -1,6 +1,7 @@
 <atcTheming:NiceWindow
     x:Class="AtcSoft.VideoSurveillance.Wpf.App.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:app="clr-namespace:AtcSoft.VideoSurveillance.Wpf.App"
     xmlns:atcTheming="https://github.com/atc-net/atc-wpf/tree/main/schemas"
@@ -70,7 +71,7 @@
                 <fluent:QuickAccessMenuItem IsChecked="True">
                     <fluent:Button
                         Command="{Binding Path=ViewLiveViewCommand}"
-                        Header="Live View"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=LiveView}"
                         Size="Small">
                         <fluent:Button.Icon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Video" />
@@ -80,7 +81,7 @@
                 <fluent:QuickAccessMenuItem IsChecked="True">
                     <fluent:Button
                         Command="{Binding Path=RefreshCurrentViewCommand}"
-                        Header="Refresh"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Refresh}"
                         Size="Small">
                         <fluent:Button.Icon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="SyncAlt" />
@@ -90,7 +91,7 @@
                 <fluent:QuickAccessMenuItem IsChecked="True">
                     <fluent:Button
                         Command="{Binding Path=ShowSettingsCommand}"
-                        Header="Settings"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Settings}"
                         Size="Small">
                         <fluent:Button.Icon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Cog" />
@@ -105,7 +106,7 @@
                     <fluent:BackstageTabControl>
                         <fluent:Button
                             Command="{Binding Path=ChangeServerCommand}"
-                            Header="Change Server"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ChangeServer}"
                             KeyTip="V"
                             Visibility="{Binding Path=ShowChangeServer}">
                             <fluent:Button.Icon>
@@ -114,7 +115,7 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=ShowSettingsCommand}"
-                            Header="Settings"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Settings}"
                             KeyTip="S">
                             <fluent:Button.Icon>
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Cog" />
@@ -122,15 +123,15 @@
                         </fluent:Button>
                         <CheckBox
                             Margin="20,16,20,8"
-                            Content="Start with Windows"
+                            Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StartWithWindows}"
                             FontSize="14"
                             Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}"
                             IsChecked="{Binding Path=StartWithWindows, Mode=TwoWay}"
-                            ToolTip="Run this app automatically when you sign in to Windows. Stored under HKCU so no admin rights are required." />
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StartWithWindowsInfo}" />
                         <fluent:SeparatorTabItem />
                         <fluent:Button
                             Command="{Binding Path=ShowCheckForUpdatesCommand}"
-                            Header="Check for Updates"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CheckForUpdates}"
                             KeyTip="U">
                             <fluent:Button.Icon>
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Download" />
@@ -138,16 +139,16 @@
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=ExportDiagnosticsCommand}"
-                            Header="Export Diagnostics"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ExportDiagnostics}"
                             KeyTip="D"
-                            ToolTip="Save a JSON snapshot of client state, server URL, hub status, and camera list — for support / issue triage.">
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ExportDiagnosticsInfo}">
                             <fluent:Button.Icon>
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="FileExport" />
                             </fluent:Button.Icon>
                         </fluent:Button>
                         <fluent:Button
                             Command="{Binding Path=ShowAboutCommand}"
-                            Header="About"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=About}"
                             KeyTip="A">
                             <fluent:Button.Icon>
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="InfoCircle" />
@@ -156,7 +157,7 @@
                         <fluent:SeparatorTabItem />
                         <fluent:Button
                             Command="{Binding Path=ExitCommand}"
-                            Header="Exit"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Exit}"
                             KeyTip="X">
                             <fluent:Button.Icon>
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="SignOutAlt" />
@@ -167,11 +168,11 @@
             </fluent:Ribbon.Menu>
 
             <!--  Home Tab  -->
-            <fluent:RibbonTabItem Header="Home">
-                <fluent:RibbonGroupBox Header="Live View">
+            <fluent:RibbonTabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Home}">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=LiveView}">
                     <fluent:Button
                         Command="{Binding Path=ViewLiveViewCommand}"
-                        Header="Live View"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=LiveView}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Video" />
@@ -179,10 +180,10 @@
                     </fluent:Button>
                 </fluent:RibbonGroupBox>
 
-                <fluent:RibbonGroupBox Header="Dashboard">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Dashboard}">
                     <fluent:Button
                         Command="{Binding Path=ViewDashboardCommand}"
-                        Header="Dashboard"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Dashboard}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="TachometerAlt" />
@@ -190,10 +191,10 @@
                     </fluent:Button>
                 </fluent:RibbonGroupBox>
 
-                <fluent:RibbonGroupBox Header="Cameras">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Cameras}">
                     <fluent:Button
                         Command="{Binding Path=ViewCamerasCommand}"
-                        Header="Cameras"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Cameras}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Camera" />
@@ -201,10 +202,10 @@
                     </fluent:Button>
                 </fluent:RibbonGroupBox>
 
-                <fluent:RibbonGroupBox Header="Layouts">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Layouts}">
                     <fluent:Button
                         Command="{Binding Path=ViewLayoutsCommand}"
-                        Header="Layouts"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Layouts}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="ThLarge" />
@@ -212,10 +213,10 @@
                     </fluent:Button>
                 </fluent:RibbonGroupBox>
 
-                <fluent:RibbonGroupBox Header="Recordings">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Recordings}">
                     <fluent:Button
                         Command="{Binding Path=ViewRecordingsCommand}"
-                        Header="Recordings"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Recordings}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Film" />
@@ -223,10 +224,10 @@
                     </fluent:Button>
                 </fluent:RibbonGroupBox>
 
-                <fluent:RibbonGroupBox Header="Notifications">
+                <fluent:RibbonGroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Notifications}">
                     <fluent:Button
                         Command="{Binding Path=ViewNotificationsCommand}"
-                        Header="Notifications"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Notifications}"
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Bell" />
@@ -250,29 +251,29 @@
             <Separator />
             <StatusBarItem>
                 <TextBlock>
-                    <Run Text="Server: " /><Run Text="{Binding Path=ServerUrl, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ServerStatusLabel}" /><Run Text="{Binding Path=ServerUrl, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />
             <StatusBarItem>
                 <TextBlock>
-                    <Run Text="Hub: " /><Run Text="{Binding Path=HubConnectionState, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=HubStatusLabel}" /><Run Text="{Binding Path=HubConnectionState, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />
             <StatusBarItem>
                 <TextBlock>
-                    <Run Text="Cameras: " /><Run Text="{Binding Path=ConnectedCameras, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=CamerasStatusLabel}" /><Run Text="{Binding Path=ConnectedCameras, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />
             <StatusBarItem>
                 <TextBlock>
-                    <Run Text="Recordings: " /><Run Text="{Binding Path=ActiveRecordings, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RecordingsStatusLabel}" /><Run Text="{Binding Path=ActiveRecordings, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />
-            <StatusBarItem ToolTip="The server's disk with the recordings. Shown in red when less is free than the recordings need; new recordings are then refused.">
+            <StatusBarItem ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=DiskStatusInfo}">
                 <TextBlock AutomationProperties.Name="Server recording disk">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
@@ -284,7 +285,7 @@
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
-                    <Run Text="Disk: " /><Run Text="{Binding Path=ServerDiskSpace, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=DiskStatusLabel}" /><Run Text="{Binding Path=ServerDiskSpace, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
             <Separator />
@@ -292,7 +293,7 @@
                 HorizontalAlignment="Right"
                 Margin="0,0,16,0">
                 <TextBlock>
-                    <Run Text="Latency: " /><Run Text="{Binding Path=ServerLatency, Mode=OneWay}" />
+                    <Run Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=LatencyStatusLabel}" /><Run Text="{Binding Path=ServerLatency, Mode=OneWay}" />
                 </TextBlock>
             </StatusBarItem>
         </StatusBar>

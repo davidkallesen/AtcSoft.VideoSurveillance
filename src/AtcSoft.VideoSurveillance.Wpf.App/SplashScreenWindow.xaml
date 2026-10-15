@@ -1,13 +1,14 @@
 <atcTheming:NiceWindow
     x:Class="AtcSoft.VideoSurveillance.Wpf.App.SplashScreenWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:app="clr-namespace:AtcSoft.VideoSurveillance.Wpf.App"
     xmlns:atcTheming="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dependencyObjects="clr-namespace:Atc.Wpf.DependencyObjects;assembly=Atc.Wpf"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Loading..."
+    Title="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Loading}"
     Width="450"
     Height="220"
     d:DataContext="{d:DesignInstance Type=app:SplashScreenWindow,

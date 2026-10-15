@@ -1566,4 +1566,118 @@
   <data name="FailedToLoadRecordings1" xml:space="preserve">
     <value>Kunne ikke indlæse optagelser: {0}</value>
   </data>
+  <data name="ConnectToServer" xml:space="preserve">
+    <value>Forbind til server</value>
+  </data>
+  <data name="ServerProfiles" xml:space="preserve">
+    <value>Serverprofiler</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Tilføj</value>
+  </data>
+  <data name="ServerUrl" xml:space="preserve">
+    <value>Server-URL</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Test forbindelse</value>
+  </data>
+  <data name="ExitApplication" xml:space="preserve">
+    <value>Afslut programmet</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Forbind</value>
+  </data>
+  <data name="ServerProfile" xml:space="preserve">
+    <value>Serverprofil</value>
+  </data>
+  <data name="OptionalDescription" xml:space="preserve">
+    <value>Valgfri beskrivelse</value>
+  </data>
+  <data name="LiveView" xml:space="preserve">
+    <value>Livevisning</value>
+  </data>
+  <data name="ChangeServer" xml:space="preserve">
+    <value>Skift server</value>
+  </data>
+  <data name="StartWithWindows" xml:space="preserve">
+    <value>Start med Windows</value>
+  </data>
+  <data name="StartWithWindowsInfo" xml:space="preserve">
+    <value>Start programmet automatisk, når du logger på Windows. Gemmes under HKCU, så der kræves ingen administratorrettigheder.</value>
+  </data>
+  <data name="ExportDiagnostics" xml:space="preserve">
+    <value>Eksportér diagnostik</value>
+  </data>
+  <data name="ExportDiagnosticsInfo" xml:space="preserve">
+    <value>Gem et JSON-øjebliksbillede af klientens tilstand, server-URL, hub-status og kameraliste — til support og fejlsøgning.</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Hjem</value>
+  </data>
+  <data name="ServerStatusLabel" xml:space="preserve">
+    <value>Server: </value>
+  </data>
+  <data name="HubStatusLabel" xml:space="preserve">
+    <value>Hub: </value>
+  </data>
+  <data name="CamerasStatusLabel" xml:space="preserve">
+    <value>Kameraer: </value>
+  </data>
+  <data name="RecordingsStatusLabel" xml:space="preserve">
+    <value>Optagelser: </value>
+  </data>
+  <data name="DiskStatusInfo" xml:space="preserve">
+    <value>Serverens disk med optagelserne. Vises med rødt, når der er mindre ledig plads, end optagelserne kræver; nye optagelser afvises så.</value>
+  </data>
+  <data name="DiskStatusLabel" xml:space="preserve">
+    <value>Disk: </value>
+  </data>
+  <data name="LatencyStatusLabel" xml:space="preserve">
+    <value>Forsinkelse: </value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Indlæser...</value>
+  </data>
+  <data name="VersionNumber1" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="LoadingConfiguration" xml:space="preserve">
+    <value>Indlæser konfiguration...</value>
+  </data>
+  <data name="InitializingVideoEngine" xml:space="preserve">
+    <value>Starter videomotoren...</value>
+  </data>
+  <data name="StartingServices" xml:space="preserve">
+    <value>Starter tjenester...</value>
+  </data>
+  <data name="ApplyingSettings" xml:space="preserve">
+    <value>Anvender indstillinger...</value>
+  </data>
+  <data name="ConnectingToServer" xml:space="preserve">
+    <value>Forbinder til serveren...</value>
+  </data>
+  <data name="LoadingMainWindow" xml:space="preserve">
+    <value>Indlæser hovedvinduet...</value>
+  </data>
+  <data name="ViewCameras" xml:space="preserve">
+    <value>Vis kameraer</value>
+  </data>
+  <data name="RefreshCurrentView" xml:space="preserve">
+    <value>Opdater den aktuelle visning</value>
+  </data>
+  <data name="ToggleFullScreen" xml:space="preserve">
+    <value>Skift fuld skærm</value>
+  </data>
+  <data name="Testing" xml:space="preserve">
+    <value>Tester...</value>
+  </data>
+  <data name="JsonFileFilter" xml:space="preserve">
+    <value>JSON-fil (*.json)|*.json|Alle filer (*.*)|*.*</value>
+  </data>
+  <data name="DiagnosticsExportedTo1" xml:space="preserve">
+    <value>Diagnostik eksporteret til {0}</value>
+  </data>
+  <data name="DiagnosticsExportFailed1" xml:space="preserve">
+    <value>Eksport af diagnostik fejlede: {0}</value>
+  </data>
 </root>

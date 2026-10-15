@@ -419,11 +419,11 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
     }
 
     /// <summary>
-    /// Builds the flat API DTO from the in-memory cache. Theme / language /
-    /// window-state fields *are* sent so the API server has a record of the
-    /// last values written, but the WPF client never reads them back —
-    /// the local <see cref="ClientPreferences"/> file is authoritative for
-    /// those.
+    /// Builds the flat API DTO from the in-memory cache. Theme and window
+    /// state are sent so the API server has a record of the last values
+    /// written, but the WPF client never reads them back — the local
+    /// <see cref="ClientPreferences"/> file is authoritative for those. The
+    /// language is not sent: it belongs to this client.
     /// </summary>
     internal static UpdateSettingsRequest BuildApiSettings(
         ApplicationSettings settings)
@@ -438,7 +438,6 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         return new UpdateSettingsRequest(
             ThemeBase: themeBase,
             ThemeAccent: settings.General.ThemeAccent,
-            Language: settings.General.Language,
             ConnectOnStartup: settings.General.ConnectCamerasOnStartup,
             StartMaximized: settings.General.StartMaximized,
             ShowOverlayTitle: settings.CameraDisplay.ShowOverlayTitle,
