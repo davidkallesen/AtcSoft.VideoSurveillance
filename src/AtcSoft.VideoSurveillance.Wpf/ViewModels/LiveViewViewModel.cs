@@ -18,6 +18,7 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     private bool disposed;
     private bool loadedOnce;
     private bool usbWatcherSubscribed;
+    private Dictionary<string, string> gridPresetItems = BuildGridPresetItems();
 
     [ObservableProperty]
     private ObservableCollection<CameraTileViewModel> cameraTiles = [];
@@ -54,7 +55,11 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the grid sizes to choose from.
     /// </summary>
-    public IDictionary<string, string> GridPresetItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    public IDictionary<string, string> GridPresetItems
+        => gridPresetItems;
+
+    private static Dictionary<string, string> BuildGridPresetItems()
+        => new(StringComparer.Ordinal)
     {
         ["0"] = Translations.GridSizeAuto,
         ["1"] = "1 \u00D7 1",
@@ -62,6 +67,20 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         ["3"] = "3 \u00D7 3",
         ["4"] = "4 \u00D7 4",
     };
+
+    /// <summary>
+    /// Shows the grid sizes in the language just chosen.
+    /// </summary>
+    internal void RefreshTexts()
+    {
+        gridPresetItems = BuildGridPresetItems();
+        OnPropertyChanged(nameof(GridPresetItems));
+    }
+
+    private void OnUiCultureChanged(
+        object? sender,
+        UiCultureEventArgs e)
+        => RefreshTexts();
 
     [RelayCommand]
     private void ClearFilter()
@@ -158,6 +177,9 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
         this.usbCameraWatcher = usbCameraWatcher;
         this.apiBaseAddress = apiBaseAddress;
         this.settingsService = settingsService;
+
+        // The language changes live; CultureManager holds the handler weakly.
+        CultureManager.UiCultureChanged += OnUiCultureChanged;
 
         // The grid starts in the size it was last shown in.
         selectedGridPreset = ((int)GridPager.ParsePreset(

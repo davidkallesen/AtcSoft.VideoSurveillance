@@ -42,6 +42,9 @@ public sealed partial class RecordingsViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(apiBaseUri);
 
+        // The language changes live; CultureManager holds the handler weakly.
+        CultureManager.UiCultureChanged += OnUiCultureChanged;
+
         this.gatewayService = gatewayService;
         this.apiBaseUri = apiBaseUri;
     }
@@ -54,7 +57,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// <summary>
     /// Gets the day filter items.
     /// </summary>
-    public IDictionary<string, string> DayFilterItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    public IDictionary<string, string> DayFilterItems
+        => new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["_ALL_"] = Translations.AllDays,
         ["TODAY"] = Translations.FilterToday,
@@ -68,7 +72,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// <summary>
     /// Gets the time filter items.
     /// </summary>
-    public IDictionary<string, string> TimeFilterItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    public IDictionary<string, string> TimeFilterItems
+        => new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["_ALL_"] = Translations.AllTimes,
         ["0_6"] = "00:00 - 06:00",
@@ -188,6 +193,22 @@ public sealed partial class RecordingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanPlay));
         CommandManager.InvalidateRequerySuggested();
     }
+
+    /// <summary>
+    /// Shows the lists and the status in the language just chosen.
+    /// </summary>
+    internal void RefreshTexts()
+    {
+        OnPropertyChanged(nameof(DayFilterItems));
+        OnPropertyChanged(nameof(TimeFilterItems));
+        UpdateCameraFilters();
+        UpdateStatusMessage();
+    }
+
+    private void OnUiCultureChanged(
+        object? sender,
+        UiCultureEventArgs e)
+        => RefreshTexts();
 
     private void UpdateCameraFilters()
     {

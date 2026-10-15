@@ -33,6 +33,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string hubConnectionState = Translations.Disconnected;
 
+    // The hub's own state, kept so its text can follow a language change.
+    private string lastHubState = "Disconnected";
+
     [ObservableProperty(DependentPropertyNames = [nameof(ShowChangeServer)])]
     private bool isAspireManaged;
 
@@ -123,13 +126,22 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _ = Application.Current?.Dispatcher.InvokeAsync(() =>
             {
+                lastHubState = state;
                 HubConnectionState = HubStates.HubText(state);
             });
         };
 
         this.hubService.OnConnectionStateChanged += OnConnectionStateChanged;
         this.hubService.OnRecordingStateChanged += OnRecordingStateChanged;
+
+        // The language changes live; CultureManager holds the handler weakly.
+        CultureManager.UiCultureChanged += OnUiCultureChanged;
     }
+
+    private void OnUiCultureChanged(
+        object? sender,
+        UiCultureEventArgs e)
+        => HubConnectionState = HubStates.HubText(lastHubState);
 
     [RelayCommand]
     private void ViewLiveView()
