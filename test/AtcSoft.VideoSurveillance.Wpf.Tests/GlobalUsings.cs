@@ -1,4 +1,5 @@
 global using System.Globalization;
+global using System.IO;
 global using System.Net;
 global using System.Net.Http;
 global using System.Net.Http.Headers;
@@ -18,6 +19,7 @@ global using AtcSoft.VideoSurveillance.Wpf.ViewModels;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Time.Testing;
 global using VideoSurveillance.Generated;
+global using VideoSurveillance.Generated.Auth.Models;
 global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Events.Endpoints.Interfaces;

@@ -1,5 +1,6 @@
 ﻿global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
+global using System.Net;
 global using System.Runtime.CompilerServices;
 
 global using AtcSoft.VideoSurveillance.Blazor.App.Logic;
@@ -9,6 +10,7 @@ global using AtcSoft.VideoSurveillance.Resources;
 global using Microsoft.Extensions.DependencyInjection;
 
 global using VideoSurveillance.Generated;
+global using VideoSurveillance.Generated.Auth.Models;
 global using VideoSurveillance.Generated.Cameras.Models;
 global using VideoSurveillance.Generated.Devices.Models;
 global using VideoSurveillance.Generated.Events.Endpoints.Interfaces;

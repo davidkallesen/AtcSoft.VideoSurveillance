@@ -121,6 +121,28 @@
                                 <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Cog" />
                             </fluent:Button.Icon>
                         </fluent:Button>
+                        <fluent:SeparatorTabItem />
+                        <TextBlock
+                            Margin="20,8,20,4"
+                            FontSize="14"
+                            Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}"
+                            Text="{Binding Path=SignedInText}" />
+                        <fluent:Button
+                            Command="{Binding Path=ChangePasswordCommand}"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ChangePassword}"
+                            KeyTip="P">
+                            <fluent:Button.Icon>
+                                <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Key" />
+                            </fluent:Button.Icon>
+                        </fluent:Button>
+                        <fluent:Button
+                            Command="{Binding Path=SignOutCommand}"
+                            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=SignOut}"
+                            KeyTip="O">
+                            <fluent:Button.Icon>
+                                <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="UserSlash" />
+                            </fluent:Button.Icon>
+                        </fluent:Button>
                         <CheckBox
                             Margin="20,16,20,8"
                             Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StartWithWindows}"

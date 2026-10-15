@@ -30,14 +30,17 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     ];
 
     private readonly IListEventsEndpoint endpoint;
+    private readonly ClientSession? session;
 
     public SurveillanceEventService(
         IListEventsEndpoint endpoint,
         ILogger<SurveillanceEventService> logger,
-        SurveillanceEventServiceOptions options)
+        SurveillanceEventServiceOptions options,
+        ClientSession? session = null)
         : base(logger, options)
     {
         this.endpoint = endpoint;
+        this.session = session;
     }
 
     public event Action<ConnectionStateChangedEvent>? OnConnectionStateChanged;
@@ -98,6 +101,19 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
         var opened = false;
         while (!cancellationToken.IsCancellationRequested)
         {
+            // The server answers a client that is not signed in with 401.
+            if (session is not null)
+            {
+                try
+                {
+                    await session.WaitUntilSignedInAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
+
             var read = false;
             var answered = false;
             try

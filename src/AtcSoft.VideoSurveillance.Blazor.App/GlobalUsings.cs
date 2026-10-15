@@ -1,5 +1,6 @@
 global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
+global using System.Net;
 global using System.Text.Json;
 
 global using Atc.Rest.Api.SourceGenerator;
@@ -20,6 +21,15 @@ global using MudBlazor;
 global using MudBlazor.Services;
 
 global using VideoSurveillance.Generated;
+global using VideoSurveillance.Generated.ApiKeys.Client;
+global using VideoSurveillance.Generated.ApiKeys.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.ApiKeys.Models;
+global using VideoSurveillance.Generated.Audit.Client;
+global using VideoSurveillance.Generated.Audit.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Audit.Models;
+global using VideoSurveillance.Generated.Auth.Client;
+global using VideoSurveillance.Generated.Auth.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Auth.Models;
 global using VideoSurveillance.Generated.Cameras.Client;
 global using VideoSurveillance.Generated.Cameras.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Cameras.Models;
@@ -39,6 +49,9 @@ global using VideoSurveillance.Generated.Resilience;
 global using VideoSurveillance.Generated.Settings.Client;
 global using VideoSurveillance.Generated.Settings.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Users.Client;
+global using VideoSurveillance.Generated.Users.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Users.Models;
 global using VideoSurveillance.Generated.Webhooks.Client;
 global using VideoSurveillance.Generated.Webhooks.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Webhooks.Models;

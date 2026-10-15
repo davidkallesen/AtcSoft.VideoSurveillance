@@ -188,6 +188,20 @@ public partial class App
         RenderSplashMessage(Translations.StartingServices, 20);
         await host.StartAsync();
 
+        // Sign in (35%): the session of the last start, else the dialog. The
+        // event stream and everything after this needs it.
+        RenderSplashMessage(Translations.SigningIn, 35);
+        splashScreen.Hide();
+        var signedIn = await host.Services.GetRequiredService<SignInFlow>().EnsureSignedInAsync(owner: null);
+        if (!signedIn)
+        {
+            splashScreen.Close();
+            Shutdown();
+            return;
+        }
+
+        splashScreen.Show();
+
         // Apply theme from settings (50%). Settings are pulled from the
         // API server (server-side fields) merged with local per-user
         // prefs (theme / language / window state) — the cache must be
@@ -318,12 +332,20 @@ public partial class App
                 services.AddSingleton<IGpuAcceleratorFactory, D3D11AcceleratorFactory>();
                 services.AddSingleton<IVideoPlayerFactory, VideoPlayerFactory>();
 
+                // The signed-in session; every call carries its access token
+                // (outermost, so a retry sends the same one). The refresh token
+                // is kept per server, encrypted for the Windows user.
+                services.AddSingleton(TimeProvider.System);
+                services.AddSingleton<ClientSession>();
+                services.AddSingleton(new SessionStore(SessionStore.DefaultFolder));
+
                 // Named HttpClient (matches Blazor.App pattern)
                 services
                     .AddHttpClient("VideoSurveillance-ApiClient", client =>
                     {
                         client.BaseAddress = new Uri(apiBaseAddress);
                     })
+                    .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredService<ClientSession>()))
                     .AddApiResilience();
 
                 // Source-generated endpoint DI
@@ -336,6 +358,13 @@ public partial class App
                     svc.ApiBaseUrl = apiBaseAddress;
                     return svc;
                 });
+
+                services.AddSingleton(sp => new AuthService(
+                    sp.GetRequiredService<GatewayService>(),
+                    sp.GetRequiredService<ClientSession>(),
+                    sp.GetRequiredService<SessionStore>(),
+                    new Uri(apiBaseAddress)));
+                services.AddSingleton<SignInFlow>();
 
                 // The camera events (GET /events), read from the start to the
                 // end of the host; one instance for the views and the host.
@@ -399,6 +428,9 @@ public partial class App
                 services.AddSingleton(sp => new MainWindowViewModel(
                     sp.GetRequiredService<GatewayService>(),
                     sp.GetRequiredService<SurveillanceEventService>(),
+                    sp.GetRequiredService<AuthService>(),
+                    sp.GetRequiredService<SignInFlow>(),
+                    sp.GetRequiredService<ClientSession>(),
                     sp.GetRequiredService<IGitHubReleaseService>(),
                     sp.GetRequiredService<IApplicationSettingsService>(),
                     sp.GetRequiredService<IAutoStartService>(),

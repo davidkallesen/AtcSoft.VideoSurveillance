@@ -2469,4 +2469,106 @@
   <data name="ColourYellow" xml:space="preserve">
     <value>Yellow</value>
   </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="SignOut" xml:space="preserve">
+    <value>Sign out</value>
+  </data>
+  <data name="SignInToTheServer" xml:space="preserve">
+    <value>Sign in to the server</value>
+  </data>
+  <data name="SigningIn" xml:space="preserve">
+    <value>Signing in...</value>
+  </data>
+  <data name="CreateTheFirstAdmin" xml:space="preserve">
+    <value>Create the first admin</value>
+  </data>
+  <data name="CreateTheFirstAdminHelp" xml:space="preserve">
+    <value>The server has no users yet. Create its first admin with the setup code.</value>
+  </data>
+  <data name="SetupCode" xml:space="preserve">
+    <value>Setup code</value>
+  </data>
+  <data name="SetupCodeHelp" xml:space="preserve">
+    <value>The code is in the file setup-code.txt in the server's data folder.</value>
+  </data>
+  <data name="SignedInAs1" xml:space="preserve">
+    <value>Signed in as {0}</value>
+  </data>
+  <data name="SessionEnded" xml:space="preserve">
+    <value>Your session has ended; sign in again.</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="CurrentPassword" xml:space="preserve">
+    <value>Current password</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="PasswordChanged" xml:space="preserve">
+    <value>The password is changed. Sign in again on your other devices.</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>The password needs at least 8 characters.</value>
+  </data>
+  <data name="LeaveEmptyToKeepIt" xml:space="preserve">
+    <value>Leave empty to keep it</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>Add user</value>
+  </data>
+  <data name="EditUser1" xml:space="preserve">
+    <value>Edit the user '{0}'</value>
+  </data>
+  <data name="RemoveUser1" xml:space="preserve">
+    <value>Remove the user '{0}'?</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="RoleViewer" xml:space="preserve">
+    <value>Viewer</value>
+  </data>
+  <data name="RoleOperator" xml:space="preserve">
+    <value>Operator</value>
+  </data>
+  <data name="RoleAdmin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="ApiKeys" xml:space="preserve">
+    <value>API keys</value>
+  </data>
+  <data name="AddApiKey" xml:space="preserve">
+    <value>Make API key</value>
+  </data>
+  <data name="ApiKeyShownOnce" xml:space="preserve">
+    <value>Copy the key now: it is not shown again.</value>
+  </data>
+  <data name="RemoveApiKey1" xml:space="preserve">
+    <value>Remove the API key '{0}'?</value>
+  </data>
+  <data name="AuditLog" xml:space="preserve">
+    <value>Audit log</value>
+  </data>
+  <data name="AuditUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="AuditAction" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="AuditTarget" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="NoUsersAccess" xml:space="preserve">
+    <value>Only an admin can manage users, API keys and the audit log.</value>
+  </data>
 </root>

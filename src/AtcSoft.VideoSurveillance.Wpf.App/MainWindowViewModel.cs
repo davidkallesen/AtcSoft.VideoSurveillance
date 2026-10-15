@@ -7,6 +7,9 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly GatewayService gatewayService;
     private readonly SurveillanceEventService eventService;
+    private readonly AuthService authService;
+    private readonly SignInFlow signInFlow;
+    private readonly ClientSession session;
     private readonly IGitHubReleaseService gitHubReleaseService;
     private readonly IApplicationSettingsService settingsService;
     private readonly IAutoStartService autoStartService;
@@ -67,6 +70,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         GatewayService gatewayService,
         SurveillanceEventService eventService,
+        AuthService authService,
+        SignInFlow signInFlow,
+        ClientSession session,
         IGitHubReleaseService gitHubReleaseService,
         IApplicationSettingsService settingsService,
         IAutoStartService autoStartService,
@@ -82,6 +88,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(eventService);
+        ArgumentNullException.ThrowIfNull(authService);
+        ArgumentNullException.ThrowIfNull(signInFlow);
+        ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(gitHubReleaseService);
         ArgumentNullException.ThrowIfNull(settingsService);
         ArgumentNullException.ThrowIfNull(autoStartService);
@@ -95,6 +104,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         this.gatewayService = gatewayService;
         this.eventService = eventService;
+        this.authService = authService;
+        this.signInFlow = signInFlow;
+        this.session = session;
         this.gitHubReleaseService = gitHubReleaseService;
         this.settingsService = settingsService;
         this.autoStartService = autoStartService;
@@ -175,6 +187,38 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ViewNotifications()
         => CurrentView = notificationHistoryViewModel;
+
+    /// <summary>
+    /// Gets who is signed in, for the backstage.
+    /// </summary>
+    public string SignedInText
+        => string.Format(CultureInfo.CurrentCulture, Translations.SignedInAs1, session.UserName);
+
+    [RelayCommand]
+    private void ChangePassword()
+    {
+        var viewModel = new AtcSoft.VideoSurveillance.Wpf.Dialogs.ChangePasswordDialogViewModel(authService.ChangeOwnPasswordAsync);
+        var dialog = new AtcSoft.VideoSurveillance.Wpf.Dialogs.ChangePasswordDialog(viewModel)
+        {
+            Owner = Application.Current.MainWindow,
+        };
+
+        dialog.ShowDialog();
+    }
+
+    // Signed out, the client signs in again (as someone else, perhaps) or closes.
+    [RelayCommand("SignOut")]
+    private async Task SignOutAsync()
+    {
+        await authService.SignOutAsync().ConfigureAwait(true);
+        if (!await signInFlow.ShowDialogAsync(Application.Current.MainWindow).ConfigureAwait(true))
+        {
+            Application.Current.Shutdown();
+            return;
+        }
+
+        RaisePropertyChanged(nameof(SignedInText));
+    }
 
     [RelayCommand("ShowSettings")]
     private async Task ShowSettingsAsync()

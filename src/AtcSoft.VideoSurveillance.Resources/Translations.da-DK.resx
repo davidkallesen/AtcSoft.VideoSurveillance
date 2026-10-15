@@ -2472,4 +2472,106 @@ Miniature:
   <data name="ColourYellow" xml:space="preserve">
     <value>Gul</value>
   </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Log ind</value>
+  </data>
+  <data name="SignOut" xml:space="preserve">
+    <value>Log ud</value>
+  </data>
+  <data name="SignInToTheServer" xml:space="preserve">
+    <value>Log ind på serveren</value>
+  </data>
+  <data name="SigningIn" xml:space="preserve">
+    <value>Logger ind...</value>
+  </data>
+  <data name="CreateTheFirstAdmin" xml:space="preserve">
+    <value>Opret den første administrator</value>
+  </data>
+  <data name="CreateTheFirstAdminHelp" xml:space="preserve">
+    <value>Serveren har ingen brugere endnu. Opret den første administrator med opsætningskoden.</value>
+  </data>
+  <data name="SetupCode" xml:space="preserve">
+    <value>Opsætningskode</value>
+  </data>
+  <data name="SetupCodeHelp" xml:space="preserve">
+    <value>Koden står i filen setup-code.txt i serverens datamappe.</value>
+  </data>
+  <data name="SignedInAs1" xml:space="preserve">
+    <value>Logget ind som {0}</value>
+  </data>
+  <data name="SessionEnded" xml:space="preserve">
+    <value>Din session er udløbet; log ind igen.</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Skift adgangskode</value>
+  </data>
+  <data name="CurrentPassword" xml:space="preserve">
+    <value>Nuværende adgangskode</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Ny adgangskode</value>
+  </data>
+  <data name="PasswordChanged" xml:space="preserve">
+    <value>Adgangskoden er skiftet. Log ind igen på dine andre enheder.</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Adgangskoden skal have mindst 8 tegn.</value>
+  </data>
+  <data name="LeaveEmptyToKeepIt" xml:space="preserve">
+    <value>Lad stå tomt for at beholde den</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Brugere</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>Tilføj bruger</value>
+  </data>
+  <data name="EditUser1" xml:space="preserve">
+    <value>Redigér brugeren '{0}'</value>
+  </data>
+  <data name="RemoveUser1" xml:space="preserve">
+    <value>Fjern brugeren '{0}'?</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Rolle</value>
+  </data>
+  <data name="RoleViewer" xml:space="preserve">
+    <value>Seer</value>
+  </data>
+  <data name="RoleOperator" xml:space="preserve">
+    <value>Operatør</value>
+  </data>
+  <data name="RoleAdmin" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Oprettet</value>
+  </data>
+  <data name="ApiKeys" xml:space="preserve">
+    <value>API-nøgler</value>
+  </data>
+  <data name="AddApiKey" xml:space="preserve">
+    <value>Opret API-nøgle</value>
+  </data>
+  <data name="ApiKeyShownOnce" xml:space="preserve">
+    <value>Kopiér nøglen nu: den vises ikke igen.</value>
+  </data>
+  <data name="RemoveApiKey1" xml:space="preserve">
+    <value>Fjern API-nøglen '{0}'?</value>
+  </data>
+  <data name="AuditLog" xml:space="preserve">
+    <value>Revisionslog</value>
+  </data>
+  <data name="AuditUser" xml:space="preserve">
+    <value>Bruger</value>
+  </data>
+  <data name="AuditAction" xml:space="preserve">
+    <value>Handling</value>
+  </data>
+  <data name="AuditTarget" xml:space="preserve">
+    <value>Mål</value>
+  </data>
+  <data name="NoUsersAccess" xml:space="preserve">
+    <value>Kun en administrator kan styre brugere, API-nøgler og revisionsloggen.</value>
+  </data>
 </root>

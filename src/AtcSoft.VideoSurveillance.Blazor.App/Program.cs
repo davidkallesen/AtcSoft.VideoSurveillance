@@ -13,11 +13,16 @@ var apiBaseAddress = builder.Configuration["services:api:https:0"]
 // Register HttpClient factory with named client for the API, with the
 // resilience the specification declares (x-retry-*): two minutes per attempt
 // for the calls that are slow by nature, and only reads are repeated.
+// The signed-in session; every call carries its access token (outermost, so a
+// retry sends the same one).
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<BrowserSession>();
 builder.Services
     .AddHttpClient("VideoSurveillance-ApiClient", client =>
     {
         client.BaseAddress = new Uri(apiBaseAddress);
     })
+    .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredService<BrowserSession>()))
     .AddHttpMessageHandler(() => new ServerUnavailableHandler())
     .AddApiResilience();
 
@@ -35,6 +40,9 @@ builder.Services.AddScoped(sp =>
     svc.ApiBaseUrl = apiBaseAddress;
     return svc;
 });
+
+// Sign-in and sign-out, kept across a page reload
+builder.Services.AddScoped<AuthService>();
 
 // The server's event stream (GET /events), one reader per page that runs it
 builder.Services.AddTransient<EventStreamService>();

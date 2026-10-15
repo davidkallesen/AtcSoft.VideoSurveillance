@@ -211,6 +211,37 @@ public sealed class SurveillanceEventServiceTests
         changes.Should().Equal(true, false, true);
     }
 
+    [Fact]
+    public async Task The_Stream_Is_Not_Asked_For_Before_The_Client_Is_Signed_In()
+    {
+        var calls = 0;
+        using var server = new GatewayTestServer(_ =>
+        {
+            calls++;
+            return Stream(ConnectionEvent(1));
+        });
+        using var session = new ClientSession(TimeProvider.System);
+        using var sut = new SurveillanceEventService(
+            server.Get<IListEventsEndpoint>(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<SurveillanceEventService>.Instance,
+            new SurveillanceEventServiceOptions(),
+            session)
+        {
+            Delay = (_, _) => Task.CompletedTask,
+        };
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        sut.OnConnectionStateChanged += _ => done.Cancel();
+
+        var running = sut.RunAsync(done.Token);
+        await Task.Delay(200, TestContext.Current.CancellationToken);
+        calls.Should().Be(0);
+
+        session.Apply(new Session(AccessToken: "token", ExpiresInSeconds: 3600, RefreshToken: "refresh", UserName: "admin", Role: UserRole.Admin));
+        await running;
+
+        calls.Should().Be(1);
+    }
+
     private static SurveillanceEventService CreateSut(GatewayTestServer server)
         => new(
             server.Get<IListEventsEndpoint>(),
