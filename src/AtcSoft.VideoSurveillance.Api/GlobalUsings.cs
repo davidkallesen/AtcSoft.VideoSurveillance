@@ -6,6 +6,7 @@ global using System.Security.Claims;
 global using System.Security.Cryptography;
 global using System.Text;
 global using System.Text.Json;
+global using System.Text.Json.Nodes;
 global using System.Text.Json.Serialization;
 
 global using Atc.Hosting;
@@ -27,6 +28,7 @@ global using AtcSoft.VideoSurveillance.Services;
 
 global using Microsoft.AspNetCore.Authentication;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.DataProtection;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.AspNetCore.OutputCaching;
 global using Microsoft.AspNetCore.StaticFiles;

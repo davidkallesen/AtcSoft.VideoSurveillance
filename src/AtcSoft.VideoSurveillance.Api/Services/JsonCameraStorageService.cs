@@ -2,9 +2,13 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// JSON file-based implementation of <see cref="ICameraStorageService"/> for the server edition.
+/// The cameras' passwords are encrypted in the file only: the cameras in memory
+/// keep them as they are, since the streams need them.
 /// </summary>
 public sealed partial class JsonCameraStorageService : ICameraStorageService
 {
+    private const string PasswordProperty = "password";
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -13,6 +17,7 @@ public sealed partial class JsonCameraStorageService : ICameraStorageService
     };
 
     private readonly string storagePath;
+    private readonly SecretProtector secrets;
     private readonly ILogger<JsonCameraStorageService> logger;
 
     // All access to data.Cameras / data.Layouts goes through this lock.
@@ -23,16 +28,13 @@ public sealed partial class JsonCameraStorageService : ICameraStorageService
     private readonly Lock dataLock = new();
     private CameraStorageData data = new();
 
-    public JsonCameraStorageService(ILogger<JsonCameraStorageService> logger)
-        : this(ApplicationPaths.DefaultCameraDataPath, logger)
-    {
-    }
-
     public JsonCameraStorageService(
         string storagePath,
+        SecretProtector secrets,
         ILogger<JsonCameraStorageService> logger)
     {
         this.storagePath = storagePath;
+        this.secrets = secrets;
         this.logger = logger;
         Load();
     }
@@ -195,7 +197,9 @@ public sealed partial class JsonCameraStorageService : ICameraStorageService
     /// <inheritdoc/>
     public void Load()
     {
-        var loaded = SafeJsonFile.TryRead<CameraStorageData>(storagePath, JsonOptions);
+        var node = SafeJsonFile.TryRead<JsonNode>(storagePath, JsonOptions);
+        var plainCount = node is null ? 0 : UnprotectPasswords(node);
+        var loaded = node?.Deserialize<CameraStorageData>(JsonOptions);
         lock (dataLock)
         {
             if (loaded is not null)
@@ -207,6 +211,15 @@ public sealed partial class JsonCameraStorageService : ICameraStorageService
             {
                 data = new CameraStorageData();
             }
+
+            if (plainCount > 0)
+            {
+                // Twice: the first save keeps the old file, plain passwords
+                // and all, as the backup; the second replaces that too.
+                SaveLocked();
+                SaveLocked();
+                LogPasswordsEncrypted(plainCount, storagePath);
+            }
         }
     }
 
@@ -214,9 +227,48 @@ public sealed partial class JsonCameraStorageService : ICameraStorageService
     // don't have to acquire-release-reacquire when they need to persist.
     private void SaveLocked()
     {
-        if (!SafeJsonFile.TryWrite(storagePath, data, JsonOptions))
+        var node = JsonSerializer.SerializeToNode(data, JsonOptions)!;
+        foreach (var authentication in Authentications(node))
+        {
+            authentication[PasswordProperty] = secrets.Protect(authentication[PasswordProperty]?.GetValue<string>());
+        }
+
+        if (!SafeJsonFile.TryWrite(storagePath, node, JsonOptions))
         {
             LogStorageSaveFailed(new IOException("Atomic save failed"), storagePath);
         }
     }
+
+    // Reads the passwords in a file as it was read; returns how many were
+    // written before encryption. One this server cannot read is left out.
+    private int UnprotectPasswords(JsonNode node)
+    {
+        var plainCount = 0;
+        foreach (var authentication in Authentications(node))
+        {
+            var stored = authentication[PasswordProperty]?.GetValue<string>();
+            if (!secrets.TryUnprotect(stored, out var password, out var wasPlain))
+            {
+                var camera = authentication.Parent?.AsObject();
+                LogPasswordUnreadable(
+                    camera?["id"]?.GetValue<string>() ?? string.Empty,
+                    camera?["display"]?["displayName"]?.GetValue<string>() ?? string.Empty);
+            }
+
+            if (wasPlain)
+            {
+                plainCount++;
+            }
+
+            authentication[PasswordProperty] = password;
+        }
+
+        return plainCount;
+    }
+
+    private static IEnumerable<JsonObject> Authentications(JsonNode node)
+        => node["cameras"]?.AsArray()
+               .Select(camera => camera?["authentication"])
+               .OfType<JsonObject>()
+           ?? [];
 }

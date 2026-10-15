@@ -5,7 +5,7 @@
 /// server's configuration, which stay as they are, and the ones added
 /// through the API, which are kept in a file in the data folder. The
 /// dispatcher asks for the receivers each time it sends, so a change takes
-/// effect at once.
+/// effect at once. The secrets are encrypted in the file only.
 /// </summary>
 public sealed partial class WebhookRegistry : IWebhookRegistry
 {
@@ -18,6 +18,7 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
     private readonly Lock sync = new();
     private readonly string filePath;
     private readonly IWebhookSender sender;
+    private readonly SecretProtector secrets;
     private readonly ILogger<WebhookRegistry> logger;
     private readonly List<Entry> configured;
     private readonly List<Entry> stored;
@@ -32,11 +33,13 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
     /// <param name="filePath">The file the added receivers are kept in.</param>
     /// <param name="options">The receivers from the server's configuration.</param>
     /// <param name="sender">Sends the test event.</param>
+    /// <param name="secrets">Encrypts the secrets in the file.</param>
     /// <param name="logger">The logger.</param>
     public WebhookRegistry(
         string filePath,
         WebhookOptions options,
         IWebhookSender sender,
+        SecretProtector secrets,
         ILogger<WebhookRegistry> logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(filePath);
@@ -44,6 +47,7 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
 
         this.filePath = filePath;
         this.sender = sender;
+        this.secrets = secrets;
         this.logger = logger;
 
         // A client holds on to an id between two listings, so a configured
@@ -66,7 +70,17 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
         }
 
         stored = SafeJsonFile.TryRead<List<Entry>>(filePath, FileOptions) ?? [];
+        var plainCount = UnprotectSecrets();
         RebuildActive();
+
+        if (plainCount > 0)
+        {
+            // Twice: the first save keeps the old file, plain secrets and
+            // all, as the backup; the second replaces that too.
+            Save();
+            Save();
+            LogSecretsEncrypted(plainCount, filePath);
+        }
     }
 
     /// <inheritdoc />
@@ -256,6 +270,29 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
             Events = [.. entry.Events],
         };
 
+    // From the constructor: the secrets as the file has them. Returns how many
+    // were written before encryption; one this server cannot read is left out.
+    private int UnprotectSecrets()
+    {
+        var plainCount = 0;
+        foreach (var entry in stored)
+        {
+            if (!secrets.TryUnprotect(entry.Secret, out var secret, out var wasPlain))
+            {
+                LogSecretUnreadable(new WebhookEndpoint { Url = entry.Url }.LogName);
+            }
+
+            if (wasPlain)
+            {
+                plainCount++;
+            }
+
+            entry.Secret = secret;
+        }
+
+        return plainCount;
+    }
+
     // Must be called while holding the lock (or from the constructor).
     private void RebuildActive()
         => active = [.. configured.Concat(stored).Select(ToEndpoint).Where(e => e.IsValid)];
@@ -265,7 +302,17 @@ public sealed partial class WebhookRegistry : IWebhookRegistry
     {
         RebuildActive();
 
-        if (!SafeJsonFile.TryWrite(filePath, stored, FileOptions))
+        var protectedEntries = stored
+            .Select(e => new Entry
+            {
+                Id = e.Id,
+                Url = e.Url,
+                Secret = secrets.Protect(e.Secret),
+                Events = e.Events,
+            })
+            .ToList();
+
+        if (!SafeJsonFile.TryWrite(filePath, protectedEntries, FileOptions))
         {
             LogSaveFailed(filePath);
         }

@@ -25,6 +25,7 @@ public sealed class ServerDataPathsTests
 
         sut.SettingsPath.Should().Be(Path.Combine(DataPath, "settings.json"));
         sut.CameraDataPath.Should().Be(Path.Combine(DataPath, "cameras.json"));
+        sut.KeysPath.Should().Be(Path.Combine(DataPath, "keys"));
     }
 
     [Fact]

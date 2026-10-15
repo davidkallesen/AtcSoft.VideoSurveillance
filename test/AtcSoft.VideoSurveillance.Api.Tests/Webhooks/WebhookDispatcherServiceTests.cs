@@ -149,6 +149,7 @@ public sealed class WebhookDispatcherServiceTests
             Path.Combine(Path.GetTempPath(), "atcsoft-webhooks-" + Guid.NewGuid().ToString("N"), "webhooks.json"),
             new WebhookOptions { Endpoints = [.. endpoints] },
             sender,
+            new SecretProtector(new EphemeralDataProtectionProvider()),
             NullLogger<WebhookRegistry>.Instance);
 
         return new(

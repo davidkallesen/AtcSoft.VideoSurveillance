@@ -66,9 +66,19 @@ try
     // a second server (or a test) can run with data of its own.
     var dataPaths = new ServerDataPaths(builder.Configuration[ServerDataPaths.ConfigurationKey]);
     builder.Services.AddSingleton(dataPaths);
+
+    // The camera passwords and webhook secrets are encrypted in the data
+    // folder, with keys kept in it too: the folder moves as a whole, and a
+    // copy of cameras.json alone gives no password away.
+    builder.Services
+        .AddDataProtection()
+        .SetApplicationName("AtcSoft.VideoSurveillance")
+        .PersistKeysToFileSystem(new DirectoryInfo(dataPaths.KeysPath));
+    builder.Services.AddSingleton<SecretProtector>();
     builder.Services.AddSingleton<ICameraStorageService>(sp =>
         new JsonCameraStorageService(
             dataPaths.CameraDataPath,
+            sp.GetRequiredService<SecretProtector>(),
             sp.GetRequiredService<ILogger<JsonCameraStorageService>>()));
     builder.Services.AddSingleton<IApplicationSettingsService>(sp =>
     {
@@ -232,6 +242,7 @@ try
         sp.GetRequiredService<ServerDataPaths>().WebhooksPath,
         sp.GetRequiredService<WebhookOptions>(),
         sp.GetRequiredService<IWebhookSender>(),
+        sp.GetRequiredService<SecretProtector>(),
         sp.GetRequiredService<ILogger<WebhookRegistry>>()));
     builder.Services.AddSingleton<IWebhookRegistry>(sp => sp.GetRequiredService<WebhookRegistry>());
     builder.Services.AddSingleton(new WebhookDispatcherServiceOptions());

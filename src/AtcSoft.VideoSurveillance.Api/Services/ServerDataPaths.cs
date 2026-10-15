@@ -36,6 +36,7 @@ public sealed class ServerDataPaths
         SetupCodePath = Path.Combine(folder, "setup-code.txt");
         SigningKeyPath = Path.Combine(folder, "signing.key");
         AuditLogPath = Path.Combine(folder, "audit.log");
+        KeysPath = Path.Combine(folder, "keys");
     }
 
     /// <summary>
@@ -80,6 +81,12 @@ public sealed class ServerDataPaths
     /// Gets the path of the audit log: what was changed, by whom.
     /// </summary>
     public string AuditLogPath { get; }
+
+    /// <summary>
+    /// Gets the folder with the keys the stored secrets (camera passwords,
+    /// webhook secrets) are encrypted with. Without it they cannot be read.
+    /// </summary>
+    public string KeysPath { get; }
 
     /// <summary>
     /// Moves the recording, snapshot and log folders into the data folder

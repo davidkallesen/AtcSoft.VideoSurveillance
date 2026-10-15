@@ -10,6 +10,7 @@ public sealed class WebhookRegistryTests : IDisposable
     private readonly string folder = Path.Combine(Path.GetTempPath(), "atcsoft-webhooks-" + Guid.NewGuid().ToString("N"));
     private readonly IWebhookSender sender = Substitute.For<IWebhookSender>();
     private readonly WebhookOptions configured = new();
+    private readonly EphemeralDataProtectionProvider keys = new();
 
     public WebhookRegistryTests()
     {
@@ -162,10 +163,49 @@ public sealed class WebhookRegistryTests : IDisposable
         sut.GetAll().Should().ContainSingle().Which.Url.Should().Be("https://configured.test/hook");
     }
 
+    [Fact]
+    public void The_Secret_Of_An_Added_Receiver_Is_Encrypted_In_The_File_And_Read_Back()
+    {
+        CreateSut().Add("https://added.test/hook", "hook-secret-1234", events: null);
+
+        var raw = File.ReadAllText(FilePath);
+        raw.Should().NotContain("hook-secret-1234");
+        raw.Should().Contain(SecretProtector.Prefix);
+
+        CreateSut().ActiveEndpoints.Should().ContainSingle().Which.Secret.Should().Be("hook-secret-1234");
+    }
+
+    [Fact]
+    public void A_Secret_Written_Before_Encryption_Is_Encrypted_When_The_File_Is_Read()
+    {
+        File.WriteAllText(FilePath, $$"""[{"id":"{{Guid.NewGuid()}}","url":"https://added.test/hook","secret":"hook-secret-1234","events":[]}]""");
+
+        var sut = CreateSut();
+
+        sut.ActiveEndpoints.Should().ContainSingle().Which.Secret.Should().Be("hook-secret-1234");
+        File.ReadAllText(FilePath).Should().NotContain("hook-secret-1234");
+        File.ReadAllText(FilePath + ".bak").Should().NotContain("hook-secret-1234");
+    }
+
+    [Fact]
+    public void A_Secret_From_Other_Keys_Is_Read_As_None()
+    {
+        new WebhookRegistry(FilePath, configured, sender, new SecretProtector(new EphemeralDataProtectionProvider()), NullLogger<WebhookRegistry>.Instance)
+            .Add("https://added.test/hook", "hook-secret-1234", events: null);
+
+        var all = CreateSut().GetAll();
+
+        all.Should().ContainSingle().Which.HasSecret.Should().BeFalse();
+    }
+
+    private string FilePath
+        => Path.Combine(folder, "webhooks.json");
+
     private WebhookRegistry CreateSut()
         => new(
-            Path.Combine(folder, "webhooks.json"),
+            FilePath,
             configured,
             sender,
+            new SecretProtector(keys),
             NullLogger<WebhookRegistry>.Instance);
 }
