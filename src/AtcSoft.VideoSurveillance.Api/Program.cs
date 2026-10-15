@@ -51,13 +51,6 @@ try
     // the handlers, and the enums on the wire as the specification writes them.
     builder.Services.AddVideoSurveillanceApi();
 
-    // The USB device list is cached for every caller: the generated policy keeps
-    // ASP.NET Core's default, which never caches a request that is signed in
-    // (all of them now). See the feedback to the generator, Z6.
-    builder.Services.Configure<OutputCacheOptions>(options => options.AddPolicy(
-        OutputCachePolicies.UsbDevices,
-        new SharedOutputCachePolicy(TimeSpan.FromSeconds(5), OutputCacheTags.UsbDevices)));
-
     // Register API handlers from the Domain project (source-generated)
     builder.Services.AddApiHandlersFromDomain();
 
