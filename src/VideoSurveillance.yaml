@@ -143,6 +143,8 @@ paths:
     get:
       summary: Capture a snapshot from a camera
       operationId: captureSnapshot
+      # A GET named capture: it also saves the picture, which "capture" says.
+      x-atc-suppress: ATC_API_OPR003
       # A snapshot opens the camera's stream; a client in a loop would keep the
       # server opening streams. Twenty per ten seconds is more than a person clicks.
       x-ratelimit-policy: snapshots
@@ -263,6 +265,8 @@ paths:
     delete:
       summary: Stop recording a camera
       operationId: stopRecording
+      # A DELETE named stop: it stops a recording; deleteRecording deletes a file.
+      x-atc-suppress: ATC_API_OPR007
       x-retry-enabled: false
       tags:
         - cameras

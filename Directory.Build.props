@@ -46,21 +46,6 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
-  <!--
-    Rules of Atc.Rest.Api.SourceGenerator's Strict validation of src/VideoSurveillance.yaml
-    that do not fit it. They are reported on the specification, not on a source file, so
-    .editorconfig and .globalconfig severities do not reach them; NoWarn does.
-    - ATC_API_NAM005 (enum values in PascalCase): the wire values are camelCase on purpose,
-      one vocabulary for every client.
-    - ATC_API_OPR003 (a GET operationId starts with get/list): captureSnapshot also saves
-      the picture, which "capture" says.
-    - ATC_API_OPR007 (a DELETE operationId starts with delete/remove): stopRecording stops a
-      recording; deleteRecording is the one that deletes a file.
-  -->
-  <PropertyGroup Label="OpenAPI specification rules">
-    <NoWarn>$(NoWarn);ATC_API_NAM005;ATC_API_OPR003;ATC_API_OPR007</NoWarn>
-  </PropertyGroup>
-
   <!-- Treat warnings as errors are always on when building in release -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

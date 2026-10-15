@@ -76,7 +76,7 @@ All three are declared in `src/VideoSurveillance.yaml`, and the generator builds
 - **Output cache** (`x-cache-*`): `GET /devices/usb` is kept 5 seconds, since enumerating the devices takes a moment. A USB camera plugged in or pulled out drops it at once (`UsbDeviceCacheEvictor`), so the next read has the new list. A cached answer has an `Age` header.
 - **Retries in the clients** (`x-retry-*`): both clients call `AddApiResilience(ResiliencePolicies.Standard)`. An attempt has two minutes, since some calls are slow by nature (starting a recording waits for the camera; saving a changed folder layout moves the recordings). A failed read (5xx, 408, a timeout, a 429 that asks for a short wait) is tried up to 3 more times. A change is sent once: POST and PATCH are never repeated, and every PUT and DELETE has `x-retry-enabled: false`. A new PUT or DELETE needs it too. `GET /events` is not repeated either: its reader resumes on its own.
 
-The specification is validated `Strict`. The rules that do not fit it are switched off in `Directory.Build.props` with the reason (camelCase enum values, `captureSnapshot`, `stopRecording`).
+The specification is validated `Strict`. Where a rule does not fit one operation, the operation switches it off with `x-atc-suppress` and says why (`captureSnapshot` also saves the picture; `stopRecording` stops rather than deletes).
 
 ---
 
