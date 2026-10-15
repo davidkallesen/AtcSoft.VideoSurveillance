@@ -14,6 +14,7 @@ public sealed partial class PlaceholderTests
     [Theory]
     [InlineData("da-DK")]
     [InlineData("de-DE")]
+    [InlineData("en-GB")]
     public void A_Translation_Has_The_Same_Parameters(string culture)
         => ResxFile.Read(culture)
             .Where(entry => Neutral.TryGetValue(entry.Key, out var original) &&

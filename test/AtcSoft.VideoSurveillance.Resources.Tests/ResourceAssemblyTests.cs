@@ -20,4 +20,13 @@ public sealed class ResourceAssemblyTests
         string cancel)
         => Translations.ResourceManager.GetString(nameof(Translations.Cancel), new CultureInfo(culture))
             .Should().Be(cancel);
+
+    [Theory]
+    [InlineData("en-GB", "Bounding box colour")]
+    [InlineData("en-US", "Bounding box color")]
+    public void British_English_Has_Its_Own_Spelling(
+        string culture,
+        string text)
+        => Translations.ResourceManager.GetString(nameof(Translations.BoundingBoxColor), new CultureInfo(culture))
+            .Should().Be(text);
 }
