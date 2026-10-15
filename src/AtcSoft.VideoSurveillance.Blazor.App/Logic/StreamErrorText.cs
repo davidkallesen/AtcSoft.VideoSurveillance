@@ -5,8 +5,6 @@
 /// </summary>
 public static class StreamErrorText
 {
-    private const string Fallback = "The stream could not be started.";
-
     // What SignalR and the server put in front of the reason itself.
     private static readonly string[] Wrappings =
     [
@@ -24,7 +22,7 @@ public static class StreamErrorText
     {
         if (string.IsNullOrWhiteSpace(message))
         {
-            return Fallback;
+            return Translations.StreamCouldNotBeStarted;
         }
 
         var wrapped = false;
@@ -43,6 +41,6 @@ public static class StreamErrorText
         // SignalR's own sentence without a reason behind it says nothing.
         var hasReason = message.Length > 0 &&
                         (wrapped || !message.StartsWith("An unexpected error occurred invoking", StringComparison.Ordinal));
-        return hasReason ? message : Fallback;
+        return hasReason ? message : Translations.StreamCouldNotBeStarted;
     }
 }

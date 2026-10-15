@@ -71,7 +71,7 @@ public static class UsbFormatChoices
     {
         if (isUsb)
         {
-            return string.IsNullOrWhiteSpace(usbName) ? "USB" : $"USB: {usbName}";
+            return string.IsNullOrWhiteSpace(usbName) ? "USB" : string.Format(CultureInfo.CurrentCulture, Translations.UsbSource1, usbName);
         }
 
         var scheme = string.IsNullOrWhiteSpace(protocol) ? "rtsp" : protocol.ToLowerInvariant();

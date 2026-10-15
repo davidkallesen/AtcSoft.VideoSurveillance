@@ -3,12 +3,12 @@
 @inject EventStreamService EventStream
 @implements IDisposable
 
-<MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">@Translations.Dashboard</MudText>
 
 @if (loadFailed)
 {
     <MudAlert Severity="Severity.Error" Class="mb-4">
-        The server did not answer. Check that it is running, then reload the page.
+        @Translations.ServerDidNotAnswer
     </MudAlert>
 }
 
@@ -19,7 +19,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Videocam" Size="Size.Large" Color="Color.Primary" />
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@board.CameraCount</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Cameras</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@Translations.Cameras</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
@@ -30,7 +30,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Large" Color="Color.Success" />
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@board.ConnectedCount</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Connected</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@Translations.Connected</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
@@ -41,7 +41,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Large" Color="Color.Error" />
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@board.RecordingCount</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Recording now</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@Translations.RecordingNow</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
@@ -52,7 +52,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Large" Color="Color.Info" />
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@layoutCount</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Layouts</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@Translations.Layouts</MudText>
                 </MudStack>
             </MudStack>
         </MudPaper>
@@ -65,32 +65,32 @@
     <MudPaper Class="pa-3 mt-4" Elevation="1" Style="max-width: 560px;">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudIcon Icon="@Icons.Material.Filled.Storage" Color="@(storage.IsLow ? Color.Error : Color.Default)" />
-            <MudText Typo="Typo.body2">Recording disk: @storage.Text</MudText>
+            <MudText Typo="Typo.body2">@(string.Format(CultureInfo.CurrentCulture, Translations.RecordingDisk1, storage.Text))</MudText>
             <MudSpacer />
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">@storage.UsedPercent % used</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@(string.Format(CultureInfo.CurrentCulture, Translations.PercentUsed1, storage.UsedPercent))</MudText>
         </MudStack>
         <MudProgressLinear Value="@(storage.UsedPercent)"
                            Color="@(storage.IsLow ? Color.Error : Color.Primary)"
                            Class="mt-2"
-                           aria-label="Share of the recording disk in use" />
+                           aria-label="@Translations.RecordingDiskShareInUse" />
         @if (storage.IsLow)
         {
             <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">
-                Less is free than the recordings need. New recordings are refused until space is freed.
+                @Translations.DiskLowRecordingsRefused
             </MudText>
         }
     </MudPaper>
 }
 
 <MudStack Row="true" Spacing="2" Class="mt-4" Wrap="Wrap.Wrap">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/live" StartIcon="@Icons.Material.Filled.LiveTv">Live view</MudButton>
-    <MudButton Variant="Variant.Outlined" Href="/recordings" StartIcon="@Icons.Material.Filled.VideoLibrary">Recordings</MudButton>
-    <MudButton Variant="Variant.Outlined" Href="/cameras" StartIcon="@Icons.Material.Filled.Videocam">Cameras</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/live" StartIcon="@Icons.Material.Filled.LiveTv">@Translations.LiveView</MudButton>
+    <MudButton Variant="Variant.Outlined" Href="/recordings" StartIcon="@Icons.Material.Filled.VideoLibrary">@Translations.Recordings</MudButton>
+    <MudButton Variant="Variant.Outlined" Href="/cameras" StartIcon="@Icons.Material.Filled.Videocam">@Translations.Cameras</MudButton>
 </MudStack>
 
 @if (cameras.Length > 0)
 {
-    <MudText Typo="Typo.h6" Class="mt-6 mb-2">Cameras</MudText>
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">@Translations.Cameras</MudText>
     <MudPaper Elevation="1">
         <MudList T="string" Dense="true">
             @foreach (var camera in cameras)
@@ -104,10 +104,10 @@
                         <MudSpacer />
                         @if (board.IsRecording(camera.Id))
                         {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Error">Recording</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error">@Translations.Recording</MudChip>
                         }
                         <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                            @(board.IsConnected(camera.Id) ? "Connected" : "Not connected")
+                            @(board.IsConnected(camera.Id) ? Translations.Connected : Translations.NotConnected)
                         </MudText>
                     </MudStack>
                 </MudListItem>
@@ -118,13 +118,13 @@
 else if (!isLoading && !loadFailed)
 {
     <MudAlert Severity="Severity.Info" Class="mt-6" Style="max-width: 700px;">
-        No cameras yet.
-        <MudLink Href="/cameras/create" Class="ml-1">Add the first camera</MudLink>
+        @Translations.NoCamerasYet
+        <MudLink Href="/cameras/create" Class="ml-1">@Translations.AddTheFirstCamera</MudLink>
     </MudAlert>
 }
 
 <MudText Typo="Typo.caption" Class="mt-4 mud-text-secondary">
-    Live updates: @(EventStream.IsReading ? "on" : "connecting...")
+    @(string.Format(CultureInfo.CurrentCulture, Translations.LiveUpdates1, EventStream.IsReading ? Translations.LiveUpdatesOn : Translations.LiveUpdatesConnecting))
 </MudText>
 
 @code {

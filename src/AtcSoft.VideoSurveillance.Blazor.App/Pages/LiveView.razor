@@ -30,7 +30,7 @@
     }
 </style>
 
-<MudText Typo="Typo.h4" Class="mb-4">Live View</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">@Translations.LiveView</MudText>
 
 @if (isLoading)
 {
@@ -39,14 +39,14 @@
 else if (loadFailed)
 {
     <MudAlert Severity="Severity.Error" Class="mb-4" Style="max-width: 700px;">
-        The server did not answer. Check that it is running, then reload the page.
+        @Translations.ServerDidNotAnswer
     </MudAlert>
 }
 else if (layouts.Length == 0)
 {
     <MudAlert Severity="Severity.Info" Style="max-width: 700px;">
-        There is no layout yet. A layout says which cameras are shown, and where.
-        <MudLink Href="/layouts" Class="ml-1">Create a layout</MudLink>
+        @Translations.NoLayoutYet
+        <MudLink Href="/layouts" Class="ml-1">@Translations.CreateALayout</MudLink>
     </MudAlert>
 }
 else
@@ -55,7 +55,7 @@ else
         <MudSelect T="Guid"
                    Value="selectedLayoutId"
                    ValueChanged="OnLayoutChangedAsync"
-                   Label="Layout"
+                   Label="@Translations.Layout"
                    Variant="Variant.Outlined"
                    Dense="true"
                    Style="min-width: 240px; max-width: 320px;">
@@ -69,27 +69,27 @@ else
                    StartIcon="@Icons.Material.Filled.PlayArrow"
                    OnClick="StartAllAsync"
                    Disabled="@(!Hub.IsConnected || !HasStoppedTiles)">
-            Start all
+            @Translations.StartAll
         </MudButton>
         <MudButton Variant="Variant.Outlined"
                    StartIcon="@Icons.Material.Filled.Stop"
                    OnClick="StopAllAsync"
                    Disabled="@(streamUrls.Count == 0 && starting.Count == 0)">
-            Stop all
+            @Translations.StopAll
         </MudButton>
-        <MudTooltip Text="Makes this the layout the server's clients start with">
-            <MudButton Variant="Variant.Text" OnClick="SetAsStartupLayoutAsync">Set as start-up layout</MudButton>
+        <MudTooltip Text="@Translations.StartUpLayoutHelp">
+            <MudButton Variant="Variant.Text" OnClick="SetAsStartupLayoutAsync">@Translations.SetAsStartUpLayout</MudButton>
         </MudTooltip>
         <MudSpacer />
         <MudChip T="string" Size="Size.Small" Color="@(Hub.IsConnected ? Color.Success : Color.Warning)">
-            @(Hub.IsConnected ? "Connected to the server" : $"Server: {Hub.ConnectionState}")
+            @(Hub.IsConnected ? Translations.ConnectedToTheServer : string.Format(CultureInfo.CurrentCulture, Translations.ServerState1, Hub.ConnectionState))
         </MudChip>
     </MudStack>
 
     @if (!Hub.IsConnected)
     {
         <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">
-            No live connection to the server, so streams cannot be started. The page reconnects by itself.
+            @Translations.NoLiveConnection
         </MudAlert>
     }
 
@@ -118,7 +118,7 @@ else
                                    @onloadedmetadata="@(() => ReadPictureSizeAsync(camera.Id))"
                                    style="@VideoRotationStyle.For(camera.Rotation)"></video>
                             <div style="position: absolute; bottom: 4px; right: 4px;">
-                                <MudTooltip Text="Stop">
+                                <MudTooltip Text="@Translations.Stop">
                                     <MudIconButton Icon="@Icons.Material.Filled.Stop"
                                                    Size="Size.Small"
                                                    Color="Color.Error"
@@ -131,7 +131,7 @@ else
                         {
                             <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%;" Spacing="2">
                                 <MudProgressCircular Indeterminate="true" Size="Size.Small" />
-                                <MudText Typo="Typo.caption" Style="color: #bbb;">Starting the stream...</MudText>
+                                <MudText Typo="Typo.caption" Style="color: #bbb;">@Translations.StartingTheStream</MudText>
                             </MudStack>
                         }
                         else
@@ -147,7 +147,7 @@ else
                                            StartIcon="@Icons.Material.Filled.PlayArrow"
                                            Disabled="!Hub.IsConnected"
                                            OnClick="@(() => StartStreamAsync(camera.Id))">
-                                    @(errors.ContainsKey(camera.Id) ? "Try again" : "Start")
+                                    @(errors.ContainsKey(camera.Id) ? Translations.TryAgain : Translations.Start)
                                 </MudButton>
                             </MudStack>
                         }
@@ -177,14 +177,14 @@ else
                                 </svg>
                             </svg>
                             <div class="live-tile-label" style="top: 4px; right: 4px; background: rgba(220,20,20,0.85); animation: pulse-motion 1s ease-in-out infinite;">
-                                <MudText Typo="Typo.caption" Style="font-weight: bold;">MOTION</MudText>
+                                <MudText Typo="Typo.caption" Style="font-weight: bold;">@Translations.MotionBadge</MudText>
                             </div>
                         }
                     }
                     else
                     {
                         <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100%;">
-                            <MudText Typo="Typo.caption" Style="color: #777;">Empty</MudText>
+                            <MudText Typo="Typo.caption" Style="color: #777;">@Translations.Empty</MudText>
                         </MudStack>
                     }
                 </div>
@@ -286,7 +286,7 @@ else
     {
         var applied = await Gateway.ApplyLayoutAsync(selectedLayoutId);
         Snackbar.Add(
-            !applied.IsSuccess ? ProblemText.WithReason("The layout could not be set as the start-up layout.", applied.Problem) : $"'{applied.Value!.Name}' is now the start-up layout.",
+            !applied.IsSuccess ? ProblemText.WithReason(Translations.StartUpLayoutCouldNotBeSet, applied.Problem) : string.Format(CultureInfo.CurrentCulture, Translations.IsNowTheStartUpLayout1, applied.Value!.Name),
             applied.IsSuccess ? Severity.Success : Severity.Error);
     }
 
@@ -346,7 +346,7 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"The stream could not be stopped: {ex.Message}", Severity.Error);
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.StreamCouldNotBeStopped1, ex.Message), Severity.Error);
         }
 
         if (wasShown)
@@ -407,7 +407,7 @@ else
                 && streamUrls.Remove(e.CameraId))
             {
                 await JS.InvokeVoidAsync("hlsInterop.destroyPlayer", $"video-{e.CameraId}");
-                errors[e.CameraId] = "The camera disconnected.";
+                errors[e.CameraId] = Translations.TheCameraDisconnected;
                 StateHasChanged();
             }
         });

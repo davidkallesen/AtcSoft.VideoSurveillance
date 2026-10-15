@@ -15,24 +15,24 @@ else
     <MudPaper Class="pa-4" MaxWidth="600px">
         <MudForm @ref="form">
             <MudExpansionPanels MultiExpansion="true">
-                <MudExpansionPanel Text="Connection" Expanded="true">
+                <MudExpansionPanel Text="@Translations.Connection" Expanded="true">
                     <MudTextField @bind-Value="displayName"
-                                  Label="Display Name"
+                                  Label="@Translations.DisplayName"
                                   Required="true"
-                                  RequiredError="Display name is required" />
+                                  RequiredError="@Translations.DisplayNameIsRequired" />
                     <MudTextField @bind-Value="description"
-                                  Label="Description"
+                                  Label="@Translations.Description"
                                   Lines="2"
                                   Class="mt-3" />
                     <MudSelect T="CameraSource"
                                Value="source"
                                ValueChanged="OnSourceChangedAsync"
-                               Label="Source"
-                               HelperText="@(IsEdit ? "The kind of camera cannot be changed afterwards." : "A network camera, or a USB camera plugged into the server.")"
+                               Label="@Translations.CameraSource"
+                               HelperText="@(IsEdit ? Translations.CameraKindCannotBeChanged : Translations.CameraKindHelp)"
                                Disabled="IsEdit"
                                Class="mt-3">
-                        <MudSelectItem Value="CameraSource.Network">Network camera</MudSelectItem>
-                        <MudSelectItem Value="CameraSource.Usb">USB camera on the server</MudSelectItem>
+                        <MudSelectItem Value="CameraSource.Network">@Translations.SourceTypeNetwork</MudSelectItem>
+                        <MudSelectItem Value="CameraSource.Usb">@Translations.UsbCameraOnTheServer</MudSelectItem>
                     </MudSelect>
 
                     @if (IsUsb)
@@ -40,17 +40,17 @@ else
                         @if (usbDevicesFailed)
                         {
                             <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3">
-                                The server could not list its USB cameras.
+                                @Translations.UsbCamerasCouldNotBeListed
                             </MudAlert>
                         }
 
                         <MudSelect T="string"
                                    Value="usbDeviceId"
                                    ValueChanged="OnUsbDeviceChanged"
-                                   Label="Camera"
+                                   Label="@Translations.Camera"
                                    Required="true"
-                                   RequiredError="Choose a camera"
-                                   HelperText="@(IsEdit ? "The camera cannot be changed afterwards." : "The cameras plugged into the server right now.")"
+                                   RequiredError="@Translations.ChooseACamera"
+                                   HelperText="@(IsEdit ? Translations.UsbCameraCannotBeChanged : Translations.UsbCameraChoiceHelp)"
                                    Disabled="IsEdit"
                                    Class="mt-3">
                             @foreach (var device in UsbChoices)
@@ -64,8 +64,8 @@ else
                             <MudSelect T="string"
                                        Value="UsbSizeKey"
                                        ValueChanged="OnUsbSizeChanged"
-                                       Label="Picture size"
-                                       HelperText="Larger pictures cost more processor time to record and to watch."
+                                       Label="@Translations.PictureSize"
+                                       HelperText="@Translations.PictureSizeCostHelp"
                                        Class="mt-3">
                                 @foreach (var size in usbSizes)
                                 {
@@ -73,7 +73,7 @@ else
                                 }
                             </MudSelect>
                             <MudSelect @bind-Value="usbFrameRate"
-                                       Label="Pictures a second"
+                                       Label="@Translations.PicturesASecond"
                                        Class="mt-3">
                                 @foreach (var rate in usbFrameRates)
                                 {
@@ -83,56 +83,56 @@ else
                         }
 
                         <MudSwitch @bind-Value="usbCaptureAudio"
-                                   Label="Record sound"
+                                   Label="@Translations.RecordSound"
                                    Color="Color.Primary"
                                    Class="mt-3" />
                         @if (usbCaptureAudio)
                         {
                             <MudTextField @bind-Value="usbAudioDeviceName"
-                                          Label="Microphone"
+                                          Label="@Translations.Microphone"
                                           Placeholder="Microphone (HD Webcam)"
-                                          HelperText="The microphone's name as Windows shows it on the server."
+                                          HelperText="@Translations.MicrophoneNameHelp"
                                           Class="mt-1" />
                         }
                     }
                     else
                     {
                         <MudTextField @bind-Value="ipAddress"
-                                      Label="IP Address"
+                                      Label="@Translations.IpAddress"
                                       Required="true"
-                                      RequiredError="IP address is required"
+                                      RequiredError="@Translations.IpAddressIsRequired"
                                       Class="mt-3" />
                         <MudNumericField @bind-Value="port"
-                                         Label="Port"
+                                         Label="@Translations.Port"
                                          Min="1"
                                          Max="65535"
                                          Class="mt-3" />
                         <MudSelect @bind-Value="protocol"
-                                   Label="Protocol"
+                                   Label="@Translations.Protocol"
                                    Class="mt-3">
                             <MudSelectItem Value="CameraProtocol.Rtsp">RTSP</MudSelectItem>
                             <MudSelectItem Value="CameraProtocol.Http">HTTP</MudSelectItem>
                             <MudSelectItem Value="CameraProtocol.Https">HTTPS</MudSelectItem>
                         </MudSelect>
                         <MudTextField @bind-Value="path"
-                                      Label="Path"
+                                      Label="@Translations.Path"
                                       Placeholder="/stream1"
                                       Class="mt-3" />
                         <MudSelect @bind-Value="connectionType"
-                                   Label="Connection Type"
+                                   Label="@Translations.ConnectionType"
                                    Class="mt-3">
-                            <MudSelectItem Value="CameraConnectionType.None">Not set</MudSelectItem>
-                            <MudSelectItem Value="CameraConnectionType.Lan">Wired (LAN)</MudSelectItem>
-                            <MudSelectItem Value="CameraConnectionType.Wifi">Wi-Fi</MudSelectItem>
+                            <MudSelectItem Value="CameraConnectionType.None">@Translations.ConnectionTypeNone</MudSelectItem>
+                            <MudSelectItem Value="CameraConnectionType.Lan">@Translations.ConnectionTypeLan</MudSelectItem>
+                            <MudSelectItem Value="CameraConnectionType.Wifi">@Translations.ConnectionTypeWifi</MudSelectItem>
                         </MudSelect>
                     }
                     <MudSelect @bind-Value="rotation"
-                               Label="Rotation (clockwise)"
+                               Label="@Translations.RotationClockwise"
                                Class="mt-3">
-                        <MudSelectItem Value="CameraRotation.None">0&deg;</MudSelectItem>
-                        <MudSelectItem Value="CameraRotation.Rotate90">90&deg;</MudSelectItem>
-                        <MudSelectItem Value="CameraRotation.Rotate180">180&deg;</MudSelectItem>
-                        <MudSelectItem Value="CameraRotation.Rotate270">270&deg;</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.None">@Translations.RotationNone</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate90">@Translations.RotationRotate90Degrees</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate180">@Translations.RotationRotate180Degrees</MudSelectItem>
+                        <MudSelectItem Value="CameraRotation.Rotate270">@Translations.RotationRotate270Degrees</MudSelectItem>
                     </MudSelect>
                     @if (IsEdit && !IsUsb)
                     {
@@ -142,7 +142,7 @@ else
                                        Size="Size.Small"
                                        OnClick="DetectConnectionTypeAsync"
                                        Disabled="isDetecting">
-                                @(isDetecting ? "Detecting..." : "Detect")
+                                @(isDetecting ? Translations.ConnectionTypeDetecting : Translations.DetectConnectionType)
                             </MudButton>
                             <MudText Typo="Typo.body2">@detectionStatus</MudText>
                         </MudStack>
@@ -150,45 +150,45 @@ else
                     @if (!IsUsb)
                     {
                         <MudTextField @bind-Value="username"
-                                      Label="Username"
+                                      Label="@Translations.Username"
                                       Class="mt-3" />
                         <MudTextField @bind-Value="password"
-                                      Label="Password"
+                                      Label="@Translations.Password"
                                       InputType="InputType.Password"
                                       Class="mt-3" />
                     }
                 </MudExpansionPanel>
 
-                <MudExpansionPanel Text="Display">
+                <MudExpansionPanel Text="@Translations.Display">
                     <MudSelect @bind-Value="overlayPosition"
-                               Label="Overlay Position"
+                               Label="@Translations.OverlayPosition"
                                Class="mt-2">
-                        <MudSelectItem Value="CameraOverlayPosition.TopLeft">Top Left</MudSelectItem>
-                        <MudSelectItem Value="CameraOverlayPosition.TopRight">Top Right</MudSelectItem>
-                        <MudSelectItem Value="CameraOverlayPosition.BottomLeft">Bottom Left</MudSelectItem>
-                        <MudSelectItem Value="CameraOverlayPosition.BottomRight">Bottom Right</MudSelectItem>
+                        <MudSelectItem Value="CameraOverlayPosition.TopLeft">@Translations.OverlayPositionTopLeft</MudSelectItem>
+                        <MudSelectItem Value="CameraOverlayPosition.TopRight">@Translations.OverlayPositionTopRight</MudSelectItem>
+                        <MudSelectItem Value="CameraOverlayPosition.BottomLeft">@Translations.OverlayPositionBottomLeft</MudSelectItem>
+                        <MudSelectItem Value="CameraOverlayPosition.BottomRight">@Translations.OverlayPositionBottomRight</MudSelectItem>
                     </MudSelect>
                 </MudExpansionPanel>
 
                 @if (!IsUsb)
                 {
-                <MudExpansionPanel Text="Stream Settings">
+                <MudExpansionPanel Text="@Translations.StreamSettings">
                     <MudCheckBox @bind-Value="streamUseLowLatencyMode"
-                                 Label="Low latency mode"
+                                 Label="@Translations.LowLatencyMode"
                                  Class="mt-2" />
                     <MudNumericField @bind-Value="streamMaxLatencyMs"
-                                     Label="Max Latency (ms)"
+                                     Label="@Translations.MaxLatencyMs"
                                      Min="100"
                                      Max="10000"
                                      Class="mt-2" />
                     <MudSelect @bind-Value="streamRtspTransport"
-                               Label="RTSP Transport"
+                               Label="@Translations.RtspTransport"
                                Class="mt-2">
                         <MudSelectItem Value="CameraStreamRtspTransport.Tcp">TCP</MudSelectItem>
                         <MudSelectItem Value="CameraStreamRtspTransport.Udp">UDP</MudSelectItem>
                     </MudSelect>
                     <MudNumericField @bind-Value="streamBufferDurationMs"
-                                     Label="Buffer Duration (ms)"
+                                     Label="@Translations.BufferDurationMs"
                                      Min="0"
                                      Max="5000"
                                      Class="mt-2" />
@@ -201,11 +201,11 @@ else
                            Color="Color.Primary"
                            OnClick="SaveAsync"
                            Disabled="isSaving">
-                    @(isSaving ? "Saving..." : "Save")
+                    @(isSaving ? Translations.Saving : Translations.Save)
                 </MudButton>
                 <MudButton Variant="Variant.Outlined"
                            Href="/cameras">
-                    Cancel
+                    @Translations.Cancel
                 </MudButton>
             </MudStack>
         </MudForm>
@@ -265,7 +265,7 @@ else
             ? usbDevices
             : usbDevices.Append(new UsbDeviceDescriptor(
                 DeviceId: usbDeviceId,
-                FriendlyName: $"{usbFriendlyName} (not plugged in)",
+                FriendlyName: string.Format(CultureInfo.CurrentCulture, Translations.NotPluggedIn1, usbFriendlyName),
                 VendorId: string.Empty,
                 ProductId: string.Empty,
                 IsPresent: false,
@@ -401,11 +401,11 @@ else
             if (detected?.Value is CameraConnectionType.Names.Lan or CameraConnectionType.Names.Wifi)
             {
                 connectionType = detected.Value;
-                detectionStatus = detected == CameraConnectionType.Lan ? "Detected: Wired (LAN)" : "Detected: Wi-Fi";
+                detectionStatus = string.Format(CultureInfo.CurrentCulture, Translations.ConnectionTypeDetectedFormat1, detected == CameraConnectionType.Lan ? Translations.ConnectionTypeLan : Translations.ConnectionTypeWifi);
             }
             else
             {
-                detectionStatus = "Could not detect the connection type";
+                detectionStatus = Translations.ConnectionTypeDetectFailed;
             }
         }
         finally
@@ -455,12 +455,12 @@ else
             var result = await Gateway.UpdateCameraAsync(CameraId!.Value, request);
             if (result.IsSuccess)
             {
-                Snackbar.Add("Camera updated.", Severity.Success);
+                Snackbar.Add(Translations.CameraUpdated, Severity.Success);
                 Navigation.NavigateTo("/cameras");
             }
             else
             {
-                Snackbar.Add(ProblemText.WithReason("Failed to update camera.", result.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(Translations.FailedToUpdateCamera, result.Problem), Severity.Error);
             }
         }
         else
@@ -494,12 +494,12 @@ else
             var result = await Gateway.CreateCameraAsync(request);
             if (result.IsSuccess)
             {
-                Snackbar.Add("Camera created.", Severity.Success);
+                Snackbar.Add(Translations.CameraCreated, Severity.Success);
                 Navigation.NavigateTo("/cameras");
             }
             else
             {
-                Snackbar.Add(ProblemText.WithReason("Failed to create camera.", result.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(Translations.FailedToCreateCamera, result.Problem), Severity.Error);
             }
         }
 

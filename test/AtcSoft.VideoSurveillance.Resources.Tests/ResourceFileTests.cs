@@ -36,4 +36,16 @@ public sealed class ResourceFileTests
         british.Where(entry => entry.Value == Neutral[entry.Key]).Select(entry => entry.Key)
             .Should().BeEmpty("a text equal to US English belongs only in the neutral file");
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("da-DK")]
+    [InlineData("de-DE")]
+    [InlineData("en-GB")]
+    public void No_Two_Keys_Differ_Only_In_Case(string culture)
+        => ResxFile.Names(culture)
+            .GroupBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => string.Join(", ", group))
+            .Should().BeEmpty("the build keeps one of two keys that differ only in case and drops the other");
 }

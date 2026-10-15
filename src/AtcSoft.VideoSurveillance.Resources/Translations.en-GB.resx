@@ -141,4 +141,25 @@
   <data name="InitializingVideoEngine" xml:space="preserve">
     <value>Initialising video engine...</value>
   </data>
+  <data name="AccentColour" xml:space="preserve">
+    <value>Accent colour</value>
+  </data>
+  <data name="Colour" xml:space="preserve">
+    <value>Colour</value>
+  </data>
+  <data name="FileNameColour" xml:space="preserve">
+    <value>File name colour</value>
+  </data>
+  <data name="StartMaximizedShort" xml:space="preserve">
+    <value>Start maximised</value>
+  </data>
+  <data name="TimeColour" xml:space="preserve">
+    <value>Time colour</value>
+  </data>
+  <data name="Startup" xml:space="preserve">
+    <value>Start-up</value>
+  </data>
+  <data name="ConnectCamerasOnStartup" xml:space="preserve">
+    <value>Connect cameras on start-up</value>
+  </data>
 </root>

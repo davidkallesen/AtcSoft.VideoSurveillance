@@ -6,7 +6,7 @@
         <MudText Typo="Typo.h5" Class="ml-3">Video Surveillance</MudText>
         <MudSpacer />
         <LanguageMenu />
-        <MudTooltip Text="@(AppInstance?.IsDarkMode == true ? "Switch to Light Mode" : "Switch to Dark Mode")">
+        <MudTooltip Text="@(AppInstance?.IsDarkMode == true ? Translations.SwitchToLightMode : Translations.SwitchToDarkMode)">
             <MudIconButton Icon="@(AppInstance?.IsDarkMode == true ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                            Color="Color.Inherit"
                            OnClick="@ToggleDarkMode" />

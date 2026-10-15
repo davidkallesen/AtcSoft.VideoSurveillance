@@ -7,14 +7,14 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<MudText Typo="Typo.h4" Class="mb-4">Cameras</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">@Translations.Cameras</MudText>
 
 <MudButton Variant="Variant.Filled"
            Color="Color.Primary"
            StartIcon="@Icons.Material.Filled.Add"
            Class="mb-4"
            Href="/cameras/create">
-    Add Camera
+    @Translations.AddCamera
 </MudButton>
 
 @if (isLoading)
@@ -25,48 +25,48 @@ else
 {
     <MudTable Items="@cameras" Hover="true" Striped="true" Dense="true">
         <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Source</MudTh>
-            <MudTh>State</MudTh>
-            <MudTh>Recording</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Translations.Name</MudTh>
+            <MudTh>@Translations.CameraSource</MudTh>
+            <MudTh>@Translations.State</MudTh>
+            <MudTh>@Translations.Recording</MudTh>
+            <MudTh>@Translations.Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Name">@context.DisplayName</MudTd>
-            <MudTd DataLabel="Source">@UsbFormatChoices.DescribeSource(
+            <MudTd DataLabel="@Translations.Name">@context.DisplayName</MudTd>
+            <MudTd DataLabel="@Translations.CameraSource">@UsbFormatChoices.DescribeSource(
                 context.Source == CameraSource.Usb,
                 context.UsbFriendlyName,
                 context.Protocol.ToString(),
                 context.IpAddress,
                 context.Port,
                 context.Path)</MudTd>
-            <MudTd DataLabel="State">
+            <MudTd DataLabel="@Translations.State">
                 <MudChip T="string"
                          Size="Size.Small"
                          Color="@GetConnectionColor(context.ConnectionState)">
-                    @(context.ConnectionState?.ToString() ?? "Unknown")
+                    @(context.ConnectionState?.ToString() ?? Translations.Unknown)
                 </MudChip>
             </MudTd>
-            <MudTd DataLabel="Recording">
+            <MudTd DataLabel="@Translations.Recording">
                 @if (context.IsRecording)
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Error">Recording</MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error">@Translations.Recording</MudChip>
                 }
             </MudTd>
             <MudTd>
-                <MudTooltip Text="Edit">
+                <MudTooltip Text="@Translations.Edit">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                    Size="Size.Small"
                                    OnClick="@(() => Navigation.NavigateTo($"/cameras/{context.Id}/edit"))" />
                 </MudTooltip>
-                <MudTooltip Text="Download a snapshot">
+                <MudTooltip Text="@Translations.DownloadASnapshot">
                     <MudIconButton Icon="@Icons.Material.Filled.CameraAlt"
                                    Size="Size.Small"
                                    OnClick="@(() => CaptureSnapshotAsync(context))" />
                 </MudTooltip>
                 @if (context.IsRecording)
                 {
-                    <MudTooltip Text="Stop recording">
+                    <MudTooltip Text="@Translations.StopRecording">
                         <MudIconButton Icon="@Icons.Material.Filled.Stop"
                                        Size="Size.Small"
                                        Color="Color.Error"
@@ -76,7 +76,7 @@ else
                 }
                 else
                 {
-                    <MudTooltip Text="Start recording">
+                    <MudTooltip Text="@Translations.StartRecording">
                         <MudIconButton Icon="@Icons.Material.Filled.FiberManualRecord"
                                        Size="Size.Small"
                                        Color="Color.Error"
@@ -84,7 +84,7 @@ else
                                        OnClick="@(() => StartRecordingAsync(context.Id))" />
                     </MudTooltip>
                 }
-                <MudTooltip Text="Delete">
+                <MudTooltip Text="@Translations.DeleteRecording">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    Size="Size.Small"
                                    Color="Color.Error"
@@ -93,7 +93,7 @@ else
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText>No cameras configured. Click "Add Camera" to get started.</MudText>
+            <MudText>@Translations.NoCamerasConfigured</MudText>
         </NoRecordsContent>
     </MudTable>
 }
@@ -173,12 +173,12 @@ else
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete camera '{camera.DisplayName}'? This cannot be undone." },
-            { x => x.ButtonText, "Delete" },
+            { x => x.ContentText, string.Format(CultureInfo.CurrentCulture, Translations.DeleteCameraQuestion1, camera.DisplayName) },
+            { x => x.ButtonText, Translations.DeleteRecording },
             { x => x.Color, Color.Error },
         };
 
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Camera", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(Translations.DeleteCameraTitle, parameters);
         var result = await dialog.Result;
 
         if (result is { Canceled: false })
@@ -186,8 +186,8 @@ else
             var deleted = await Gateway.DeleteCameraAsync(camera.Id);
             Snackbar.Add(
                 deleted.IsSuccess
-                    ? $"Camera '{camera.DisplayName}' deleted."
-                    : ProblemText.WithReason($"Camera '{camera.DisplayName}' could not be deleted.", deleted.Problem),
+                    ? string.Format(CultureInfo.CurrentCulture, Translations.CameraDeleted1, camera.DisplayName)
+                    : ProblemText.WithReason(string.Format(CultureInfo.CurrentCulture, Translations.CameraCouldNotBeDeleted1, camera.DisplayName), deleted.Problem),
                 deleted.IsSuccess ? Severity.Success : Severity.Error);
 
             await LoadCamerasAsync();
@@ -206,12 +206,12 @@ else
             var status = await Gateway.StartRecordingAsync(cameraId);
             if (status.IsSuccess)
             {
-                Snackbar.Add("Recording started.", Severity.Success);
+                Snackbar.Add(Translations.RecordingStartedMessage, Severity.Success);
                 await LoadCamerasAsync();
             }
             else
             {
-                Snackbar.Add(ProblemText.WithReason("The recording could not be started.", status.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(Translations.RecordingCouldNotBeStarted, status.Problem), Severity.Error);
             }
         }
         finally
@@ -232,12 +232,12 @@ else
             var status = await Gateway.StopRecordingAsync(cameraId);
             if (status.IsSuccess)
             {
-                Snackbar.Add("Recording stopped.", Severity.Success);
+                Snackbar.Add(Translations.RecordingStoppedMessage, Severity.Success);
                 await LoadCamerasAsync();
             }
             else
             {
-                Snackbar.Add(ProblemText.WithReason("The recording could not be stopped.", status.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(Translations.RecordingCouldNotBeStopped, status.Problem), Severity.Error);
             }
         }
         finally
@@ -248,17 +248,17 @@ else
 
     private async Task CaptureSnapshotAsync(Camera camera)
     {
-        Snackbar.Add($"Capturing snapshot from '{camera.DisplayName}'...", Severity.Info);
+        Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.CapturingSnapshotFrom1, camera.DisplayName), Severity.Info);
         var picture = await Gateway.CaptureSnapshotAsync(camera.Id);
         if (picture is { Length: > 0 })
         {
             var fileName = $"{camera.DisplayName}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
             await JS.InvokeVoidAsync("fileInterop.downloadBlob", Convert.ToBase64String(picture), fileName, "image/png");
-            Snackbar.Add("Snapshot downloaded.", Severity.Success);
+            Snackbar.Add(Translations.SnapshotDownloaded, Severity.Success);
         }
         else
         {
-            Snackbar.Add("Failed to capture snapshot.", Severity.Error);
+            Snackbar.Add(Translations.FailedToCaptureSnapshot, Severity.Error);
         }
     }
 

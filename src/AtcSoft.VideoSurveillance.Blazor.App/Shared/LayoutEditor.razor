@@ -1,6 +1,6 @@
 @using MudBlazor
 
-<MudText Typo="Typo.h6" Class="mb-2">Edit Layout: @Layout.Name</MudText>
+<MudText Typo="Typo.h6" Class="mb-2">@(string.Format(CultureInfo.CurrentCulture, Translations.EditLayoutTitle1, Layout.Name))</MudText>
 
 <MudDropContainer T="CameraDropItem"
                   Items="dropItems"
@@ -12,7 +12,7 @@
         <MudGrid>
             <MudItem xs="3">
                 <MudPaper Class="pa-3" Elevation="1" Style="min-height: 300px;">
-                    <MudText Typo="Typo.subtitle1" Class="mb-2">Available Cameras</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">@Translations.AvailableCameras</MudText>
                     <MudDropZone T="CameraDropItem"
                                  Identifier="available"
                                  AllowReorder="true"
@@ -21,7 +21,7 @@
             </MudItem>
             <MudItem xs="9">
                 <MudPaper Class="pa-3" Elevation="1">
-                    <MudText Typo="Typo.subtitle1" Class="mb-2">Grid (@(Layout.Rows)x@(Layout.Columns))</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">@(string.Format(CultureInfo.CurrentCulture, Translations.GridSize2, Layout.Rows, Layout.Columns))</MudText>
                     <div style="display: grid; grid-template-columns: repeat(@Layout.Columns, 1fr); gap: 8px;">
                         @for (var i = 0; i < Layout.Rows * Layout.Columns; i++)
                         {
@@ -32,11 +32,11 @@
                                 <MudText Typo="Typo.caption" Color="@(assigned is not null ? Color.Default : Color.Secondary)" Class="mb-1">
                                     @if (assigned is not null)
                                     {
-                                        @($"Pos {pos} — {assigned.DisplayName}")
+                                        @(string.Format(CultureInfo.CurrentCulture, Translations.PositionWithCamera2, pos, assigned.DisplayName))
                                     }
                                     else
                                     {
-                                        @($"Pos {pos}")
+                                        @(string.Format(CultureInfo.CurrentCulture, Translations.Position1, pos))
                                     }
                                 </MudText>
                                 <MudDropZone T="CameraDropItem"
@@ -60,11 +60,11 @@
     <MudButton Variant="Variant.Filled"
                Color="Color.Primary"
                OnClick="SaveAsync">
-        Save
+        @Translations.Save
     </MudButton>
     <MudButton Variant="Variant.Outlined"
                OnClick="@(() => OnCancel.InvokeAsync())">
-        Cancel
+        @Translations.Cancel
     </MudButton>
 </MudStack>
 

@@ -2,22 +2,22 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">@(IsNew ? "Add receiver" : "Edit receiver")</MudText>
+        <MudText Typo="Typo.h6">@(IsNew ? Translations.AddReceiver : Translations.EditReceiver)</MudText>
     </TitleContent>
     <DialogContent>
         <MudStack Spacing="3" Style="min-width: min(480px, 80vw);">
             <MudTextField @bind-Value="url"
-                          Label="Address"
+                          Label="@Translations.Address"
                           Placeholder="https://example.com/hooks/surveillance"
-                          HelperText="The server posts each event to this http or https address."
+                          HelperText="@Translations.WebhookAddressHelp"
                           Immediate="true"
                           Error="@(showErrors && !WebhookEventChoices.IsUsableAddress(url))"
-                          ErrorText="Enter an http or https address."
+                          ErrorText="@Translations.EnterAnHttpAddress"
                           Variant="Variant.Outlined"
                           autocomplete="off" />
 
             <MudTextField @bind-Value="secret"
-                          Label="Secret"
+                          Label="@Translations.Secret"
                           InputType="InputType.Password"
                           HelperText="@SecretHint"
                           Variant="Variant.Outlined"
@@ -26,14 +26,14 @@
             @if (!IsNew && HasSecret)
             {
                 <MudCheckBox @bind-Value="removeSecret"
-                             Label="Remove the secret (send unsigned requests)"
+                             Label="@Translations.RemoveSecret"
                              Dense="true" />
             }
 
             <div>
-                <MudText Typo="Typo.subtitle2">Events</MudText>
+                <MudText Typo="Typo.subtitle2">@Translations.Events</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                    Tick what the receiver should get. None ticked means everything.
+                    @Translations.WebhookEventsHelp
                 </MudText>
                 @foreach (var group in WebhookEventChoices.Groups)
                 {
@@ -47,15 +47,15 @@
                 @if (kept.Count > 0)
                 {
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                        Also set, and kept as they are: @string.Join(", ", kept)
+                        @(string.Format(CultureInfo.CurrentCulture, Translations.AlsoSetAndKept1, string.Join(", ", kept)))
                     </MudText>
                 }
             </div>
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(IsNew ? "Add" : "Save")</MudButton>
+        <MudButton OnClick="Cancel">@Translations.Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(IsNew ? Translations.Add : Translations.Save)</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -86,12 +86,12 @@
         {
             if (IsNew)
             {
-                return "Optional. With a secret, every request is signed so the receiver can check it comes from this server.";
+                return Translations.WebhookSecretHelp;
             }
 
             return HasSecret
-                ? "A secret is set. Leave empty to keep it, or type a new one to replace it."
-                : "No secret is set. Type one to have the requests signed.";
+                ? Translations.WebhookSecretIsSet
+                : Translations.WebhookSecretIsNotSet;
         }
     }
 

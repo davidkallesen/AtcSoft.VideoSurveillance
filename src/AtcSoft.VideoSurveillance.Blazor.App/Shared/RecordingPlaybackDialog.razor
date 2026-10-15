@@ -12,15 +12,14 @@
         @if (!PlaysInBrowser && !failed)
         {
             <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
-                Browsers often cannot play this format, and do not turn a rotated picture upright. If it does not play, download it and open it in a video player.
-                Recording as MP4 (Settings, Capture) avoids both.
+                @Translations.BrowserPlaybackHelp
             </MudAlert>
         }
 
         @if (failed)
         {
             <MudAlert Severity="Severity.Warning" Class="mb-2">
-                This browser cannot play the recording. Download it and open it in a video player such as VLC.
+                @Translations.BrowserCannotPlayRecording
             </MudAlert>
         }
         else
@@ -35,8 +34,8 @@
     <DialogActions>
         <MudText Typo="Typo.caption" Class="ml-4 mud-text-secondary" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@FileName</MudText>
         <MudSpacer />
-        <MudButton StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadAsync">Download</MudButton>
-        <MudButton OnClick="Close">Close</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadAsync">@Translations.Download</MudButton>
+        <MudButton OnClick="Close">@Translations.Close</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -56,7 +55,7 @@
     public string DownloadUrl { get; set; } = string.Empty;
 
     [Parameter]
-    public string Title { get; set; } = "Recording Playback";
+    public string Title { get; set; } = Translations.RecordingPlayback;
 
     [Parameter]
     public string FileName { get; set; } = string.Empty;

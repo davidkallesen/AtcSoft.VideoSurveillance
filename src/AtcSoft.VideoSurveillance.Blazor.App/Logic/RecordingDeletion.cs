@@ -13,13 +13,9 @@ public static class RecordingDeletion
     public static string Question(
         string? cameraName,
         string started)
-    {
-        var what = string.IsNullOrEmpty(cameraName)
-            ? "the recording"
-            : $"the recording of {cameraName}";
-
-        return $"Delete {what} from {started}? The file is removed from the server and cannot be brought back.";
-    }
+        => string.IsNullOrEmpty(cameraName)
+            ? string.Format(CultureInfo.CurrentCulture, Translations.DeleteRecordingQuestion1, started)
+            : string.Format(CultureInfo.CurrentCulture, Translations.DeleteCameraRecordingQuestion2, cameraName, started);
 
     /// <summary>
     /// Gets what to tell the user about the outcome.
@@ -27,10 +23,10 @@ public static class RecordingDeletion
     public static string ResultText(RecordingDeletionOutcome outcome)
         => outcome switch
         {
-            RecordingDeletionOutcome.Deleted => "Recording deleted.",
-            RecordingDeletionOutcome.InProgress => "The recording is still being made. Delete it when it has ended.",
-            RecordingDeletionOutcome.NotFound => "The recording was already gone.",
-            _ => "The recording could not be deleted.",
+            RecordingDeletionOutcome.Deleted => Translations.RecordingDeleted,
+            RecordingDeletionOutcome.InProgress => Translations.RecordingStillBeingMade,
+            RecordingDeletionOutcome.NotFound => Translations.RecordingAlreadyGone,
+            _ => Translations.RecordingCouldNotBeDeleted,
         };
 
     /// <summary>

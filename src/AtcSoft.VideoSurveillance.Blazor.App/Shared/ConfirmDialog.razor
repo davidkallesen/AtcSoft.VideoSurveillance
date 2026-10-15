@@ -11,7 +11,7 @@
         <MudText>@ContentText</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@Translations.Cancel</MudButton>
         <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
     </DialogActions>
 </MudDialog>
@@ -21,7 +21,7 @@
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public string ContentText { get; set; } = "Are you sure?";
+    public string ContentText { get; set; } = Translations.AreYouSure;
 
     [Parameter]
     public string ButtonText { get; set; } = "Confirm";

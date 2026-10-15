@@ -3,19 +3,19 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Class="mb-4">Layouts</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">@Translations.Layouts</MudText>
 
 <MudPaper Class="pa-4 mb-4" MaxWidth="500px">
-    <MudText Typo="Typo.h6" Class="mb-2">Create Layout</MudText>
+    <MudText Typo="Typo.h6" Class="mb-2">@Translations.CreateLayout</MudText>
     <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2">
-        <MudTextField @bind-Value="newLayoutName" Label="Name" />
-        <MudNumericField @bind-Value="newRows" Label="Rows" Min="1" Max="8" />
-        <MudNumericField @bind-Value="newColumns" Label="Columns" Min="1" Max="8" />
+        <MudTextField @bind-Value="newLayoutName" Label="@Translations.Name" />
+        <MudNumericField @bind-Value="newRows" Label="@Translations.Rows" Min="1" Max="8" />
+        <MudNumericField @bind-Value="newColumns" Label="@Translations.Columns" Min="1" Max="8" />
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    OnClick="CreateLayoutAsync"
                    Disabled="string.IsNullOrWhiteSpace(newLayoutName)">
-            Create
+            @Translations.Create
         </MudButton>
     </MudStack>
 </MudPaper>
@@ -28,15 +28,15 @@ else
 {
     <MudTable Items="@layouts" Hover="true" Striped="true" Dense="true">
         <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Grid</MudTh>
-            <MudTh>Cameras</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Translations.Name</MudTh>
+            <MudTh>@Translations.GridSizeGroup</MudTh>
+            <MudTh>@Translations.Cameras</MudTh>
+            <MudTh>@Translations.Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Grid">@(context.Rows)x@(context.Columns)</MudTd>
-            <MudTd DataLabel="Cameras">@(context.Cameras?.Count ?? 0)</MudTd>
+            <MudTd DataLabel="@Translations.Name">@context.Name</MudTd>
+            <MudTd DataLabel="@Translations.GridSizeGroup">@(context.Rows)x@(context.Columns)</MudTd>
+            <MudTd DataLabel="@Translations.Cameras">@(context.Cameras?.Count ?? 0)</MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.GridView"
                                Size="Size.Small"
@@ -46,7 +46,7 @@ else
                            Variant="Variant.Outlined"
                            Color="Color.Primary"
                            OnClick="@(() => ApplyLayoutAsync(context))">
-                    Apply
+                    @Translations.Apply
                 </MudButton>
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Size="Size.Small"
@@ -55,7 +55,7 @@ else
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText>No layouts configured. Create one above.</MudText>
+            <MudText>@Translations.NoLayoutsConfigured</MudText>
         </NoRecordsContent>
     </MudTable>
 }
@@ -104,13 +104,13 @@ else
         var result = await Gateway.CreateLayoutAsync(request);
         if (result.IsSuccess)
         {
-            Snackbar.Add($"Layout '{newLayoutName}' created.", Severity.Success);
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.LayoutCreated1, newLayoutName), Severity.Success);
             newLayoutName = string.Empty;
             await LoadLayoutsAsync();
         }
         else
         {
-            Snackbar.Add(ProblemText.WithReason("Failed to create layout.", result.Problem), Severity.Error);
+            Snackbar.Add(ProblemText.WithReason(Translations.FailedToCreateLayout, result.Problem), Severity.Error);
         }
     }
 
@@ -119,11 +119,11 @@ else
         var result = await Gateway.ApplyLayoutAsync(layout.Id);
         if (result.IsSuccess)
         {
-            Snackbar.Add($"Layout '{layout.Name}' applied.", Severity.Success);
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.LayoutApplied1, layout.Name), Severity.Success);
         }
         else
         {
-            Snackbar.Add(ProblemText.WithReason("Failed to apply layout.", result.Problem), Severity.Error);
+            Snackbar.Add(ProblemText.WithReason(Translations.FailedToApplyLayout, result.Problem), Severity.Error);
         }
     }
 
@@ -131,12 +131,12 @@ else
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Delete layout '{layout.Name}'? This cannot be undone." },
-            { x => x.ButtonText, "Delete" },
+            { x => x.ContentText, string.Format(CultureInfo.CurrentCulture, Translations.DeleteLayoutQuestion1, layout.Name) },
+            { x => x.ButtonText, Translations.DeleteRecording },
             { x => x.Color, Color.Error },
         };
 
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Layout", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(Translations.DeleteLayoutTitle, parameters);
         var result = await dialog.Result;
 
         if (result is { Canceled: false })
@@ -144,11 +144,11 @@ else
             var deleted = await Gateway.DeleteLayoutAsync(layout.Id);
             if (!deleted.IsSuccess)
             {
-                Snackbar.Add(ProblemText.WithReason($"Layout '{layout.Name}' could not be deleted.", deleted.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(string.Format(CultureInfo.CurrentCulture, Translations.LayoutCouldNotBeDeleted1, layout.Name), deleted.Problem), Severity.Error);
                 return;
             }
 
-            Snackbar.Add($"Layout '{layout.Name}' deleted.", Severity.Success);
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.LayoutDeleted1, layout.Name), Severity.Success);
 
             if (editingLayout?.Id == layout.Id)
             {
@@ -175,13 +175,13 @@ else
         var result = await Gateway.UpdateLayoutAsync(editingLayout.Id, request);
         if (result.IsSuccess)
         {
-            Snackbar.Add($"Layout '{editingLayout.Name}' saved.", Severity.Success);
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.LayoutSaved1, editingLayout.Name), Severity.Success);
             editingLayout = null;
             await LoadLayoutsAsync();
         }
         else
         {
-            Snackbar.Add(ProblemText.WithReason("Failed to save layout.", result.Problem), Severity.Error);
+            Snackbar.Add(ProblemText.WithReason(Translations.FailedToSaveLayout, result.Problem), Severity.Error);
         }
     }
 

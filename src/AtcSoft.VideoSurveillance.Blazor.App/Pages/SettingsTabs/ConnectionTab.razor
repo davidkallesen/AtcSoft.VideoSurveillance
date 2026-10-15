@@ -1,24 +1,24 @@
-<MudText Typo="Typo.subtitle1" Class="mb-1">Defaults for a new camera</MudText>
-<MudSelect @bind-Value="State.DefaultProtocol" Label="Protocol" Class="mt-2">
+<MudText Typo="Typo.subtitle1" Class="mb-1">@Translations.NewCameraDefaults</MudText>
+<MudSelect @bind-Value="State.DefaultProtocol" Label="@Translations.Protocol" Class="mt-2">
     <MudSelectItem Value="AppSettingsDefaultProtocol.Rtsp">RTSP</MudSelectItem>
     <MudSelectItem Value="AppSettingsDefaultProtocol.Http">HTTP</MudSelectItem>
     <MudSelectItem Value="AppSettingsDefaultProtocol.Https">HTTPS</MudSelectItem>
 </MudSelect>
-<MudNumericField @bind-Value="State.DefaultPort" Label="Port" Min="1" Max="65535" Class="mt-2" />
+<MudNumericField @bind-Value="State.DefaultPort" Label="@Translations.Port" Min="1" Max="65535" Class="mt-2" />
 
 <MudDivider Class="my-4" />
 
-<MudText Typo="Typo.subtitle1" Class="mb-1">Connection</MudText>
-<MudNumericField @bind-Value="State.ConnectionTimeoutSeconds" Label="Connection timeout (seconds)" Min="1" Max="120" Class="mt-2" />
-<MudNumericField @bind-Value="State.ReconnectDelaySeconds" Label="Reconnect delay (seconds)" Min="1" Max="300" Class="mt-2" />
-<SettingSwitch @bind-Value="State.AutoReconnectOnFailure" Label="Reconnect automatically" Class="mt-2" />
+<MudText Typo="Typo.subtitle1" Class="mb-1">@Translations.Connection</MudText>
+<MudNumericField @bind-Value="State.ConnectionTimeoutSeconds" Label="@Translations.ConnectionTimeoutSeconds" Min="1" Max="120" Class="mt-2" />
+<MudNumericField @bind-Value="State.ReconnectDelaySeconds" Label="@Translations.ReconnectDelaySeconds" Min="1" Max="300" Class="mt-2" />
+<SettingSwitch @bind-Value="State.AutoReconnectOnFailure" Label="@Translations.ReconnectAutomatically" Class="mt-2" />
 
 <MudDivider Class="my-4" />
 
-<MudText Typo="Typo.subtitle1" Class="mb-1">Notifications in the desktop apps</MudText>
-<SettingSwitch @bind-Value="State.ShowNotificationOnDisconnect" Label="Notify when a camera disconnects" />
-<SettingSwitch @bind-Value="State.ShowNotificationOnReconnect" Label="Notify when a camera reconnects" />
-<SettingSwitch @bind-Value="State.PlayNotificationSound" Label="Play a sound" />
+<MudText Typo="Typo.subtitle1" Class="mb-1">@Translations.DesktopAppsNotifications</MudText>
+<SettingSwitch @bind-Value="State.ShowNotificationOnDisconnect" Label="@Translations.NotifyOnDisconnect" />
+<SettingSwitch @bind-Value="State.ShowNotificationOnReconnect" Label="@Translations.NotifyOnReconnect" />
+<SettingSwitch @bind-Value="State.PlayNotificationSound" Label="@Translations.PlayASound" />
 
 @code {
     [Parameter, EditorRequired]

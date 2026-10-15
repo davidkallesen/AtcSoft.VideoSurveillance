@@ -24,9 +24,11 @@ public static class ProblemText
             case ProblemDetails { Title: { Length: > 0 } title }:
                 return title;
             default:
-                return string.Create(
-                    CultureInfo.InvariantCulture,
-                    $"The server answered {(int)response.StatusCode} ({response.StatusCode}).");
+                return string.Format(
+                    CultureInfo.CurrentCulture,
+                    Translations.ServerAnswered2,
+                    (int)response.StatusCode,
+                    response.StatusCode);
         }
     }
 

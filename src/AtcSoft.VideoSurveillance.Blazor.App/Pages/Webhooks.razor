@@ -3,10 +3,9 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Class="mb-1">Webhooks</MudText>
+<MudText Typo="Typo.h4" Class="mb-1">@Translations.Webhooks</MudText>
 <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4" Style="max-width: 760px;">
-    The server posts camera, recording and motion events to these receivers as they happen.
-    A change here takes effect at once.
+    @Translations.WebhooksIntro
 </MudText>
 
 <MudButton Variant="Variant.Filled"
@@ -15,7 +14,7 @@
            Class="mb-4"
            Disabled="@(loadFailed || isLoading)"
            OnClick="AddAsync">
-    Add receiver
+    @Translations.AddReceiver
 </MudButton>
 
 @if (isLoading)
@@ -25,59 +24,59 @@
 else if (loadFailed)
 {
     <MudAlert Severity="Severity.Error" Style="max-width: 700px;">
-        The server did not answer. Check that it is running, then reload the page.
+        @Translations.ServerDidNotAnswer
     </MudAlert>
 }
 else
 {
     <MudTable Items="@webhooks" Hover="true" Striped="true" Dense="true">
         <HeaderContent>
-            <MudTh>Address</MudTh>
-            <MudTh>Events</MudTh>
-            <MudTh>Signed</MudTh>
-            <MudTh>Set in</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Translations.Address</MudTh>
+            <MudTh>@Translations.Events</MudTh>
+            <MudTh>@Translations.Signed</MudTh>
+            <MudTh>@Translations.SetIn</MudTh>
+            <MudTh>@Translations.Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Address" Style="word-break: break-all;">@context.Url</MudTd>
-            <MudTd DataLabel="Events">@WebhookEventChoices.Describe(context.Events)</MudTd>
-            <MudTd DataLabel="Signed">@(context.HasSecret ? "Yes" : "No")</MudTd>
-            <MudTd DataLabel="Set in">@(context.IsEditable ? "This page" : "Server configuration")</MudTd>
+            <MudTd DataLabel="@Translations.Address" Style="word-break: break-all;">@context.Url</MudTd>
+            <MudTd DataLabel="@Translations.Events">@WebhookEventChoices.Describe(context.Events)</MudTd>
+            <MudTd DataLabel="@Translations.Signed">@(context.HasSecret ? Translations.Yes : Translations.No)</MudTd>
+            <MudTd DataLabel="@Translations.SetIn">@(context.IsEditable ? Translations.ThisPage : Translations.ServerConfiguration)</MudTd>
             <MudTd>
-                <MudTooltip Text="Send a test event">
+                <MudTooltip Text="@Translations.SendATestEvent">
                     <MudIconButton Icon="@Icons.Material.Filled.Send"
                                    Size="Size.Small"
-                                   aria-label="Send a test event"
+                                   aria-label="@Translations.SendATestEvent"
                                    Disabled="@testing.Contains(context.Id)"
                                    OnClick="@(() => TestAsync(context))" />
                 </MudTooltip>
                 @if (context.IsEditable)
                 {
-                    <MudTooltip Text="Edit">
+                    <MudTooltip Text="@Translations.Edit">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Size="Size.Small"
-                                       aria-label="Edit"
+                                       aria-label="@Translations.Edit"
                                        OnClick="@(() => EditAsync(context))" />
                     </MudTooltip>
-                    <MudTooltip Text="Remove">
+                    <MudTooltip Text="@Translations.Remove">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        Size="Size.Small"
                                        Color="Color.Error"
-                                       aria-label="Remove"
+                                       aria-label="@Translations.Remove"
                                        OnClick="@(() => DeleteAsync(context))" />
                     </MudTooltip>
                 }
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText>No receivers yet. Click "Add receiver" to send the server's events somewhere.</MudText>
+            <MudText>@Translations.NoReceiversYet</MudText>
         </NoRecordsContent>
     </MudTable>
 
     @if (webhooks.Any(w => !w.IsEditable))
     {
         <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">
-            A receiver from the server's configuration is changed there, not here.
+            @Translations.ConfiguredReceiverInfo
         </MudText>
     }
 }
@@ -112,7 +111,7 @@ else
             Events: [.. entered.Events]));
 
         Snackbar.Add(
-            created.IsSuccess ? "Receiver added." : ProblemText.WithReason("The receiver could not be added.", created.Problem),
+            created.IsSuccess ? Translations.ReceiverAdded : ProblemText.WithReason(Translations.ReceiverCouldNotBeAdded, created.Problem),
             created.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
@@ -132,7 +131,7 @@ else
                 Events: [.. entered.Events]));
 
         Snackbar.Add(
-            updated.IsSuccess ? "Receiver saved." : ProblemText.WithReason("The receiver could not be saved.", updated.Problem),
+            updated.IsSuccess ? Translations.ReceiverSaved : ProblemText.WithReason(Translations.ReceiverCouldNotBeSaved, updated.Problem),
             updated.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
@@ -141,12 +140,12 @@ else
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Remove the receiver '{webhook.Url}'? It gets no more events." },
-            { x => x.ButtonText, "Remove" },
+            { x => x.ContentText, string.Format(CultureInfo.CurrentCulture, Translations.RemoveReceiverQuestion1, webhook.Url) },
+            { x => x.ButtonText, Translations.Remove },
             { x => x.Color, Color.Error },
         };
 
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove receiver", parameters);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(Translations.RemoveReceiver, parameters);
         if (await dialog.Result is not { Canceled: false })
         {
             return;
@@ -154,7 +153,7 @@ else
 
         var removed = await Gateway.DeleteWebhookAsync(webhook.Id);
         Snackbar.Add(
-            removed.IsSuccess ? "Receiver removed." : ProblemText.WithReason("The receiver could not be removed.", removed.Problem),
+            removed.IsSuccess ? Translations.ReceiverRemoved : ProblemText.WithReason(Translations.ReceiverCouldNotBeRemoved, removed.Problem),
             removed.IsSuccess ? Severity.Success : Severity.Error);
         await LoadAsync();
     }
@@ -173,9 +172,9 @@ else
             Snackbar.Add(
                 delivered switch
                 {
-                    true => "The receiver took the test event.",
-                    false => "The receiver did not take the test event. Check the address, and that it answers with a success status.",
-                    null => "The server could not be asked to send the test event.",
+                    true => Translations.TestEventTaken,
+                    false => Translations.TestEventNotTaken,
+                    null => Translations.TestEventCouldNotBeSent,
                 },
                 delivered == true ? Severity.Success : Severity.Error);
         }

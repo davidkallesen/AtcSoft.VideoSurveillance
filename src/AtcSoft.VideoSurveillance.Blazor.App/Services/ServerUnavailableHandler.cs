@@ -23,7 +23,7 @@ public sealed class ServerUnavailableHandler : DelegatingHandler
             return new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
             {
                 RequestMessage = request,
-                ReasonPhrase = "The server could not be reached",
+                ReasonPhrase = Translations.ServerCouldNotBeReached,
             };
         }
     }

@@ -3,9 +3,9 @@
 @inject GatewayService Gateway
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Class="mb-1">Settings</MudText>
+<MudText Typo="Typo.h4" Class="mb-1">@Translations.Settings</MudText>
 <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
-    The server's settings. The desktop apps that connect to this server use the same ones.
+    @Translations.ServerSettingsInfo
 </MudText>
 
 <style>
@@ -24,9 +24,9 @@
 else if (loadFailed)
 {
     <MudAlert Severity="Severity.Error" Class="mb-4" Style="max-width: 800px;">
-        The settings could not be loaded. Check that the server is running, then try again.
+        @Translations.SettingsCouldNotBeLoaded
     </MudAlert>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadAsync">Try again</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadAsync">@Translations.TryAgain</MudButton>
 }
 else
 {
@@ -40,31 +40,31 @@ else
 
         @* Same tabs, in the same order and down the left side, as the desktop apps' settings dialog *@
         <MudTabs Elevation="0" Rounded="true" Position="Position.Left" ApplyEffectsToContainer="true" TabPanelsClass="pa-4" MinimumTabWidth="170px">
-            <MudTabPanel Text="General">
+            <MudTabPanel Text="@Translations.General">
                 <div class="settings-pane"><GeneralTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Camera Display">
+            <MudTabPanel Text="@Translations.CameraDisplay">
                 <div class="settings-pane"><CameraDisplayTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Connection">
+            <MudTabPanel Text="@Translations.Connection">
                 <div class="settings-pane"><ConnectionTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Performance">
+            <MudTabPanel Text="@Translations.Performance">
                 <div class="settings-pane"><PerformanceTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Motion Detection">
+            <MudTabPanel Text="@Translations.MotionDetection">
                 <div class="settings-pane"><MotionDetectionTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Capture">
+            <MudTabPanel Text="@Translations.Capture">
                 <div class="settings-pane"><CaptureTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Timelapse">
+            <MudTabPanel Text="@Translations.Timelapse">
                 <div class="settings-pane"><TimelapseTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Storage">
+            <MudTabPanel Text="@Translations.Storage">
                 <div class="settings-pane"><StorageTab State="state" /></div>
             </MudTabPanel>
-            <MudTabPanel Text="Advanced">
+            <MudTabPanel Text="@Translations.Advanced">
                 <div class="settings-pane"><AdvancedTab State="state" /></div>
             </MudTabPanel>
         </MudTabs>
@@ -75,13 +75,13 @@ else
                        StartIcon="@Icons.Material.Filled.Save"
                        OnClick="SaveSettingsAsync"
                        Disabled="isSaving">
-                Save
+                @Translations.Save
             </MudButton>
             <MudButton Variant="Variant.Outlined"
                        StartIcon="@Icons.Material.Filled.Undo"
                        OnClick="LoadAsync"
                        Disabled="isSaving">
-                Discard changes
+                @Translations.DiscardChanges
             </MudButton>
         </MudStack>
     </MudPaper>
@@ -122,8 +122,8 @@ else
     {
         // A changed folder layout moves the recordings before the call returns.
         savingText = state.HasRecordingLayoutChanged
-            ? "Saving and moving recordings..."
-            : "Saving...";
+            ? Translations.SavingAndMovingRecordings
+            : Translations.Saving;
         isSaving = true;
         StateHasChanged();
 
@@ -136,16 +136,16 @@ else
                 var saved = new SettingsState();
                 saved.LoadFrom(result.Value!);
                 state = saved;
-                Snackbar.Add("Settings saved.", Severity.Success);
+                Snackbar.Add(Translations.SettingsSaved, Severity.Success);
             }
             else
             {
-                Snackbar.Add(ProblemText.WithReason("The settings could not be saved.", result.Problem), Severity.Error);
+                Snackbar.Add(ProblemText.WithReason(Translations.SettingsCouldNotBeSaved, result.Problem), Severity.Error);
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            Snackbar.Add("The server did not answer; the settings may not have been saved.", Severity.Error);
+            Snackbar.Add(Translations.SettingsMayNotBeSaved, Severity.Error);
         }
         finally
         {

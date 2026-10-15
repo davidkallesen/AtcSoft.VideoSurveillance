@@ -360,12 +360,23 @@ public sealed class SettingsState
     private static string OnOffHint(
         string on,
         string off)
-        => $"On: {on}{Environment.NewLine}Off: {off}";
+        => string.Format(CultureInfo.CurrentCulture, Translations.RecordingLayoutOnOffHint2, on, off);
 
     /// <summary>
     /// Gets the concrete corner a placement resolves to for the current
     /// overlay position: the icon always uses a corner adjacent to the info box.
     /// </summary>
+    private static string Corner(
+        bool isTop,
+        bool isLeft)
+        => (isTop, isLeft) switch
+        {
+            (true, true) => Translations.OverlayPositionTopLeft,
+            (true, false) => Translations.OverlayPositionTopRight,
+            (false, true) => Translations.OverlayPositionBottomLeft,
+            _ => Translations.OverlayPositionBottomRight,
+        };
+
     public string GetConnectionTypeIconPlacementLabel(
         AppSettingsConnectionTypeIconPlacement placement)
     {
@@ -375,10 +386,10 @@ public sealed class SettingsState
         if (placement == AppSettingsConnectionTypeIconPlacement.SameColumn)
         {
             isTop = !isTop;
-            return $"{(isTop ? "Top" : "Bottom")} {(isLeft ? "Left" : "Right")} (same column as info box)";
+            return string.Format(CultureInfo.CurrentCulture, Translations.ConnectionTypeIconPositionSameColumnFormat1, Corner(isTop, isLeft));
         }
 
         isLeft = !isLeft;
-        return $"{(isTop ? "Top" : "Bottom")} {(isLeft ? "Left" : "Right")} (same row as info box)";
+        return string.Format(CultureInfo.CurrentCulture, Translations.ConnectionTypeIconPositionSameRowFormat1, Corner(isTop, isLeft));
     }
 }

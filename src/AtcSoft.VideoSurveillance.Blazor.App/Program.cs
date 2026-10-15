@@ -26,6 +26,7 @@ builder.Services.AddVideoSurveillanceEndpoints();
 
 // Register MudBlazor services
 builder.Services.AddMudServices();
+builder.Services.AddTransient<MudLocalizer, TranslationsMudLocalizer>();
 
 // Register Gateway service with API base URL for static file URL building
 builder.Services.AddScoped(sp =>

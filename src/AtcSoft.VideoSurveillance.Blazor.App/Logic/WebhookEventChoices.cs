@@ -7,16 +7,14 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 /// </summary>
 public static class WebhookEventChoices
 {
-    private const string AllEvents = "All events";
-
     /// <summary>
     /// Gets the groups of events the server sends, with the name the page shows.
     /// </summary>
     public static IReadOnlyList<(string Pattern, string Label)> Groups { get; } =
     [
-        ("camera.*", "Camera connection"),
-        ("recording.*", "Recording"),
-        ("motion.*", "Motion"),
+        ("camera.*", Translations.CameraConnection),
+        ("recording.*", Translations.Recording),
+        ("motion.*", Translations.Motion),
     ];
 
     /// <summary>
@@ -30,7 +28,7 @@ public static class WebhookEventChoices
         if ((groups.Count == 0 && others.Count == 0) ||
             (groups.Count == Groups.Count && others.Count == 0))
         {
-            return AllEvents;
+            return Translations.AllEvents;
         }
 
         var names = Groups

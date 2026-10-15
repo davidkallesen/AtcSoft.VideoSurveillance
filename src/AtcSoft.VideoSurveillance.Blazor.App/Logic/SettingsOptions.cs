@@ -3,13 +3,14 @@
 /// <summary>
 /// The choices the settings page offers. They are the same choices, in the
 /// same order, as the desktop apps' settings dialog, so a value picked in
-/// one client is one the others can show.
+/// one client is one the others can show. The labels are in the language the
+/// app started in (Program.cs sets it before any page reads them).
 /// </summary>
 public static class SettingsOptions
 {
     public static IReadOnlyList<(string Value, string Label)> VideoQualities { get; } =
     [
-        ("Auto", "Auto (source quality)"),
+        ("Auto", Translations.VideoQualityAuto),
         ("1080p", "1080p"),
         ("720p", "720p"),
         ("480p", "480p"),
@@ -21,28 +22,28 @@ public static class SettingsOptions
 
     public static IReadOnlyList<(int Value, string Label)> MotionSensitivities { get; } =
     [
-        (10, "Low"),
-        (30, "Medium"),
-        (50, "High"),
-        (70, "Very high"),
+        (10, Translations.MotionSensitivityLow),
+        (30, Translations.MotionSensitivityMedium),
+        (50, Translations.MotionSensitivityHigh),
+        (70, Translations.MotionSensitivityVeryHigh),
     ];
 
     public static IReadOnlyList<(string Value, string Label)> AnalysisResolutions { get; } =
     [
-        ("320x240", "320 x 240 (low CPU)"),
-        ("480x360", "480 x 360 (balanced)"),
-        ("640x480", "640 x 480 (better detection)"),
-        ("800x600", "800 x 600 (high CPU)"),
-        ("960x720", "960 x 720 (very high CPU)"),
+        ("320x240", Translations.MotionResolutionLowCpu),
+        ("480x360", Translations.MotionResolutionBalanced),
+        ("640x480", Translations.MotionResolutionBetterDetection),
+        ("800x600", Translations.MotionResolutionHighCpu),
+        ("960x720", Translations.MotionResolutionVeryHighCpu),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> PostMotionDurations { get; } =
     [
-        (5, "5 seconds"),
-        (10, "10 seconds"),
-        (15, "15 seconds"),
-        (30, "30 seconds"),
-        (60, "1 minute"),
+        (5, Translations.Duration5Seconds),
+        (10, Translations.Duration10Seconds),
+        (15, Translations.Duration15Seconds),
+        (30, Translations.Duration30Seconds),
+        (60, Translations.Duration1Minute),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> BoundingBoxThicknesses { get; } =
@@ -50,45 +51,45 @@ public static class SettingsOptions
 
     public static IReadOnlyList<(int Value, string Label)> BoundingBoxMinAreas { get; } =
     [
-        (10, "Tiny"),
-        (25, "Small"),
-        (50, "Medium"),
-        (100, "Large"),
-        (200, "Very large"),
+        (10, Translations.AreaTiny),
+        (25, Translations.AreaSmall),
+        (50, Translations.AreaMedium),
+        (100, Translations.AreaLarge),
+        (200, Translations.AreaVeryLarge),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> ThumbnailTiles { get; } =
     [
-        (1, "Single picture (320 x 240)"),
-        (4, "2 x 2 grid (640 x 480)"),
+        (1, Translations.ThumbnailTileOne),
+        (4, Translations.ThumbnailTileFour),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> MaxRecordingDurations { get; } =
     [
-        (15, "15 minutes"),
-        (30, "30 minutes"),
-        (60, "1 hour"),
-        (120, "2 hours"),
-        (180, "3 hours"),
-        (240, "4 hours"),
+        (15, Translations.Duration15Minutes),
+        (30, Translations.Duration30Minutes),
+        (60, Translations.Duration1Hour),
+        (120, Translations.Duration2Hours),
+        (180, Translations.Duration3Hours),
+        (240, Translations.Duration4Hours),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> RetentionPeriods { get; } =
     [
-        (7, "7 days"),
-        (14, "14 days"),
-        (30, "30 days"),
-        (60, "60 days"),
-        (90, "90 days"),
-        (180, "6 months"),
-        (365, "1 year"),
+        (7, Translations.RetentionPeriod7Days),
+        (14, Translations.RetentionPeriod14Days),
+        (30, Translations.RetentionPeriod30Days),
+        (60, Translations.RetentionPeriod60Days),
+        (90, Translations.RetentionPeriod90Days),
+        (180, Translations.RetentionPeriod6Months),
+        (365, Translations.RetentionPeriod1Year),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> MinFreeSpaces { get; } =
     [
         (512, "500 MB"),
         (1024, "1 GB"),
-        (2048, "2 GB (recommended)"),
+        (2048, string.Format(CultureInfo.CurrentCulture, Translations.RecommendedChoice1, "2 GB")),
         (5120, "5 GB"),
         (10240, "10 GB"),
         (20480, "20 GB"),
@@ -96,17 +97,17 @@ public static class SettingsOptions
 
     public static IReadOnlyList<(string Value, string Label)> TimelapseIntervals { get; } =
     [
-        ("10s", "10 seconds"),
-        ("30s", "30 seconds"),
-        ("1m", "1 minute"),
-        ("5m", "5 minutes"),
-        ("10m", "10 minutes"),
-        ("30m", "30 minutes"),
-        ("1h", "1 hour"),
-        ("3h", "3 hours"),
-        ("6h", "6 hours"),
-        ("12h", "12 hours"),
-        ("24h", "24 hours"),
+        ("10s", Translations.Duration10Seconds),
+        ("30s", Translations.Duration30Seconds),
+        ("1m", Translations.Duration1Minute),
+        ("5m", Translations.Duration5Minutes),
+        ("10m", Translations.Duration10Minutes),
+        ("30m", Translations.Duration30Minutes),
+        ("1h", Translations.Duration1Hour),
+        ("3h", Translations.Duration3Hours),
+        ("6h", Translations.Duration6Hours),
+        ("12h", Translations.Duration12Hours),
+        ("24h", Translations.Duration24Hours),
     ];
 
     /// <summary>
