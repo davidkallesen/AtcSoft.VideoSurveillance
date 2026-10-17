@@ -94,8 +94,10 @@ if [ -n "$RECORDINGS" ] && [ -d "$RECORDINGS" ]; then
     for cam_dir in "$RECORDINGS"/*/; do
         [ -d "$cam_dir" ] || continue
         cam=$(basename "$cam_dir")
-        count=$(find "$cam_dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" \) | wc -l)
-        bytes=$(find "$cam_dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" \) -printf "%s\n" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+        # The separate thumbnail folder is not a camera, and videos sit in day folders below the camera.
+        [ "$cam" = "thumbnails" ] && continue
+        count=$(find "$cam_dir" -maxdepth 2 -type f \( -iname "*.mkv" -o -iname "*.mp4" \) | wc -l)
+        bytes=$(find "$cam_dir" -maxdepth 2 -type f \( -iname "*.mkv" -o -iname "*.mp4" \) -printf "%s\n" 2>/dev/null | awk '{s+=$1} END {print s+0}')
         # Convert bytes to GB for readability when large.
         if [ "$bytes" -gt 1073741824 ]; then
             size_str=$(awk -v b="$bytes" 'BEGIN { printf "%.2f GB", b/1073741824 }')
