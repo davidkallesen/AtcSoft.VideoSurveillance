@@ -56,18 +56,29 @@ public sealed partial class GatewayService
     /// Renews a session; <see langword="null"/> when the server refused (sign in
     /// again) or could not be reached.
     /// </summary>
-    public async Task<Session?> RefreshSessionAsync(
+    /// <summary>
+    /// Renews the session; the outcome tells a refused refresh token (sign in again) from a
+    /// server that is busy or away (keep the stored session and try again later).
+    /// </summary>
+    public async Task<(Session? Session, SessionRenewalOutcome Outcome)> RefreshSessionAsync(
         string refreshToken,
         CancellationToken cancellationToken = default)
     {
         var parameters = new RefreshSessionParameters(Request: new RefreshSessionRequest(refreshToken));
-        var result = await refreshSessionEndpoint
-            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
+        try
+        {
+            var result = await refreshSessionEndpoint
+                .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
-        return result.IsOk
-            ? result.OkContent
-            : null;
+            return result.IsOk
+                ? (result.OkContent, SessionRenewalOutcome.Renewed)
+                : (null, SessionRenewal.Outcome((int)result.StatusCode));
+        }
+        catch (HttpRequestException)
+        {
+            return (null, SessionRenewalOutcome.Unavailable);
+        }
     }
 
     public Task EndSessionAsync(
