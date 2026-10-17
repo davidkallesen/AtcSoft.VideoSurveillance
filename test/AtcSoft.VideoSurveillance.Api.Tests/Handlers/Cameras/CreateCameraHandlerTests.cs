@@ -92,6 +92,55 @@ public class CreateCameraHandlerTests
             c.Connection.Usb.DeviceId == @"\\?\usb#vid_046d&pid_085e"));
     }
 
+    // A camera that cannot be opened was stored and failed only when it was used:
+    // a network camera needs an address, a USB camera a device.
+    [Fact]
+    public async Task ExecuteAsync_NetworkCameraWithoutAddress_IsRefused()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var handler = new CreateCameraHandler(storage);
+
+        var result = await handler.ExecuteAsync(new CreateCameraParameters(NetworkRequest("No address", ipAddress: " ")), CancellationToken.None);
+
+        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        storage.DidNotReceive().AddOrUpdateCamera(Arg.Any<CameraConfiguration>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UsbCameraWithoutDevice_IsRefused()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var handler = new CreateCameraHandler(storage);
+        var request = NetworkRequest("No device") with
+        {
+            Source = ApiCameraSource.Usb,
+            UsbDeviceId = string.Empty,
+            UsbFriendlyName = string.Empty,
+        };
+
+        var result = await handler.ExecuteAsync(new CreateCameraParameters(request), CancellationToken.None);
+
+        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        storage.DidNotReceive().AddOrUpdateCamera(Arg.Any<CameraConfiguration>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UsbCameraKnownByItsNameOnly_IsStored()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var handler = new CreateCameraHandler(storage);
+        var request = NetworkRequest("By name") with
+        {
+            Source = ApiCameraSource.Usb,
+            UsbDeviceId = string.Empty,
+            UsbFriendlyName = "HD Webcam",
+        };
+
+        var result = await handler.ExecuteAsync(new CreateCameraParameters(request), CancellationToken.None);
+
+        await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
+    }
+
     private static CreateCameraRequest NetworkRequest(
         string displayName,
         string description = "",

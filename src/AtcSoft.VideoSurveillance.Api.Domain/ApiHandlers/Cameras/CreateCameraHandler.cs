@@ -13,6 +13,11 @@ public sealed class CreateCameraHandler(
         ArgumentNullException.ThrowIfNull(parameters);
 
         var camera = parameters.Request.ToCoreModel();
+        if (CameraSourceCheck.Problem(camera) is { } problem)
+        {
+            return Task.FromResult(CreateCameraResult.BadRequest(problem));
+        }
+
         storage.AddOrUpdateCamera(camera);
         storage.Save();
 

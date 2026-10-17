@@ -100,6 +100,27 @@ public class UpdateCameraHandlerTests
         okResult.Value.IpAddress.Should().Be("192.168.1.1");
     }
 
+    [Fact]
+    public async Task ExecuteAsync_SwitchingToUsbWithoutADevice_IsRefused_AndChangesNothing()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var cameraId = Guid.NewGuid();
+        var camera = new CameraConfiguration { Id = cameraId };
+        camera.Display.DisplayName = "Kept";
+        camera.Connection.IpAddress = "10.0.0.1";
+        storage.GetCameraById(cameraId).Returns(camera);
+        var handler = new UpdateCameraHandler(storage);
+
+        var result = await handler.ExecuteAsync(
+            new UpdateCameraParameters(cameraId, MinimalUpdate("Renamed") with { Source = ApiCameraSource.Usb }),
+            CancellationToken.None);
+
+        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        camera.Connection.Source.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraSource.Network);
+        camera.Display.DisplayName.Should().Be("Kept");
+        storage.DidNotReceive().Save();
+    }
+
     private static UpdateCameraRequest MinimalUpdate(string displayName)
         => new(
             DisplayName: displayName,
