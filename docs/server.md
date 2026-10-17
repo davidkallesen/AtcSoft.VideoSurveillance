@@ -57,9 +57,9 @@ A server without users writes a one-time code to `setup-code.txt` in its data fo
 | `refreshToken` | 30 days, renewed with every use | `POST /auth/refresh` gets a new session; each refresh token works once |
 | `mediaToken` | 12 hours | `?media=...` on the addresses a player or an `<img>` fetches itself: `/recordings-files/...` (a recording, a thumbnail) |
 
-`POST /auth/sign-out` with the refresh token signs out. Wrong credentials answer 400, as OAuth's `invalid_grant` does; sign-ins are limited to 10 a minute per address.
+`POST /auth/sign-out` with the refresh token signs out. Wrong credentials answer 400, as OAuth's `invalid_grant` does; sign-ins (and the first admin's setup code) are limited to 10 a minute per address. Renewing a session has a limit of its own, 60 a minute per address: a refresh token cannot be guessed, and the web client renews on every page load.
 
-Both clients keep the session across a restart: the web client in the browser's local storage, the desktop client in a file under `%LOCALAPPDATA%\AtcSoft\VideoSurveillance\sessions`, encrypted for the Windows user. They renew the access token a minute before it runs out, and once after a 401.
+Both clients keep the session across a restart: the web client in the browser's local storage, the desktop client in a file under `%LOCALAPPDATA%\AtcSoft\VideoSurveillance\sessions`, encrypted for the Windows user. They renew the access token a minute before it runs out, and once after a 401. Only a refused refresh token (400) makes a client forget its stored session; a 429, a server error or no server keeps it for the next try.
 
 For an unattended desktop client (a wall screen), `Auth:UserName` and `Auth:Password` in its configuration sign it in without the dialog.
 
@@ -134,6 +134,8 @@ All three are declared in `src/VideoSurveillance.yaml`, and the generator builds
   |---|---|---|
   | `GET /cameras/{id}/snapshot` | 20 per 10 s | a snapshot opens the camera's stream |
   | `POST /webhooks/{id}/test` | 10 per minute | a test sends a request to someone else's server |
+  | `POST /auth/token`, `POST /auth/setup` | 10 per minute | guessing a password or the setup code |
+  | `POST /auth/refresh` | 60 per minute | renewals from several browsers behind one address; a refresh token cannot be guessed |
   | `POST /auth/setup`, `POST /auth/token` | 10 per minute | guessing a password or the setup code |
 
 - **Output cache** (`x-cache-*`): `GET /devices/usb` is kept 5 seconds, since enumerating the devices takes a moment. A USB camera plugged in or pulled out drops it at once (`UsbDeviceCacheEvictor`), so the next read has the new list. A cached answer has an `Age` header.
