@@ -64,6 +64,25 @@ public sealed class ThumbnailGeneratorServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Portrait_Frame_Keeps_Its_Shape_In_Its_Tile()
+    {
+        // A camera turned a quarter gives portrait frames (the capture is already rotated); the
+        // tile shows them upright with dark bars at the sides, not stretched to the cell.
+        var pipeline = Substitute.For<IMediaPipeline>();
+        pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<byte[]?>(CreateWhitePng(36, 64)));
+        var thumbnailPath = Path.Combine(directory, "portrait.png");
+
+        sut.StartCapture(Guid.NewGuid(), "Cam", pipeline, Path.ChangeExtension(thumbnailPath, ".mkv"), tileCount: 1, thumbnailPath);
+
+        using var thumbnail = await WaitForThumbnailAsync(thumbnailPath);
+        thumbnail.Width.Should().Be(CellWidth);
+        thumbnail.Height.Should().Be(CellHeight);
+        IsBright(thumbnail.GetPixel(CellWidth / 2, CellHeight / 2)).Should().BeTrue("the picture is in the middle of the tile");
+        IsBright(thumbnail.GetPixel(10, CellHeight / 2)).Should().BeFalse("a portrait picture leaves a bar on the left");
+        IsBright(thumbnail.GetPixel(CellWidth - 10, CellHeight / 2)).Should().BeFalse("and on the right");
+    }
+
+    [Fact]
     public async Task Stopping_Early_Writes_The_Frames_Captured_So_Far()
     {
         // A recording that is stopped after a second still gets a thumbnail.
@@ -131,9 +150,14 @@ public sealed class ThumbnailGeneratorServiceTests : IDisposable
         }
     }
 
-    private static byte[] CreateWhitePng()
+    private static bool IsBright(Drawing.Color color)
+        => color.R > 200 && color.G > 200 && color.B > 200;
+
+    private static byte[] CreateWhitePng(
+        int width = 64,
+        int height = 36)
     {
-        using var bitmap = new Drawing.Bitmap(64, 36);
+        using var bitmap = new Drawing.Bitmap(width, height);
         using (var graphics = Drawing.Graphics.FromImage(bitmap))
         {
             graphics.Clear(Drawing.Color.White);

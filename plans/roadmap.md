@@ -38,7 +38,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 | Area | Plan | Status | Open |
 |---|---|:--:|---|
 | 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Phases 0–9 and 7b done, security S1–S6 done; waits for v3 on nuget.org. Minor items in that file |
-| 🔄 Video rotation | [archive/roadmap-video-rotation.md](archive/roadmap-video-rotation.md) | 🟨 | Hands-on checks; two test gaps; the 180° report |
+| 🔄 Video rotation | [archive/roadmap-video-rotation.md](archive/roadmap-video-rotation.md) | 🟨 | Hands-on checks; the 180° report |
 | 📁 Recording storage layout | [archive/roadmap-recording-storage.md](archive/roadmap-recording-storage.md) | 🟨 | Hands-on checks; cameras with their own recording path |
 | 🔌 Connection-type icon | [archive/roadmap-cameras-connection-icons.md](archive/roadmap-cameras-connection-icons.md) | 🟨 | Hands-on checks; phase 8 (remove the legacy USB pills) |
 | 🎥 USB cameras | [archive/roadmap-usb-cameras.md](archive/roadmap-usb-cameras.md) | ✅ | Hands-on checks; a few small gaps; ⏸️ Linux / macOS, UVC property pages |
@@ -58,7 +58,6 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 | Item | Where it stands | Test |
 |---|---|---|
 | Remove the legacy USB pills (connection-type icon, phase 8) | Still in `CameraOverlay.xaml`, `CameraTileBadge.xaml` and `CameraTileViewModel` (`ShowUsbBadge`). The plan gates it on "the release after the icon ships" | E2E walks catch a binding left behind |
-| Rotation: a `FrameCapture` test with a marked corner, and a portrait thumbnail test | Rotation is covered through `PixelRotatorTests` only | Unit |
 | Rotation: the client's `Wpf/Windows/FullScreenCameraWindow` sizes boxes without the rotation | Nothing in the client opens that window today; fix it or remove the window | Unit, once the sizing leaves the code-behind |
 | A message for a stored USB device that is not plugged in (`UsbDeviceMissing`) | No key or message exists; the picker may already cover it | Unit on the dialog view model |
 | `Debug.WriteLine` left in `CameraTile`, `ApplicationSettingsService`, `CameraStorageService`, `SettingsDialogViewModel` | The suggestions list marks it done; it is not quite | None needed |
