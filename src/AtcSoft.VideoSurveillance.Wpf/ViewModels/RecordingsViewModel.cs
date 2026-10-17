@@ -53,9 +53,10 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Gets the available camera filters.
+    /// Gets the available camera filters: all cameras first, then each camera by name.
+    /// A new dictionary each time, because atc:LabelComboBox takes its items as one.
     /// </summary>
-    public ObservableCollection<KeyValuePair<string, string>> CameraFilters { get; } = [];
+    public IDictionary<string, string> CameraFilters { get; private set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the day filter items.
@@ -217,8 +218,10 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     {
         var currentSelection = SelectedCameraFilter;
 
-        CameraFilters.Clear();
-        CameraFilters.Add(new KeyValuePair<string, string>(AllCamerasKey, Translations.AllCameras));
+        var filters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [AllCamerasKey] = Translations.AllCameras,
+        };
 
         var cameraNames = Recordings
             .Select(r => r.CameraName)
@@ -228,10 +231,13 @@ public sealed partial class RecordingsViewModel : ViewModelBase
 
         foreach (var cameraName in cameraNames)
         {
-            CameraFilters.Add(new KeyValuePair<string, string>(cameraName, cameraName));
+            filters[cameraName] = cameraName;
         }
 
-        if (CameraFilters.Any(f => f.Key == currentSelection))
+        CameraFilters = filters;
+        OnPropertyChanged(nameof(CameraFilters));
+
+        if (currentSelection is not null && filters.ContainsKey(currentSelection))
         {
             SelectedCameraFilter = currentSelection;
         }

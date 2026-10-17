@@ -18,42 +18,38 @@
             <atc:GridEx
                 Grid.Row="0"
                 Margin="0,0,0,16"
-                Columns="Auto,180,Auto,140,Auto,140,*,Auto">
-                <TextBlock
+                Columns="Auto,Auto,Auto,*,Auto">
+                <atc:LabelComboBox
                     Grid.Column="0"
-                    Margin="0,0,8,0"
+                    Width="260"
                     VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Camera}" />
-                <ComboBox
+                    HideAreas="All"
+                    Items="{Binding Path=CameraFilters}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Camera}"
+                    LabelWidthSizeDefinition="Auto"
+                    SelectedKey="{Binding Path=SelectedCameraFilter, UpdateSourceTrigger=PropertyChanged}" />
+                <atc:LabelComboBox
                     Grid.Column="1"
-                    DisplayMemberPath="Value"
-                    ItemsSource="{Binding Path=CameraFilters}"
-                    SelectedValue="{Binding Path=SelectedCameraFilter}"
-                    SelectedValuePath="Key" />
-                <TextBlock
+                    Width="220"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    HideAreas="All"
+                    Items="{Binding Path=DayFilterItems}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Day}"
+                    LabelWidthSizeDefinition="Auto"
+                    SelectedKey="{Binding Path=SelectedDayFilter, UpdateSourceTrigger=PropertyChanged}" />
+                <atc:LabelComboBox
                     Grid.Column="2"
-                    Margin="16,0,8,0"
+                    Width="220"
+                    Margin="16,0,0,0"
                     VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Day}" />
-                <ComboBox
-                    Grid.Column="3"
-                    DisplayMemberPath="Value"
-                    ItemsSource="{Binding Path=DayFilterItems}"
-                    SelectedValue="{Binding Path=SelectedDayFilter}"
-                    SelectedValuePath="Key" />
-                <TextBlock
-                    Grid.Column="4"
-                    Margin="16,0,8,0"
-                    VerticalAlignment="Center"
-                    Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Time}" />
-                <ComboBox
-                    Grid.Column="5"
-                    DisplayMemberPath="Value"
-                    ItemsSource="{Binding Path=TimeFilterItems}"
-                    SelectedValue="{Binding Path=SelectedTimeFilter}"
-                    SelectedValuePath="Key" />
+                    HideAreas="All"
+                    Items="{Binding Path=TimeFilterItems}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Time}"
+                    LabelWidthSizeDefinition="Auto"
+                    SelectedKey="{Binding Path=SelectedTimeFilter, UpdateSourceTrigger=PropertyChanged}" />
                 <Button
-                    Grid.Column="7"
+                    Grid.Column="4"
                     Padding="16,6"
                     Command="{Binding Path=RefreshCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Refresh}" />

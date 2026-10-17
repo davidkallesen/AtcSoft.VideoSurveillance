@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcValueConverters="https://github.com/atc-net/atc-wpf/tree/main/schemas/value-converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fontIcons="clr-namespace:Atc.Wpf.FontIcons;assembly=Atc.Wpf.FontIcons"
@@ -22,14 +23,15 @@
 
         <!--  Which cameras are shown: a filter, the grid's size and its pages  -->
         <ToolBar Grid.Row="0">
-            <TextBlock
-                Margin="4,0,6,0"
-                VerticalAlignment="Center"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Filter}" />
-            <TextBox
-                Width="200"
+            <atc:LabelTextBox
+                Width="260"
+                Margin="4,0,0,0"
                 VerticalAlignment="Center"
                 AutomationProperties.Name="Filter cameras"
+                HideAreas="All"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Filter}"
+                LabelWidthSizeDefinition="Auto"
+                ShowClearTextButton="False"
                 Text="{Binding Path=FilterText, UpdateSourceTrigger=PropertyChanged}"
                 ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=FilterCamerasByNameToolTip}" />
             <Button
@@ -43,18 +45,16 @@
                     Icon="Times" />
             </Button>
             <Separator />
-            <TextBlock
-                Margin="4,0,6,0"
-                VerticalAlignment="Center"
-                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GridSizeGroup}" />
-            <ComboBox
-                Width="190"
+            <atc:LabelComboBox
+                Width="300"
+                Margin="4,0,0,0"
                 VerticalAlignment="Center"
                 AutomationProperties.Name="Grid size"
-                DisplayMemberPath="Value"
-                ItemsSource="{Binding Path=GridPresetItems}"
-                SelectedValue="{Binding Path=SelectedGridPreset}"
-                SelectedValuePath="Key"
+                HideAreas="All"
+                Items="{Binding Path=GridPresetItems}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GridSizeGroup}"
+                LabelWidthSizeDefinition="Auto"
+                SelectedKey="{Binding Path=SelectedGridPreset, UpdateSourceTrigger=PropertyChanged}"
                 ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GridSizeToolTip}" />
             <Button
                 AutomationProperties.Name="Previous page"
