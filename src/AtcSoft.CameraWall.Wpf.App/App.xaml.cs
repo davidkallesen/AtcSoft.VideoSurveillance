@@ -31,6 +31,13 @@ public partial class CameraWallApp
                 formatProvider: CultureInfo.InvariantCulture);
         }
 
+        // Under Aspire the logs (binding errors included) also go to the dashboard; the sink reads
+        // the OTEL_EXPORTER_OTLP_* variables Aspire sets (endpoint, headers, protocol, service name).
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+        {
+            loggerConfig.WriteTo.OpenTelemetry();
+        }
+
         Log.Logger = loggerConfig.CreateLogger();
 
         host = Host

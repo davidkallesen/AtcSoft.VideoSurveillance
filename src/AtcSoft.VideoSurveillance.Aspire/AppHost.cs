@@ -7,9 +7,19 @@ var builder = DistributedApplication.CreateBuilder(args);
 // resource is called in the dashboard.
 const string apiReferenceName = "api";
 
+// Optional scratch folder (AtcSoft__DataPath=... or --AtcSoft:DataPath=...): the server, both WPF
+// apps and all their files then live there instead of in ProgramData / LocalAppData.
+var scratchDataPath = builder.Configuration["AtcSoft:DataPath"];
+var useScratch = !string.IsNullOrWhiteSpace(scratchDataPath);
+
 var api = builder
     .AddProject<Projects.AtcSoft_VideoSurveillance_Api>("VideoSurveillance-Api")
     .WithHttpEndpoint(port: 5000, name: "public");
+
+if (useScratch)
+{
+    api.WithEnvironment("Storage__DataPath", Path.Combine(scratchDataPath!, "server"));
+}
 
 builder
     .AddProject<Projects.AtcSoft_VideoSurveillance_Blazor_App>("VideoSurveillance-BlazorApp")
@@ -17,13 +27,20 @@ builder
     .WaitFor(api)
     .WithExternalHttpEndpoints();
 
-builder
+var wpfApp = builder
     .AddProject<Projects.AtcSoft_VideoSurveillance_Wpf_App>("VideoSurveillance-WpfApp")
     .WithReference(api, apiReferenceName)
     .WaitFor(api);
 
-builder
+var cameraWall = builder
     .AddProject<Projects.AtcSoft_CameraWall_Wpf_App>("CameraWall-WpfApp");
+
+if (useScratch)
+{
+    // ApplicationPaths.DataPathEnvironmentVariable
+    wpfApp.WithEnvironment("ATCSOFT_DATA_PATH", Path.Combine(scratchDataPath!, "wpf-app"));
+    cameraWall.WithEnvironment("ATCSOFT_DATA_PATH", Path.Combine(scratchDataPath!, "camera-wall"));
+}
 
 await builder
     .Build()
