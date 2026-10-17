@@ -22,7 +22,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     [ObservableProperty]
     private int port = 554;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedProtocolKey)])]
     private CameraProtocol selectedProtocol = CameraProtocol.Rtsp;
 
     [ObservableProperty]
@@ -34,13 +34,13 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     [ObservableProperty]
     private string password = string.Empty;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedConnectionTypeKey)])]
     private CameraConnectionType selectedConnectionType = CameraConnectionType.None;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedRotationKey)])]
     private CameraRotation selectedRotation = CameraRotation.None;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedOverlayPositionKey)])]
     private CameraOverlayPosition selectedOverlayPosition = CameraOverlayPosition.TopLeft;
 
     [ObservableProperty]
@@ -49,7 +49,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     [ObservableProperty]
     private int streamMaxLatencyMs;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedRtspTransportKey)])]
     private CameraStreamRtspTransport selectedRtspTransport = CameraStreamRtspTransport.Tcp;
 
     [ObservableProperty]
@@ -69,11 +69,15 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Gets the protocol items for the combobox.
     /// </summary>
+    /// <remarks>
+    /// The keys of every drop-down are the API's wire values (<c>rtsp</c>, <c>topLeft</c>):
+    /// a LabelComboBox's SelectedKey is a string, bound to the <c>Selected...Key</c> properties.
+    /// </remarks>
     public IDictionary<string, string> ProtocolItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [nameof(CameraProtocol.Rtsp)] = "RTSP",
-        [nameof(CameraProtocol.Http)] = "HTTP",
-        [nameof(CameraProtocol.Https)] = "HTTPS",
+        [CameraProtocol.Rtsp.ToString()] = "RTSP",
+        [CameraProtocol.Http.ToString()] = "HTTP",
+        [CameraProtocol.Https.ToString()] = "HTTPS",
     };
 
     /// <summary>
@@ -81,9 +85,9 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> ConnectionTypeItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [nameof(CameraConnectionType.None)] = "Not set",
-        [nameof(CameraConnectionType.Lan)] = "Wired (LAN)",
-        [nameof(CameraConnectionType.Wifi)] = "Wi-Fi",
+        [CameraConnectionType.None.ToString()] = Translations.ConnectionTypeNone,
+        [CameraConnectionType.Lan.ToString()] = Translations.ConnectionTypeLan,
+        [CameraConnectionType.Wifi.ToString()] = Translations.ConnectionTypeWifi,
     };
 
     /// <summary>
@@ -91,10 +95,10 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> RotationItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [nameof(CameraRotation.None)] = "0\u00B0",
-        [nameof(CameraRotation.Rotate90)] = "90\u00B0",
-        [nameof(CameraRotation.Rotate180)] = "180\u00B0",
-        [nameof(CameraRotation.Rotate270)] = "270\u00B0",
+        [CameraRotation.None.ToString()] = Translations.RotationNone,
+        [CameraRotation.Rotate90.ToString()] = Translations.RotationRotate90Degrees,
+        [CameraRotation.Rotate180.ToString()] = Translations.RotationRotate180Degrees,
+        [CameraRotation.Rotate270.ToString()] = Translations.RotationRotate270Degrees,
     };
 
     /// <summary>
@@ -102,10 +106,10 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> OverlayPositionItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [nameof(CameraOverlayPosition.TopLeft)] = "Top Left",
-        [nameof(CameraOverlayPosition.TopRight)] = "Top Right",
-        [nameof(CameraOverlayPosition.BottomLeft)] = "Bottom Left",
-        [nameof(CameraOverlayPosition.BottomRight)] = "Bottom Right",
+        [CameraOverlayPosition.TopLeft.ToString()] = Translations.OverlayPositionTopLeft,
+        [CameraOverlayPosition.TopRight.ToString()] = Translations.OverlayPositionTopRight,
+        [CameraOverlayPosition.BottomLeft.ToString()] = Translations.OverlayPositionBottomLeft,
+        [CameraOverlayPosition.BottomRight.ToString()] = Translations.OverlayPositionBottomRight,
     };
 
     /// <summary>
@@ -113,9 +117,54 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     /// </summary>
     public IDictionary<string, string> RtspTransportItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [nameof(CameraStreamRtspTransport.Tcp)] = "TCP",
-        [nameof(CameraStreamRtspTransport.Udp)] = "UDP",
+        [CameraStreamRtspTransport.Tcp.ToString()] = "TCP",
+        [CameraStreamRtspTransport.Udp.ToString()] = "UDP",
     };
+
+    /// <summary>
+    /// Gets or sets the key of <see cref="SelectedProtocol"/> in <see cref="ProtocolItems"/> (its wire value).
+    /// </summary>
+    public string SelectedProtocolKey
+    {
+        get => SelectedProtocol.ToString();
+        set => SelectedProtocol = KnownValue.FromName(CameraProtocol.KnownValues, value, SelectedProtocol);
+    }
+
+    /// <summary>
+    /// Gets or sets the key of <see cref="SelectedConnectionType"/> in <see cref="ConnectionTypeItems"/> (its wire value).
+    /// </summary>
+    public string SelectedConnectionTypeKey
+    {
+        get => SelectedConnectionType.ToString();
+        set => SelectedConnectionType = KnownValue.FromName(CameraConnectionType.KnownValues, value, SelectedConnectionType);
+    }
+
+    /// <summary>
+    /// Gets or sets the key of <see cref="SelectedRotation"/> in <see cref="RotationItems"/> (its wire value).
+    /// </summary>
+    public string SelectedRotationKey
+    {
+        get => SelectedRotation.ToString();
+        set => SelectedRotation = KnownValue.FromName(CameraRotation.KnownValues, value, SelectedRotation);
+    }
+
+    /// <summary>
+    /// Gets or sets the key of <see cref="SelectedOverlayPosition"/> in <see cref="OverlayPositionItems"/> (its wire value).
+    /// </summary>
+    public string SelectedOverlayPositionKey
+    {
+        get => SelectedOverlayPosition.ToString();
+        set => SelectedOverlayPosition = KnownValue.FromName(CameraOverlayPosition.KnownValues, value, SelectedOverlayPosition);
+    }
+
+    /// <summary>
+    /// Gets or sets the key of <see cref="SelectedRtspTransport"/> in <see cref="RtspTransportItems"/> (its wire value).
+    /// </summary>
+    public string SelectedRtspTransportKey
+    {
+        get => SelectedRtspTransport.ToString();
+        set => SelectedRtspTransport = KnownValue.FromName(CameraStreamRtspTransport.KnownValues, value, SelectedRtspTransport);
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraEditDialogViewModel"/> class for adding a new camera.

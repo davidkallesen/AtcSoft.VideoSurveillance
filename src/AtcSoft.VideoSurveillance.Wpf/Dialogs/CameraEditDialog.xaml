@@ -48,7 +48,7 @@
                     Margin="0,4"
                     Items="{Binding ProtocolItems}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Protocol}"
-                    SelectedKey="{Binding SelectedProtocol}" />
+                    SelectedKey="{Binding SelectedProtocolKey, UpdateSourceTrigger=PropertyChanged}" />
                 <atc:LabelTextBox
                     Margin="0,4"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Path}"
@@ -57,12 +57,12 @@
                     Margin="0,4"
                     Items="{Binding ConnectionTypeItems}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectionType}"
-                    SelectedKey="{Binding SelectedConnectionType}" />
+                    SelectedKey="{Binding SelectedConnectionTypeKey, UpdateSourceTrigger=PropertyChanged}" />
                 <atc:LabelComboBox
                     Margin="0,4"
                     Items="{Binding RotationItems}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RotationClockwise}"
-                    SelectedKey="{Binding SelectedRotation}" />
+                    SelectedKey="{Binding SelectedRotationKey, UpdateSourceTrigger=PropertyChanged}" />
                 <!--  Server-side ONVIF detection (edit mode only; uses the stored credentials)  -->
                 <StackPanel
                     Margin="0,4"
@@ -107,16 +107,16 @@
                     Margin="0,4"
                     Items="{Binding OverlayPositionItems}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=OverlayPosition}"
-                    SelectedKey="{Binding SelectedOverlayPosition}" />
+                    SelectedKey="{Binding SelectedOverlayPositionKey, UpdateSourceTrigger=PropertyChanged}" />
                 <atc:LabelComboBox
                     Margin="0,4"
                     Items="{Binding RtspTransportItems}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RtspTransport}"
-                    SelectedKey="{Binding SelectedRtspTransport}" />
-                <CheckBox
+                    SelectedKey="{Binding SelectedRtspTransportKey, UpdateSourceTrigger=PropertyChanged}" />
+                <atc:LabelCheckBox
                     Margin="0,4"
-                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=UseLowLatencyMode}"
-                    IsChecked="{Binding StreamUseLowLatencyMode}" />
+                    IsChecked="{Binding StreamUseLowLatencyMode}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=UseLowLatencyMode}" />
                 <atc:LabelIntegerBox
                     Margin="0,4"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MaxLatencyMs}"
