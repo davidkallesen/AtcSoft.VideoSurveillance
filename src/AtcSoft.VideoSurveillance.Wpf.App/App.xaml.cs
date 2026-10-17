@@ -320,6 +320,9 @@ public partial class App
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+
+            // Auth__UserName / Auth__Password sign an unattended run in (Aspire, the E2E smoke tests).
+            .AddEnvironmentVariables()
             .Build();
 
         return Host
