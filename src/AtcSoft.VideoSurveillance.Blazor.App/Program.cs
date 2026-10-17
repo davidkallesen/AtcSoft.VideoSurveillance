@@ -4,7 +4,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure HttpClient with API base address
 // For Aspire: uses services__api__https__0 or services__api__http__0 environment variable
-// For standalone: uses ApiBaseAddress from appsettings.json or falls back to default
+// For standalone: uses ApiBaseAddress from wwwroot/appsettings.json (the server's address for a
+// deployment; the E2E smoke tests answer that request with their test server) or the default
 var apiBaseAddress = builder.Configuration["services:api:https:0"]
     ?? builder.Configuration["services:api:http:0"]
     ?? builder.Configuration["ApiBaseAddress"]
