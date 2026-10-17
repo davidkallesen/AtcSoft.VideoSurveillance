@@ -1,5 +1,3 @@
-using Microsoft.Playwright;
-
 namespace AtcSoft.VideoSurveillance.E2E;
 
 /// <summary>
@@ -99,7 +97,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await run("Add receiver", () => OpenAndCancelAsync(page, "/webhooks", "Add receiver"));
         await run("Change password", () => ChangePasswordAsync(page));
 
-        await File.WriteAllLinesAsync(Path.Combine(shots, "browser-problems.txt"), problems);
+        await File.WriteAllLinesAsync(Path.Combine(shots, "browser-problems.txt"), problems, TestContext.Current.CancellationToken);
         steps.Failures.Should().BeEmpty(steps.Report());
         problems.Should().BeEmpty("the web client must open every page without errors");
         server.ServerFailures().Should().BeEmpty($"the server must not fail while the web client walks (output: {server.ServerOutputPath})");
@@ -189,6 +187,12 @@ public sealed class WebClientSmokeTests(ServerFixture server)
     {
         using var admin = await server.CreateAdminClientAsync();
         var cameras = await admin.GetFromJsonAsync<JsonElement>("/cameras");
-        return cameras.EnumerateArray().Select(c => c.GetProperty("id").GetGuid()).ToList();
+        var ids = new List<Guid>();
+        foreach (var camera in cameras.EnumerateArray())
+        {
+            ids.Add(camera.GetProperty("id").GetGuid());
+        }
+
+        return ids;
     }
 }

@@ -1,6 +1,3 @@
-using FlaUI.Core.AutomationElements;
-using FlaUI.Core.Definitions;
-
 namespace AtcSoft.VideoSurveillance.E2E;
 
 /// <summary>

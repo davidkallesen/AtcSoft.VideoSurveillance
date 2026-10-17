@@ -1,7 +1,3 @@
-using AtcSoft.VideoSurveillance.Enums;
-using AtcSoft.VideoSurveillance.Helpers;
-using AtcSoft.VideoSurveillance.Wpf.Core.Models;
-using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
 
 namespace AtcSoft.VideoSurveillance.E2E.Infrastructure;

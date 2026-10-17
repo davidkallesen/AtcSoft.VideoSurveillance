@@ -1,6 +1,10 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Dialogs;
 
-using global::VideoSurveillance.Generated.Cameras.Models;
+using CameraConnectionType = global::VideoSurveillance.Generated.Cameras.Models.CameraConnectionType;
+using CameraOverlayPosition = global::VideoSurveillance.Generated.Cameras.Models.CameraOverlayPosition;
+using CameraProtocol = global::VideoSurveillance.Generated.Cameras.Models.CameraProtocol;
+using CameraRotation = global::VideoSurveillance.Generated.Cameras.Models.CameraRotation;
+using CameraStreamRtspTransport = global::VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport;
 
 /// <summary>
 /// The dialog edits a network camera's fields. An update leaves out what the
