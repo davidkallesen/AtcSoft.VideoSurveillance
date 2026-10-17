@@ -133,9 +133,11 @@ paths:
       operationId: refreshSession
       security: []
       x-retry-enabled: false
-      # Guessing passwords or the setup code: ten tries a minute from one address.
-      x-ratelimit-policy: sign-in
-      x-ratelimit-permit-limit: 10
+      # A refresh token cannot be guessed, so not the sign-in limit: the web client renews its
+      # session on every page load (the access token is kept in memory only), and ten loads a
+      # minute from one address (an office behind one address) signed browsers out.
+      x-ratelimit-policy: session-renewal
+      x-ratelimit-permit-limit: 60
       x-ratelimit-window-seconds: 60
       x-ratelimit-algorithm: fixed
       x-ratelimit-partition: ip
