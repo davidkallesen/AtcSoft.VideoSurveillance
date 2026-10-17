@@ -26,8 +26,6 @@ global using Atc.Wpf.Notifications;
 global using Atc.Wpf.Theming.Helpers;
 global using Atc.Wpf.Translation;
 global using Atc.XamlToolkit.Controls.Attributes;
-global using Atc.XamlToolkit.Diagnostics;
-global using AtcSoft.VideoSurveillance.Wpf.Core.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;
 
 global using AtcSoft.VideoEngine;
@@ -38,6 +36,7 @@ global using AtcSoft.VideoSurveillance.Services;
 global using AtcSoft.VideoSurveillance.Wpf.App.Models;
 global using AtcSoft.VideoSurveillance.Wpf.App.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Core;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Diagnostics;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Helpers;
