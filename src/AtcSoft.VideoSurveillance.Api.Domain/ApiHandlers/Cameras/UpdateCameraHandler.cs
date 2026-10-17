@@ -18,7 +18,8 @@ public sealed class UpdateCameraHandler(
             return Task.FromResult(UpdateCameraResult.NotFound($"Camera {parameters.CameraId} not found."));
         }
 
-        // Applied to a copy first: a refused update leaves the stored camera as it was.
+        // Checked on a copy first, so a refused update leaves the stored camera as it was;
+        // an accepted one is then applied to the stored camera itself.
         var updated = camera.Clone();
         updated.ApplyUpdate(parameters.Request);
         if (CameraSourceCheck.Problem(updated) is { } problem)
@@ -26,7 +27,7 @@ public sealed class UpdateCameraHandler(
             return Task.FromResult(UpdateCameraResult.BadRequest(problem));
         }
 
-        camera.CopyFrom(updated);
+        camera.ApplyUpdate(parameters.Request);
         storage.AddOrUpdateCamera(camera);
         storage.Save();
 

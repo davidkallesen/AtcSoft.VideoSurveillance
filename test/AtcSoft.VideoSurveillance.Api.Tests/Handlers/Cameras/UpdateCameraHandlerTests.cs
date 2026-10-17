@@ -121,6 +121,45 @@ public class UpdateCameraHandlerTests
         storage.DidNotReceive().Save();
     }
 
+    [Fact]
+    public async Task ExecuteAsync_UsbRotationAndConnectionType_AreStored()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var cameraId = Guid.NewGuid();
+        var camera = new CameraConfiguration { Id = cameraId };
+        camera.Display.DisplayName = "Desk";
+        camera.Connection.IpAddress = "10.0.0.1";
+        storage.GetCameraById(cameraId).Returns(camera);
+        var handler = new UpdateCameraHandler(storage);
+        var request = MinimalUpdate("Desk") with
+        {
+            Source = ApiCameraSource.Usb,
+            UsbDeviceId = "usb#vid_046d&pid_085e",
+            UsbFriendlyName = "Logitech BRIO",
+            UsbWidth = 1280,
+            UsbHeight = 720,
+            UsbFrameRate = 30,
+            UsbPixelFormat = "nv12",
+            UsbCaptureAudio = true,
+            UsbAudioDeviceName = "Microphone (BRIO)",
+            Rotation = ApiCameraRotation.Rotate90,
+            ConnectionType = ApiCameraConnectionType.Usb,
+        };
+
+        var result = await handler.ExecuteAsync(new UpdateCameraParameters(cameraId, request), CancellationToken.None);
+
+        result.Result.Should().BeOfType<Ok<Camera>>();
+        camera.Connection.Source.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraSource.Usb);
+        camera.Connection.Usb!.DeviceId.Should().Be("usb#vid_046d&pid_085e");
+        camera.Connection.Usb.FriendlyName.Should().Be("Logitech BRIO");
+        camera.Connection.Usb.Format!.Width.Should().Be(1280);
+        camera.Connection.Usb.Format.FrameRate.Should().Be(30);
+        camera.Connection.Usb.PreferAudio.Should().BeTrue();
+        camera.Connection.Usb.AudioDeviceName.Should().Be("Microphone (BRIO)");
+        camera.Display.Rotation.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraRotation.Rotate90);
+        camera.Connection.ConnectionType.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraConnectionType.Usb);
+    }
+
     private static UpdateCameraRequest MinimalUpdate(string displayName)
         => new(
             DisplayName: displayName,
