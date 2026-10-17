@@ -142,6 +142,8 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | E2E smoke tests of all three apps; binding errors logged; logs in the Aspire dashboard; `ATCSOFT_DATA_PATH` | [`docs/e2e-smoke-tests.md`](../docs/e2e-smoke-tests.md) |
 | Found by the smoke tests and fixed: the client's camera dialog drop-downs, its environment configuration, motion boxes on its live tiles, the web client signed out after ten reloads a minute, its user menu label, its server address | The commits of 2026-10-17 |
 | A camera without an address or a USB device is refused by the server | `CameraSourceCheck` |
+| Neither client forgets its stored session when the server is busy, failing or restarting (only a refused refresh token does) | [`docs/server.md`](../docs/server.md) |
+| The soak report scripts count recordings in day folders | `scripts/soak-report*.sh` |
 
 ---
 
