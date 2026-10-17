@@ -1,5 +1,7 @@
 # 📁 Recording Storage Layout Roadmap
 
+> **Archived 2026-10-17.** Kept for its design and decisions. What is still open from this plan, checked against the code that day, is in [the roadmap](../roadmap.md); this file is not updated any more.
+
 Plan for making the recordings folder manageable after months of continuous recording. Today every camera has **one flat folder** holding all its videos and thumbnails: 100 days × 15-minute segments is ~9,600 videos + ~9,600 thumbnails ≈ **19,000 files in one folder**, which Windows Explorer handles badly.
 
 Two new, independent options:
@@ -9,7 +11,7 @@ Two new, independent options:
 
 Affects **`AtcSoft.VideoSurveillance.Core`** (new path helper, settings, cleanup), **`AtcSoft.CameraWall.Wpf`** and **`AtcSoft.VideoSurveillance.Api`** (the two recording services), **`AtcSoft.VideoSurveillance.Wpf.Core`** (recordings browser, settings UI), and the **API contract + both API clients** (settings only).
 
-← Back to the [roadmap home](roadmap.md)
+← Back to the [roadmap home](../roadmap.md)
 
 ---
 

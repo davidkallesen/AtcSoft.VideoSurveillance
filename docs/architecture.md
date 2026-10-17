@@ -72,7 +72,7 @@ graph BT
     Aspire --> VSApp
 ```
 
-`AtcSoft.VideoEngine.Windows` is the optional Windows-only USB layer — Media Foundation device enumeration plus a WMI hot-plug watcher. The Core abstraction (`IUsbCameraEnumerator` / `IUsbCameraWatcher`) lives in `AtcSoft.VideoSurveillance.Core` so non-Windows hosts can compose with `NullUsbCameraEnumerator` / `NullUsbCameraWatcher` and a future V4L2 / AVFoundation implementation can drop in without touching consumers. The `Api` host targets `net10.0-windows` so it can reference `VideoEngine.Windows` directly; Linux server support is deferred to Phase 10 of [`roadmap-usb-cameras.md`](../plans/roadmap-usb-cameras.md).
+`AtcSoft.VideoEngine.Windows` is the optional Windows-only USB layer — Media Foundation device enumeration plus a WMI hot-plug watcher. The Core abstraction (`IUsbCameraEnumerator` / `IUsbCameraWatcher`) lives in `AtcSoft.VideoSurveillance.Core` so non-Windows hosts can compose with `NullUsbCameraEnumerator` / `NullUsbCameraWatcher` and a future V4L2 / AVFoundation implementation can drop in without touching consumers. The `Api` host targets `net10.0-windows` so it can reference `VideoEngine.Windows` directly; Linux server support is deferred to Phase 10 of [`roadmap-usb-cameras.md`](../plans/archive/roadmap-usb-cameras.md).
 
 ## 📊 Layered Architecture
 

@@ -1,10 +1,12 @@
 # 🗺️ AtcSoft.VideoSurveillance Roadmap
 
-The home page for everything planned. Each **area** has its own `roadmap-<area>.md` with the design, phases and decisions; this page only says where each area stands and what comes next.
+The one list of what is still open. Every item was checked against the code and the git history on
+**2026-10-17**; the finished area plans moved to [`archive/`](archive/), where they keep their design and
+decisions.
 
 System documentation (how things work today) lives in [`docs/`](../docs/). This folder holds plans only.
 
-*Last updated: 2026-10-13*
+*Last updated: 2026-10-17*
 
 ---
 
@@ -17,131 +19,138 @@ System documentation (how things work today) lives in [`docs/`](../docs/). This 
 | ✅ | Complete |
 | ⏸️ | Deferred (intentionally not in current scope) |
 
+Sizes: **S** an hour or two, **M** a day, **L** several days.
+
 ---
 
 ## 🎯 Focus
 
-### Now
-
-| Area | What | Blocked on |
-|---|---|---|
-| [Video rotation](roadmap-video-rotation.md) | 🐛 Motion boxes and recordings ignore the camera's rotation — built and tested | Hands-on verification with a real camera |
-| [Recording storage layout](roadmap-recording-storage.md) | Day folders and a separate thumbnail folder; files move when the switches are saved; the server makes thumbnails — built and tested | Hands-on verification in the desktop apps |
-| [Connection-type icon](roadmap-cameras-connection-icons.md) | Built and unit-tested; needs a visual check and a try against real ONVIF cameras | Hands-on verification |
-
-### Next
-
-| Area | What |
+| What | Why now |
 |---|---|
-| [Connection-type icon](roadmap-cameras-connection-icons.md) | Phase 8: remove the legacy "USB" pills (the release after the icon ships) |
-| [USB cameras](roadmap-usb-cameras.md) | A look at the USB paths in the server's desktop client |
-| [Suggestions](roadmap-suggestions.md) | The grid sizes, the camera filter, the disk indicators and the unplugged text in the two desktop apps are built and tested but not yet looked at on screen; so is the per-camera *Recording video* row in CameraWall's camera dialog |
-
-### Later
-
-| Area | What |
-|---|---|
-| [WPF API client](roadmap-wpf-api-client.md) | Phase 10: multi-monitor, camera groups, event log viewer, timelapse browser |
-| [Suggestions](roadmap-suggestions.md) | Server security (authentication, HTTPS, rate limiting), server-side motion detection, integrations (MQTT, webhooks) |
-| [USB cameras](roadmap-usb-cameras.md) | ⏸️ Linux / macOS capture, UVC property pages |
-| [FFmpeg 9](roadmap-ffmpeg-9.md) | ⏸️ Move the engine to FFmpeg 9 and bindings 9.0.2; before that, the cheap step to FFmpeg 8.1.3 |
+| Release the server and the desktop client together | The wire format of enums changed with generator v3 ([REST API generator v3](roadmap-rest-api-sg.md)); generator v3 has to be on nuget.org first, the build uses a local package until then |
+| The hands-on checks below | A large part of what was built since 2026-10-12 has unit, host and E2E tests but has not been looked at with real cameras |
+| Run the E2E smoke tests before a release | `ATCSOFT_E2E=1 dotnet test test/AtcSoft.VideoSurveillance.E2E.Tests` (see [`docs/e2e-smoke-tests.md`](../docs/e2e-smoke-tests.md)); on 2026-10-17 they found five defects the unit tests had not |
 
 ---
 
 ## 📚 Areas
 
-| Area | Roadmap | Status | Done | Open |
-|---|---|:--:|---|---|
-| 🔄 Video rotation | [roadmap-video-rotation.md](roadmap-video-rotation.md) | 🟨 | Phases 2, 5, 7; phases 1, 3, 4, 6 built; the web client's live view rotates | Hands-on checks; the 180° box report is not explained |
-| 📁 Recording storage layout | [roadmap-recording-storage.md](roadmap-recording-storage.md) | 🟨 | Phases 1, 4, 7; phases 2, 3, 5, 6 built; move-on-save; server thumbnails and a corrected recordings listing | Hands-on checks in each layout |
-| 🔌 Connection-type icon | [roadmap-cameras-connection-icons.md](roadmap-cameras-connection-icons.md) | 🟨 | Phases 1, 4, 5, 7; phases 2, 3, 6 built and unit-tested | Hands-on checks for 2, 3, 6; phase 8 (remove legacy pills) |
-| 🎥 USB cameras | [roadmap-usb-cameras.md](roadmap-usb-cameras.md) | 🟨 | Phases 1–9, 12; recording, sound, motion and live view seen with real cameras on 2026-10-13 | ⏸️ phases 10–11 |
-| 🎞️ FFmpeg 9 upgrade | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Trial bump and impact analysis; phase 1 (a failed FFmpeg load fails the tests) | Phases 2–6; deferred on 2026-10-13 |
-| 🖥️ WPF API client | [roadmap-wpf-api-client.md](roadmap-wpf-api-client.md) | 🟨 | Phases 1–9 | Phase 10 (advanced capabilities) |
-| 💡 Suggestions (backlog) | [roadmap-suggestions.md](roadmap-suggestions.md) | — | Reliability fixes, batches 1–5; outbound webhooks; keyboard shortcuts; camera filter | Security gaps, feature gaps, remaining quick wins |
-| 🌐 Web client | — (see the note below) | 🟨 | Settings, live view, recordings and dashboard brought in line with the desktop apps on 2026-10-13 | Camera and layout pages untouched. Recordings can be deleted, and the motion boxes were seen against server-side motion, since 2026-10-13; boxes over a picture turned a quarter are built and tested but not seen |
+| Area | Plan | Status | Open |
+|---|---|:--:|---|
+| 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Phases 0–9 and 7b done, security S1–S6 done; waits for v3 on nuget.org. Minor items in that file |
+| 🔄 Video rotation | [archive/roadmap-video-rotation.md](archive/roadmap-video-rotation.md) | 🟨 | Hands-on checks; two test gaps; the 180° report |
+| 📁 Recording storage layout | [archive/roadmap-recording-storage.md](archive/roadmap-recording-storage.md) | 🟨 | Hands-on checks; cameras with their own recording path |
+| 🔌 Connection-type icon | [archive/roadmap-cameras-connection-icons.md](archive/roadmap-cameras-connection-icons.md) | 🟨 | Hands-on checks; phase 8 (remove the legacy USB pills) |
+| 🎥 USB cameras | [archive/roadmap-usb-cameras.md](archive/roadmap-usb-cameras.md) | ✅ | Hands-on checks; a few small gaps; ⏸️ Linux / macOS, UVC property pages |
+| 🖥️ WPF API client | [archive/roadmap-wpf-api-client.md](archive/roadmap-wpf-api-client.md) | ✅ | Phases 1–9 done; phase 10 is in the backlog below |
+| 🎞️ FFmpeg 9 | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Phase 1 done; FFmpeg 8.1.3 and the TLS setting can come first |
+| 🧪 24/7 soak | [soak-test-plan.md](soak-test-plan.md) | ⬜ | The procedure was never run; the report scripts count day folders since 2026-10-17 |
+| 💡 Ideas | [roadmap-suggestions.md](roadmap-suggestions.md) | — | The backlog below is the checked part of it |
 
-### What changed on 2026-10-13
+---
 
-A long session without an area file of its own. The details are in the commit messages and in [`docs/server.md`](../docs/server.md); the decisions that were made on the way:
+## 🔧 Open work a developer can do now
 
-| Decision | Why |
+Nothing here needs a camera or a person. Each item says how it can be tested.
+
+### Small (S)
+
+| Item | Where it stands | Test |
+|---|---|---|
+| Remove the legacy USB pills (connection-type icon, phase 8) | Still in `CameraOverlay.xaml`, `CameraTileBadge.xaml` and `CameraTileViewModel` (`ShowUsbBadge`). The plan gates it on "the release after the icon ships" | E2E walks catch a binding left behind |
+| Rotation: a `FrameCapture` test with a marked corner, and a portrait thumbnail test | Rotation is covered through `PixelRotatorTests` only | Unit |
+| Rotation: the client's `Wpf/Windows/FullScreenCameraWindow` sizes boxes without the rotation | Nothing in the client opens that window today; fix it or remove the window | Unit, once the sizing leaves the code-behind |
+| A message for a stored USB device that is not plugged in (`UsbDeviceMissing`) | No key or message exists; the picker may already cover it | Unit on the dialog view model |
+| `Debug.WriteLine` left in `CameraTile`, `ApplicationSettingsService`, `CameraStorageService`, `SettingsDialogViewModel` | The suggestions list marks it done; it is not quite | None needed |
+| A rate limit on starting a recording or a stream | Neither has `x-ratelimit-*`. A second start only adds a lease, so it may not be needed | Host test |
+| Remote-access notes (VPN, reverse proxy) in the docs | Nothing in `docs/` | — |
+| A severity filter and an unread badge for notifications in the client | Only time, title, message and type columns | Unit and E2E |
+| A theme toggle in the ribbon | None | E2E |
+
+### Medium (M)
+
+| Item | Where it stands | Test |
+|---|---|---|
+| Cameras with their own recording path are never browsed, cleaned or reorganised | Listing, the recordings browser, both clean-up services and `RecordingLayoutReorganizer.Synchronize` use the global path only | Unit with temp trees, host |
+| Record into each folder layout end to end without a camera | The host tests record with the FFmpeg test stream, but not into each layout | Host |
+| TLS verification as an explicit per-camera setting (FFmpeg 9 plan, phase 2) | No `tls_verify` anywhere; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
+| FFmpeg 8.1.3 (FFmpeg 9 plan, decision 4) | Still 8.1.2 in the pipeline and README; check that a shared build exists | Engine tests, E2E with the live test camera |
+| Camera passwords at rest in standalone CameraWall | Only the server encrypts (`SecretProtector`); CameraWall writes them in plain text | Unit |
+| The audit log keeps the value before a change | `AuditRecord` has none | Unit |
+| Clip export / trim | Only a download exists | Unit and E2E |
+| MQTT publisher | None | Unit and host |
+| Webhook management in the WPF client | Web client only; whether it is wanted is open | E2E |
+| Inline rename and drag-reorder in the client's camera and layout lists | Both grids are read-only | E2E |
+| FFmpeg timeouts and probe sizes as settings; stream-health counters | Constants in `Demuxer` and `VideoPlayer` | Unit |
+| Privacy and permission messages for a USB camera Windows refuses | Only documented in `docs/usb-cameras.md` | Unit for the message mapping |
+| USB counters in the stats panel | None | Unit |
+
+### Large (L)
+
+| Item | Where it stands |
 |---|---|
-| The thumbnail generator lives in `AtcSoft.VideoEngine.Windows` | The server and the standalone app both need it, it draws with GDI+, and that project is not published as a package |
-| The server takes its data folder from `Storage:DataPath` | It could only run against the shared application data folder, so it could not be tested, or run twice, safely |
-| Video quality is `Auto` / `1080p` / `720p` / `480p` / `360p` everywhere, the API included | The API had its own names with no translation, and a chosen resolution was reset to Auto by any save through the server |
-| Colours are stored by name | The desktop colour selector cannot show the hex values the web client wrote; the web client now loads those as names |
-| Webhooks are configured in the server's configuration, not in the settings | Receivers and their secrets are an operator's matter; a settings page can follow |
-| Only reads are retried by the web client, and slow calls get minutes, not seconds | Starting a recording and saving a layout change were cut off after ten seconds and sent again |
-| The API tests run the real server in-process against a temp data folder | Routing, serialization, the file server and the real recording pipeline are covered, including a live test stream from the FFmpeg tool |
-
-### What changed later on 2026-10-13 (USB cameras, motion, and the rest of the quick wins)
-
-Done with two USB cameras attached, then with the IP cameras back. Details in the commit messages, [`docs/server.md`](../docs/server.md), [`docs/usb-cameras.md`](../docs/usb-cameras.md) and [`docs/settings.md`](../docs/settings.md).
-
-| What | State |
-|---|---|
-| USB cameras record (encoded to H.264), with sound from a microphone | Seen on the server and in CameraWall |
-| Server-side motion detection: watch, record while it moves, events and webhooks | Seen with two cameras and a webhook receiver |
-| A USB camera the server has open is streamed to browsers from that pipeline | Seen: live in the web client while watched and recorded |
-| "Record as H.264" for cameras that send H.265 or MJPEG | Seen with a real H.265 camera, on the server and in CameraWall |
-| Webhook receivers added, changed, tested and removed while the server runs; a page for it | Seen in a browser |
-| USB cameras in the web client's camera form and list | Seen in a browser |
-| Grid sizes with pages (both desktop apps), camera filter (server client) | Tested with the real grid control; not looked at on screen |
-| Disk indicator in every client; names on icon-only buttons | Web dashboard seen; the desktop status bars not |
-
-| Decision | Why |
-|---|---|
-| A fixed grid hides the tiles of the other pages instead of removing them | In CameraWall a camera is connected and recorded by its tile; removing the tile would stop the recording |
-| The server is the one owner of a camera's pipeline; a motion recording borrows it | Stopping a motion recording must not close the connection that watches for the next motion |
-| A motion lasts until the scene has been quiet for the post-motion time | An end at every pause would start and stop recordings and webhooks many times a minute |
-| Only a USB camera is streamed from the server's pipeline | It cannot be opened twice. A network camera can, and its own stream carries its sound |
-| Every use of a USB camera goes through the one pipeline `CameraConnectionService` keeps for it | A live view with a process of its own held the camera, and a recording was refused until the viewers were gone. The sound a process of its own carried was lost with it for a few hours; the pipeline's stream carries it since the same day |
-| The server analyses at most four pictures a second for motion | Each analysed picture is captured as a PNG and decoded again |
-| Webhook receivers from the configuration stay read-only in the API | An operator's configuration should not be changed from a web page; added receivers live in `webhooks.json` |
-| `recordAsH264` is a plain yes/no in the API | The setting has two values; an enum there would only add a translation |
-
-### Supporting plans
-
-| Plan | Purpose |
-|---|---|
-| [soak-test-plan.md](soak-test-plan.md) | How to run and judge a 24/7 stability soak of the camera wall |
-| [archive/](archive/) | Finished plans kept for their design rationale |
+| Motion zones / exclusion masks | No zone concept anywhere |
+| AI detection (ONNX) | Needs a model choice |
+| Push notifications (WebPush) | None |
+| WPF client phase 10: multi-monitor, camera groups and tags, an event log viewer, a camera health view, timelapse | None of it exists. Tags, health and timelapse need the server first (timelapse is only a setting today). The event log may be covered by the notification history and the audit log: decide whether it still stands |
+| FFmpeg 9 and bindings 9.0.2 (phases 3–6) | ⏸️ deferred on 2026-10-13 |
 
 ---
 
 ## ✋ Waiting on a Person
 
-Things that are built but cannot be closed without hands, eyes or hardware.
+Built and tested, but not closed without hands, eyes or hardware.
 
-| What | Needs | Area |
+| What | Needs | From |
 |---|---|---|
-| Icon placement in all four info-box corners, grid and full screen | A visual check | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
-| ONVIF detection against a wired, a Wi-Fi and a Tapo camera | Real cameras | [Connection-type icon](roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
-| Boxes at 0 / 90 / 180 / 270, rotation after a setting change and a tile swap (rotated playback is confirmed in the app; VLC needs MP4) | A real camera | [Video rotation](roadmap-video-rotation.md#-to-verify-by-hand) |
-| Record, browse, play and delete in each of the four folder layouts; midnight rollover | The app and some recording time | [Recording storage layout](roadmap-recording-storage.md#-to-verify-by-hand) |
-| The CameraWall keyboard shortcuts (Ctrl+1 to 9, Ctrl+N, Ctrl+R, F5, F1) and Enter in the recordings browser | The app | [Suggestions](roadmap-suggestions.md) |
-| The filter box and the thumbnail column in the server client; its settings dialog after the contract change (video quality, quick actions) | The server client app | [WPF API client](roadmap-wpf-api-client.md) |
-| The web client against real cameras: live view of H.264 and H.265 cameras, rotated cameras, playback of real recordings | A browser, the server and cameras | — |
-| Webhooks against a real receiver (Home Assistant, Slack) | A receiver | [`docs/server.md`](../docs/server.md#-webhooks) |
+| Icon placement in all four info-box corners, grid and full screen; tint on connect and disconnect | A visual check | [Connection-type icon](archive/roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
+| ONVIF detection against a wired, a Wi-Fi and a Tapo camera | Real cameras | [Connection-type icon](archive/roadmap-cameras-connection-icons.md#still-to-verify-by-hand) |
+| Boxes at 0 / 90 / 180 / 270 in the grid and full screen; rotation after a setting change and a tile swap; snapshots and thumbnails upright | A real camera | [Video rotation](archive/roadmap-video-rotation.md#-to-verify-by-hand) |
+| Record, browse, play and delete in each of the four folder layouts; an old flat archive; midnight rollover | The app and some recording time | [Recording storage](archive/roadmap-recording-storage.md#-to-verify-by-hand) |
+| USB: unplug and replug in CameraWall (recording resumes within 5 s); recording and sound seen in CameraWall (the USB plan says not yet, the old roadmap said seen: confirm) | Two USB cameras | [USB cameras](archive/roadmap-usb-cameras.md) |
+| "Show in Full Screen" on a CameraWall tile: through UI Automation it stayed disabled on a connected HTTP camera | The app and a camera | [E2E notes](../docs/e2e-smoke-tests.md#left-out-on-purpose) |
+| The client's live grid now draws motion boxes (bound since 2026-10-17) | The server client and a camera that moves | — |
+| The client's filters and grid size as label controls; the camera dialog's drop-downs | A look at the server client | — |
+| The grid sizes, filter, disk indicators and unplugged text in both desktop apps; CameraWall's per-camera *Recording video* row; the keyboard shortcuts | A look at the apps | [Ideas](roadmap-suggestions.md) |
+| The Users dialog (WPF) and the Users page (web) | A look at the clients | [REST API generator v3](roadmap-rest-api-sg.md) |
+| The web client against real cameras: H.264 and H.265 live view, rotated cameras, playback of real recordings | A browser, the server and cameras | — |
+| Webhooks against a real receiver (Home Assistant, Slack) | A receiver | [`docs/server.md`](../docs/server.md) |
+| The 24/7 soak | A machine, three cameras and a day | [soak-test-plan.md](soak-test-plan.md) |
 
 ---
 
 ## 🐛 Known Bugs
 
-Open defects, wherever they are tracked.
-
 | Bug | Tracked in |
 |---|---|
-| Motion boxes reported misplaced at 180° — two possible causes fixed, not confirmed | [Video rotation](roadmap-video-rotation.md#the-180-report-is-not-explained) |
+| Motion boxes reported misplaced at 180°: two possible causes fixed, not confirmed | [Video rotation](archive/roadmap-video-rotation.md#the-180-report-is-not-explained) |
+| `RecordingsBrowserDialogTests` is flaky in a full test run | [REST API generator v3](roadmap-rest-api-sg.md) |
+| An `http://` client behind the HTTPS redirect loses its `Authorization` header | [REST API generator v3](roadmap-rest-api-sg.md) |
+| `ValidationError` template in Atc.Wpf.Theming reads `(Validation.Errors)[0]`, which fails each time an error clears | Filed in atc-wpf: `issues/theming-validationerror-template-indexes-empty-errors.md` |
+
+---
+
+## ✅ Done since the last roadmap (2026-10-13 to 2026-10-17)
+
+The details are in the commit messages and in [`docs/`](../docs/).
+
+| What | Where to read |
+|---|---|
+| Sign-in, roles, API keys, audit log; HTTPS redirect and HSTS; secrets encrypted at rest; rate limits | [`docs/server.md`](../docs/server.md) |
+| `GET /events` (Server-Sent Events) replaced SignalR; stream leases for live views | [`docs/server.md`](../docs/server.md) |
+| REST API source generator v3 (local package until it is on nuget.org) | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) |
+| Every client in US and British English, Danish and German | CLAUDE.md, *Texts and languages* |
+| E2E smoke tests of all three apps; binding errors logged; logs in the Aspire dashboard; `ATCSOFT_DATA_PATH` | [`docs/e2e-smoke-tests.md`](../docs/e2e-smoke-tests.md) |
+| Found by the smoke tests and fixed: the client's camera dialog drop-downs, its environment configuration, motion boxes on its live tiles, the web client signed out after ten reloads a minute, its user menu label, its server address | The commits of 2026-10-17 |
+| A camera without an address or a USB device is refused by the server | `CameraSourceCheck` |
 
 ---
 
 ## ✍️ Conventions
 
-- **One area, one file:** `roadmap-<area>.md`. Start it with a one-paragraph summary and a link back here.
-- **Every area file has** a phase table with a status per phase, a "Decisions" section, and a "To verify by hand" section when something needs hardware or eyes.
-- **Update this page in the same change** that moves a phase: the *Areas* row, and *Focus* if priorities shifted.
-- **Ideas without a plan** go into [roadmap-suggestions.md](roadmap-suggestions.md). When one is picked up, it gets its own area file and a row here.
-- **Finished areas** move to [`archive/`](archive/) once nothing is open, and their row here is removed.
+- **This page is the list of what is open.** An area gets a plan file of its own (`roadmap-<area>.md`) when it needs design and decisions; its open items are listed here too.
+- **Every area plan has** a phase table with a status per phase, a "Decisions" section, and a "To verify by hand" section when something needs hardware or eyes.
+- **Update this page in the same change** that closes or opens an item.
+- **Ideas without a plan** go into [roadmap-suggestions.md](roadmap-suggestions.md); when one is picked up it moves here.
+- **Finished areas** move to [`archive/`](archive/) once their open items are listed here or done.
 - **How things work today** is documentation, not a plan: it belongs in [`docs/`](../docs/).

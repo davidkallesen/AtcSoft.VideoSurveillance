@@ -1,6 +1,8 @@
 # 🖥️ WPF API Client Roadmap (AtcSoft.VideoSurveillance.Wpf.App)
 
-← Back to the [roadmap home](roadmap.md) · Original design for phases 1–6: [archive](archive/roadmap-wpf-api-client-initial-design.md)
+> **Archived 2026-10-17.** Kept for its design and decisions. What is still open from this plan, checked against the code that day, is in [the roadmap](../roadmap.md); this file is not updated any more.
+
+← Back to the [roadmap home](../roadmap.md) · Original design for phases 1–6: [archive](roadmap-wpf-api-client-initial-design.md)
 
 ## 🎯 Vision
 

@@ -1,6 +1,8 @@
 # 🔌 Camera Connection-Type Icon Roadmap
 
-← Back to the [roadmap home](roadmap.md)
+← Back to the [roadmap home](../roadmap.md)
+
+> **Archived 2026-10-17.** Kept for its design and decisions. What is still open from this plan, checked against the code that day, is in [the roadmap](../roadmap.md); this file is not updated any more.
 
 Plan for adding a **connection-type** attribute to every camera (`None`, `Lan`, `Wifi`, `Usb`), auto-detecting it where possible, letting the user set it, and showing it as an **optional icon in a corner of the camera tile**. The icon must never overlap the overlay info box or the quick-action buttons.
 

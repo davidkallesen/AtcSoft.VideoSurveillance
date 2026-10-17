@@ -1,5 +1,7 @@
 # 💡 Roadmap Suggestions (Backlog)
 
+> **Checked 2026-10-17.** Much of this list is done since it was written (sign-in, HTTPS, rate limits, the audit log, webhooks, server-side motion; SignalR is gone), and the assessment and the comparison table below describe the state of 2026-10-13. The checked list of what is still open is in [the roadmap](roadmap.md).
+
 ← Back to the [roadmap home](roadmap.md)
 
 This document is a candid product assessment of **AtcSoft.VideoSurveillance**, produced from a full internal code audit (60+ findings, spot-verified against the actual source) cross-referenced with 2024-2025 market research on the leading NVR/VMS products (Blue Iris, Frigate, Milestone XProtect, Genetec, Scrypted, Agent DVR). It is *not* an implementation plan — it is an honest "where we stand and where to invest" memo for the dev team. The existing [`roadmap.md`](roadmap.md) tracks the (now-complete) build-out of the WPF API client; this document covers what comes *after* feature-parity: making this best-in-class.

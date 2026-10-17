@@ -1,10 +1,12 @@
 # 🔄 Video Rotation Roadmap
 
+> **Archived 2026-10-17.** Kept for its design and decisions. What is still open from this plan, checked against the code that day, is in [the roadmap](../roadmap.md); this file is not updated any more.
+
 Plan for making a camera's **rotation** (`CameraDisplaySettings.Rotation`: 0 / 90 / 180 / 270, clockwise) apply to everything the operator sees, not only the live picture. Today the live picture rotates, but the **motion bounding boxes** do not follow it and **recordings play back unrotated**.
 
 Affects **`AtcSoft.VideoEngine`** (recorder, frame capture, media probe), **`AtcSoft.VideoEngine.DirectX`** (software-frame upload), **`AtcSoft.VideoSurveillance.Core`** (a new mapping helper), **`AtcSoft.VideoSurveillance.Wpf.Core`** (`CameraTile`, motion overlay, full-screen windows, recording playback) and **`AtcSoft.CameraWall.Wpf`** (thumbnails).
 
-← Back to the [roadmap home](roadmap.md)
+← Back to the [roadmap home](../roadmap.md)
 
 ---
 
