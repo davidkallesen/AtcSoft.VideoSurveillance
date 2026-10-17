@@ -19,7 +19,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host (REST, `GET /events`, HLS streams)
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
 - `AtcSoft.VideoSurveillance.Blazor.App` - Blazor WebAssembly client for the API server (MudBlazor). Its logic lives in plain classes under `Logic/`, tested in `AtcSoft.VideoSurveillance.Blazor.App.Tests`
-- `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App)
+- `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App), plus `AtcSoft.VideoSurveillance.E2E.Tests` (smoke tests of the running apps, see below)
 
 ## NuGet Packages
 Six projects are published to nuget.org so external WPF apps can embed live camera tiles:
@@ -85,6 +85,12 @@ The REST API server enables headless video surveillance:
 - Logs, developer exceptions, the server's ProblemDetails and the wire values stay English.
 - The language belongs to the client: CameraWall in `GeneralSettings.Language`, the WPF client in `ClientPreferences` (applied at startup), the web client in the browser (`LanguageChoice`, a change reloads the page). The server's `language` setting is deprecated.
 - Atc.Wpf finds the texts only in loaded assemblies: each WPF app touches `Translations.ResourceManager` first thing in `OnStartup`.
+
+## Diagnostics and end-to-end smoke tests
+- **Binding errors are logged:** both WPF apps call `BindingErrorLogging.Start` (Wpf.Core) first thing, so every binding error is written to the log at Warning (`AtcSoft.BindingErrors`), with or without a debugger. A binding error is a bug: the E2E smoke tests fail on one.
+- **Logs reach Aspire:** under Aspire (`OTEL_EXPORTER_OTLP_ENDPOINT` set) the server and both WPF apps also write their Serilog logs over OTLP, so the WPF apps, which have no console, show up in the dashboard's structured logs.
+- **One data folder:** `ATCSOFT_DATA_PATH` moves all of a desktop app's data (ProgramData and the per-user LocalAppData files, under `{folder}\local`) into one folder. A new file a desktop app keeps goes through `ApplicationPaths` (Core: `GetLocalDataPath`, Wpf.Core: the `Default*` paths), never `Environment.GetFolderPath` directly. The AppHost passes a scratch folder to all apps with `AtcSoft__DataPath=...`.
+- **E2E smoke tests:** `test/AtcSoft.VideoSurveillance.E2E.Tests` starts the server, CameraWall, the WPF client and the web client in scratch folders and opens every window, page and dialog (FlaUI for WPF, Playwright with the installed Edge for the web). They need a desktop and run only with `ATCSOFT_E2E=1`. A new dialog, view or page gets a step in its walk; controls are found by their en-US text. See `docs/e2e-smoke-tests.md`.
 
 ## Hosted Background Services (Atc.Hosting)
 Long-running periodic work uses `Atc.Hosting` base classes instead of hand-rolled `System.Threading.Timer` loops. The base class supplies the loop, sequential (no-overlap) ticking, exception logging via `OnExceptionAsync`, and optional health tracking.
