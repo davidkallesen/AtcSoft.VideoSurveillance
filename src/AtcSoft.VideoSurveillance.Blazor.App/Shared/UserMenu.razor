@@ -4,14 +4,18 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" AriaLabel="@Translations.SignedInAs1">
-    <MudMenuItem Disabled="true">@string.Format(CultureInfo.CurrentCulture, Translations.SignedInAs1, Session.UserName)</MudMenuItem>
+<MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" AriaLabel="@SignedInAs">
+    <MudMenuItem Disabled="true">@SignedInAs</MudMenuItem>
     <MudDivider />
     <MudMenuItem Icon="@Icons.Material.Filled.Password" OnClick="ChangePasswordAsync">@Translations.ChangePassword</MudMenuItem>
     <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="SignOutAsync">@Translations.SignOut</MudMenuItem>
 </MudMenu>
 
 @code {
+    // The menu's label names the user too (it was the bare format, "Signed in as {0}").
+    private string SignedInAs
+        => string.Format(CultureInfo.CurrentCulture, Translations.SignedInAs1, Session.UserName);
+
     private async Task ChangePasswordAsync()
     {
         var dialog = await DialogService.ShowAsync<ChangePasswordDialog>(Translations.ChangePassword);
