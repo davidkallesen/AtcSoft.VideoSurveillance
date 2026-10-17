@@ -56,11 +56,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
         this.gatewayService = gatewayService ?? throw new ArgumentNullException(nameof(gatewayService));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        clientPrefsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AtcSoft",
-            "VideoSurveillance.Client",
-            "client-prefs.json");
+        clientPrefsPath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.GetLocalDataPath("VideoSurveillance.Client", "client-prefs.json");
     }
 
     /// <inheritdoc/>

@@ -6,11 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 /// </summary>
 public sealed class ServerProfileService : JsonFileServiceBase<ServerProfileData>
 {
-    private static readonly string ProfilesFilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "AtcSoft",
-        "VideoSurveillance",
-        "servers.json");
+    private static readonly string ProfilesFilePath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.GetLocalDataPath("VideoSurveillance", "servers.json");
 
     public ServerProfileService()
         : base(ProfilesFilePath)

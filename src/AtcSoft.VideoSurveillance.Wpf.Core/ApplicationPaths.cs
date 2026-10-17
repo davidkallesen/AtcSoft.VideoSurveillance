@@ -6,9 +6,9 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core;
 /// </summary>
 public static class ApplicationPaths
 {
-    private static string baseDataPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-        "AtcSoft",
+    // ATCSOFT_DATA_PATH (the E2E smoke tests, a scratch run) replaces the whole folder.
+    private static string baseDataPath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.ResolveBaseDataPath(
+        AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.DataPathOverride,
         "CameraWall");
 
     /// <summary>
@@ -43,14 +43,14 @@ public static class ApplicationPaths
 
     /// <summary>
     /// Configures the application folder name under AtcSoft in ProgramData.
-    /// Must be called before any path properties are accessed.
+    /// Must be called before any path properties are accessed. With
+    /// ATCSOFT_DATA_PATH set the folder stays the override.
     /// </summary>
     /// <param name="applicationName">The application folder name (e.g. "CameraWall" or "VideoSurveillance").</param>
     public static void Configure(string applicationName)
     {
-        baseDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "AtcSoft",
+        baseDataPath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.ResolveBaseDataPath(
+            AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.DataPathOverride,
             applicationName);
     }
 }

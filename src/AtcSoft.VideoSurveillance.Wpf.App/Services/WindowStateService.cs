@@ -6,11 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 /// </summary>
 public sealed class WindowStateService : JsonFileServiceBase<WindowStateData>
 {
-    private static readonly string StateFilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "AtcSoft",
-        "VideoSurveillance",
-        "window-state.json");
+    private static readonly string StateFilePath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.GetLocalDataPath("VideoSurveillance", "window-state.json");
 
     public WindowStateService()
         : base(StateFilePath)

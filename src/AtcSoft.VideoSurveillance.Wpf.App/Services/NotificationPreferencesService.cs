@@ -6,11 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.App.Services;
 /// </summary>
 public sealed class NotificationPreferencesService : JsonFileServiceBase<NotificationPreferences>
 {
-    private static readonly string PreferencesFilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "AtcSoft",
-        "VideoSurveillance",
-        "notifications.json");
+    private static readonly string PreferencesFilePath = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.GetLocalDataPath("VideoSurveillance", "notifications.json");
 
     public NotificationPreferencesService()
         : base(PreferencesFilePath)

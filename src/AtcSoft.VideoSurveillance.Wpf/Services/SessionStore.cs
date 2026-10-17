@@ -25,11 +25,7 @@ public sealed class SessionStore
     /// user's local application data.
     /// </summary>
     public static string DefaultFolder
-        => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AtcSoft",
-            "VideoSurveillance",
-            "sessions");
+        => AtcSoft.VideoSurveillance.Helpers.ApplicationPaths.GetLocalDataPath("VideoSurveillance", "sessions");
 
     public void Save(
         Uri server,
