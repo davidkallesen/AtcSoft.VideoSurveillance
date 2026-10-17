@@ -1,4 +1,5 @@
 using AtcSoft.VideoSurveillance.Enums;
+using AtcSoft.VideoSurveillance.Helpers;
 using AtcSoft.VideoSurveillance.Wpf.Core.Models;
 using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
@@ -70,6 +71,7 @@ internal sealed class CameraWallRun : IDisposable
         var layout = new CameraLayout { Name = LayoutName };
         var order = 0;
 
+        var layoutOptions = RecordingLayoutOptions.From(settings.Recording);
         foreach (var (name, port) in Cameras(livePort))
         {
             var camera = new CameraConfiguration();
@@ -79,6 +81,15 @@ internal sealed class CameraWallRun : IDisposable
             camera.Connection.Path = TestCameras.StreamPath;
             camera.Display.DisplayName = name;
             storage.AddOrUpdateCamera(camera);
+
+            // A recording per camera, so the recordings browser lists rows with thumbnails.
+            var video = RecordingPathHelper.BuildRecordingPath(
+                settings.Recording.RecordingPath,
+                RecordingPathHelper.GetCameraFolderName(name, camera.Id),
+                DateTime.Now.AddMinutes(-5),
+                "mp4",
+                layoutOptions);
+            TestCameras.WriteRecording(video, RecordingPathHelper.BuildThumbnailPath(video, settings.Recording.RecordingPath, layoutOptions));
             layout.Items.Add(new CameraLayoutItem { CameraId = camera.Id, OrderNumber = order++ });
         }
 

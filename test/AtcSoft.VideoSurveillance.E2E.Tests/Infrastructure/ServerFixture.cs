@@ -139,14 +139,15 @@ public sealed class ServerFixture : IAsyncLifetime
         {
             liveCameras.Add(camera);
             HasLiveCamera = true;
-            await PostCameraAsync(admin, TestCameras.LiveCameraName, camera.Port);
+            var liveId = await PostCameraAsync(admin, TestCameras.LiveCameraName, camera.Port);
+            await RecordAsync(admin, liveId);
         }
 
         using var layout = await admin.PostAsJsonAsync("/layouts", new { name = "E2E", rows = 2, columns = 2 });
         layout.EnsureSuccessStatusCode();
     }
 
-    private static async Task PostCameraAsync(
+    private static async Task<Guid> PostCameraAsync(
         HttpClient admin,
         string name,
         int port)
@@ -155,5 +156,23 @@ public sealed class ServerFixture : IAsyncLifetime
             "/cameras",
             new { displayName = name, ipAddress = "127.0.0.1", port, protocol = "http", path = TestCameras.StreamPath });
         response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+    }
+
+    /// <summary>
+    /// Records a few seconds of the live camera, so the recordings views have a row.
+    /// </summary>
+    private static async Task RecordAsync(
+        HttpClient admin,
+        Guid cameraId)
+    {
+        using var started = await admin.PostAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), content: null);
+        if (!started.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(6));
+        using var stopped = await admin.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative));
     }
 }
