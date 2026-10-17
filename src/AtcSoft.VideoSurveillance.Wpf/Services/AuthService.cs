@@ -111,10 +111,15 @@ public sealed class AuthService
             return false;
         }
 
-        var renewed = await gateway.RefreshSessionAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+        var (renewed, refused) = await gateway.RefreshSessionAsync(refreshToken, cancellationToken).ConfigureAwait(false);
         if (renewed is null)
         {
-            store.Clear(server);
+            // Only a refused refresh token ends the stored session; a busy or absent server keeps it.
+            if (refused)
+            {
+                store.Clear(server);
+            }
+
             return false;
         }
 

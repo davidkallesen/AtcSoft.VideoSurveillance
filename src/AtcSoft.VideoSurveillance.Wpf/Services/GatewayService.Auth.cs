@@ -61,10 +61,11 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
-    /// Renews a session; <see langword="null"/> when the server refused (sign in
-    /// again) or could not be reached.
+    /// Renews a session. <c>Refused</c> is <see langword="true"/> only when the server does not
+    /// know the refresh token (sign in again); a busy or failing server, or none, leaves the
+    /// stored session for the next try.
     /// </summary>
-    public async Task<Session?> RefreshSessionAsync(
+    public async Task<(Session? Session, bool Refused)> RefreshSessionAsync(
         string refreshToken,
         CancellationToken cancellationToken = default)
     {
@@ -76,12 +77,12 @@ public sealed partial class GatewayService
                 .ConfigureAwait(false);
 
             return result.IsOk
-                ? result.OkContent
-                : null;
+                ? (result.OkContent, false)
+                : (null, result.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Unauthorized);
         }
         catch (HttpRequestException)
         {
-            return null;
+            return (null, false);
         }
     }
 
