@@ -50,6 +50,13 @@ public partial class MotionBoundingBoxOverlay
     /// The displayed video width (after rotation), used to compute letterbox offset.
     /// When set to 0, falls back to stretching across the full container (legacy behavior).
     /// </summary>
+    /// <summary>
+    /// The boxes to draw, for a host that binds them (the server client's tiles); a host that
+    /// drives the overlay from code calls <see cref="UpdateBoundingBoxes"/> instead.
+    /// </summary>
+    [DependencyProperty(PropertyChangedCallback = nameof(OnBoundingBoxesChanged))]
+    private IReadOnlyList<Rect>? boundingBoxes;
+
     [DependencyProperty(DefaultValue = 0)]
     private int videoWidth;
 
@@ -67,6 +74,18 @@ public partial class MotionBoundingBoxOverlay
     {
         InitializeComponent();
         OverlayCanvas.SizeChanged += OnCanvasSizeChanged;
+    }
+
+    private static void OnBoundingBoxesChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MotionBoundingBoxOverlay overlay)
+        {
+            overlay.UpdateBoundingBoxes(
+                e.NewValue as IReadOnlyList<Rect>,
+                new Size(overlay.ActualWidth, overlay.ActualHeight));
+        }
     }
 
     /// <summary>

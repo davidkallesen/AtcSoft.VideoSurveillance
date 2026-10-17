@@ -116,6 +116,15 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private IReadOnlyList<Rect> currentBoundingBoxes = [];
 
+    /// <summary>
+    /// The displayed picture's width (turned with the rotation), so the boxes stay off the black bars.
+    /// </summary>
+    [ObservableProperty]
+    private int motionVideoWidth;
+
+    [ObservableProperty]
+    private int motionVideoHeight;
+
     [ObservableProperty]
     private int analysisWidth = 320;
 
@@ -567,6 +576,11 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
             IsMotionDetected = e.IsMotionActive;
             AnalysisWidth = e.AnalysisWidth;
             AnalysisHeight = e.AnalysisHeight;
+
+            if (player?.StreamInfo is { Width: > 0, Height: > 0 } stream)
+            {
+                (MotionVideoWidth, MotionVideoHeight) = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper.GetDisplaySize(stream.Width, stream.Height, Rotation);
+            }
 
             if (e.IsMotionActive && e.BoundingBoxes.Count > 0)
             {
