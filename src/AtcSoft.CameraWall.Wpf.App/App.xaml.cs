@@ -149,10 +149,12 @@ public partial class CameraWallApp
         Current.DispatcherUnhandledException += ApplicationOnDispatcherUnhandledException;
         base.OnStartup(e);
 
-        if (Debugger.IsAttached)
-        {
-            BindingErrorTraceListener.StartTrace();
-        }
+        // Binding errors always go to the log (and so to Aspire and the E2E smoke tests);
+        // the message box is for a developer at the debugger.
+        BindingErrorLogging.Start(
+            static message => Log.ForContext(Serilog.Core.Constants.SourceContextPropertyName, "AtcSoft.BindingErrors")
+                .Warning("Binding error: {BindingError}", message),
+            showMessageBox: Debugger.IsAttached);
     }
 
     private void CurrentDomainUnhandledException(

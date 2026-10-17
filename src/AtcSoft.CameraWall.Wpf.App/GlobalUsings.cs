@@ -20,6 +20,7 @@ global using Atc.Wpf.Notifications;
 global using Atc.Wpf.Theming.Helpers;
 global using Atc.Wpf.Translation;
 global using Atc.XamlToolkit.Diagnostics;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;
 
 global using AtcSoft.CameraWall.Wpf.SplashScreens;
