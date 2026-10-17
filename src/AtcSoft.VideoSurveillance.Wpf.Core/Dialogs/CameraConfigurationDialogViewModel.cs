@@ -1937,6 +1937,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             OnPropertyChanged(nameof(UsbWidth));
             OnPropertyChanged(nameof(UsbHeight));
             OnPropertyChanged(nameof(UsbFrameRate));
+            OnPropertyChanged(nameof(SelectedUsbFrameRate));
             OnPropertyChanged(nameof(UsbPixelFormat));
             OnPropertyChanged(nameof(UsbResolutionItems));
             OnPropertyChanged(nameof(SelectedUsbResolution));
@@ -2019,6 +2020,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             OnPropertyChanged(nameof(UsbWidth));
             OnPropertyChanged(nameof(UsbHeight));
             OnPropertyChanged(nameof(UsbFrameRate));
+            OnPropertyChanged(nameof(SelectedUsbFrameRate));
             OnPropertyChanged(nameof(UsbPixelFormat));
             OnPropertyChanged(nameof(UsbResolutionItems));
             OnPropertyChanged(nameof(SelectedUsbResolution));
@@ -2104,12 +2106,32 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             EnsureUsbFormat();
             Camera.Connection.Usb!.Format!.FrameRate = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(SelectedUsbFrameRate));
             OnPropertyChanged(nameof(UsbPixelFormatItems));
 
             // Cascade: pixel format may be invalid at the new frame
             // rate. Pick the first valid format so the combo never
             // shows a stale value.
             TryApplyDefaultUsbFormat();
+        }
+    }
+
+    /// <summary>
+    /// The frame-rate combo's selection. Picking another camera replaces the
+    /// frame-rate items, and the combo then pushes <see langword="null"/> back:
+    /// into a <see langword="double"/> that is a conversion error on the combo,
+    /// so the combo binds here and a <see langword="null"/> is ignored. The
+    /// defaults for the new camera follow from <see cref="TryApplyDefaultUsbFormat"/>.
+    /// </summary>
+    public double? SelectedUsbFrameRate
+    {
+        get => Camera.Connection.Usb?.Format?.FrameRate is > 0 and var rate ? rate : null;
+        set
+        {
+            if (value is { } rate)
+            {
+                UsbFrameRate = rate;
+            }
         }
     }
 
@@ -2421,6 +2443,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             EnsureUsbFormat();
             Camera.Connection.Usb!.Format!.FrameRate = bestFps;
             OnPropertyChanged(nameof(UsbFrameRate));
+            OnPropertyChanged(nameof(SelectedUsbFrameRate));
             OnPropertyChanged(nameof(UsbPixelFormatItems));
         }
 

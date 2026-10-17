@@ -76,7 +76,7 @@
 
             <ComboBox
                 ItemsSource="{Binding Path=UsbFrameRateItems}"
-                SelectedItem="{Binding Path=UsbFrameRate, Mode=TwoWay}" />
+                SelectedItem="{Binding Path=SelectedUsbFrameRate, Mode=TwoWay}" />
         </StackPanel>
 
         <StackPanel

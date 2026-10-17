@@ -122,6 +122,45 @@ public class CameraConfigurationDialogViewModelUsbPickerTests
     }
 
     [Fact]
+    public void SelectedUsbFrameRate_IgnoresNull_FromTheComboWhenItsItemsAreReplaced()
+    {
+        // Picking another camera replaces the frame-rate items; the combo then
+        // pushes null back. A null must not reach the double (a conversion
+        // error on the combo) nor clear the chosen rate.
+        var vm = BuildVm(BuildUsbCamera(), NullUsbCameraEnumerator.Instance);
+        vm.UsbFrameRate = 30;
+
+        vm.SelectedUsbFrameRate = null;
+
+        vm.UsbFrameRate.Should().Be(30);
+        vm.SelectedUsbFrameRate.Should().Be(30);
+    }
+
+    [Fact]
+    public void SelectedUsbFrameRate_WritesTheRate_AndIsNullWithoutOne()
+    {
+        var vm = BuildVm(BuildUsbCamera(), NullUsbCameraEnumerator.Instance);
+        vm.SelectedUsbFrameRate.Should().BeNull();
+
+        vm.SelectedUsbFrameRate = 15;
+
+        vm.UsbFrameRate.Should().Be(15);
+        vm.Camera.Connection.Usb!.Format!.FrameRate.Should().Be(15);
+    }
+
+    [Fact]
+    public void SelectedUsbFrameRate_IsRaised_WhenTheRateChanges()
+    {
+        var vm = BuildVm(BuildUsbCamera(), NullUsbCameraEnumerator.Instance);
+        var raised = new List<string?>();
+        vm.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        vm.UsbFrameRate = 25;
+
+        raised.Should().Contain(nameof(CameraConfigurationDialogViewModel.SelectedUsbFrameRate));
+    }
+
+    [Fact]
     public void UsbAudioDeviceName_RoundTripsToConnectionSettings()
     {
         // The dialog's audio-device text field writes directly to
