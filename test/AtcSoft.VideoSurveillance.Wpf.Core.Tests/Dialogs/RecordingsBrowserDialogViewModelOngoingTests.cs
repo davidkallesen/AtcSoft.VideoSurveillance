@@ -33,7 +33,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
         writer?.Dispose();
         if (System.IO.Directory.Exists(root))
         {
-            System.IO.Directory.Delete(root, recursive: true);
+            TestFolders.Delete(root);
         }
     }
 

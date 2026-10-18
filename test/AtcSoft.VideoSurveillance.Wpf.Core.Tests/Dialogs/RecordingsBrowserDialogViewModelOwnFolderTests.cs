@@ -20,7 +20,7 @@ public sealed class RecordingsBrowserDialogViewModelOwnFolderTests : IDisposable
     {
         if (System.IO.Directory.Exists(root))
         {
-            System.IO.Directory.Delete(root, recursive: true);
+            TestFolders.Delete(root);
         }
     }
 

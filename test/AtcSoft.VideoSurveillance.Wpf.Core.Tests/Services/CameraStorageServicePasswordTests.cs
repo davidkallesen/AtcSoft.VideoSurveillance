@@ -20,7 +20,7 @@ public sealed class CameraStorageServicePasswordTests : IDisposable
     {
         if (System.IO.Directory.Exists(folder))
         {
-            System.IO.Directory.Delete(folder, recursive: true);
+            TestFolders.Delete(folder);
         }
     }
 

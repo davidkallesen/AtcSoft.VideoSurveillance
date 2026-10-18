@@ -19,7 +19,7 @@ public sealed class SettingsDialogViewModelRecordingLayoutTests : IDisposable
     {
         if (System.IO.Directory.Exists(directory))
         {
-            System.IO.Directory.Delete(directory, recursive: true);
+            TestFolders.Delete(directory);
         }
     }
 

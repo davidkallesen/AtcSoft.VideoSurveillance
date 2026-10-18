@@ -122,7 +122,7 @@ Built and tested, but not closed without hands, eyes or hardware.
 | Bug | Tracked in |
 |---|---|
 | Motion boxes reported misplaced at 180°: two possible causes fixed, not confirmed | [Video rotation](archive/roadmap-video-rotation.md#the-180-report-is-not-explained) |
-| `RecordingsBrowserDialogTests` is flaky in a full test run | [REST API generator v3](roadmap-rest-api-sg.md) |
+| `RecordingsBrowserDialogTests` was flaky in a full test run (its clean-up met a test file still held, likely by the virus scanner); since 2026-10-18 the Wpf.Core tests' clean-up retries and never fails a test. Close it when full runs stay green | [REST API generator v3](roadmap-rest-api-sg.md) |
 | An `http://` client behind the HTTPS redirect loses its `Authorization` header | [REST API generator v3](roadmap-rest-api-sg.md) |
 
 ---
