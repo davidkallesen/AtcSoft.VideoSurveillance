@@ -44,6 +44,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 | 🎥 USB cameras | [archive/roadmap-usb-cameras.md](archive/roadmap-usb-cameras.md) | ✅ | Hands-on checks; a few small gaps; ⏸️ Linux / macOS, UVC property pages |
 | 🖥️ WPF API client | [archive/roadmap-wpf-api-client.md](archive/roadmap-wpf-api-client.md) | ✅ | Phases 1–9 done; phase 10 is in the backlog below |
 | 🎞️ FFmpeg 9 | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | 🟨 | On FFmpeg 9.0.2 with a set-up dialog since 2026-10-18; hands-on checks (phase 5) and the per-camera TLS setting are open |
+| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | ⬜ | Planned 2026-10-18: storybook test harness and `sample/BoundingBoxWpfApp`, detector v2 with tracking, masks and zones, an activity timeline per recording; ONNX detection deferred |
 | 🧪 24/7 soak | [soak-test-plan.md](soak-test-plan.md) | ⬜ | The procedure was never run; the report scripts count day folders since 2026-10-17 |
 | 💡 Ideas | [roadmap-suggestions.md](roadmap-suggestions.md) | — | The backlog below is the checked part of it |
 
