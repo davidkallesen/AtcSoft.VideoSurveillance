@@ -401,7 +401,7 @@ public sealed partial class StreamingService : ILiveStreamService, IDisposable
 
         var psi = new ProcessStartInfo
         {
-            FileName = HlsStreamCommand.FindTool(VideoEngineBootstrap.FindFFmpegPath()),
+            FileName = HlsStreamCommand.FindTool(VideoEngineBootstrap.FFmpegFolder ?? VideoEngineBootstrap.FindFFmpegPath()),
             Arguments = args,
             UseShellExecute = false,
             CreateNoWindow = true,

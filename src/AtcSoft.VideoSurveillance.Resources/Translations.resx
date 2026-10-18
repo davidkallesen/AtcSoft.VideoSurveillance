@@ -2601,4 +2601,55 @@ Thumbnail:
   <data name="ApiKey" xml:space="preserve">
     <value>API key</value>
   </data>
+  <data name="FFmpegSetup" xml:space="preserve">
+    <value>FFmpeg Setup</value>
+  </data>
+  <data name="FFmpegNotInstalled1" xml:space="preserve">
+    <value>The video engine needs FFmpeg {0}, which is not installed on this computer.</value>
+  </data>
+  <data name="FFmpegOtherVersion1" xml:space="preserve">
+    <value>The video engine needs FFmpeg {0}. The FFmpeg found on this computer is another version.</value>
+  </data>
+  <data name="FFmpegFoundOnThisComputer" xml:space="preserve">
+    <value>Found on this computer:</value>
+  </data>
+  <data name="FFmpegFoundIn2" xml:space="preserve">
+    <value>FFmpeg {0} in {1}</value>
+  </data>
+  <data name="FFmpegInstallHint2" xml:space="preserve">
+    <value>Install FFmpeg downloads FFmpeg {0} (about 100 MB) from GitHub and puts it in {1}, where every AtcSoft app on this computer finds it.</value>
+  </data>
+  <data name="FFmpegChooseFolder1" xml:space="preserve">
+    <value>Or choose a folder that holds FFmpeg {0}:</value>
+  </data>
+  <data name="FFmpegFolder" xml:space="preserve">
+    <value>FFmpeg folder</value>
+  </data>
+  <data name="FFmpegInstall" xml:space="preserve">
+    <value>Install FFmpeg</value>
+  </data>
+  <data name="FFmpegUseFolder" xml:space="preserve">
+    <value>Use this folder</value>
+  </data>
+  <data name="FFmpegDownloadPage" xml:space="preserve">
+    <value>Download page</value>
+  </data>
+  <data name="FFmpegDownloading2" xml:space="preserve">
+    <value>Downloading: {0} of {1} MB</value>
+  </data>
+  <data name="FFmpegVerifying" xml:space="preserve">
+    <value>Checking the download</value>
+  </data>
+  <data name="FFmpegExtracting" xml:space="preserve">
+    <value>Unpacking</value>
+  </data>
+  <data name="FFmpegInstallFailed1" xml:space="preserve">
+    <value>FFmpeg could not be installed. {0}</value>
+  </data>
+  <data name="FFmpegInstallCancelled" xml:space="preserve">
+    <value>The install was cancelled.</value>
+  </data>
+  <data name="FFmpegFolderNotReady1" xml:space="preserve">
+    <value>This folder does not hold FFmpeg {0}.</value>
+  </data>
 </root>

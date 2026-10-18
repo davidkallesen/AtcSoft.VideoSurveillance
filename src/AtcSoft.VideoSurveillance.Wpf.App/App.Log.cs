@@ -13,6 +13,9 @@ public partial class App
     [LoggerMessage(Level = LogLevel.Information, Message = "App starting")]
     private partial void LogAppStarting();
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "FFmpeg is not ready, the set-up dialog is shown: {Description}")]
+    private partial void LogFFmpegNotReady(string description);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "The server at '{Configured}' redirects to '{Resolved}'; the client uses the redirected address")]
     private partial void LogServerAddressRedirected(string configured, string resolved);
 

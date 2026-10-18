@@ -2,9 +2,11 @@
 // ReSharper disable SeparateLocalFunctionsWithJumpStatement
 // The data folder is read from the environment and the command line here:
 // logging is set up before the host, and its configuration, exist.
+// --install-ffmpeg is taken out first: the host would read it as a configuration key.
+var installFFmpeg = ServerFFmpegStartup.TakeInstallArgument(args, out var hostArgs);
 var earlyConfiguration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
-    .AddCommandLine(args)
+    .AddCommandLine(hostArgs)
     .Build();
 var advancedSettings = LoadAdvancedSettingsForLogging(
     new ServerDataPaths(earlyConfiguration[ServerDataPaths.ConfigurationKey]).SettingsPath);
@@ -47,7 +49,7 @@ Log.Logger = loggerConfig.CreateLogger();
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+    var builder = WebApplication.CreateBuilder(hostArgs);
 
     builder.Host.UseSerilog();
 
@@ -103,7 +105,25 @@ try
     // Initialize VideoEngine (FFmpeg in-process) and register services.
     // DecoderThreads=1: headless server uses single-threaded decoding per camera
     // to avoid thread_count=0 (auto) hanging in avcodec_open2 with certain codecs.
-    VideoEngineBootstrap.Initialize(new VideoEngineConfig { DecoderThreads = 1 });
+    // Without the FFmpeg the engine needs the server says what is needed and stops, unless
+    // it was started with --install-ffmpeg.
+    using var ffmpegLog = new Serilog.Extensions.Logging.SerilogLoggerFactory(Log.Logger);
+    using var ffmpegHttp = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
+    var ffmpegFolder = await ServerFFmpegStartup
+        .EnsureReadyAsync(
+            FFmpegRuntime.Check(),
+            installFFmpeg,
+            (progress, cancellationToken) => FFmpegInstaller.InstallAsync(ffmpegHttp, progress, cancellationToken),
+            ffmpegLog.CreateLogger("AtcSoft.VideoSurveillance.Api.FFmpeg"),
+            CancellationToken.None)
+        .ConfigureAwait(false);
+    if (ffmpegFolder is null)
+    {
+        Environment.ExitCode = 1;
+        return;
+    }
+
+    VideoEngineBootstrap.Initialize(new VideoEngineConfig { DecoderThreads = 1, FFmpegPath = ffmpegFolder });
     builder.Services.AddSingleton<IVideoPlayerFactory>(sp =>
         new VideoPlayerFactory(sp.GetRequiredService<ILoggerFactory>()));
     builder.Services.AddSingleton<IMediaPipelineFactory, VideoEngineMediaPipelineFactory>();

@@ -203,7 +203,25 @@ public partial class App
 
         // Initialize video engine (10%)
         RenderSplashMessage(Translations.InitializingVideoEngine, 10);
-        VideoEngineBootstrap.Initialize();
+        var ffmpeg = FFmpegRuntime.Check();
+        var ffmpegFolder = ffmpeg.Folder;
+        if (ffmpeg.Status != FFmpegStatus.Ready)
+        {
+            // The FFmpeg the engine needs is not there: offer to install it, or a folder.
+            LogFFmpegNotReady(ffmpeg.Describe());
+            splashScreen.Hide();
+            ffmpegFolder = FFmpegSetup.ShowDialog(ffmpeg);
+            if (ffmpegFolder is null)
+            {
+                splashScreen.Close();
+                Shutdown();
+                return;
+            }
+
+            splashScreen.Show();
+        }
+
+        VideoEngineBootstrap.Initialize(new VideoEngineConfig { FFmpegPath = ffmpegFolder });
 
         // Start host (20%)
         RenderSplashMessage(Translations.StartingServices, 20);

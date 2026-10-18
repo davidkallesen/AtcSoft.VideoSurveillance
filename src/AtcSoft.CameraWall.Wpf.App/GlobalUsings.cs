@@ -31,6 +31,7 @@ global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Resources;
 global using AtcSoft.VideoSurveillance.Wpf.Core;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Diagnostics;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Events;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Helpers;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Models;

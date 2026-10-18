@@ -7,6 +7,7 @@ global using System.Text.Json;
 global using System.Text.Json.Nodes;
 
 global using Atc.Hosting;
+global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Devices;
 global using AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Layouts;

@@ -18,7 +18,9 @@ internal sealed class CameraWallRun : IDisposable
 
     private readonly LiveTestCamera? liveCamera;
 
-    public CameraWallRun()
+    /// <param name="environment">More environment variables for the app, such as a limited FFmpeg search.</param>
+    public CameraWallRun(
+        IReadOnlyDictionary<string, string>? environment = null)
     {
         DataFolder = E2ESettings.NewFolder("camera-wall");
         LogFolder = Path.Combine(DataFolder, "logs");
@@ -35,7 +37,7 @@ internal sealed class CameraWallRun : IDisposable
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["ATCSOFT_DATA_PATH"] = DataFolder,
-            },
+            }.With(environment),
             Path.Combine(E2ESettings.RunFolder, "camera-wall-output.log"));
         App = new DesktopApp(process, Path.Combine(E2ESettings.RunFolder, "camera-wall-ui"));
     }

@@ -264,7 +264,25 @@ public partial class CameraWallApp
 
         // Initialize camera engine (50%)
         AppHelper.RenderLoadingInitializeMessage(logger, Translations.InitializeCameraEngine, 50);
-        CameraWallEngine.Initialize();
+        var ffmpeg = FFmpegRuntime.Check();
+        var ffmpegFolder = ffmpeg.Folder;
+        if (ffmpeg.Status != FFmpegStatus.Ready)
+        {
+            // The FFmpeg the engine needs is not there: offer to install it, or a folder.
+            LogFFmpegNotReady(ffmpeg.Describe());
+            splashScreen.Hide();
+            ffmpegFolder = FFmpegSetup.ShowDialog(ffmpeg);
+            if (ffmpegFolder is null)
+            {
+                splashScreen.Close();
+                Shutdown();
+                return;
+            }
+
+            splashScreen.Show();
+        }
+
+        CameraWallEngine.Initialize(ffmpegFolder);
 
         // Load main window (80%)
         AppHelper.RenderLoadingInitializeMessage(logger, Translations.InitializeLoadMainWindow, 80);

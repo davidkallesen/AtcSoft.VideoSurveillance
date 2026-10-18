@@ -105,6 +105,48 @@ public sealed class FFmpegRuntimeTests : IDisposable
             FFmpegRuntime.ReleaseVersion,
             "bin"));
 
+    [Fact]
+    public void The_Usual_Folders_Are_Looked_In_After_The_Configured_One()
+    {
+        var candidates = FFmpegRuntime.Candidates(@"D:\Configured", name => name == "PATH" ? @"D:\OnPath" : null);
+
+        candidates[0].Should().Be(@"D:\Configured");
+        candidates.Should().Contain(FFmpegRuntime.ManagedFolder).And.Contain(@"D:\OnPath");
+    }
+
+    [Fact]
+    public void Only_The_Named_Folders_Are_Looked_In_When_The_Search_Is_Limited()
+    {
+        // Lets the end-to-end tests show the set-up dialog on a machine that has FFmpeg.
+        var environment = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [FFmpegRuntime.SearchEnvironmentVariable] = "explicit",
+            [FFmpegRuntime.PathEnvironmentVariable] = @"D:\FromEnvironment",
+            ["PATH"] = @"D:\OnPath",
+        };
+
+        var candidates = FFmpegRuntime.Candidates(@"D:\Configured", environment.GetValueOrDefault);
+
+        candidates.Should().Equal(@"D:\Configured", @"D:\FromEnvironment");
+    }
+
+    [Fact]
+    public void A_Folder_The_User_Chose_Is_Remembered_For_Every_App()
+    {
+        var file = Path.Combine(directory, "notes", "folder.txt");
+        var chosen = Install("chosen", FFmpegRuntime.Expected);
+
+        FFmpegRuntime.RememberFolder(chosen, file).Should().BeTrue();
+
+        FFmpegRuntime.ReadRememberedFolder(file).Should().Be(chosen);
+    }
+
+    [Fact]
+    public void No_Folder_Is_Remembered_When_None_Was_Chosen()
+    {
+        FFmpegRuntime.ReadRememberedFolder(Path.Combine(directory, "missing.txt")).Should().BeNull();
+    }
+
     private static FFmpegLibraryVersions Older()
         => FFmpegRuntime.Expected with
         {

@@ -2601,4 +2601,55 @@ Vorschaubild:
   <data name="ApiKey" xml:space="preserve">
     <value>API-Schlüssel</value>
   </data>
+  <data name="FFmpegSetup" xml:space="preserve">
+    <value>FFmpeg einrichten</value>
+  </data>
+  <data name="FFmpegNotInstalled1" xml:space="preserve">
+    <value>Die Video-Engine benötigt FFmpeg {0}, das auf diesem Computer nicht installiert ist.</value>
+  </data>
+  <data name="FFmpegOtherVersion1" xml:space="preserve">
+    <value>Die Video-Engine benötigt FFmpeg {0}. Das auf diesem Computer gefundene FFmpeg ist eine andere Version.</value>
+  </data>
+  <data name="FFmpegFoundOnThisComputer" xml:space="preserve">
+    <value>Auf diesem Computer gefunden:</value>
+  </data>
+  <data name="FFmpegFoundIn2" xml:space="preserve">
+    <value>FFmpeg {0} in {1}</value>
+  </data>
+  <data name="FFmpegInstallHint2" xml:space="preserve">
+    <value>„FFmpeg installieren“ lädt FFmpeg {0} (etwa 100 MB) von GitHub herunter und legt es in {1} ab, wo jede AtcSoft-Anwendung auf diesem Computer es findet.</value>
+  </data>
+  <data name="FFmpegChooseFolder1" xml:space="preserve">
+    <value>Oder wählen Sie einen Ordner, der FFmpeg {0} enthält:</value>
+  </data>
+  <data name="FFmpegFolder" xml:space="preserve">
+    <value>FFmpeg-Ordner</value>
+  </data>
+  <data name="FFmpegInstall" xml:space="preserve">
+    <value>FFmpeg installieren</value>
+  </data>
+  <data name="FFmpegUseFolder" xml:space="preserve">
+    <value>Diesen Ordner verwenden</value>
+  </data>
+  <data name="FFmpegDownloadPage" xml:space="preserve">
+    <value>Downloadseite</value>
+  </data>
+  <data name="FFmpegDownloading2" xml:space="preserve">
+    <value>Wird heruntergeladen: {0} von {1} MB</value>
+  </data>
+  <data name="FFmpegVerifying" xml:space="preserve">
+    <value>Download wird geprüft</value>
+  </data>
+  <data name="FFmpegExtracting" xml:space="preserve">
+    <value>Wird entpackt</value>
+  </data>
+  <data name="FFmpegInstallFailed1" xml:space="preserve">
+    <value>FFmpeg konnte nicht installiert werden. {0}</value>
+  </data>
+  <data name="FFmpegInstallCancelled" xml:space="preserve">
+    <value>Die Installation wurde abgebrochen.</value>
+  </data>
+  <data name="FFmpegFolderNotReady1" xml:space="preserve">
+    <value>Dieser Ordner enthält nicht FFmpeg {0}.</value>
+  </data>
 </root>

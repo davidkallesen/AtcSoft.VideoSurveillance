@@ -17,6 +17,9 @@ public partial class CameraWallApp
     [LoggerMessage(Level = LogLevel.Information, Message = "App started")]
     private partial void LogAppStarted();
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "FFmpeg is not ready, the set-up dialog is shown: {Description}")]
+    private partial void LogFFmpegNotReady(string description);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "App closing")]
     private partial void LogAppClosing();
 

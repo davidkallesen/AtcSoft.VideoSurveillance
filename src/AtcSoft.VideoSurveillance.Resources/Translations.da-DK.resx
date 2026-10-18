@@ -2601,4 +2601,55 @@ Miniature:
   <data name="ApiKey" xml:space="preserve">
     <value>API-nøgle</value>
   </data>
+  <data name="FFmpegSetup" xml:space="preserve">
+    <value>Opsætning af FFmpeg</value>
+  </data>
+  <data name="FFmpegNotInstalled1" xml:space="preserve">
+    <value>Videomotoren skal bruge FFmpeg {0}, som ikke er installeret på denne computer.</value>
+  </data>
+  <data name="FFmpegOtherVersion1" xml:space="preserve">
+    <value>Videomotoren skal bruge FFmpeg {0}. Den FFmpeg, der blev fundet på denne computer, er en anden version.</value>
+  </data>
+  <data name="FFmpegFoundOnThisComputer" xml:space="preserve">
+    <value>Fundet på denne computer:</value>
+  </data>
+  <data name="FFmpegFoundIn2" xml:space="preserve">
+    <value>FFmpeg {0} i {1}</value>
+  </data>
+  <data name="FFmpegInstallHint2" xml:space="preserve">
+    <value>Installér FFmpeg henter FFmpeg {0} (cirka 100 MB) fra GitHub og lægger den i {1}, hvor alle AtcSoft-programmer på denne computer finder den.</value>
+  </data>
+  <data name="FFmpegChooseFolder1" xml:space="preserve">
+    <value>Eller vælg en mappe, der indeholder FFmpeg {0}:</value>
+  </data>
+  <data name="FFmpegFolder" xml:space="preserve">
+    <value>FFmpeg-mappe</value>
+  </data>
+  <data name="FFmpegInstall" xml:space="preserve">
+    <value>Installér FFmpeg</value>
+  </data>
+  <data name="FFmpegUseFolder" xml:space="preserve">
+    <value>Brug denne mappe</value>
+  </data>
+  <data name="FFmpegDownloadPage" xml:space="preserve">
+    <value>Downloadside</value>
+  </data>
+  <data name="FFmpegDownloading2" xml:space="preserve">
+    <value>Henter: {0} af {1} MB</value>
+  </data>
+  <data name="FFmpegVerifying" xml:space="preserve">
+    <value>Kontrollerer downloaden</value>
+  </data>
+  <data name="FFmpegExtracting" xml:space="preserve">
+    <value>Pakker ud</value>
+  </data>
+  <data name="FFmpegInstallFailed1" xml:space="preserve">
+    <value>FFmpeg kunne ikke installeres. {0}</value>
+  </data>
+  <data name="FFmpegInstallCancelled" xml:space="preserve">
+    <value>Installationen blev annulleret.</value>
+  </data>
+  <data name="FFmpegFolderNotReady1" xml:space="preserve">
+    <value>Denne mappe indeholder ikke FFmpeg {0}.</value>
+  </data>
 </root>

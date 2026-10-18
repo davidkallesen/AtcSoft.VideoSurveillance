@@ -22,6 +22,12 @@ public static class VideoEngineBootstrap
     public static string? FFmpegVersion { get; private set; }
 
     /// <summary>
+    /// Gets the folder the FFmpeg libraries were loaded from, or <c>null</c> if not yet initialized.
+    /// The FFmpeg command-line tool of the same version is looked for there.
+    /// </summary>
+    public static string? FFmpegFolder { get; private set; }
+
+    /// <summary>
     /// Gets the current engine configuration, or <c>null</c> if not yet initialized.
     /// </summary>
     public static VideoEngineConfig? Config => currentConfig;
@@ -63,6 +69,7 @@ public static class VideoEngineBootstrap
             }
 
             FFmpegVersion = FFmpegLoader.Initialize(check.Folder, config.FFmpegLogLevel);
+            FFmpegFolder = check.Folder;
 
             currentConfig = config;
             isInitialized = true;

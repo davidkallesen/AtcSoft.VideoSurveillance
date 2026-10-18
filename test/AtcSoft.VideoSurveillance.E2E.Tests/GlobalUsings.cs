@@ -8,6 +8,7 @@ global using System.Net.Http.Json;
 global using System.Net.Sockets;
 global using System.Text;
 global using System.Text.Json;
+global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.E2E.Infrastructure;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers;
