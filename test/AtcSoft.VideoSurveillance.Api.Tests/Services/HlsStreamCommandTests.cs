@@ -34,6 +34,20 @@ public sealed class HlsStreamCommandTests
         arguments.Should().Contain("-c:v copy");
     }
 
+    [Theory]
+    [InlineData(CoreCameraProtocol.Https, true)]
+    [InlineData(CoreCameraProtocol.Http, false)]
+    [InlineData(CoreCameraProtocol.Rtsp, false)]
+    public void Only_An_Https_Camera_Is_Opened_Without_Verifying_Its_Certificate(
+        CoreCameraProtocol protocol,
+        bool expected)
+    {
+        // FFmpeg 9 verifies by default; a camera's certificate is usually self-signed.
+        var arguments = HlsStreamCommand.BuildArguments(CreateCamera(protocol, 443), Playlist);
+
+        arguments.Contains("-tls_verify 0", StringComparison.Ordinal).Should().Be(expected);
+    }
+
     [Fact]
     public void FFmpeg_Is_Told_Not_To_Print_Its_Progress()
     {

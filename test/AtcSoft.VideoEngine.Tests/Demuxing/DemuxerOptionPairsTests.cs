@@ -19,6 +19,13 @@ public class DemuxerOptionPairsTests
     }
 
     [Fact]
+    public void Auto_Network_Does_Not_Verify_The_Certificate_Unless_Asked()
+    {
+        ToDict(Demuxer.BuildAvOptionPairs(new StreamOptions(), isFFmpegV8: true))["tls_verify"].Should().Be("0");
+        ToDict(Demuxer.BuildAvOptionPairs(new StreamOptions { VerifyTlsCertificate = true }, isFFmpegV8: true))["tls_verify"].Should().Be("1");
+    }
+
+    [Fact]
     public void Auto_Network_FFmpegV7_Uses_Stimeout()
     {
         var options = new StreamOptions { UseLowLatencyMode = false };

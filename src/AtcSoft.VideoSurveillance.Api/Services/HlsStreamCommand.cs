@@ -85,6 +85,14 @@ public static class HlsStreamCommand
             arguments.Add($"-rtsp_transport {camera.Stream.RtspTransport ?? "tcp"}");
         }
 
+        // FFmpeg 9 verifies a server's certificate by default, and most cameras
+        // that offer HTTPS have a self-signed one: the engine does not verify
+        // either (StreamOptions.VerifyTlsCertificate).
+        if (camera.Connection.Protocol == CameraProtocol.Https)
+        {
+            arguments.Add("-tls_verify 0");
+        }
+
         // -c:v copy: pass the camera's native H.264/H.265 video stream
         // straight through to HLS without re-encoding. Modern IP cameras
         // already produce HLS-compatible video, so transcoding is pure CPU

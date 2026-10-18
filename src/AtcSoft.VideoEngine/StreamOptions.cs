@@ -12,6 +12,13 @@ public sealed class StreamOptions
     public bool UseLowLatencyMode { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether an HTTPS or RTSPS source's certificate is verified
+    /// (FFmpeg's <c>tls_verify</c>). Off by default: FFmpeg 9 turned verification on, and most
+    /// cameras that offer TLS use a self-signed certificate.
+    /// </summary>
+    public bool VerifyTlsCertificate { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum allowed latency in milliseconds.
     /// The player will speed up to catch up if latency exceeds this value.
     /// A value of 0 disables latency management.

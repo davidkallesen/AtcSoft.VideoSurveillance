@@ -332,6 +332,7 @@ internal sealed unsafe partial class Demuxer : IDisposable
                 pairs.Add(new("probesize", "50000000"));
                 pairs.Add(new("analyzeduration", "10000000"));
                 pairs.Add(new(isFFmpegV8 ? "timeout" : "stimeout", timeoutUs));
+                pairs.Add(new("tls_verify", options.VerifyTlsCertificate ? "1" : "0"));
 
                 if (options.UseLowLatencyMode)
                 {
