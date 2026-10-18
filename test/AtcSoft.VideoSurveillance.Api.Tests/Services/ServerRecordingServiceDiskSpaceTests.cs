@@ -87,6 +87,19 @@ public sealed class ServerRecordingServiceDiskSpaceTests : IDisposable
         sut.IsRecording(camera.Id).Should().BeFalse();
     }
 
+    [Fact]
+    public void A_Recording_Whose_Writes_Fail_Is_Stopped_By_The_Reaper()
+    {
+        using var sut = CreateSut();
+        sut.StartRecording(camera, pipeline).Should().BeTrue();
+
+        pipeline.RecordingError.Returns("Writing 'front.mkv' failed: No space left on device");
+        pipeline.IsRecordingActive.Returns(false);
+
+        sut.ReapInactiveSessions().Should().Be(1);
+        sut.IsRecording(camera.Id).Should().BeFalse();
+    }
+
     private ServerRecordingService CreateSut()
         => new(
             settingsService,

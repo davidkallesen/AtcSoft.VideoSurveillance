@@ -43,6 +43,12 @@ public interface IVideoPlayer : IDisposable
     bool IsRecording { get; }
 
     /// <summary>
+    /// Gets why the recording can take no more packets (a full disk, a broken output), or
+    /// <see langword="null"/> while it records.
+    /// </summary>
+    string? RecordingError => null;
+
+    /// <summary>
     /// Gets the GPU accelerator used by this player, or <c>null</c> if CPU-only.
     /// </summary>
     IGpuAccelerator? GpuAccelerator { get; }

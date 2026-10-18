@@ -545,6 +545,15 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
                 continue;
             }
 
+            if (pipeline.RecordingError is { Length: > 0 } writeError)
+            {
+                // The recorder can write nothing more: a full disk, a share that is gone.
+                LogRecordingWriteFailed(session.CameraName, writeError);
+                StopRecording(cameraId);
+                reaped++;
+                continue;
+            }
+
             if (!pipeline.IsRecordingActive)
             {
                 LogReapingInactiveSession(session.CameraName, cameraId, "pipeline IsRecordingActive=false");

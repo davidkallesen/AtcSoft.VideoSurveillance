@@ -36,6 +36,8 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
     /// <inheritdoc />
     public bool IsRecordingActive => player.IsRecording;
 
+    public string? RecordingError => player.RecordingError;
+
     /// <inheritdoc />
     public double CurrentFps => player.CurrentFps;
 

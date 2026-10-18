@@ -62,6 +62,9 @@ public partial class RecordingService
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below the space kept free mid-recording: stopping {Count} recording(s) on that volume")]
     private partial void LogDiskSpaceGuardStoppingRecordings(int count);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Recording of camera '{CameraName}' stopped: nothing more can be written ({Error})")]
+    private partial void LogRecordingWriteFailed(string cameraName, string error);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Not enough free space where camera '{CameraName}' records, or it cannot be read: the recording is not started")]
     private partial void LogDiskSpaceGateFailed(string cameraName);
 }

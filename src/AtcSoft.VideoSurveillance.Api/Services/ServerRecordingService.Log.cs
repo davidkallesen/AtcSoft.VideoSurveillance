@@ -38,6 +38,9 @@ public sealed partial class ServerRecordingService
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below the space kept free mid-recording: stopping {Count} recording(s)")]
     private partial void LogDiskSpaceGuardStoppingRecordings(int count);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Recording of camera '{CameraName}' stopped: nothing more can be written ({Error})")]
+    private partial void LogRecordingWriteFailed(string cameraName, string error);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk space still below threshold after reclaim — recording aborted for camera '{CameraName}'")]
     private partial void LogDiskSpaceGateFailed(string cameraName);
 

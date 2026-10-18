@@ -88,7 +88,13 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         ? DateTime.MinValue
         : new DateTime(Interlocked.Read(ref lastPacketTicks), DateTimeKind.Utc);
 
-    public bool IsRecording => remuxer?.IsOpen ?? false;
+    public bool IsRecording => remuxer is { IsOpen: true, WriteError: null };
+
+    /// <summary>
+    /// Gets why the recording can take no more packets (a full disk, a broken output), or
+    /// <see langword="null"/> while it records. <see cref="IsRecording"/> is false then.
+    /// </summary>
+    public string? RecordingError => remuxer?.WriteError;
 
     public bool IsStreaming => liveRemuxer?.IsOpen ?? false;
 

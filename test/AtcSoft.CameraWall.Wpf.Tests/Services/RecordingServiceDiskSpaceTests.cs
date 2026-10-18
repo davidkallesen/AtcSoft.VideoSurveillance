@@ -116,6 +116,23 @@ public sealed class RecordingServiceDiskSpaceTests : IDisposable
         sut.IsRecording(garden.Id).Should().BeTrue("a share that hiccups must not end a recording; a failed write does");
     }
 
+    [Fact]
+    public void A_Recording_Whose_Writes_Fail_Is_Stopped()
+    {
+        // A full disk the guard did not see coming (another program filled it): the recorder
+        // can write nothing more, so the recording must not go on claiming to run.
+        var door = Camera("Door");
+        var pipeline = Pipeline();
+        using var sut = CreateSut();
+        sut.StartRecording(door, pipeline).Should().BeTrue();
+
+        pipeline.RecordingError.Returns("Writing 'door.mkv' failed: No space left on device");
+        pipeline.IsRecordingActive.Returns(false);
+        sut.EnforceDiskSpaceGuard();
+
+        sut.IsRecording(door.Id).Should().BeFalse();
+    }
+
     private RecordingService CreateSut()
     {
         var settings = Substitute.For<IApplicationSettingsService>();

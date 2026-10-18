@@ -69,6 +69,12 @@ public interface IMediaPipeline : IDisposable
     bool IsRecordingActive { get; }
 
     /// <summary>
+    /// Gets why the recording can take no more data (a full disk, a broken output), or
+    /// <see langword="null"/> while it records.
+    /// </summary>
+    string? RecordingError => null;
+
+    /// <summary>
     /// Gets a value indicating whether the pipeline is writing a live
     /// stream for browsers.
     /// </summary>

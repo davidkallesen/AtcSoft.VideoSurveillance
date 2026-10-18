@@ -468,6 +468,11 @@ public partial class RecordingService : IRecordingService, IDisposable
     /// <inheritdoc/>
     public bool EnforceDiskSpaceGuard()
     {
+        // A recording whose writes fail (a disk another program filled, a share that is gone)
+        // stops here: the recorder drops what it cannot write, so it must not go on claiming
+        // to record.
+        var failed = StopRecordingsThatCannotWrite();
+
         var result = ReclaimDiskSpace();
 
         // Only the recordings on a volume that is still short stop; one whose space cannot be
@@ -479,7 +484,7 @@ public partial class RecordingService : IRecordingService, IDisposable
             .ToList();
         if (shortSessions.Count == 0)
         {
-            return false;
+            return failed;
         }
 
         LogDiskSpaceGuardStoppingRecordings(shortSessions.Count);
@@ -489,6 +494,22 @@ public partial class RecordingService : IRecordingService, IDisposable
         }
 
         return true;
+    }
+
+    private bool StopRecordingsThatCannotWrite()
+    {
+        var stopped = false;
+        foreach (var (cameraId, pipeline) in pipelines.ToList())
+        {
+            if (pipeline.RecordingError is { Length: > 0 } error && sessions.TryGetValue(cameraId, out var session))
+            {
+                LogRecordingWriteFailed(session.CameraName, error);
+                StopRecording(cameraId);
+                stopped = true;
+            }
+        }
+
+        return stopped;
     }
 
     /// <inheritdoc/>

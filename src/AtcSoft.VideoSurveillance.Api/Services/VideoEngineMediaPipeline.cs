@@ -32,6 +32,8 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
     /// <inheritdoc />
     public bool IsRecordingActive => player.IsRecording;
 
+    public string? RecordingError => player.RecordingError;
+
     /// <summary>
     /// Gets or sets a value indicating whether the camera is recorded as
     /// H.264 whatever it sends. Read when the pipeline is opened.

@@ -47,9 +47,18 @@ internal sealed unsafe class Remuxer : IDisposable
 
     private volatile bool stopWriter;
 
+    // Why the file can take no more packets (a full disk, a broken output); null while it can.
+    private volatile string? writeError;
+
     private Thread? writerThread;
 
     public bool IsOpen => outputCtx is not null;
+
+    /// <summary>
+    /// Gets why the current file can take no more packets (a full disk, a broken output), or
+    /// <see langword="null"/> while it can. Packets after such an error are dropped.
+    /// </summary>
+    public string? WriteError => writeError;
 
     public void Open(
         string outputPath,
@@ -126,6 +135,7 @@ internal sealed unsafe class Remuxer : IDisposable
     {
         try
         {
+            writeError = null;
             OpenOutputLocked(outputPath, codecpar, rotationDegrees, audioCodecpar, live);
             this.outputPath = outputPath;
         }
@@ -547,8 +557,7 @@ internal sealed unsafe class Remuxer : IDisposable
 
             if (outputCtx is not null)
             {
-                var pkt = (AVPacket*)ptr;
-                _ = av_interleaved_write_frame(outputCtx, pkt);
+                WriteLocked((AVPacket*)ptr);
             }
 
             FreeQueuedPacket(ptr);
@@ -564,11 +573,27 @@ internal sealed unsafe class Remuxer : IDisposable
         {
             if (outputCtx is not null)
             {
-                var pkt = (AVPacket*)ptr;
-                _ = av_interleaved_write_frame(outputCtx, pkt);
+                WriteLocked((AVPacket*)ptr);
             }
 
             FreeQueuedPacket(ptr);
+        }
+    }
+
+    // Must be called while holding syncLock with an open output. After a write that ends the
+    // file, the rest is dropped: the recording reports the error instead of claiming to run.
+    private void WriteLocked(AVPacket* pkt)
+    {
+        if (writeError is not null)
+        {
+            return;
+        }
+
+        var ret = av_interleaved_write_frame(outputCtx, pkt);
+        var ioError = outputCtx->pb is null ? 0 : outputCtx->pb->error;
+        if (WriteErrorClassifier.IsFatal(ret, ioError))
+        {
+            writeError = new FFmpegException(ret < 0 ? ret : ioError, $"Writing '{outputPath}' failed").Message;
         }
     }
 
