@@ -50,6 +50,22 @@ public sealed class ServerRecordingServiceThumbnailTests : IDisposable
             RecordingPathHelper.BuildThumbnailPath(videoPath, root, new RecordingLayoutOptions(UseDailySubfolders: true, SeparateThumbnailFolder: true)));
     }
 
+    // The server keeps every recording below its own folder, the one it lists, serves (behind
+    // the media token), cleans and reorganises. A camera imported from CameraWall with a folder
+    // of its own recorded where the server could not see it.
+    [Fact]
+    public void A_Cameras_Own_Recording_Folder_Is_Not_Used_By_The_Server()
+    {
+        camera.Overrides.Recording.RecordingPath = Path.Combine(Path.GetTempPath(), "atcsoft-elsewhere-" + Guid.NewGuid().ToString("N"));
+        using var sut = CreateSut();
+
+        sut.StartRecording(camera, pipeline).Should().BeTrue();
+
+        var videoPath = sut.GetSession(camera.Id)!.CurrentFilePath;
+        videoPath.Should().StartWith(root + Path.DirectorySeparatorChar);
+        Directory.Exists(camera.Overrides.Recording.RecordingPath).Should().BeFalse();
+    }
+
     [Fact]
     public void The_Thumbnail_Follows_The_Layout_And_The_Tile_Count()
     {

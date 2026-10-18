@@ -39,7 +39,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 |---|---|:--:|---|
 | 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Phases 0–9 and 7b done, security S1–S6 done; waits for v3 on nuget.org. Minor items in that file |
 | 🔄 Video rotation | [archive/roadmap-video-rotation.md](archive/roadmap-video-rotation.md) | 🟨 | Hands-on checks; the 180° report |
-| 📁 Recording storage layout | [archive/roadmap-recording-storage.md](archive/roadmap-recording-storage.md) | 🟨 | Hands-on checks; the server and cameras with their own recording path |
+| 📁 Recording storage layout | [archive/roadmap-recording-storage.md](archive/roadmap-recording-storage.md) | 🟨 | Hands-on checks |
 | 🔌 Connection-type icon | [archive/roadmap-cameras-connection-icons.md](archive/roadmap-cameras-connection-icons.md) | 🟨 | Hands-on checks; phase 8 (remove the legacy USB pills) |
 | 🎥 USB cameras | [archive/roadmap-usb-cameras.md](archive/roadmap-usb-cameras.md) | ✅ | Hands-on checks; a few small gaps; ⏸️ Linux / macOS, UVC property pages |
 | 🖥️ WPF API client | [archive/roadmap-wpf-api-client.md](archive/roadmap-wpf-api-client.md) | ✅ | Phases 1–9 done; phase 10 is in the backlog below |
@@ -70,7 +70,6 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 
 | Item | Where it stands | Test |
 |---|---|---|
-| The server and cameras with their own recording path | CameraWall reads every camera's folder since 2026-10-18 (`RecordingRoots`). The API cannot set such a path; a camera imported from CameraWall with one still records there, where the server neither lists, serves nor cleans it. Decide: ignore the path on the server (one root it serves and protects), or serve every root | Unit, host |
 | Record into each folder layout end to end without a camera | The host tests record with the FFmpeg test stream, but not into each layout | Host |
 | TLS verification as an explicit per-camera setting (FFmpeg 9 plan, phase 2) | No `tls_verify` anywhere; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
 | FFmpeg 8.1.3 (FFmpeg 9 plan, decision 4) | Still 8.1.2 in the pipeline and README; check that a shared build exists | Engine tests, E2E with the live test camera |
@@ -145,6 +144,7 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | CameraWall browses, cleans and reorganises cameras' own recording folders (2026-10-18) | `RecordingRoots` |
 | The WPF client set to a server's `http://` address uses the `https://` address the server redirects to, so it keeps its sign-in (2026-10-18) | `ServerAddress` |
 | A failed save of the settings or the cameras is logged (2026-10-18) | `CameraStorageService`, `ApplicationSettingsService` |
+| The server records every camera below its own recording folder; a camera's own folder (from a CameraWall import) is not used and is logged (2026-10-18) | [`docs/server.md`](../docs/server.md) |
 
 ---
 

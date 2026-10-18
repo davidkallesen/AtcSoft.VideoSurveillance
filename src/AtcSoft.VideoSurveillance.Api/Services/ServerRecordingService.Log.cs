@@ -52,4 +52,7 @@ public sealed partial class ServerRecordingService
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below threshold mid-recording — stopping {Count} active recording(s) to prevent disk exhaustion")]
     private partial void LogDiskSpaceGuardStoppingAllRecordings(int count);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Camera '{CameraName}' has a recording folder of its own, '{OwnFolder}'; the server records every camera below '{RecordingPath}', which it lists, serves and cleans")]
+    private partial void LogOwnRecordingFolderNotUsed(string cameraName, string ownFolder, string recordingPath);
 }

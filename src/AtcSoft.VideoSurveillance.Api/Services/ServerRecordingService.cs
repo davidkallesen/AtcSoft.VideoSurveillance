@@ -23,6 +23,9 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     // when they stop.
     private readonly ConcurrentDictionary<Guid, byte> borrowedPipelines = new();
 
+    // Cameras whose own recording folder has been reported as not used (once each).
+    private readonly ConcurrentDictionary<Guid, byte> ownFolderReported = new();
+
     // When each camera's last motion recording stopped, for the cooldown.
     private readonly ConcurrentDictionary<Guid, DateTimeOffset> motionRecordingStops = new();
     private readonly ConcurrentDictionary<Guid, RecordingSession> sessions = new();
@@ -682,10 +685,21 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         }
     }
 
+    /// <summary>
+    /// The server records every camera below its own recording folder: the one it lists, serves
+    /// (behind the media token), cleans and reorganises. A camera's own folder
+    /// (<c>Overrides.Recording.RecordingPath</c>, which the API cannot set; it comes with a camera
+    /// imported from CameraWall) is not used, so no recording ends up where the server cannot see it.
+    /// </summary>
     private string GetEffectiveRecordingPath(CameraConfiguration camera)
     {
-        var overridePath = camera.Overrides?.Recording.RecordingPath;
-        return !string.IsNullOrEmpty(overridePath) ? overridePath : settingsService.Recording.RecordingPath;
+        var ownFolder = camera.Overrides?.Recording.RecordingPath;
+        if (!string.IsNullOrEmpty(ownFolder) && ownFolderReported.TryAdd(camera.Id, 0))
+        {
+            LogOwnRecordingFolderNotUsed(camera.Display.DisplayName, ownFolder, settingsService.Recording.RecordingPath);
+        }
+
+        return settingsService.Recording.RecordingPath;
     }
 
     private string GetEffectiveRecordingFormat(CameraConfiguration camera)

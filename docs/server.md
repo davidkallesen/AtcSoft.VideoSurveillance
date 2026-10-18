@@ -181,7 +181,7 @@ The web client's pages read it with `EventStreamService` and the desktop client 
 | `inProgress` | `true` while it is still being recorded |
 | `id` | The same for a file every time it is listed |
 
-The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`, signed in, with an API key, or with the session's media token as `?media=` (a video player or an `<img>` cannot send a header). Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request.
+The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`, signed in, with an API key, or with the session's media token as `?media=` (a video player or an `<img>` cannot send a header). Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request. Every camera records below that folder: a recording folder of its own, which a camera imported from CameraWall can carry, is not used by the server (it logs a warning once per camera), so nothing is recorded where the server cannot list, serve or clean it.
 
 `DELETE /recordings?filePath={filePath}` deletes one finished recording, its thumbnail, and the day folder it leaves empty. `filePath` is the path the listing returned. The answers:
 
