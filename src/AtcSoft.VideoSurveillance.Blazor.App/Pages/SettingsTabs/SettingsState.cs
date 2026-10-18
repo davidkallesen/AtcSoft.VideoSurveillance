@@ -154,6 +154,8 @@ public sealed class SettingsState
 
     public int MinFreeSpaceMb { get; set; } = 2048;
 
+    public int MaxRecordingStorageGb { get; set; }
+
     public bool PlaybackShowFilename { get; set; } = true;
 
     public string PlaybackFilenameColor { get; set; } = "White";
@@ -277,6 +279,7 @@ public sealed class SettingsState
         SnapshotRetentionDays = settings.SnapshotRetentionDays;
         EnableDiskSpaceGuard = settings.EnableDiskSpaceGuard;
         MinFreeSpaceMb = settings.MinFreeSpaceMb > 0 ? settings.MinFreeSpaceMb : 2048;
+        MaxRecordingStorageGb = Math.Max(0, settings.MaxRecordingStorageGb);
         PlaybackShowFilename = settings.PlaybackShowFilename;
         PlaybackFilenameColor = ColorChoices.Normalize(settings.PlaybackFilenameColor, "White");
         PlaybackShowTimestamp = settings.PlaybackShowTimestamp;
@@ -350,6 +353,7 @@ public sealed class SettingsState
             SnapshotRetentionDays: SnapshotRetentionDays,
             EnableDiskSpaceGuard: EnableDiskSpaceGuard,
             MinFreeSpaceMb: MinFreeSpaceMb,
+            MaxRecordingStorageGb: MaxRecordingStorageGb,
             PlaybackShowFilename: PlaybackShowFilename,
             PlaybackFilenameColor: PlaybackFilenameColor,
             PlaybackShowTimestamp: PlaybackShowTimestamp,

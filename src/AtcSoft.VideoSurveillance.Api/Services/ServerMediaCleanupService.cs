@@ -17,17 +17,20 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
 
     private readonly IApplicationSettingsService settingsService;
     private readonly IRecordingService recordingService;
+    private readonly DiskSpaceGuard diskSpaceGuard;
 
     public ServerMediaCleanupService(
         ILogger<ServerMediaCleanupService> logger,
         ServerMediaCleanupServiceOptions options,
         IBackgroundServiceHealthService healthService,
         IApplicationSettingsService settingsService,
-        IRecordingService recordingService)
+        IRecordingService recordingService,
+        DiskSpaceGuard? diskSpaceGuard = null)
         : base(logger, options, healthService)
     {
         this.settingsService = settingsService;
         this.recordingService = recordingService;
+        this.diskSpaceGuard = diskSpaceGuard ?? new DiskSpaceGuard(FreeSpaceReader.Default);
 
         healthService.SetMaxStalenessInSeconds(
             ServiceName,
@@ -47,7 +50,7 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
 
         if (schedule == MediaCleanupSchedule.OnStartup)
         {
-            // Run-once mode: stop the loop so we don't spin a 4-hour timer
+            // Run-once mode: stop the loop so we don't spin an hourly timer
             // forever. Safe to call from within DoWorkAsync — StopAsync
             // observes the now-cancelled stopping token and returns.
             await StopAsync(stoppingToken).ConfigureAwait(false);
@@ -112,6 +115,25 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
             summary.ThumbnailsDeleted += run.DeletedThumbnails.Count;
             summary.BytesFreed += run.BytesFreed;
             ApplyErrors(run.Errors, summary);
+
+            // All recordings within the size limit, the oldest first.
+            if (settings.MaxRecordingStorageGb > 0)
+            {
+                var limited = diskSpaceGuard.EnforceSizeLimit(
+                    [recordingPath],
+                    settings.MaxRecordingStorageGb * 1024L * 1024L * 1024L,
+                    activePaths,
+                    RecordingExtensions);
+                foreach (var f in limited.DeletedFiles)
+                {
+                    LogDeletedFile(f);
+                }
+
+                summary.RecordingsDeleted += limited.DeletedFiles.Count;
+                summary.ThumbnailsDeleted += limited.DeletedThumbnails.Count;
+                summary.BytesFreed += limited.BytesFreed;
+                ApplyErrors(limited.Errors, summary);
+            }
 
             // Thumbnails whose recording was deleted outside the app.
             var orphans = MediaCleanupRunner.RemoveOrphanThumbnails(

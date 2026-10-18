@@ -29,7 +29,14 @@ public class MediaCleanupSettings
     /// </summary>
     public int MinFreeSpaceMb { get; set; } = 2048;
 
+    /// <summary>
+    /// Gets or sets the most space, in gigabytes, all recordings together may take; the oldest
+    /// go first when they take more. 0 (the default) is no limit: the age and the free space
+    /// kept decide alone.
+    /// </summary>
+    public int MaxRecordingStorageGb { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"MediaCleanupSettings {{ Schedule={Schedule}, RetentionDays={RecordingRetentionDays.ToString(CultureInfo.InvariantCulture)} }}";
+        => $"MediaCleanupSettings {{ Schedule={Schedule}, RetentionDays={RecordingRetentionDays.ToString(CultureInfo.InvariantCulture)}, MaxStorageGb={MaxRecordingStorageGb.ToString(CultureInfo.InvariantCulture)} }}";
 }

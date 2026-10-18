@@ -82,6 +82,7 @@ internal static class SettingsMappingExtensions
             SnapshotRetentionDays: recording.Cleanup.SnapshotRetentionDays,
             EnableDiskSpaceGuard: recording.Cleanup.EnableDiskSpaceGuard,
             MinFreeSpaceMb: recording.Cleanup.MinFreeSpaceMb,
+            MaxRecordingStorageGb: recording.Cleanup.MaxRecordingStorageGb,
             PlaybackShowFilename: recording.PlaybackOverlay.ShowFilename,
             PlaybackFilenameColor: recording.PlaybackOverlay.FilenameColor,
             PlaybackShowTimestamp: recording.PlaybackOverlay.ShowTimestamp,
@@ -423,6 +424,11 @@ internal static class SettingsMappingExtensions
         if (api.MinFreeSpaceMb > 0)
         {
             recording.Cleanup.MinFreeSpaceMb = api.MinFreeSpaceMb.Value;
+        }
+
+        if (api.MaxRecordingStorageGb is { } maxRecordingStorageGb)
+        {
+            recording.Cleanup.MaxRecordingStorageGb = maxRecordingStorageGb;
         }
 
         if (api.PlaybackShowFilename is { } playbackShowFilename)

@@ -7,6 +7,7 @@ namespace AtcSoft.CameraWall.Wpf.Services;
 public sealed class MediaCleanupServiceOwnFolderTests : IDisposable
 {
     private readonly string root = Path.Combine(Path.GetTempPath(), "atcsoft-cleanup-own-" + Guid.NewGuid().ToString("N"));
+    private int maxStorageGb;
 
     private string Global
         => Path.Combine(root, "global");
@@ -35,6 +36,20 @@ public sealed class MediaCleanupServiceOwnFolderTests : IDisposable
         File.Exists(recent).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Above_The_Size_Limit_The_Oldest_Recordings_Of_Every_Folder_Go()
+    {
+        maxStorageGb = 1;
+        var oldest = Touch(DateTime.Now.AddDays(-3), Own, "Garden", "Garden_20261015_101500_000.mkv", sizeBytes: 600 * 1024 * 1024);
+        var newer = Touch(DateTime.Now.AddDays(-1), Global, "Door", "Door_20261017_101500_000.mkv", sizeBytes: 600 * 1024 * 1024);
+        using var sut = CreateSut();
+
+        await sut.RunCleanupAsync();
+
+        File.Exists(oldest).Should().BeFalse("1.2 GB of recordings is above the 1 GB kept");
+        File.Exists(newer).Should().BeTrue();
+    }
+
     private MediaCleanupService CreateSut()
     {
         Directory.CreateDirectory(Global);
@@ -42,7 +57,7 @@ public sealed class MediaCleanupServiceOwnFolderTests : IDisposable
         settingsService.Recording.Returns(new RecordingSettings
         {
             RecordingPath = Global,
-            Cleanup = new MediaCleanupSettings { RecordingRetentionDays = 30, EnableDiskSpaceGuard = false },
+            Cleanup = new MediaCleanupSettings { RecordingRetentionDays = 30, EnableDiskSpaceGuard = false, MaxRecordingStorageGb = maxStorageGb },
         });
         settingsService.CameraDisplay.Returns(new CameraDisplayAppSettings { SnapshotPath = Path.Combine(root, "snapshots") });
 
@@ -64,10 +79,28 @@ public sealed class MediaCleanupServiceOwnFolderTests : IDisposable
     private static string Touch(
         DateTime lastWrite,
         params string[] segments)
+        => Touch(lastWrite, Path.Combine(segments), sizeBytes: 1);
+
+    private static string Touch(
+        DateTime lastWrite,
+        string folder,
+        string camera,
+        string name,
+        long sizeBytes)
+        => Touch(lastWrite, Path.Combine(folder, camera, name), sizeBytes);
+
+    // A sparse length: the size counts without writing the bytes.
+    private static string Touch(
+        DateTime lastWrite,
+        string path,
+        long sizeBytes)
     {
-        var path = Path.Combine(segments);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "x");
+        using (var file = File.Create(path))
+        {
+            file.SetLength(sizeBytes);
+        }
+
         File.SetLastWriteTime(path, lastWrite);
         return path;
     }

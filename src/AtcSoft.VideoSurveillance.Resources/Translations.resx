@@ -2652,4 +2652,13 @@ Thumbnail:
   <data name="FFmpegFolderNotReady1" xml:space="preserve">
     <value>This folder does not hold FFmpeg {0}.</value>
   </data>
+  <data name="NoLimit" xml:space="preserve">
+    <value>No limit</value>
+  </data>
+  <data name="MaxRecordingStorage" xml:space="preserve">
+    <value>Most space for recordings</value>
+  </data>
+  <data name="MaxRecordingStorageHelp" xml:space="preserve">
+    <value>When the recordings take more, the oldest are deleted first.</value>
+  </data>
 </root>

@@ -95,6 +95,18 @@ public static class SettingsOptions
         (20480, "20 GB"),
     ];
 
+    public static IReadOnlyList<(int Value, string Label)> MaxRecordingStorages { get; } =
+    [
+        (0, Translations.NoLimit),
+        (50, "50 GB"),
+        (100, "100 GB"),
+        (250, "250 GB"),
+        (500, "500 GB"),
+        (1000, "1 TB"),
+        (2000, "2 TB"),
+        (4000, "4 TB"),
+    ];
+
     public static IReadOnlyList<(string Value, string Label)> TimelapseIntervals { get; } =
     [
         ("10s", Translations.Duration10Seconds),

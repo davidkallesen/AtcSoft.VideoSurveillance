@@ -186,6 +186,51 @@ public sealed class DiskSpaceGuardTests : IDisposable
             .And.Contain(Path.GetFullPath(Path.Combine(own, @"thumbnails\Front\live.png")));
     }
 
+    [Fact]
+    public void Above_The_Size_Limit_The_Oldest_Recordings_Of_All_Folders_Go_Until_It_Fits()
+    {
+        var global = Path.Combine(VolumeA, "recordings");
+        var own = Path.Combine(VolumeB, "front-door");
+        var oldest = Write(own, @"Front\oldest.mkv", 400, daysAgo: 9);
+        var oldestThumbnail = Write(own, @"Front\oldest.png", 10, daysAgo: 9);
+        var middle = Write(global, @"Cam\middle.mkv", 400, daysAgo: 5);
+        var newest = Write(global, @"Cam\newest.mkv", 400, daysAgo: 1);
+        volumes.Add(VolumeA, free: 5000);
+        volumes.Add(VolumeB, free: 5000);
+
+        var run = Guard().EnforceSizeLimit([global, own], maxBytes: 900, DiskSpaceGuard.ProtectedPaths([], [global, own]), Videos);
+
+        File.Exists(oldest).Should().BeFalse();
+        File.Exists(oldestThumbnail).Should().BeFalse("it goes with its recording");
+        File.Exists(middle).Should().BeTrue("800 bytes of recordings are left, within the 900 kept");
+        File.Exists(newest).Should().BeTrue();
+        run.DeletedFiles.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void A_Recording_Being_Written_Counts_Toward_The_Size_Limit_But_Stays()
+    {
+        var global = Path.Combine(VolumeA, "recordings");
+        var active = Write(global, @"Cam\active.mkv", 800, daysAgo: 3);
+        var old = Write(global, @"Cam\old.mkv", 400, daysAgo: 2);
+
+        Guard().EnforceSizeLimit([global], maxBytes: 900, DiskSpaceGuard.ProtectedPaths([active], [global]), Videos);
+
+        File.Exists(active).Should().BeTrue();
+        File.Exists(old).Should().BeFalse();
+    }
+
+    [Fact]
+    public void No_Size_Limit_Deletes_Nothing()
+    {
+        var global = Path.Combine(VolumeA, "recordings");
+        var video = Write(global, @"Cam\old.mkv", 400, daysAgo: 300);
+
+        Guard().EnforceSizeLimit([global], maxBytes: 0, DiskSpaceGuard.ProtectedPaths([], [global]), Videos);
+
+        File.Exists(video).Should().BeTrue();
+    }
+
     private static DiskSpaceGuardRequest Request(
         IReadOnlyList<string> recordingFolders,
         IReadOnlyList<string>? active = null,

@@ -56,6 +56,15 @@
         <MudSelectItem Value="@value">@label</MudSelectItem>
     }
 </MudSelect>
+<MudSelect @bind-Value="State.MaxRecordingStorageGb"
+           Label="@Translations.MaxRecordingStorage"
+           HelperText="@Translations.MaxRecordingStorageHelp"
+           Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.MaxRecordingStorages, State.MaxRecordingStorageGb, v => $"{v} GB"))
+    {
+        <MudSelectItem Value="@value">@label</MudSelectItem>
+    }
+</MudSelect>
 
 <MudDivider Class="my-4" />
 

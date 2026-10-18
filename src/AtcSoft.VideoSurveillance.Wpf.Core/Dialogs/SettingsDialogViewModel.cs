@@ -349,6 +349,12 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     public IDictionary<string, string> MinFreeSpaceItems
         => DropDownItemsFactory.MinFreeSpaceItems;
 
+    [ObservableProperty]
+    private string selectedMaxRecordingStorage = DropDownItemsFactory.DefaultMaxRecordingStorageGb;
+
+    public IDictionary<string, string> MaxRecordingStorageItems
+        => DropDownItemsFactory.MaxRecordingStorageItems;
+
     /// <summary>
     /// Gets a value indicating whether the minimum free-space dropdown
     /// should be enabled: the disk guard is on. The guard runs whatever the
@@ -530,6 +536,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedSnapshotRetention = DropDownItemsFactory.DefaultSnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
         IsDiskSpaceGuardEnabled = true;
         SelectedMinFreeSpace = DropDownItemsFactory.DefaultMinFreeSpaceMb;
+        SelectedMaxRecordingStorage = DropDownItemsFactory.DefaultMaxRecordingStorageGb;
 
         // Recordings Browser
         CloseRecordingsBrowserOnPlay = false;
@@ -643,6 +650,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedSnapshotRetention = recording.Cleanup.SnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
         IsDiskSpaceGuardEnabled = recording.Cleanup.EnableDiskSpaceGuard;
         SelectedMinFreeSpace = recording.Cleanup.MinFreeSpaceMb.ToString(CultureInfo.InvariantCulture);
+        SelectedMaxRecordingStorage = recording.Cleanup.MaxRecordingStorageGb.ToString(CultureInfo.InvariantCulture);
 
         // Recordings Browser Settings
         CloseRecordingsBrowserOnPlay = recording.CloseRecordingsBrowserOnPlay;
@@ -808,6 +816,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
                 MinFreeSpaceMb = int.TryParse(SelectedMinFreeSpace, NumberStyles.Integer, CultureInfo.InvariantCulture, out var minFreeSpaceMb) && minFreeSpaceMb > 0
                     ? minFreeSpaceMb
                     : int.Parse(DropDownItemsFactory.DefaultMinFreeSpaceMb, CultureInfo.InvariantCulture),
+                MaxRecordingStorageGb = int.TryParse(SelectedMaxRecordingStorage, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxStorageGb) && maxStorageGb > 0
+                    ? maxStorageGb
+                    : 0,
             },
             PlaybackOverlay = new PlaybackOverlaySettings
             {

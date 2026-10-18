@@ -9,6 +9,7 @@ public class ApiApplicationSettingsServiceTests
         var settings = ApiApplicationSettingsService.BuildCacheFrom(new ClientPreferences(), api: null);
         settings.Recording.Cleanup.EnableDiskSpaceGuard = false;
         settings.Recording.Cleanup.MinFreeSpaceMb = 5000;
+        settings.Recording.Cleanup.MaxRecordingStorageGb = 500;
 
         // Act
         var api = ApiApplicationSettingsService.BuildApiSettings(settings);
@@ -19,6 +20,7 @@ public class ApiApplicationSettingsServiceTests
         api.MinFreeSpaceMb.Should().Be(5000);
         roundTripped.Recording.Cleanup.EnableDiskSpaceGuard.Should().BeFalse();
         roundTripped.Recording.Cleanup.MinFreeSpaceMb.Should().Be(5000);
+        roundTripped.Recording.Cleanup.MaxRecordingStorageGb.Should().Be(500);
     }
 
     [Fact]

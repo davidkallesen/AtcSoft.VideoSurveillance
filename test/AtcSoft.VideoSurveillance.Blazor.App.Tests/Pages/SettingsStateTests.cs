@@ -1,4 +1,4 @@
-﻿namespace AtcSoft.VideoSurveillance.Blazor.App.Pages;
+namespace AtcSoft.VideoSurveillance.Blazor.App.Pages;
 
 using Core = AtcSoft.VideoSurveillance.Models.Settings;
 
@@ -43,6 +43,7 @@ public sealed class SettingsStateTests
         sut.RecordingRetentionDays.Should().Be(recording.Cleanup.RecordingRetentionDays);
         sut.SnapshotRetentionDays.Should().Be(recording.Cleanup.SnapshotRetentionDays);
         sut.MinFreeSpaceMb.Should().Be(recording.Cleanup.MinFreeSpaceMb);
+        sut.MaxRecordingStorageGb.Should().Be(recording.Cleanup.MaxRecordingStorageGb);
         sut.PlaybackFilenameColor.Should().Be(recording.PlaybackOverlay.FilenameColor);
         sut.PlaybackTimestampColor.Should().Be(recording.PlaybackOverlay.TimestampColor);
     }
@@ -226,6 +227,7 @@ public sealed class SettingsStateTests
             SnapshotRetentionDays: 60,
             EnableDiskSpaceGuard: false,
             MinFreeSpaceMb: 5120,
+            MaxRecordingStorageGb: 250,
             PlaybackShowFilename: false,
             PlaybackFilenameColor: "Yellow",
             PlaybackShowTimestamp: false,

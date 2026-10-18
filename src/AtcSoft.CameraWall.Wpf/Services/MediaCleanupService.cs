@@ -15,6 +15,7 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
     private readonly IApplicationSettingsService settingsService;
     private readonly IRecordingService recordingService;
     private readonly ICameraStorageService? cameraStorage;
+    private readonly DiskSpaceGuard diskSpaceGuard;
     private readonly Lock lockObject = new();
     private bool isRunning;
 
@@ -26,14 +27,17 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
     /// <param name="recordingService">The recording service, used to identify and skip files that are currently being written to.</param>
     /// <param name="cameraStorage">The cameras, whose own recording folders are cleaned too.</param>
     /// <param name="options">When the cleanup runs; the defaults when not given.</param>
+    /// <param name="diskSpaceGuard">The guard shared with the recording service; it keeps the size limit.</param>
     public MediaCleanupService(
         ILogger<MediaCleanupService> logger,
         IApplicationSettingsService settingsService,
         IRecordingService recordingService,
         ICameraStorageService? cameraStorage = null,
-        MediaCleanupServiceOptions? options = null)
+        MediaCleanupServiceOptions? options = null,
+        DiskSpaceGuard? diskSpaceGuard = null)
         : base(logger, options ?? new MediaCleanupServiceOptions())
     {
+        this.diskSpaceGuard = diskSpaceGuard ?? new DiskSpaceGuard(FreeSpaceReader.Default);
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.recordingService = recordingService ?? throw new ArgumentNullException(nameof(recordingService));
         this.cameraStorage = cameraStorage;
@@ -233,6 +237,17 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
 
             var emptyDirs = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingPath, MediaCleanupRunner.EmptyDirectoryGracePeriod);
             ApplyEmptyDirectoriesResult(emptyDirs, result);
+        }
+
+        // All recordings together within the size limit, the oldest first.
+        if (settings.MaxRecordingStorageGb > 0)
+        {
+            var limited = diskSpaceGuard.EnforceSizeLimit(
+                folders,
+                settings.MaxRecordingStorageGb * 1024L * 1024L * 1024L,
+                activePaths,
+                RecordingExtensions);
+            ApplyRecordingRunResult(limited, result);
         }
 
         if (!settings.IncludeSnapshots)

@@ -89,6 +89,80 @@ public sealed class DiskSpaceGuard
         }
     }
 
+    /// <summary>
+    /// Keeps the recordings of all folders together within a size, deleting the oldest first
+    /// with their thumbnails. Recordings being written count toward the size but stay.
+    /// </summary>
+    /// <param name="recordingFolders">Every recording folder, nested ones included.</param>
+    /// <param name="maxBytes">The size to keep within; 0 or less is no limit.</param>
+    /// <param name="protectedPaths">Full paths never to delete (<see cref="ProtectedPaths"/>).</param>
+    /// <param name="recordingExtensions">The recording file extensions, with a leading dot.</param>
+    /// <returns>What was deleted.</returns>
+    public MediaCleanupRunResult EnforceSizeLimit(
+        IReadOnlyList<string> recordingFolders,
+        long maxBytes,
+        IReadOnlySet<string> protectedPaths,
+        IReadOnlyCollection<string> recordingExtensions)
+    {
+        ArgumentNullException.ThrowIfNull(recordingFolders);
+        ArgumentNullException.ThrowIfNull(protectedPaths);
+        ArgumentNullException.ThrowIfNull(recordingExtensions);
+
+        if (maxBytes <= 0)
+        {
+            return Empty();
+        }
+
+        lock (gate)
+        {
+            var errors = new List<MediaCleanupRunError>();
+            var extensions = new HashSet<string>(recordingExtensions, StringComparer.OrdinalIgnoreCase);
+            var recordings = new List<FileInfo>();
+            foreach (var folder in RecordingRoots.Collect(null, recordingFolders).Where(Directory.Exists))
+            {
+                try
+                {
+                    recordings.AddRange(Directory
+                        .EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
+                        .Where(f => extensions.Contains(Path.GetExtension(f)))
+                        .Select(f => new FileInfo(f)));
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    errors.Add(new MediaCleanupRunError(folder, ex));
+                }
+            }
+
+            var total = recordings.Sum(f => f.Length);
+            var deleted = new List<string>();
+            var deletedThumbnails = new List<string>();
+            long freed = 0;
+            var request = new DiskSpaceGuardRequest(recordingFolders, null, 0, protectedPaths, recordingExtensions, []);
+            foreach (var file in recordings.Where(f => !protectedPaths.Contains(f.FullName)).OrderBy(f => f.LastWriteTimeUtc))
+            {
+                if (total - freed <= maxBytes)
+                {
+                    break;
+                }
+
+                try
+                {
+                    var size = file.Length;
+                    file.Delete();
+                    deleted.Add(file.FullName);
+                    freed += size;
+                    DeleteThumbnails(file.FullName, request, deletedThumbnails, errors);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    errors.Add(new MediaCleanupRunError(file.FullName, ex));
+                }
+            }
+
+            return new MediaCleanupRunResult(deleted, deletedThumbnails, freed, errors) { StillShort = total - freed > maxBytes };
+        }
+    }
+
     private DiskSpaceVolumeResult EnforceVolume(
         string volume,
         IReadOnlyList<string> folders,

@@ -63,6 +63,13 @@
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedMinFreeSpace, Mode=TwoWay}" />
 
+            <atc:LabelComboBox
+                Items="{Binding Path=MaxRecordingStorageItems}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=MaxRecordingStorage}"
+                Orientation="Vertical"
+                SelectedKey="{Binding Path=SelectedMaxRecordingStorage, Mode=TwoWay}" />
+
         </StackPanel>
     </GroupBox>
 </UserControl>

@@ -50,9 +50,39 @@ public sealed class ServerMediaCleanupServiceTests : IDisposable
         File.Exists(snapshot).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Above_The_Size_Limit_The_Oldest_Recordings_Go()
+    {
+        var recordings = Path.Combine(root, "recordings");
+        var oldest = Sized(Path.Combine(recordings, "Cam", "oldest.mkv"), 600 * 1024 * 1024, DateTime.Now.AddDays(-3));
+        var newer = Sized(Path.Combine(recordings, "Cam", "newer.mkv"), 600 * 1024 * 1024, DateTime.Now.AddDays(-1));
+        using var sut = CreateService(recordings, Path.Combine(root, "snapshots"), maxStorageGb: 1);
+
+        await sut.DoWorkAsync(CancellationToken.None);
+
+        File.Exists(oldest).Should().BeFalse("1.2 GB of recordings is above the 1 GB kept");
+        File.Exists(newer).Should().BeTrue();
+    }
+
+    private static string Sized(
+        string path,
+        long size,
+        DateTime lastWrite)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        using (var file = File.Create(path))
+        {
+            file.SetLength(size);
+        }
+
+        File.SetLastWriteTime(path, lastWrite);
+        return path;
+    }
+
     private static ServerMediaCleanupService CreateService(
         string recordingPath,
-        string snapshotPath)
+        string snapshotPath,
+        int maxStorageGb = 0)
     {
         var settings = Substitute.For<IApplicationSettingsService>();
         settings.Recording.Returns(new RecordingSettings
@@ -63,6 +93,7 @@ public sealed class ServerMediaCleanupServiceTests : IDisposable
                 Schedule = MediaCleanupSchedule.OnStartupAndPeriodically,
                 RecordingRetentionDays = 30,
                 EnableDiskSpaceGuard = false,
+                MaxRecordingStorageGb = maxStorageGb,
             },
         });
         settings.CameraDisplay.Returns(new CameraDisplayAppSettings { SnapshotPath = snapshotPath });

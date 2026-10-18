@@ -2652,4 +2652,13 @@ Miniature:
   <data name="FFmpegFolderNotReady1" xml:space="preserve">
     <value>Denne mappe indeholder ikke FFmpeg {0}.</value>
   </data>
+  <data name="NoLimit" xml:space="preserve">
+    <value>Ingen grænse</value>
+  </data>
+  <data name="MaxRecordingStorage" xml:space="preserve">
+    <value>Mest plads til optagelser</value>
+  </data>
+  <data name="MaxRecordingStorageHelp" xml:space="preserve">
+    <value>Når optagelserne fylder mere, slettes de ældste først.</value>
+  </data>
 </root>

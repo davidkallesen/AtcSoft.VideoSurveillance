@@ -337,12 +337,19 @@ public partial class SettingsDialogViewModel : ViewModelBase
     public IDictionary<string, string> MinFreeSpaceItems
         => DropDownItemsFactory.MinFreeSpaceItems;
 
+    [ObservableProperty]
+    private string selectedMaxRecordingStorage = DropDownItemsFactory.DefaultMaxRecordingStorageGb;
+
+    public IDictionary<string, string> MaxRecordingStorageItems
+        => DropDownItemsFactory.MaxRecordingStorageItems;
+
     /// <summary>
     /// Gets a value indicating whether the minimum free space dropdown
-    /// should be enabled (cleanup is on AND disk guard is on).
+    /// should be enabled: the disk guard is on. The guard runs whatever the
+    /// cleanup schedule is.
     /// </summary>
     public bool IsDiskSpaceGuardControlEnabled
-        => IsCleanupEnabled && IsDiskSpaceGuardEnabled;
+        => IsDiskSpaceGuardEnabled;
 
     // Playback Overlay
     [ObservableProperty]
@@ -468,6 +475,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             SelectedMinFreeSpace = settings.MinFreeSpaceMb > 0
                 ? settings.MinFreeSpaceMb.ToString(CultureInfo.InvariantCulture)
                 : DropDownItemsFactory.DefaultMinFreeSpaceMb;
+            SelectedMaxRecordingStorage = settings.MaxRecordingStorageGb.ToString(CultureInfo.InvariantCulture);
             ShowPlaybackFilename = settings.PlaybackShowFilename;
             SelectedPlaybackFilenameColor = settings.PlaybackFilenameColor ?? "White";
             ShowPlaybackTimestamp = settings.PlaybackShowTimestamp;
@@ -606,6 +614,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
         SelectedSnapshotRetention = DropDownItemsFactory.DefaultSnapshotRetentionDays.ToString(CultureInfo.InvariantCulture);
         IsDiskSpaceGuardEnabled = true;
         SelectedMinFreeSpace = DropDownItemsFactory.DefaultMinFreeSpaceMb;
+        SelectedMaxRecordingStorage = DropDownItemsFactory.DefaultMaxRecordingStorageGb;
         ShowPlaybackFilename = true;
         SelectedPlaybackFilenameColor = "White";
         ShowPlaybackTimestamp = true;
@@ -689,6 +698,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             minFreeSpace = int.Parse(DropDownItemsFactory.DefaultMinFreeSpaceMb, CultureInfo.InvariantCulture);
         }
 
+        _ = int.TryParse(SelectedMaxRecordingStorage, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxRecordingStorage);
+
         _ = int.TryParse(SelectedBoundingBoxThickness, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxThickness);
         _ = int.TryParse(SelectedBoundingBoxMinArea, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxMinArea);
 
@@ -757,6 +768,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             SnapshotRetentionDays: snapshotRetention > 0 ? snapshotRetention : DropDownItemsFactory.DefaultSnapshotRetentionDays,
             EnableDiskSpaceGuard: IsDiskSpaceGuardEnabled,
             MinFreeSpaceMb: minFreeSpace,
+            MaxRecordingStorageGb: Math.Max(0, maxRecordingStorage),
             PlaybackShowFilename: ShowPlaybackFilename,
             PlaybackFilenameColor: SelectedPlaybackFilenameColor,
             PlaybackShowTimestamp: ShowPlaybackTimestamp,

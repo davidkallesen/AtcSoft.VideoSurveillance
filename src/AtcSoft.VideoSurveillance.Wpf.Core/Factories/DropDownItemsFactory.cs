@@ -265,6 +265,21 @@ public static class DropDownItemsFactory
     };
 
     /// <summary>
+    /// Gets the most space all recordings may take, in gigabytes; "0" is no limit.
+    /// </summary>
+    public static IDictionary<string, string> MaxRecordingStorageItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["0"] = Translations.NoLimit,
+        ["50"] = "50 GB",
+        ["100"] = "100 GB",
+        ["250"] = "250 GB",
+        ["500"] = "500 GB",
+        ["1000"] = "1 TB",
+        ["2000"] = "2 TB",
+        ["4000"] = "4 TB",
+    };
+
+    /// <summary>
     /// Gets the timelapse capture interval options for dropdowns.
     /// Keys are interval codes (e.g., "10s", "1m"), values are display text.
     /// </summary>
@@ -429,6 +444,8 @@ public static class DropDownItemsFactory
     /// Gets the default minimum free disk space in MB (2 GB).
     /// </summary>
     public const string DefaultMinFreeSpaceMb = "2048";
+
+    public const string DefaultMaxRecordingStorageGb = "0";
 
     /// <summary>
     /// Converts a video quality setting to the maximum vertical resolution in pixels.

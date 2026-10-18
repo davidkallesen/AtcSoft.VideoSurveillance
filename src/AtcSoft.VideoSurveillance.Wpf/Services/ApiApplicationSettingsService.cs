@@ -395,6 +395,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
                 SnapshotRetentionDays = api.SnapshotRetentionDays,
                 EnableDiskSpaceGuard = api.EnableDiskSpaceGuard,
                 MinFreeSpaceMb = api.MinFreeSpaceMb > 0 ? api.MinFreeSpaceMb : DefaultCleanup.MinFreeSpaceMb,
+                MaxRecordingStorageGb = Math.Max(0, api.MaxRecordingStorageGb),
             },
             PlaybackOverlay = new PlaybackOverlaySettings
             {
@@ -494,6 +495,7 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             SnapshotRetentionDays: settings.Recording.Cleanup.SnapshotRetentionDays,
             EnableDiskSpaceGuard: settings.Recording.Cleanup.EnableDiskSpaceGuard,
             MinFreeSpaceMb: settings.Recording.Cleanup.MinFreeSpaceMb,
+            MaxRecordingStorageGb: settings.Recording.Cleanup.MaxRecordingStorageGb,
             PlaybackShowFilename: settings.Recording.PlaybackOverlay.ShowFilename,
             PlaybackFilenameColor: settings.Recording.PlaybackOverlay.FilenameColor,
             PlaybackShowTimestamp: settings.Recording.PlaybackOverlay.ShowTimestamp,

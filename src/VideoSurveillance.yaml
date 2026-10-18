@@ -2336,6 +2336,7 @@ components:
         - snapshotRetentionDays
         - enableDiskSpaceGuard
         - minFreeSpaceMb
+        - maxRecordingStorageGb
         - playbackShowFilename
         - playbackFilenameColor
         - playbackShowTimestamp
@@ -2536,6 +2537,11 @@ components:
           type: integer
           format: int32
           description: Free disk space, in megabytes, the disk space guard keeps available.
+        maxRecordingStorageGb:
+          type: integer
+          format: int32
+          minimum: 0
+          description: The most space, in gigabytes, all recordings together may take; the oldest go first when they take more. 0 is no limit.
         playbackShowFilename:
           type: boolean
         playbackFilenameColor:
@@ -2748,6 +2754,11 @@ components:
           type: integer
           format: int32
           description: Free disk space, in megabytes, the disk space guard keeps available.
+        maxRecordingStorageGb:
+          type: integer
+          format: int32
+          minimum: 0
+          description: The most space, in gigabytes, all recordings together may take; the oldest go first when they take more. 0 is no limit.
         playbackShowFilename:
           type: boolean
         playbackFilenameColor:
