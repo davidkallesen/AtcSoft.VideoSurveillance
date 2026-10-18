@@ -6,7 +6,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 /// Settings are stored at <see cref="ApplicationPaths.DefaultSettingsPath"/>.
 /// </summary>
 [Registration(Lifetime.Singleton)]
-public class ApplicationSettingsService : IApplicationSettingsService
+public partial class ApplicationSettingsService : IApplicationSettingsService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -16,14 +16,17 @@ public class ApplicationSettingsService : IApplicationSettingsService
     };
 
     private readonly string storagePath;
+    private readonly ILogger<ApplicationSettingsService> logger;
     private ApplicationSettings appSettings = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplicationSettingsService"/> class.
     /// Uses the default storage location from <see cref="ApplicationPaths.DefaultSettingsPath"/>.
     /// </summary>
-    public ApplicationSettingsService()
-        : this(ApplicationPaths.DefaultSettingsPath)
+    /// <param name="logger">The logger; a failed save is written to it.</param>
+    public ApplicationSettingsService(
+        ILogger<ApplicationSettingsService>? logger = null)
+        : this(ApplicationPaths.DefaultSettingsPath, logger)
     {
     }
 
@@ -32,9 +35,13 @@ public class ApplicationSettingsService : IApplicationSettingsService
     /// with a custom storage path.
     /// </summary>
     /// <param name="storagePath">The path to the storage file.</param>
-    public ApplicationSettingsService(string storagePath)
+    /// <param name="logger">The logger; a failed save is written to it.</param>
+    public ApplicationSettingsService(
+        string storagePath,
+        ILogger<ApplicationSettingsService>? logger = null)
     {
         this.storagePath = storagePath;
+        this.logger = logger ?? NullLogger<ApplicationSettingsService>.Instance;
         EnsureSettingsFileExists();
         Load();
     }
@@ -242,7 +249,7 @@ public class ApplicationSettingsService : IApplicationSettingsService
 
         if (!SafeJsonFile.TryWrite(storagePath, appSettings, JsonOptions))
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to save application settings to {storagePath}");
+            LogSaveFailed(storagePath);
         }
     }
 
@@ -261,11 +268,17 @@ public class ApplicationSettingsService : IApplicationSettingsService
 
         if (SafeJsonFile.TryWrite(storagePath, defaults, JsonOptions))
         {
-            System.Diagnostics.Debug.WriteLine($"Created default settings file: {storagePath}");
+            LogDefaultsCreated(storagePath);
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to create default settings file: {storagePath}");
+            LogSaveFailed(storagePath);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "The settings could not be saved to '{StoragePath}'; changes are lost when the app closes")]
+    private partial void LogSaveFailed(string storagePath);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Created the default settings file '{StoragePath}'")]
+    private partial void LogDefaultsCreated(string storagePath);
 }

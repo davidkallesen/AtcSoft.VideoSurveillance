@@ -60,7 +60,7 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 | Remove the legacy USB pills (connection-type icon, phase 8) | Still in `CameraOverlay.xaml`, `CameraTileBadge.xaml` and `CameraTileViewModel` (`ShowUsbBadge`). The plan gates it on "the release after the icon ships" | E2E walks catch a binding left behind |
 | Rotation: the client's `Wpf/Windows/FullScreenCameraWindow` sizes boxes without the rotation | Nothing in the client opens that window today; fix it or remove the window | Unit, once the sizing leaves the code-behind |
 | A message for a stored USB device that is not plugged in (`UsbDeviceMissing`) | No key or message exists; the picker may already cover it | Unit on the dialog view model |
-| `Debug.WriteLine` left in `CameraTile`, `ApplicationSettingsService`, `CameraStorageService`, `SettingsDialogViewModel` | The suggestions list marks it done; it is not quite | None needed |
+| `Debug.WriteLine` left in `CameraTile` (overlay not found) and `SettingsDialogViewModel` (a layout move that failed; the synchronizer logs each file) | Failed saves of the settings and the cameras are logged since 2026-10-18 | None needed |
 | A rate limit on starting a recording or a stream | Neither has `x-ratelimit-*`. A second start only adds a lease, so it may not be needed | Host test |
 | Remote-access notes (VPN, reverse proxy) in the docs | Nothing in `docs/` | — |
 | A severity filter and an unread badge for notifications in the client | Only time, title, message and type columns | Unit and E2E |

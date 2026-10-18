@@ -5,7 +5,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 /// JSON file-based implementation of <see cref="ICameraStorageService"/>.
 /// </summary>
 [Registration(Lifetime.Singleton)]
-public class CameraStorageService : ICameraStorageService
+public partial class CameraStorageService : ICameraStorageService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -19,14 +19,16 @@ public class CameraStorageService : ICameraStorageService
     };
 
     private readonly string storagePath;
+    private readonly ILogger<CameraStorageService> logger;
     private CameraStorageData data = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraStorageService"/> class.
     /// Uses the default storage location from <see cref="ApplicationPaths.DefaultCameraDataPath"/>.
     /// </summary>
-    public CameraStorageService()
-        : this(ApplicationPaths.DefaultCameraDataPath)
+    /// <param name="logger">The logger; a failed save is written to it.</param>
+    public CameraStorageService(ILogger<CameraStorageService>? logger = null)
+        : this(ApplicationPaths.DefaultCameraDataPath, logger)
     {
     }
 
@@ -35,9 +37,13 @@ public class CameraStorageService : ICameraStorageService
     /// with a custom storage path.
     /// </summary>
     /// <param name="storagePath">The path to the storage file.</param>
-    public CameraStorageService(string storagePath)
+    /// <param name="logger">The logger; a failed save is written to it.</param>
+    public CameraStorageService(
+        string storagePath,
+        ILogger<CameraStorageService>? logger = null)
     {
         this.storagePath = storagePath;
+        this.logger = logger ?? NullLogger<CameraStorageService>.Instance;
         Load();
     }
 
@@ -159,7 +165,7 @@ public class CameraStorageService : ICameraStorageService
 
         if (json is null || !SafeJsonFile.TryWrite(storagePath, json, JsonOptions))
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to save camera storage to {storagePath}");
+            LogSaveFailed(storagePath);
         }
     }
 
@@ -248,4 +254,7 @@ public class CameraStorageService : ICameraStorageService
                value is JsonValue jsonValue &&
                jsonValue.TryGetValue(out text);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "The cameras could not be saved to '{StoragePath}'; changes since the last save are lost when the app closes")]
+    private partial void LogSaveFailed(string storagePath);
 }
