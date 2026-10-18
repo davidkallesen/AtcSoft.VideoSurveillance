@@ -24,6 +24,11 @@ public sealed class DiskSpaceGuard
     }
 
     /// <summary>
+    /// Gets the reader the guard measures with, for a status that must agree with the guard.
+    /// </summary>
+    public IFreeSpaceReader Reader => reader;
+
+    /// <summary>
     /// Gets the paths never to delete: the recordings being written and every place their
     /// thumbnail may be, taken from the innermost recording folder that holds each recording.
     /// </summary>

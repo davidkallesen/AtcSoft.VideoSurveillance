@@ -70,4 +70,12 @@ public interface IRecordingService
     /// recordings are active.
     /// </summary>
     bool EnforceDiskSpaceGuard();
+
+    /// <summary>
+    /// Keeps free space on every volume that holds media, deleting the oldest first, and says
+    /// what it found on each.
+    /// </summary>
+    /// <returns>What was found and done; <see cref="DiskSpaceGuardResult.None"/> when the guard is off.</returns>
+    DiskSpaceGuardResult ReclaimDiskSpace()
+        => DiskSpaceGuardResult.None;
 }

@@ -10,12 +10,14 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     private const int StalePacketThresholdSeconds = 15;
 
     private static readonly string[] RecordingFileExtensions = [".mp4", ".mkv", ".avi"];
+    private static readonly string[] SnapshotFileExtensions = [".png", ".jpg", ".jpeg", ".bmp"];
 
     private readonly IApplicationSettingsService settingsService;
     private readonly ICameraStorageService cameraStorageService;
     private readonly ILogger<ServerRecordingService> logger;
     private readonly IThumbnailGeneratorService? thumbnailService;
     private readonly TimeProvider timeProvider;
+    private readonly DiskSpaceGuard diskSpaceGuard;
 
     // Cameras whose recording runs on a pipeline it does not own: a motion
     // recording uses the pipeline that watches the camera, a recording of a
@@ -48,18 +50,21 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     /// cannot draw thumbnails (not Windows) records without them.
     /// </param>
     /// <param name="timeProvider">The clock; the system's when not given.</param>
+    /// <param name="diskSpaceGuard">Keeps free space on the volumes that hold media; shared with the cleanup.</param>
     public ServerRecordingService(
         IApplicationSettingsService settingsService,
         ICameraStorageService cameraStorageService,
         ILogger<ServerRecordingService> logger,
         IThumbnailGeneratorService? thumbnailService = null,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        DiskSpaceGuard? diskSpaceGuard = null)
     {
         this.settingsService = settingsService;
         this.cameraStorageService = cameraStorageService;
         this.logger = logger;
         this.thumbnailService = thumbnailService;
         this.timeProvider = timeProvider ?? TimeProvider.System;
+        this.diskSpaceGuard = diskSpaceGuard ?? new DiskSpaceGuard(FreeSpaceReader.Default);
     }
 
     /// <inheritdoc/>
@@ -121,7 +126,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
             return false;
         }
 
-        if (!ReclaimDiskSpaceIfNeeded())
+        if (!MayRecord())
         {
             LogDiskSpaceGateFailed(camera.Display.DisplayName);
             return false;
@@ -316,70 +321,48 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         // No-op for server implementation (no post-motion timer needed)
     }
 
-    private bool ReclaimDiskSpaceIfNeeded()
+    // A recording may start when the recording folder's volume has the free space the guard
+    // keeps. When that space cannot be read, it may not.
+    private bool MayRecord()
     {
-        var cleanup = settingsService.Recording.Cleanup;
-        if (!cleanup.EnableDiskSpaceGuard)
+        if (!settingsService.Recording.Cleanup.EnableDiskSpaceGuard)
         {
             return true;
         }
 
+        var result = ReclaimDiskSpace();
+        return result != DiskSpaceGuardResult.None &&
+               result.StateOf(settingsService.Recording.RecordingPath) is DiskSpaceVolumeState.Ok or DiskSpaceVolumeState.Reclaimed;
+    }
+
+    /// <inheritdoc/>
+    public DiskSpaceGuardResult ReclaimDiskSpace()
+    {
+        var cleanup = settingsService.Recording.Cleanup;
         var recordingPath = settingsService.Recording.RecordingPath;
-        if (string.IsNullOrEmpty(recordingPath))
+        if (!cleanup.EnableDiskSpaceGuard || string.IsNullOrEmpty(recordingPath))
         {
-            return true;
+            return DiskSpaceGuardResult.None;
         }
 
         try
         {
-            var driveRoot = Path.GetPathRoot(Path.GetFullPath(recordingPath));
-            if (string.IsNullOrEmpty(driveRoot))
-            {
-                return true;
-            }
-
-            var minFreeBytes = (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
-            var freeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
-            if (freeBytes >= minFreeBytes)
-            {
-                return true;
-            }
-
-            LogDiskSpaceLowBeforeRecording(driveRoot, freeBytes / (1024.0 * 1024.0), cleanup.MinFreeSpaceMb);
-
-            var skipPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var session in sessions.Values)
-            {
-                if (!string.IsNullOrEmpty(session.CurrentFilePath))
-                {
-                    skipPaths.Add(Path.GetFullPath(session.CurrentFilePath));
-                    foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingPath))
-                    {
-                        skipPaths.Add(Path.GetFullPath(thumbnail));
-                    }
-                }
-            }
-
-            var run = MediaCleanupRunner.ReclaimBySize(
-                recordingPath,
+            string[] folders = [recordingPath];
+            var request = new DiskSpaceGuardRequest(
+                folders,
+                settingsService.CameraDisplay.SnapshotPath,
+                (long)cleanup.MinFreeSpaceMb * 1024L * 1024L,
+                DiskSpaceGuard.ProtectedPaths(sessions.Values.Select(s => s.CurrentFilePath), folders),
                 RecordingFileExtensions,
-                minFreeBytes,
-                skipPaths,
-                deleteCompanionThumbnail: true);
-
-            if (run.StillShort)
-            {
-                LogDiskSpaceReclaimStillShort(driveRoot, run.BytesFreed / (1024.0 * 1024.0));
-                return false;
-            }
-
-            LogDiskSpaceReclaimComplete(run.BytesFreed / (1024.0 * 1024.0), run.DeletedFiles.Count);
-            return true;
+                SnapshotFileExtensions);
+            var result = diskSpaceGuard.Enforce(request);
+            DiskSpaceGuardLog.Write(logger, result, cleanup.MinFreeSpaceMb);
+            return result;
         }
         catch (Exception ex)
         {
             LogDiskSpaceReclaimFailed(ex);
-            return true;
+            return DiskSpaceGuardResult.None;
         }
     }
 
@@ -438,7 +421,13 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
             Directory.CreateDirectory(directory);
         }
 
-        ReclaimDiskSpaceIfNeeded();
+        // A volume that is still short gets no new segment: the recording stops instead.
+        if (ReclaimDiskSpace().StateOf(newFilePath) == DiskSpaceVolumeState.StillShort)
+        {
+            LogDiskSpaceGuardStoppingRecordings(1);
+            StopRecording(cameraId);
+            return false;
+        }
 
         // The old segment's thumbnail is complete; the new one starts below.
         StopThumbnail(cameraId);
@@ -518,29 +507,17 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
 
     private bool IsDiskSpaceLow()
     {
-        try
-        {
-            var cleanup = settingsService.Recording.Cleanup;
-            if (!cleanup.EnableDiskSpaceGuard)
-            {
-                return false;
-            }
-
-            var recordingPath = settingsService.Recording.RecordingPath;
-            var driveRoot = Path.GetPathRoot(Path.GetFullPath(recordingPath));
-            if (string.IsNullOrEmpty(driveRoot))
-            {
-                return false;
-            }
-
-            var freeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
-            var minFreeBytes = (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
-            return freeBytes < minFreeBytes;
-        }
-        catch
+        var cleanup = settingsService.Recording.Cleanup;
+        if (!cleanup.EnableDiskSpaceGuard)
         {
             return false;
         }
+
+        // The same reader as the guard, so a share or a mounted folder is read the same way.
+        var reader = diskSpaceGuard.Reader;
+        var volume = reader.GetVolume(settingsService.Recording.RecordingPath);
+        var free = volume is null ? null : reader.GetFreeBytes(volume);
+        return free is { } bytes && bytes < (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
     }
 
     /// <inheritdoc/>
@@ -614,19 +591,26 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     /// <inheritdoc/>
     public bool EnforceDiskSpaceGuard()
     {
-        if (sessions.IsEmpty)
+        var result = ReclaimDiskSpace();
+
+        // Only a volume that is still short stops its recordings; one whose space cannot be read
+        // goes on (a failed write stops a recording anyway).
+        var shortSessions = sessions.Values
+            .Where(s => !string.IsNullOrEmpty(s.CurrentFilePath) &&
+                        result.StateOf(s.CurrentFilePath) == DiskSpaceVolumeState.StillShort)
+            .ToList();
+        if (shortSessions.Count == 0)
         {
             return false;
         }
 
-        if (!ReclaimDiskSpaceIfNeeded())
+        LogDiskSpaceGuardStoppingRecordings(shortSessions.Count);
+        foreach (var session in shortSessions)
         {
-            LogDiskSpaceGuardStoppingAllRecordings(sessions.Count);
-            StopAllRecordings();
-            return true;
+            StopRecording(session.CameraId);
         }
 
-        return false;
+        return true;
     }
 
     /// <inheritdoc/>

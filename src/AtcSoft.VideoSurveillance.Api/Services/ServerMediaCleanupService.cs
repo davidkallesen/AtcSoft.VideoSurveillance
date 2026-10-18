@@ -77,88 +77,9 @@ public sealed partial class ServerMediaCleanupService : BackgroundServiceBase<Se
             FormatBytes(summary.BytesFreed),
             summary.ErrorCount);
 
-        await CheckAndReclaimDiskSpaceAsync(settingsService.Recording.RecordingPath).ConfigureAwait(false);
-    }
-
-    private async Task CheckAndReclaimDiskSpaceAsync(string recordingPath)
-    {
-        if (string.IsNullOrEmpty(recordingPath))
-        {
-            return;
-        }
-
-        var cleanup = settingsService.Recording.Cleanup;
-        if (!cleanup.EnableDiskSpaceGuard)
-        {
-            return;
-        }
-
-        var minFreeBytes = (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
-
-        long freeBytes;
-        string driveRoot;
-        try
-        {
-            driveRoot = Path.GetPathRoot(Path.GetFullPath(recordingPath)) ?? string.Empty;
-            if (string.IsNullOrEmpty(driveRoot))
-            {
-                return;
-            }
-
-            freeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
-        }
-        catch (Exception ex)
-        {
-            LogDiskSpaceCheckFailed(ex, recordingPath);
-            return;
-        }
-
-        var freeMb = freeBytes / (1024.0 * 1024.0);
-
-        if (freeBytes >= minFreeBytes)
-        {
-            LogDiskSpaceOk(driveRoot, freeMb);
-            return;
-        }
-
-        // Below minimum — escalate to Error when critically low (≤ 25% of threshold)
-        if (freeBytes <= minFreeBytes / 4)
-        {
-            LogDiskSpaceCritical(driveRoot, freeMb);
-        }
-        else
-        {
-            LogDiskSpaceLow(driveRoot, freeMb, cleanup.MinFreeSpaceMb);
-        }
-
-        LogDiskSpaceReclaimStarted(recordingPath, cleanup.MinFreeSpaceMb);
-
-        var activePaths = GetActiveRecordingPaths();
-        var run = await Task.Run(() => MediaCleanupRunner.ReclaimBySize(
-            recordingPath,
-            RecordingExtensions,
-            minFreeBytes,
-            activePaths,
-            deleteCompanionThumbnail: true)).ConfigureAwait(false);
-
-        foreach (var f in run.DeletedFiles)
-        {
-            LogDeletedFile(f);
-        }
-
-        foreach (var t in run.DeletedThumbnails)
-        {
-            LogDeletedThumbnail(t);
-        }
-
-        if (run.StillShort)
-        {
-            LogDiskSpaceReclaimStillShort(recordingPath, run.BytesFreed / (1024.0 * 1024.0));
-        }
-        else
-        {
-            LogDiskSpaceReclaimComplete(recordingPath, run.BytesFreed / (1024.0 * 1024.0), run.DeletedFiles.Count);
-        }
+        // The free space is kept by the recording service's guard, which also runs every 30
+        // seconds; this pass runs it once more after the age cleanup.
+        await Task.Run(recordingService.ReclaimDiskSpace).ConfigureAwait(false);
     }
 
     private CleanupSummary RunCore(

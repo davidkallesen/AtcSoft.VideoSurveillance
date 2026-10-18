@@ -32,26 +32,17 @@ public sealed partial class ServerRecordingService
     [LoggerMessage(Level = LogLevel.Information, Message = "Reaper swept {ReapedCount} inactive recording session(s)")]
     private partial void LogReaperSwept(int reapedCount);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space low on '{Drive}': {FreeMb:F0} MB free (threshold {ThresholdMb} MB) — reclaiming oldest recordings before start")]
-    private partial void LogDiskSpaceLowBeforeRecording(string drive, double freeMb, int thresholdMb);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Disk space reclaim complete before recording: freed {FreedMb:F2} MB ({Count} files)")]
-    private partial void LogDiskSpaceReclaimComplete(double freedMb, int count);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space reclaim exhausted all non-active recordings on '{Drive}': freed {FreedMb:F2} MB but still below threshold")]
-    private partial void LogDiskSpaceReclaimStillShort(string drive, double freedMb);
-
     [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space reclaim failed before recording start")]
     private partial void LogDiskSpaceReclaimFailed(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below the space kept free mid-recording: stopping {Count} recording(s)")]
+    private partial void LogDiskSpaceGuardStoppingRecordings(int count);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Disk space still below threshold after reclaim — recording aborted for camera '{CameraName}'")]
     private partial void LogDiskSpaceGateFailed(string cameraName);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Thumbnail capture failed for camera {CameraId}; the recording is not affected")]
     private partial void LogThumbnailFailed(Exception ex, Guid cameraId);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Disk still below threshold mid-recording — stopping {Count} active recording(s) to prevent disk exhaustion")]
-    private partial void LogDiskSpaceGuardStoppingAllRecordings(int count);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Camera '{CameraName}' has a recording folder of its own, '{OwnFolder}'; the server records every camera below '{RecordingPath}', which it lists, serves and cleans")]
     private partial void LogOwnRecordingFolderNotUsed(string cameraName, string ownFolder, string recordingPath);

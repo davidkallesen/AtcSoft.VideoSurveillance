@@ -97,6 +97,8 @@ try
     // instance — the broadcaster subscribes to ServerRecordingService's
     // server-only CameraConnectionStateChanged event (not on IRecordingService
     // since WPF doesn't need it).
+    // One disk-space guard for the recording service and the cleanup: they take turns.
+    builder.Services.AddSingleton(new DiskSpaceGuard(FreeSpaceReader.Default));
     builder.Services.AddSingleton<ServerRecordingService>();
     builder.Services.AddSingleton<IRecordingService>(sp =>
         sp.GetRequiredService<ServerRecordingService>());
