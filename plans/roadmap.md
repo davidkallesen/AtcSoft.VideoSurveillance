@@ -123,7 +123,6 @@ Built and tested, but not closed without hands, eyes or hardware.
 |---|---|
 | Motion boxes reported misplaced at 180°: two possible causes fixed, not confirmed | [Video rotation](archive/roadmap-video-rotation.md#the-180-report-is-not-explained) |
 | `RecordingsBrowserDialogTests` was flaky in a full test run (its clean-up met a test file still held, likely by the virus scanner); since 2026-10-18 the Wpf.Core tests' clean-up retries and never fails a test. Close it when full runs stay green | [REST API generator v3](roadmap-rest-api-sg.md) |
-| An `http://` client behind the HTTPS redirect loses its `Authorization` header | [REST API generator v3](roadmap-rest-api-sg.md) |
 
 ---
 
@@ -144,6 +143,8 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | The soak report scripts count recordings in day folders | `scripts/soak-report*.sh` |
 | CameraWall keeps camera passwords encrypted in `cameras.json` (2026-10-18) | `StoredSecret` |
 | CameraWall browses, cleans and reorganises cameras' own recording folders (2026-10-18) | `RecordingRoots` |
+| The WPF client set to a server's `http://` address uses the `https://` address the server redirects to, so it keeps its sign-in (2026-10-18) | `ServerAddress` |
+| A failed save of the settings or the cameras is logged (2026-10-18) | `CameraStorageService`, `ApplicationSettingsService` |
 
 ---
 

@@ -13,6 +13,9 @@ public partial class App
     [LoggerMessage(Level = LogLevel.Information, Message = "App starting")]
     private partial void LogAppStarting();
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "The server at '{Configured}' redirects to '{Resolved}'; the client uses the redirected address")]
+    private partial void LogServerAddressRedirected(string configured, string resolved);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to read the settings from the server again")]
     private partial void LogSettingsReloadFailed(Exception ex);
 

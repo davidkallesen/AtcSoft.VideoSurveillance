@@ -171,9 +171,21 @@ public partial class App
             return;
         }
 
+        // A server with HTTPS redirects plain HTTP, and the client would lose its sign-in on the
+        // way: talk to the address the server redirects to.
+        var configuredAddress = apiBaseAddress;
+        using (var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) })
+        {
+            apiBaseAddress = (await ServerAddress.ResolveAsync(probeClient, new Uri(apiBaseAddress))).AbsoluteUri.TrimEnd('/');
+        }
+
         // 2. Build DI host
         host = BuildHost(apiBaseAddress);
         logger = host.Services.GetService<ILoggerFactory>()!.CreateLogger<App>();
+        if (!string.Equals(configuredAddress.TrimEnd('/'), apiBaseAddress, StringComparison.OrdinalIgnoreCase))
+        {
+            LogServerAddressRedirected(configuredAddress, apiBaseAddress);
+        }
 
         LogAppStarting();
 
