@@ -90,12 +90,7 @@ public static class FFmpegInstaller
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            if (Directory.Exists(targetFolder))
-            {
-                Directory.Delete(targetFolder, recursive: true);
-            }
-
-            Directory.Move(bin, targetFolder);
+            Replace(bin, targetFolder, Path.Combine(work, "old"));
             progress?.Report(new FFmpegInstallProgress(FFmpegInstallStage.Done, package.Size, package.Size));
             return targetFolder;
         }
@@ -106,6 +101,39 @@ public static class FFmpegInstaller
         finally
         {
             TryDelete(work);
+        }
+    }
+
+    /// <summary>
+    /// Puts the new folder in place of the target. The old one is moved aside first, which fails
+    /// before anything changes when one of its files is in use (the server may run from it), and
+    /// is moved back when the new one cannot be put in place. A target that already holds the
+    /// FFmpeg the engine needs (another app installed it meanwhile) is kept.
+    /// </summary>
+    private static void Replace(
+        string newFolder,
+        string targetFolder,
+        string asideFolder)
+    {
+        if (FFmpegRuntime.ReadVersions(targetFolder) == FFmpegRuntime.Expected)
+        {
+            return;
+        }
+
+        var hadTarget = Directory.Exists(targetFolder);
+        if (hadTarget)
+        {
+            Directory.Move(targetFolder, asideFolder);
+        }
+
+        try
+        {
+            Directory.Move(newFolder, targetFolder);
+        }
+        catch (Exception ex) when (hadTarget && ex is IOException or UnauthorizedAccessException)
+        {
+            Directory.Move(asideFolder, targetFolder);
+            throw;
         }
     }
 

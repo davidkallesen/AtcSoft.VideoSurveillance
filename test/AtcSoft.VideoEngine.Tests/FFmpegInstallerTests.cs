@@ -86,6 +86,47 @@ public sealed class FFmpegInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task An_Install_In_Use_Is_Left_As_It_Was()
+    {
+        // The server may run from the shared folder while a client installs.
+        Directory.CreateDirectory(Target);
+        var inUse = Path.Combine(Target, "avutil-60.dll");
+        await File.WriteAllTextAsync(inUse, "old", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(Target, "avcodec-62.dll"), "old", TestContext.Current.CancellationToken);
+        var zip = Zip(FFmpegRuntime.Expected);
+        using var handler = new Serve(zip);
+        using var http = new HttpClient(handler, disposeHandler: false);
+
+        await using (new FileStream(inUse, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var install = () => FFmpegInstaller.InstallAsync(http, Package(zip), Target, progress: null, TestContext.Current.CancellationToken);
+
+            await install.Should().ThrowAsync<FFmpegInstallException>();
+        }
+
+        Directory.GetFiles(Target).Select(Path.GetFileName).Should().BeEquivalentTo("avutil-60.dll", "avcodec-62.dll");
+        (await File.ReadAllTextAsync(inUse, TestContext.Current.CancellationToken)).Should().Be("old");
+        Directory.GetDirectories(Path.GetDirectoryName(Target)!).Should().Equal([Target], "no work folder is left behind");
+    }
+
+    [Fact]
+    public async Task An_Install_Another_App_Has_Just_Finished_Is_Kept()
+    {
+        // Two apps started together may both offer to install.
+        var zip = Zip(FFmpegRuntime.Expected);
+        using var handler = new Serve(zip);
+        using var http = new HttpClient(handler, disposeHandler: false);
+        await FFmpegInstaller.InstallAsync(http, Package(zip), Target, progress: null, TestContext.Current.CancellationToken);
+        var marker = Path.Combine(Target, "in-use.marker");
+        await File.WriteAllTextAsync(marker, "x", TestContext.Current.CancellationToken);
+
+        var installed = await FFmpegInstaller.InstallAsync(http, Package(zip), Target, progress: null, TestContext.Current.CancellationToken);
+
+        installed.Should().Be(Target);
+        File.Exists(marker).Should().BeTrue();
+    }
+
+    [Fact]
     public void The_Package_Is_The_Pinned_Release_With_Its_Checksum()
     {
         var package = FFmpegInstaller.Package;
