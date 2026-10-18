@@ -125,7 +125,6 @@ Built and tested, but not closed without hands, eyes or hardware.
 | Motion boxes reported misplaced at 180°: two possible causes fixed, not confirmed | [Video rotation](archive/roadmap-video-rotation.md#the-180-report-is-not-explained) |
 | `RecordingsBrowserDialogTests` is flaky in a full test run | [REST API generator v3](roadmap-rest-api-sg.md) |
 | An `http://` client behind the HTTPS redirect loses its `Authorization` header | [REST API generator v3](roadmap-rest-api-sg.md) |
-| `ValidationError` template in Atc.Wpf.Theming reads `(Validation.Errors)[0]`, which fails each time an error clears | Filed in atc-wpf: `issues/theming-validationerror-template-indexes-empty-errors.md` |
 
 ---
 

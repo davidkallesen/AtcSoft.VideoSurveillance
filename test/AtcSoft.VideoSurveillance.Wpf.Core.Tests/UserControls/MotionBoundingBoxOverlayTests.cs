@@ -47,7 +47,8 @@ public sealed class MotionBoundingBoxOverlayTests
         drawn.Should().Be(0);
     }
 
-    private static MotionBoundingBoxOverlay Arranged(MotionBoundingBoxOverlay overlay)
+    private static MotionBoundingBoxOverlay Arranged(
+        MotionBoundingBoxOverlay overlay)
     {
         overlay.Measure(new System.Windows.Size(200, 100));
         overlay.Arrange(new System.Windows.Rect(0, 0, 200, 100));

@@ -23,7 +23,8 @@ public sealed class GatewayServiceSessionRenewalTests
     [InlineData(HttpStatusCode.TooManyRequests)]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
-    public async Task A_Busy_Or_Failing_Server_Is_Not_A_Refusal(HttpStatusCode status)
+    public async Task A_Busy_Or_Failing_Server_Is_Not_A_Refusal(
+        HttpStatusCode status)
     {
         using var body = new StringContent($$"""{"title":"Busy","status":{{(int)status}}}""");
         using var server = new GatewayTestServer(status, body, "application/problem+json");
