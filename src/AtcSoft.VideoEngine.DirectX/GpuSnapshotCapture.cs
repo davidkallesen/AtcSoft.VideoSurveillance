@@ -192,23 +192,23 @@ internal sealed unsafe class GpuSnapshotCapture : IDisposable
         int width,
         int height)
     {
-        byte*[] srcData = [(byte*)bgraData, null, null, null];
-        int[] srcStride = [rowPitch, 0, 0, 0];
+        byte** srcData = stackalloc byte*[] { (byte*)bgraData, null, null, null };
+        int* srcStride = stackalloc int[] { rowPitch, 0, 0, 0 };
 
-        byte*[] dstData =
-        [
+        byte** dstData = stackalloc byte*[]
+        {
             (byte*)rgbFrame->data[0],
             (byte*)rgbFrame->data[1],
             (byte*)rgbFrame->data[2],
             (byte*)rgbFrame->data[3],
-        ];
-        int[] dstStride =
-        [
+        };
+        int* dstStride = stackalloc int[]
+        {
             rgbFrame->linesize[0],
             rgbFrame->linesize[1],
             rgbFrame->linesize[2],
             rgbFrame->linesize[3],
-        ];
+        };
 
         _ = sws_scale(swsCtx, srcData, srcStride, 0, height, dstData, dstStride);
     }

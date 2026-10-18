@@ -87,29 +87,29 @@ internal sealed unsafe class CpuFrameUploader : IDisposable
         // Flyleaf.FFmpeg's byte_ptrArray8 doesn't expose a byte** root,
         // so unpack the plane pointers and strides into managed arrays
         // for the sws_scale call (mirrors FrameCapture's approach).
-        byte*[] srcData =
-        [
+        byte** srcData = stackalloc byte*[]
+        {
             (byte*)frame->data[0], (byte*)frame->data[1],
             (byte*)frame->data[2], (byte*)frame->data[3],
-        ];
+        };
 
-        int[] srcStride =
-        [
+        int* srcStride = stackalloc int[]
+        {
             frame->linesize[0], frame->linesize[1],
             frame->linesize[2], frame->linesize[3],
-        ];
+        };
 
-        byte*[] dstData =
-        [
+        byte** dstData = stackalloc byte*[]
+        {
             (byte*)bgraFrame->data[0], (byte*)bgraFrame->data[1],
             (byte*)bgraFrame->data[2], (byte*)bgraFrame->data[3],
-        ];
+        };
 
-        int[] dstStride =
-        [
+        int* dstStride = stackalloc int[]
+        {
             bgraFrame->linesize[0], bgraFrame->linesize[1],
             bgraFrame->linesize[2], bgraFrame->linesize[3],
-        ];
+        };
 
         sws_scale(swsCtx, srcData, srcStride, 0, frame->height, dstData, dstStride);
 

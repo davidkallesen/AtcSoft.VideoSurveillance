@@ -396,29 +396,29 @@ internal sealed unsafe class FrameEncoder : IDisposable
 
     private void Convert(AVFrame* frame)
     {
-        byte*[] srcData =
-        [
+        byte** srcData = stackalloc byte*[]
+        {
             (byte*)frame->data[0], (byte*)frame->data[1],
             (byte*)frame->data[2], (byte*)frame->data[3],
-        ];
+        };
 
-        int[] srcStride =
-        [
+        int* srcStride = stackalloc int[]
+        {
             frame->linesize[0], frame->linesize[1],
             frame->linesize[2], frame->linesize[3],
-        ];
+        };
 
-        byte*[] dstData =
-        [
+        byte** dstData = stackalloc byte*[]
+        {
             (byte*)converted->data[0], (byte*)converted->data[1],
             (byte*)converted->data[2], (byte*)converted->data[3],
-        ];
+        };
 
-        int[] dstStride =
-        [
+        int* dstStride = stackalloc int[]
+        {
             converted->linesize[0], converted->linesize[1],
             converted->linesize[2], converted->linesize[3],
-        ];
+        };
 
         sws_scale(swsCtx, srcData, srcStride, 0, sourceHeight, dstData, dstStride);
     }

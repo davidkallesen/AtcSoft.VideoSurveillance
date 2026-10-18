@@ -1,7 +1,9 @@
 global using System.Collections.Concurrent;
 global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
+global using System.IO.Compression;
 global using System.Runtime.InteropServices;
+global using System.Security.Cryptography;
 global using System.Text;
 
 global using AtcSoft.VideoEngine.Capture;

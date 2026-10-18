@@ -54,8 +54,15 @@ public static class VideoEngineBootstrap
                 return;
             }
 
-            var ffmpegPath = config.FFmpegPath ?? FindFFmpegPath();
-            FFmpegVersion = FFmpegLoader.Initialize(ffmpegPath, config.FFmpegLogLevel);
+            // The bindings load exactly one FFmpeg version; say which is needed and what was
+            // found instead of letting the loader fail with "avutil.61 not found".
+            var check = FFmpegRuntime.Check(config.FFmpegPath);
+            if (check.Status != FFmpegStatus.Ready)
+            {
+                throw new FFmpegNotReadyException(check);
+            }
+
+            FFmpegVersion = FFmpegLoader.Initialize(check.Folder, config.FFmpegLogLevel);
 
             currentConfig = config;
             isInitialized = true;
@@ -70,54 +77,21 @@ public static class VideoEngineBootstrap
     }
 
     /// <summary>
-    /// Finds the folder the FFmpeg shared libraries are installed in by
-    /// checking the common locations. Finding the folder does not mean the
-    /// libraries load: they also have to be the version the bindings expect.
+    /// Finds the folder with the FFmpeg the engine needs (<see cref="FFmpegRuntime.Check(string?)"/>);
+    /// without one, a folder with another FFmpeg, so that loading it fails with the loader's
+    /// message (the engine tests rely on this to tell "not installed" from "wrong version").
     /// </summary>
-    /// <returns>The folder, or <c>null</c> when none of the locations holds the libraries.</returns>
+    /// <returns>The folder, or <c>null</c> when no FFmpeg is installed at all.</returns>
     public static string? FindFFmpegPath()
-        => FindFFmpegPath(
-        [
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"),
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                "ffmpeg",
-                "bin"),
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "ffmpeg",
-                "bin"),
-            @"C:\ffmpeg\bin",
-            @"C:\Program Files\ffmpeg\bin",
-        ]);
+        => FindFFmpegPath(FFmpegRuntime.Candidates());
 
     /// <summary>
-    /// Returns the first of the folders that holds the FFmpeg shared libraries.
+    /// Returns the folder with the FFmpeg the engine needs among the candidates, else the
+    /// first folder with any FFmpeg.
     /// </summary>
     internal static string? FindFFmpegPath(IEnumerable<string> candidates)
     {
-        foreach (var path in candidates)
-        {
-            if (Directory.Exists(path) && ContainsFFmpegBinaries(path))
-            {
-                return path;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool ContainsFFmpegBinaries(string path)
-    {
-        try
-        {
-            return Directory.GetFiles(path, "avcodec*.dll").Length > 0
-                || Directory.GetFiles(path, "libavcodec*.so").Length > 0
-                || Directory.GetFiles(path, "libavcodec*.dylib").Length > 0;
-        }
-        catch
-        {
-            return false;
-        }
+        var check = FFmpegRuntime.Check(candidates);
+        return check.Folder ?? (check.Found.Count > 0 ? check.Found[0].Folder : null);
     }
 }
