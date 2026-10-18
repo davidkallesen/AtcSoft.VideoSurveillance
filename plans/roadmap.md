@@ -74,7 +74,6 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 | Record into each folder layout end to end without a camera | The host tests record with the FFmpeg test stream, but not into each layout | Host |
 | TLS verification as an explicit per-camera setting (FFmpeg 9 plan, phase 2) | No `tls_verify` anywhere; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
 | FFmpeg 8.1.3 (FFmpeg 9 plan, decision 4) | Still 8.1.2 in the pipeline and README; check that a shared build exists | Engine tests, E2E with the live test camera |
-| Camera passwords at rest in standalone CameraWall | Only the server encrypts (`SecretProtector`); CameraWall writes them in plain text | Unit |
 | The audit log keeps the value before a change | `AuditRecord` has none | Unit |
 | Clip export / trim | Only a download exists | Unit and E2E |
 | MQTT publisher | None | Unit and host |
@@ -143,6 +142,8 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | A camera without an address or a USB device is refused by the server | `CameraSourceCheck` |
 | Neither client forgets its stored session when the server is busy, failing or restarting (only a refused refresh token does) | [`docs/server.md`](../docs/server.md) |
 | The soak report scripts count recordings in day folders | `scripts/soak-report*.sh` |
+| CameraWall keeps camera passwords encrypted in `cameras.json` (2026-10-18) | `StoredSecret` |
+| CameraWall browses, cleans and reorganises cameras' own recording folders (2026-10-18) | `RecordingRoots` |
 
 ---
 

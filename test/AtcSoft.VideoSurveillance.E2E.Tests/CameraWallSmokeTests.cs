@@ -57,6 +57,11 @@ public sealed class CameraWallSmokeTests
 
         steps.Failures.Should().BeEmpty(steps.Report());
         LogFindings.AssertClean(run.LogFolder, "CameraWall");
+        foreach (var file in Directory.EnumerateFiles(run.DataFolder, "cameras.json*"))
+        {
+            File.ReadAllText(file).Should().NotContain(CameraWallRun.CameraPassword, $"camera passwords are kept encrypted ({Path.GetFileName(file)})");
+        }
+
         closed.Should().BeTrue("CameraWall closes when its main window closes");
     }
 

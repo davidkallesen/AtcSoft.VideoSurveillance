@@ -148,18 +148,104 @@ public class CameraStorageService : ICameraStorageService
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Camera passwords are written encrypted (<see cref="StoredSecret"/>); the cameras in memory
+    /// keep their plain passwords.
+    /// </remarks>
     public void Save()
     {
-        if (!SafeJsonFile.TryWrite(storagePath, data, JsonOptions))
+        var json = JsonSerializer.SerializeToNode(data, JsonOptions);
+        _ = TransformPasswords(json, StoredSecret.Protect);
+
+        if (json is null || !SafeJsonFile.TryWrite(storagePath, json, JsonOptions))
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save camera storage to {storagePath}");
         }
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Encrypted passwords are decrypted. A file with plain passwords (written before they were
+    /// encrypted) is written again at once, twice, so the backup copy holds no plain password either.
+    /// </remarks>
     public void Load()
     {
-        data = SafeJsonFile.TryRead<CameraStorageData>(storagePath, JsonOptions)
-               ?? new CameraStorageData();
+        var json = SafeJsonFile.TryRead<JsonNode>(storagePath, JsonOptions);
+        if (json is null)
+        {
+            data = new CameraStorageData();
+            return;
+        }
+
+        var hadPlainPasswords = HasPlainPassword(json);
+        _ = TransformPasswords(json, StoredSecret.Unprotect);
+        data = json.Deserialize<CameraStorageData>(JsonOptions) ?? new CameraStorageData();
+
+        if (hadPlainPasswords)
+        {
+            Save();
+            Save();
+        }
+    }
+
+    // Every "password" in the file, whatever the format version put it in.
+    private static bool TransformPasswords(
+        JsonNode? node,
+        Func<string?, string?> transform)
+    {
+        var changed = false;
+        switch (node)
+        {
+            case JsonObject jsonObject:
+                foreach (var (name, value) in jsonObject.ToList())
+                {
+                    if (IsPassword(name, value, out var text))
+                    {
+                        var transformed = transform(text);
+                        if (!string.Equals(transformed, text, StringComparison.Ordinal))
+                        {
+                            jsonObject[name] = transformed is null ? null : JsonValue.Create(transformed);
+                            changed = true;
+                        }
+                    }
+                    else
+                    {
+                        changed |= TransformPasswords(value, transform);
+                    }
+                }
+
+                break;
+            case JsonArray jsonArray:
+                foreach (var item in jsonArray)
+                {
+                    changed |= TransformPasswords(item, transform);
+                }
+
+                break;
+        }
+
+        return changed;
+    }
+
+    private static bool HasPlainPassword(JsonNode? node)
+        => node switch
+        {
+            JsonObject jsonObject => jsonObject.Any(p =>
+                IsPassword(p.Key, p.Value, out var text)
+                    ? !string.IsNullOrEmpty(text) && !StoredSecret.IsProtected(text)
+                    : HasPlainPassword(p.Value)),
+            JsonArray jsonArray => jsonArray.Any(HasPlainPassword),
+            _ => false,
+        };
+
+    private static bool IsPassword(
+        string name,
+        JsonNode? value,
+        out string? text)
+    {
+        text = null;
+        return string.Equals(name, "password", StringComparison.OrdinalIgnoreCase) &&
+               value is JsonValue jsonValue &&
+               jsonValue.TryGetValue(out text);
     }
 }

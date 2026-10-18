@@ -11,6 +11,11 @@ internal sealed class CameraWallRun : IDisposable
     public const string MainWindowTitle = "AtcSoft Camera Wall";
     public const string LayoutName = "E2E";
 
+    /// <summary>
+    /// The cameras' password; it must never be in cameras.json in plain text.
+    /// </summary>
+    public const string CameraPassword = "e2e-camera-secret";
+
     private readonly LiveTestCamera? liveCamera;
 
     public CameraWallRun()
@@ -76,6 +81,8 @@ internal sealed class CameraWallRun : IDisposable
             camera.Connection.Protocol = CameraProtocol.Http;
             camera.Connection.Path = TestCameras.StreamPath;
             camera.Display.DisplayName = name;
+            camera.Authentication.UserName = "e2e";
+            camera.Authentication.Password = CameraPassword;
             storage.AddOrUpdateCamera(camera);
 
             // A recording per camera, so the recordings browser lists rows with thumbnails.
