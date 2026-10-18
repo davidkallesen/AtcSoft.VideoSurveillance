@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <!-- Aspire brings MessagePack 2.5.302 (GHSA-qhrr-8q5h-9q3h, fixed in 2.5.303); drop this when Aspire takes a fixed one. -->
-    <PackageReference Include="MessagePack" Version="2.5.307" />
+    <PackageReference Include="MessagePack" Version="3.1.12" />
   </ItemGroup>
 
 </Project>

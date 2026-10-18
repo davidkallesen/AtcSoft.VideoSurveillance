@@ -16,6 +16,17 @@ public sealed class FFmpegSetupSmokeTests(ServerFixture server)
         [FFmpegRuntime.PathEnvironmentVariable] = string.Empty,
     };
 
+    // A picture of the dialog in the run folder, to look at.
+    private static void Picture(
+        Window dialog,
+        string name)
+    {
+        dialog.SetForeground();
+        dialog.Move(0, 0);
+        DesktopApp.Settle(TimeSpan.FromSeconds(1));
+        FlaUI.Core.Capturing.Capture.MainScreen().ToFile(Path.Combine(E2ESettings.RunFolder, $"ffmpeg-setup-{name}.png"));
+    }
+
     [Fact]
     public void CameraWall_Starts_With_A_Folder_Chosen_In_The_Set_Up_Dialog()
     {
@@ -26,6 +37,7 @@ public sealed class FFmpegSetupSmokeTests(ServerFixture server)
         using var run = new CameraWallRun(WithoutFFmpeg);
         var app = run.App;
         var dialog = app.WaitForWindowTitled(DialogTitle, DesktopApp.StartTimeout);
+        Picture(dialog, run.GetType().Name);
 
         app.FindWhere(dialog, e => (e.Properties.Name.ValueOrDefault ?? string.Empty).Contains("not installed", StringComparison.Ordinal), "saying FFmpeg is not installed");
         var install = app.Find(dialog, "Install FFmpeg", ControlType.Button);
@@ -53,6 +65,7 @@ public sealed class FFmpegSetupSmokeTests(ServerFixture server)
         using var run = new WpfClientRun(server, WithoutFFmpeg);
         var app = run.App;
         var dialog = app.WaitForWindowTitled(DialogTitle, DesktopApp.StartTimeout);
+        Picture(dialog, run.GetType().Name);
 
         app.FindWhere(dialog, e => (e.Properties.Name.ValueOrDefault ?? string.Empty).Contains("FFmpeg", StringComparison.Ordinal), "naming FFmpeg");
         DesktopApp.Press(app.Find(dialog, "Exit", ControlType.Button));

@@ -2620,7 +2620,7 @@ Miniature:
     <value>Installér FFmpeg henter FFmpeg {0} (cirka 100 MB) fra GitHub og lægger den i {1}, hvor alle AtcSoft-programmer på denne computer finder den.</value>
   </data>
   <data name="FFmpegChooseFolder1" xml:space="preserve">
-    <value>Eller vælg en mappe, der indeholder FFmpeg {0}:</value>
+    <value>Eller vælg en mappe, der indeholder FFmpeg {0}</value>
   </data>
   <data name="FFmpegFolder" xml:space="preserve">
     <value>FFmpeg-mappe</value>

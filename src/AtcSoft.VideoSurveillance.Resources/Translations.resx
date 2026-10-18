@@ -2620,7 +2620,7 @@ Thumbnail:
     <value>Install FFmpeg downloads FFmpeg {0} (about 100 MB) from GitHub and puts it in {1}, where every AtcSoft app on this computer finds it.</value>
   </data>
   <data name="FFmpegChooseFolder1" xml:space="preserve">
-    <value>Or choose a folder that holds FFmpeg {0}:</value>
+    <value>Or choose a folder that holds FFmpeg {0}</value>
   </data>
   <data name="FFmpegFolder" xml:space="preserve">
     <value>FFmpeg folder</value>

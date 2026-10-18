@@ -2620,7 +2620,7 @@ Vorschaubild:
     <value>„FFmpeg installieren“ lädt FFmpeg {0} (etwa 100 MB) von GitHub herunter und legt es in {1} ab, wo jede AtcSoft-Anwendung auf diesem Computer es findet.</value>
   </data>
   <data name="FFmpegChooseFolder1" xml:space="preserve">
-    <value>Oder wählen Sie einen Ordner, der FFmpeg {0} enthält:</value>
+    <value>Oder wählen Sie einen Ordner, der FFmpeg {0} enthält</value>
   </data>
   <data name="FFmpegFolder" xml:space="preserve">
     <value>FFmpeg-Ordner</value>
