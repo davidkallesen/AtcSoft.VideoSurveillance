@@ -60,7 +60,7 @@ public static class FFmpegRuntime
 
     /// <summary>
     /// Gets the folders looked in, in order: the configured one, <see cref="PathEnvironmentVariable"/>,
-    /// the folder a user chose (<see cref="RememberedFolderFile"/>), next to the app, <see cref="ManagedFolder"/>, the usual install folders, and the PATH.
+    /// the folder a user chose (<see cref="RememberedFolderFile"/>), next to the app, <see cref="ManagedFolder"/>, the usual install folders, the app's own folder, and the PATH.
     /// </summary>
     /// <param name="configuredPath">A folder the app was configured with, looked in first.</param>
     /// <returns>The folders, each once.</returns>
@@ -102,6 +102,7 @@ public static class FFmpegRuntime
         Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ffmpeg", "bin"));
         Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ffmpeg", "bin"));
         Add(@"C:\ffmpeg\bin");
+        Add(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar));
         foreach (var folder in (environment("PATH") ?? string.Empty).Split(Path.PathSeparator))
         {
             Add(folder.Trim());

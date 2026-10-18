@@ -34,7 +34,7 @@ Tile.Camera = camera;   // AtcSoft.VideoSurveillance.Models.CameraConfiguration
 
 ## FFmpeg is not included
 
-This package does not ship the FFmpeg native libraries. Your application must deploy FFmpeg **8.x** shared builds (`avutil-60.dll` and friends) and point `VideoEngineConfig.FFmpegPath` at them. A different major version fails at runtime with `Library avutil.60* not found`.
+This package does not ship the FFmpeg native libraries. Your application must deploy an FFmpeg **9** shared build (`avutil-61.dll` and friends) and point `VideoEngineConfig.FFmpegPath` at it. Or call `FFmpegSetup.EnsureReady()` before starting the engine: when FFmpeg 9 is not found it shows a dialog that installs it or takes a folder the user names, and returns the folder to start the engine with (`null` when the user chose to exit).
 
 ## Links
 

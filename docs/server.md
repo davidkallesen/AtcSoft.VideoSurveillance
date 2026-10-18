@@ -14,6 +14,10 @@ These are read from the server's configuration: `appsettings.json` next to the s
 | `Cors:AllowedOrigins` | `Cors__AllowedOrigins__0`, ... | The local web client addresses | Which web addresses may call the API |
 | `Webhooks:Endpoints` | `Webhooks__Endpoints__0__Url`, ... | None | Where camera events are posted — see [Webhooks](#-webhooks) |
 
+### FFmpeg
+
+The server needs FFmpeg 9 (the libraries for the engine, `ffmpeg.exe` for live streams). Without it, it logs what is needed and what it found, and exits with code 1. Start it once with `--install-ffmpeg` and it downloads the pinned build, checks it and puts it in `%ProgramData%\AtcSoft\ffmpeg\9.0.2\bin`, where the desktop apps find it too. `ATCSOFT_FFMPEG_PATH` names a folder to use instead. See the [README](../README.md#-install-ffmpeg-building-from-source) for every folder looked in.
+
 ### Data folder
 
 With `Storage:DataPath` set, the server keeps `settings.json` and `cameras.json` in that folder. The recording, snapshot and log folders are moved into it too, as long as they still point at their default location; a folder you picked yourself in the settings is left alone.

@@ -6,7 +6,7 @@ Affects **`AtcSoft.VideoEngine`** and **`AtcSoft.VideoEngine.DirectX`** (code), 
 
 ← Back to the [roadmap home](roadmap.md)
 
-**Status: ⏸️ Deferred** — decided 2026-10-13. Nothing is blocked on it; this file records what was learned so the work can be picked up later.
+**Status: 🟨 Built, awaiting hands-on checks** — picked up again and done in code on 2026-10-18: the engine runs on FFmpeg 9.0.2, and the apps and the server find, report and install it themselves. What is left is phase 5 by hand and the per-camera TLS setting.
 
 ---
 
@@ -91,36 +91,50 @@ Most of the 9.0 headline list does nothing for a surveillance recorder: AMF colo
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | Make a failed FFmpeg load visible in tests | ✅ |
-| 2 | TLS verification as an explicit setting | ⬜ |
-| 3 | Bindings 9.0.2 and the code adaptation | ⬜ |
-| 4 | FFmpeg 9 everywhere it is provided | ⬜ |
-| 5 | Re-verify the engine against FFmpeg 9 | ⬜ |
+| 2 | TLS verification as an explicit setting | 🟨 off engine-wide; the per-camera setting is open |
+| 3 | Bindings 9.0.2 and the code adaptation | ✅ |
+| 4 | FFmpeg 9 everywhere it is provided | ✅ |
+| 4b | Find, report and install FFmpeg (set-up dialog, server) | ✅ |
+| 5 | Re-verify the engine against FFmpeg 9 | 🟨 automated part done |
+
+### Done on 2026-10-18
+
+- **Bindings 9.0.2**, `sws_scale` arrays as `stackalloc` (four files).
+- **The engine knows which FFmpeg it needs.** `FFmpegRuntime.Expected` comes from the bindings' `LIB*_VERSION_MAJOR` constants. `FFmpegRuntime.Check` reads the library versions from the file names in each folder it looks in and says Ready, WrongVersion (with every folder and version found) or Missing. `VideoEngineBootstrap.Initialize` throws `FFmpegNotReadyException` with that description instead of the loader's "avutil.61 not found".
+- **An installer** (`FFmpegInstaller`): the pinned gyan.dev 9.0.2 shared build from its GitHub mirror, checked against its SHA-256, only its `bin` folder, the versions checked, then put in `%ProgramData%\AtcSoft\ffmpeg\9.0.2\bin`. A failed install leaves the target as it was; an install in use (the server runs from it) fails before anything changes; one another app just finished is kept.
+- **The set-up dialog** (`FFmpegSetup`, `FFmpegSetupDialog` in Wpf.Core), shown by CameraWall and the WPF client before the engine starts when the check is not Ready: what is needed, what was found, *Install FFmpeg* with progress and cancel, *Use this folder* (only accepted when it holds FFmpeg 9; remembered for the machine in `%ProgramData%\AtcSoft\ffmpeg\folder.txt`), the download page, and *Exit*.
+- **The server** logs what is needed and exits with code 1, or installs first when started with `--install-ffmpeg` (`ServerFFmpegStartup`). Its live streams use `ffmpeg.exe` from the folder the engine loaded.
+- **TLS**: `tls_verify=0` unless `StreamOptions.VerifyTlsCertificate`; the server's HLS command passes it for HTTPS cameras. Checked against an HTTPS stream with a self-signed certificate served by the FFmpeg 9 tool: it opens by default and is refused with verification on (`DemuxerTlsTests`).
+- **Release pipeline** downloads the same pinned zip, checks the same SHA-256, and ships `ffmpeg.exe` too. README and package READMEs updated.
+- **Tests**: all unit, host and engine suites pass on FFmpeg 9.0.2 with nothing skipped (the engine tests decode and record a live test stream); `FFmpegSetupSmokeTests` walks the dialog in both apps (`ATCSOFT_FFMPEG_SEARCH=explicit` hides the installed FFmpeg).
+
+Three places name the pinned build and must change together: `FFmpegRuntime.ReleaseVersion`, `FFmpegInstaller.Package` (URL and SHA-256) and `release-please.yml`.
 | 6 | Use what is new | ⏸️ |
 
 ### Phase 1 — Make a failed FFmpeg load visible in tests ✅
 
 Done 2026-10-13. `VideoEngineBootstrap.FindFFmpegPath` tells "not installed" from "installed"; the engine tests skip in the first case and **fail** with the loader's message in the second, and print the FFmpeg version they ran against. The API host tests, which need the engine to start the server, skip the same way.
 
-### Phase 2 — TLS verification as an explicit setting ⬜
+### Phase 2 — TLS verification as an explicit setting 🟨
 
 Do this **before** the upgrade, on FFmpeg 8, so the upgrade does not change behaviour.
 
 - A setting for verifying a camera's certificate, passed to the demuxer as `tls_verify` for HTTPS and RTSPS sources.
 - End to end like any other setting: Core model, both settings dialogs, the API contract, docs.
 
-### Phase 3 — Bindings 9.0.2 and the code adaptation ⬜
+### Phase 3 — Bindings 9.0.2 and the code adaptation ✅
 
 - `Flyleaf.FFmpeg.Bindings` 8.0.1 → 9.0.2.
 - The twelve `sws_scale` array declarations become `stackalloc` (the trial did this with a mechanical edit; it built cleanly).
 
-### Phase 4 — FFmpeg 9 everywhere it is provided ⬜
+### Phase 4 — FFmpeg 9 everywhere it is provided ✅
 
 - **Release pipeline** (`release-please.yml`): the download URL is pinned to `ffmpeg-8.1.2-full_build-shared.7z`. FFmpeg 9.0.2 shared builds exist at gyan.dev and BtbN.
 - **README** and the NuGet package READMEs: supported version, download links, DLL names (`avutil-61.dll`, …), the install snippet.
 - **`VideoEngineBootstrap`**: check the error message a wrong version gives the user.
 - **Developer machines**: `%LOCALAPPDATA%\ffmpeg\bin` has to be replaced, or the apps fail at startup.
 
-### Phase 5 — Re-verify the engine against FFmpeg 9 ⬜
+### Phase 5 — Re-verify the engine against FFmpeg 9 🟨
 
 The engine tests cover only part of this; the rest is by hand or with a marked test stream fed to the player over UDP by the FFmpeg command-line tool.
 
@@ -145,10 +159,10 @@ Only after the upgrade is in and stable; each is its own piece of work.
 
 | # | Question | Recommendation |
 |---|----------|----------------|
-| 1 | **Default for certificate verification?** Off keeps every camera working as today; on is safer but breaks self-signed cameras until someone switches it off per camera. | **Off by default, per camera**, with the setting visible in the camera dialog. A camera on a private LAN with a self-signed certificate is the normal case. |
-| 2 | **Go to bindings 8.1.0 first?** It matches the FFmpeg already in use and carries less risk. | **Yes, as a separate small step**, if there is any reason to touch the bindings before the FFmpeg 9 move. Otherwise skip it. |
+| 1 | **Default for certificate verification?** Off keeps every camera working as today; on is safer but breaks self-signed cameras until someone switches it off per camera. | **Off by default, per camera**, with the setting visible in the camera dialog. A camera on a private LAN with a self-signed certificate is the normal case. *2026-10-18: off for every camera (`StreamOptions.VerifyTlsCertificate`); the per-camera setting in the dialogs and the API is still to do.* |
+| 2 | **Go to bindings 8.1.0 first?** It matches the FFmpeg already in use and carries less risk. | *Skipped: went to 9.0.2 directly on 2026-10-18.* |
 | 3 | **Support FFmpeg 8 and 9 side by side for a while?** | **No.** The bindings accept exactly one major version; a clean switch in one release is simpler than two code paths. |
-| 4 | **Take FFmpeg 8.1.3 now?** | **Yes, when a shared Windows build is published where the pipeline downloads from.** It carries the fragmented-MP4 crash fix and needs no code change. |
+| 4 | **Take FFmpeg 8.1.3 now?** | *Superseded by 9.0.2, which has the same fixes.* |
 
 ---
 

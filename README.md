@@ -257,7 +257,7 @@ Override categories: Connection, CameraDisplay, Performance, Recording, MotionDe
 
 - Windows 10/11
 - .NET 10 SDK (for building from source)
-- FFmpeg 8.x shared libraries (for building from source; see below)
+- FFmpeg 9 shared libraries (for building from source; the apps offer to install them, see below)
 
 ### 📥 Install
 
@@ -265,46 +265,38 @@ Download the latest MSI installer from [GitHub Releases](https://github.com/davi
 
 ### 🎞️ Install FFmpeg (building from source)
 
-The video engine loads FFmpeg in-process, so when you run from source you have to provide the FFmpeg DLLs yourself. Without them the apps fail at startup with:
+The video engine loads FFmpeg in-process, so when you run from source the FFmpeg DLLs have to be on the machine.
 
+**Supported version: FFmpeg 9 (9.0.2), *shared* build, Windows x64.** The bindings (`Flyleaf.FFmpeg.Bindings` 9.0.2) load exactly one major version of each library (`avutil-61.dll`, `avcodec-62.dll`, `avformat-62.dll`, …), so FFmpeg 8 and older are not used. A *shared* build has these DLLs in its `bin` folder; the *essentials* and static builds contain only `ffmpeg.exe`, which won't work.
+
+**The easy way: let the app install it.** When CameraWall or the VideoSurveillance WPF app starts without FFmpeg 9, it shows an *FFmpeg Setup* dialog. It says which FFmpeg is needed and what it found, and offers to:
+
+- **Install FFmpeg**: downloads the pinned 9.0.2 build (about 100 MB) from the [gyan.dev mirror on GitHub](https://github.com/GyanD/codexffmpeg/releases), checks its SHA-256, and puts it in `%ProgramData%\AtcSoft\ffmpeg\9.0.2\bin`, where every app and the server find it. An FFmpeg you installed yourself is never touched.
+- **Use this folder**: takes a folder you name, when it holds FFmpeg 9. The folder is remembered for the whole machine (`%ProgramData%\AtcSoft\ffmpeg\folder.txt`).
+
+The server has no dialog. Without FFmpeg 9 it logs what is needed and exits with code 1. Start it once with `--install-ffmpeg` to install it:
+
+```bash
+dotnet run --project src/AtcSoft.VideoSurveillance.Api -- --install-ffmpeg
 ```
-System.Exception: Library avutil.60* not found
-```
 
-**Supported version: FFmpeg 8.x, *shared* build, Windows x64.** The bindings (`Flyleaf.FFmpeg.Bindings` 8.0.1) check the library versions, so FFmpeg 7.x and older are rejected. The release pipeline uses **8.1.2**.
+**By hand:** download a shared FFmpeg 9 build ([gyan.dev](https://www.gyan.dev/ffmpeg/builds/) `ffmpeg-9.0.2-full_build-shared`, or [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) `…-win64-gpl-shared-9.0.zip`) and copy everything in its `bin` folder to one of the folders below.
 
-A *shared* build has the DLLs (`avutil-60.dll`, `avcodec-62.dll`, `avformat-62.dll`, …) in its `bin` folder. The *essentials* and static builds contain only `ffmpeg.exe`, which won't work.
-
-1. Download a shared FFmpeg 8.x build:
-   - [gyan.dev](https://www.gyan.dev/ffmpeg/builds/): `ffmpeg-8.x-full_build-shared.7z` (the one CI uses: [8.1.2](https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-full_build-shared.7z))
-   - or [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases): `ffmpeg-n8.x-…-win64-gpl-shared-8.x.zip`
-2. Extract it and copy **all** `*.dll` files from its `bin` folder to one of the folders below.
-
-The engine looks for FFmpeg in this order and uses the first folder that contains `avcodec*.dll`:
+The engine looks in these folders, in this order, and uses the first one whose libraries are all FFmpeg 9:
 
 | # | Folder | Notes |
 |---|---|---|
-| 1 | `<app folder>\ffmpeg` | e.g. `src\AtcSoft.CameraWall.Wpf.App\bin\Debug\net10.0-windows…\ffmpeg`. This is what the installers use. |
-| 2 | `%ProgramFiles%\ffmpeg\bin` | Needs admin rights to create |
-| 3 | `%LOCALAPPDATA%\ffmpeg\bin` | **Recommended for development**: no admin rights, and it works for every app and build configuration |
-| 4 | `C:\ffmpeg\bin` | |
-| 5 | `<app folder>` | Fallback when none of the above exist |
+| 1 | The folder the app is configured with | |
+| 2 | `ATCSOFT_FFMPEG_PATH` | An environment variable naming a folder |
+| 3 | The folder chosen in the set-up dialog | `%ProgramData%\AtcSoft\ffmpeg\folder.txt` |
+| 4 | `<app folder>\ffmpeg` | What the installers use |
+| 5 | `%ProgramData%\AtcSoft\ffmpeg\9.0.2\bin` | What the set-up dialog and `--install-ffmpeg` install |
+| 6 | `%ProgramFiles%\ffmpeg\bin`, `%LOCALAPPDATA%\ffmpeg\bin`, `C:\ffmpeg\bin` | |
+| 7 | `<app folder>`, then each folder on `PATH` | |
 
-`PATH` is **not** searched.
+A folder with another FFmpeg version is reported, not used. The server's live streams use `ffmpeg.exe` from the same folder.
 
-To install the same build as CI into `%LOCALAPPDATA%\ffmpeg\bin` (needs [7-Zip](https://www.7-zip.org/) on `PATH`):
-
-```powershell
-$url = "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-full_build-shared.7z"
-$tmp = Join-Path $env:TEMP "ffmpeg-8.1.2"
-Invoke-WebRequest -Uri $url -OutFile "$tmp.7z"
-7z x "$tmp.7z" "-o$tmp" -y | Out-Null
-$target = Join-Path $env:LOCALAPPDATA "ffmpeg\bin"
-New-Item -ItemType Directory -Path $target -Force | Out-Null
-Copy-Item (Join-Path (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName "bin\*.dll") $target
-```
-
-This applies to the CameraWall app, the VideoSurveillance WPF app and the API server (also when started through Aspire). NuGet consumers of `AtcSoft.VideoEngine` have to deploy the DLLs with their app in the same way.
+This applies to the CameraWall app, the VideoSurveillance WPF app and the API server (also when started through Aspire). NuGet consumers of `AtcSoft.VideoEngine` deploy the DLLs with their app, or call `FFmpegInstaller.InstallAsync`.
 
 ### 🔨 Build from Source
 

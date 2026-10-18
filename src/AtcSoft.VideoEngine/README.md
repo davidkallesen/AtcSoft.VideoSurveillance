@@ -23,7 +23,7 @@ IVideoPlayer player = factory.Create();
 
 ## FFmpeg is not included
 
-This package contains no native binaries. Deploy FFmpeg **8.x** shared builds (`avutil-60.dll` and friends) with your application and point `FFmpegPath` at them. A different major version fails at runtime with `Library avutil.60* not found`.
+This package contains no native binaries. Deploy an FFmpeg **9** shared build (`avutil-61.dll` and friends) with your application and point `FFmpegPath` at it, or install it at run time with `FFmpegInstaller.InstallAsync` (the pinned 9.0.2 build, checked against its SHA-256). `FFmpegRuntime.Check()` says whether the right FFmpeg is there and what was found; without it, `VideoEngineBootstrap.Initialize` throws `FFmpegNotReadyException`, whose `Check.Describe()` says what is needed.
 
 ## Related packages
 

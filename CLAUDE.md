@@ -37,7 +37,7 @@ These are exactly the projects with `<IsPackable>true</IsPackable>`; every other
 
 Marking another project packable means it joins the lockstep, and its package id must be covered by the nuget.org Trusted Publishing policy's glob patterns.
 
-A consumer must call `CameraTile.InitializeServices(..., videoPlayerFactory: ...)` before the tile plays anything — without a factory it stays `Disconnected`. The packages do not include the FFmpeg 8.x native DLLs (`avutil-60.dll` etc.); the consuming app has to deploy those itself.
+A consumer must call `CameraTile.InitializeServices(..., videoPlayerFactory: ...)` before the tile plays anything — without a factory it stays `Disconnected`. The packages do not include the FFmpeg 9 native DLLs (`avutil-61.dll` etc.); the consuming app deploys them itself or calls `FFmpegSetup.EnsureReady()`.
 
 ## Architecture
 The solution follows a layered architecture with Core at the base:
@@ -518,6 +518,9 @@ public class RecordingSettings
 
 ### Recording paths
 `RecordingPathHelper` (Core) is the only place that knows where recordings and thumbnails live. Never build a recording path, sanitise a camera folder name, or derive a thumbnail with `Path.ChangeExtension(video, ".png")` by hand. Writers call `BuildRecordingPath` / `BuildThumbnailPath` with `RecordingLayoutOptions.From(settings)`. Readers ignore the layout settings: they take the camera from `GetCameraFolderFromPath`, the time from `TryParseTimestamp`, and the thumbnail from `FindThumbnailPath` / `GetThumbnailCandidates`, so archives written under any layout keep working. The folder must always follow the settings: when the layout options change, call `RecordingLayoutReorganizer.Synchronize` (it restarts running recordings that are not in place, then moves the files). See `plans/archive/roadmap-recording-storage.md`.
+
+### FFmpeg
+The engine needs exactly FFmpeg 9 (`Flyleaf.FFmpeg.Bindings` 9.0.2 load one major version of each library). `FFmpegRuntime` knows the versions and where to look; `FFmpegRuntime.Check()` tells Ready, WrongVersion or Missing with what was found. Check before `VideoEngineBootstrap.Initialize`: the desktop apps show `FFmpegSetup.ShowDialog(check)` (install into `FFmpegRuntime.ManagedFolder`, or a folder the user names), the server logs and exits unless started with `--install-ffmpeg` (`ServerFFmpegStartup`). The pinned build is in three places that must agree: `FFmpegRuntime.ReleaseVersion`, `FFmpegInstaller.Package` (URL and SHA-256) and `release-please.yml`. FFmpeg 9 verifies TLS certificates by default; the engine passes `tls_verify=0` unless `StreamOptions.VerifyTlsCertificate`, and so does the server's HLS command for HTTPS cameras. `ATCSOFT_FFMPEG_SEARCH=explicit` limits the search so the E2E tests can show the dialog.
 
 ### Rotation
 `CameraDisplaySettings.Rotation` (clockwise) must reach every consumer of the picture: `VideoPlayer.CaptureFrameAsync` always returns the rotated picture (GPU snapshot or CPU fallback), software frames are rotated in `CpuFrameUploader`, and recordings are flagged with a display matrix (`DisplayMatrix`, read back by `MediaProbe.GetRotation`) because the recorder copies packets. Anything that maps coordinates onto the video must use the displayed size (`MotionBoxMapper.GetDisplaySize`), not `StreamInfo.Width/Height`. Call `ApplyRotation` whenever a `CameraTile` gets a new player. See `plans/archive/roadmap-video-rotation.md`.

@@ -164,16 +164,21 @@ jobs:
 
       - name: Download FFmpeg
         run: |
-          # gyan.dev keeps only the latest build at this path and deletes older
-          # ones, so a pinned version eventually 404s — that is what broke the
-          # v1.1.0 installer jobs. Must stay on FFmpeg 8.x: Flyleaf.FFmpeg.Bindings
-          # loads avutil.60*, which is the 8.x ABI.
-          $ffmpegUrl = "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-full_build-shared.7z"
-          Invoke-WebRequest -Uri $ffmpegUrl -OutFile ffmpeg.7z
-          7z x ffmpeg.7z -offmpeg-temp
+          # The FFmpeg the engine needs (FFmpegRuntime.ReleaseVersion): bindings 9.0.2
+          # load only FFmpeg 9 (avutil-61). The GitHub mirror of gyan.dev keeps every
+          # release (gyan.dev itself deletes old ones), and the checksum is the one
+          # FFmpegInstaller.Package checks. Keep the three in step.
+          $ffmpegUrl = "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-full_build-shared.zip"
+          $ffmpegSha256 = "8d31e162f1616e37aab3fa2db991b97e1b8dbeb1c8465fd81a81be16ff91b328"
+          Invoke-WebRequest -Uri $ffmpegUrl -OutFile ffmpeg.zip
+          $actual = (Get-FileHash ffmpeg.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $ffmpegSha256) { throw "FFmpeg download checksum $actual, expected $ffmpegSha256" }
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-temp
           $binDir = Get-ChildItem -Path ffmpeg-temp -Recurse -Directory -Filter "bin" | Select-Object -First 1
           New-Item -ItemType Directory -Path "./${{ matrix.publish_dir }}/ffmpeg" -Force
+          # The DLLs for the engine, ffmpeg.exe for the server's live streams.
           Copy-Item "$($binDir.FullName)\*.dll" -Destination "./${{ matrix.publish_dir }}/ffmpeg/"
+          Copy-Item "$($binDir.FullName)\ffmpeg.exe" -Destination "./${{ matrix.publish_dir }}/ffmpeg/"
 
       # No -p:ProductVersion here: it comes from setup/Directory.Build.props.
       - name: Build Installer

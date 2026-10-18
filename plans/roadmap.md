@@ -6,7 +6,7 @@ decisions.
 
 System documentation (how things work today) lives in [`docs/`](../docs/). This folder holds plans only.
 
-*Last updated: 2026-10-17*
+*Last updated: 2026-10-18*
 
 ---
 
@@ -43,7 +43,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 | 🔌 Connection-type icon | [archive/roadmap-cameras-connection-icons.md](archive/roadmap-cameras-connection-icons.md) | 🟨 | Hands-on checks; phase 8 (remove the legacy USB pills) |
 | 🎥 USB cameras | [archive/roadmap-usb-cameras.md](archive/roadmap-usb-cameras.md) | ✅ | Hands-on checks; a few small gaps; ⏸️ Linux / macOS, UVC property pages |
 | 🖥️ WPF API client | [archive/roadmap-wpf-api-client.md](archive/roadmap-wpf-api-client.md) | ✅ | Phases 1–9 done; phase 10 is in the backlog below |
-| 🎞️ FFmpeg 9 | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | ⏸️ | Phase 1 done; FFmpeg 8.1.3 and the TLS setting can come first |
+| 🎞️ FFmpeg 9 | [roadmap-ffmpeg-9.md](roadmap-ffmpeg-9.md) | 🟨 | On FFmpeg 9.0.2 with a set-up dialog since 2026-10-18; hands-on checks (phase 5) and the per-camera TLS setting are open |
 | 🧪 24/7 soak | [soak-test-plan.md](soak-test-plan.md) | ⬜ | The procedure was never run; the report scripts count day folders since 2026-10-17 |
 | 💡 Ideas | [roadmap-suggestions.md](roadmap-suggestions.md) | — | The backlog below is the checked part of it |
 
@@ -71,8 +71,7 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 | Item | Where it stands | Test |
 |---|---|---|
 | Record into each folder layout end to end without a camera | The host tests record with the FFmpeg test stream, but not into each layout | Host |
-| TLS verification as an explicit per-camera setting (FFmpeg 9 plan, phase 2) | No `tls_verify` anywhere; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
-| FFmpeg 8.1.3 (FFmpeg 9 plan, decision 4) | Still 8.1.2 in the pipeline and README; check that a shared build exists | Engine tests, E2E with the live test camera |
+| TLS verification as an explicit per-camera setting (FFmpeg 9 plan, phase 2) | Off for every camera since 2026-10-18 (`StreamOptions.VerifyTlsCertificate`); no setting in the dialogs or the API; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
 | The audit log keeps the value before a change | `AuditRecord` has none | Unit |
 | Clip export / trim | Only a download exists | Unit and E2E |
 | MQTT publisher | None | Unit and host |
@@ -90,7 +89,6 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 | AI detection (ONNX) | Needs a model choice |
 | Push notifications (WebPush) | None |
 | WPF client phase 10: multi-monitor, camera groups and tags, an event log viewer, a camera health view, timelapse | None of it exists. Tags, health and timelapse need the server first (timelapse is only a setting today). The event log may be covered by the notification history and the audit log: decide whether it still stands |
-| FFmpeg 9 and bindings 9.0.2 (phases 3–6) | ⏸️ deferred on 2026-10-13 |
 
 ---
 
@@ -113,6 +111,7 @@ Built and tested, but not closed without hands, eyes or hardware.
 | The web client against real cameras: H.264 and H.265 live view, rotated cameras, playback of real recordings | A browser, the server and cameras | — |
 | Webhooks against a real receiver (Home Assistant, Slack) | A receiver | [`docs/server.md`](../docs/server.md) |
 | The 24/7 soak | A machine, three cameras and a day | [soak-test-plan.md](soak-test-plan.md) |
+| FFmpeg 9 by hand: hardware and software decode, recordings in MKV and MP4, rotation, snapshots, motion, USB cameras, an HTTPS camera; the set-up dialog's *Install FFmpeg* on a machine without FFmpeg 9 | The apps, cameras, a clean machine | [FFmpeg 9](roadmap-ffmpeg-9.md#phase-5--re-verify-the-engine-against-ffmpeg-9-) |
 
 ---
 
@@ -120,6 +119,7 @@ Built and tested, but not closed without hands, eyes or hardware.
 
 | Bug | Tracked in |
 |---|---|
+| The web client is signed out when the page is left or reloaded while it renews its session (found by the E2E web walk on 2026-10-18, twice in a row: `POST /auth/refresh` ended 499, the next one 400). The server replaces the refresh token as soon as it is used, so an answer the browser never read leaves it with a dead token. A short grace period for a replaced token (it may be used again for some seconds) would fix it; that is a security trade-off to decide. The E2E web walk fails at *Add user* until then | `AccountService.Refresh` |
 | Motion boxes reported misplaced at 180°: two possible causes fixed, not confirmed | [Video rotation](archive/roadmap-video-rotation.md#the-180-report-is-not-explained) |
 | `RecordingsBrowserDialogTests` was flaky in a full test run (its clean-up met a test file still held, likely by the virus scanner); since 2026-10-18 the Wpf.Core tests' clean-up retries and never fails a test. Close it when full runs stay green | [REST API generator v3](roadmap-rest-api-sg.md) |
 
@@ -145,6 +145,7 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | The WPF client set to a server's `http://` address uses the `https://` address the server redirects to, so it keeps its sign-in (2026-10-18) | `ServerAddress` |
 | A failed save of the settings or the cameras is logged (2026-10-18) | `CameraStorageService`, `ApplicationSettingsService` |
 | The server records every camera below its own recording folder; a camera's own folder (from a CameraWall import) is not used and is logged (2026-10-18) | [`docs/server.md`](../docs/server.md) |
+| FFmpeg 9.0.2; the apps and the server find, report and install it (set-up dialog, `--install-ffmpeg`); HTTPS cameras with self-signed certificates keep working (2026-10-18) | [FFmpeg 9](roadmap-ffmpeg-9.md) |
 
 ---
 

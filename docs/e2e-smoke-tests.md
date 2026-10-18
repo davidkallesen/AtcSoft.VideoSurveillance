@@ -36,6 +36,10 @@ Leave the mouse alone while the CameraWall walk runs: a few steps are real click
   services: en-US, a log file, no recording, the two cameras in the start-up layout.
 - **The WPF client**, pointed at the test server the way Aspire does it (`services__api__http__0`),
   signed in from `Auth__UserName` / `Auth__Password`, in a scratch folder of its own.
+- **The FFmpeg set-up dialog** (`FFmpegSetupSmokeTests`): CameraWall and the WPF client started with
+  `ATCSOFT_FFMPEG_SEARCH=explicit`, so the installed FFmpeg is not found. CameraWall takes the real
+  FFmpeg folder typed into the dialog and starts; the client exits from the dialog. The install
+  itself (a 100 MB download) is covered by the unit tests only.
 - **The web client**, served by its development server on the port the test server allows as a CORS
   origin. The browser is pointed at the test server by answering the app's `appsettings.json` request.
 
