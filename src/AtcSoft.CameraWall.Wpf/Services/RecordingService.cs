@@ -12,11 +12,13 @@ public partial class RecordingService : IRecordingService, IDisposable
     private static readonly TimeSpan CooldownEntryMaxAge = TimeSpan.FromHours(24);
 
     private static readonly string[] RecordingFileExtensions = [".mp4", ".mkv", ".avi"];
+    private static readonly string[] SnapshotFileExtensions = [".png", ".jpg", ".jpeg", ".bmp"];
 
     private readonly ILogger<RecordingService> logger;
     private readonly IApplicationSettingsService settingsService;
     private readonly IThumbnailGeneratorService thumbnailService;
     private readonly ICameraStorageService cameraStorageService;
+    private readonly DiskSpaceGuard diskSpaceGuard;
     private readonly ConcurrentDictionary<Guid, RecordingSession> sessions = new();
     private readonly ConcurrentDictionary<Guid, IMediaPipeline> pipelines = new();
     private readonly ConcurrentDictionary<Guid, DispatcherTimer> postMotionTimers = new();
@@ -30,16 +32,19 @@ public partial class RecordingService : IRecordingService, IDisposable
     /// <param name="settingsService">The application settings service.</param>
     /// <param name="thumbnailService">The thumbnail generator service.</param>
     /// <param name="cameraStorageService">The camera storage service.</param>
+    /// <param name="diskSpaceGuard">Keeps free space on the volumes that hold media; shared with the cleanup.</param>
     public RecordingService(
         ILogger<RecordingService> logger,
         IApplicationSettingsService settingsService,
         IThumbnailGeneratorService thumbnailService,
-        ICameraStorageService cameraStorageService)
+        ICameraStorageService cameraStorageService,
+        DiskSpaceGuard? diskSpaceGuard = null)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.thumbnailService = thumbnailService ?? throw new ArgumentNullException(nameof(thumbnailService));
         this.cameraStorageService = cameraStorageService ?? throw new ArgumentNullException(nameof(cameraStorageService));
+        this.diskSpaceGuard = diskSpaceGuard ?? new DiskSpaceGuard(FreeSpaceReader.Default);
     }
 
     /// <inheritdoc/>
@@ -77,7 +82,7 @@ public partial class RecordingService : IRecordingService, IDisposable
             return false;
         }
 
-        if (!ReclaimDiskSpaceIfNeeded())
+        if (!MayRecordInto(GetEffectiveRecordingPath(camera)))
         {
             LogDiskSpaceGateFailed(camera.Display.DisplayName);
             return false;
@@ -213,7 +218,7 @@ public partial class RecordingService : IRecordingService, IDisposable
             }
         }
 
-        if (!ReclaimDiskSpaceIfNeeded())
+        if (!MayRecordInto(GetEffectiveRecordingPath(camera)))
         {
             LogDiskSpaceGateFailed(camera.Display.DisplayName);
             return false;
@@ -388,8 +393,14 @@ public partial class RecordingService : IRecordingService, IDisposable
                 Directory.CreateDirectory(directory);
             }
 
-            // 2.5. Reclaim disk space before opening the next segment
-            ReclaimDiskSpaceIfNeeded();
+            // 2.5. Reclaim disk space before opening the next segment. A volume that is still
+            // short gets no new segment: the recording stops instead of filling it.
+            if (ReclaimDiskSpace().StateOf(newFilePath) == DiskSpaceVolumeState.StillShort)
+            {
+                LogDiskSpaceGuardStoppingRecordings(1);
+                StopRecording(cameraId);
+                return false;
+            }
 
             // 3. Atomically switch the recording so packets arriving from
             // the demux thread between the two file boundaries land in
@@ -457,19 +468,57 @@ public partial class RecordingService : IRecordingService, IDisposable
     /// <inheritdoc/>
     public bool EnforceDiskSpaceGuard()
     {
-        if (sessions.IsEmpty)
+        var result = ReclaimDiskSpace();
+
+        // Only the recordings on a volume that is still short stop; one whose space cannot be
+        // read goes on (a share that hiccups must not end 24/7 recording; a write that fails
+        // stops it anyway).
+        var shortSessions = sessions.Values
+            .Where(s => !string.IsNullOrEmpty(s.CurrentFilePath) &&
+                        result.StateOf(s.CurrentFilePath) == DiskSpaceVolumeState.StillShort)
+            .ToList();
+        if (shortSessions.Count == 0)
         {
             return false;
         }
 
-        if (!ReclaimDiskSpaceIfNeeded())
+        LogDiskSpaceGuardStoppingRecordings(shortSessions.Count);
+        foreach (var session in shortSessions)
         {
-            LogDiskSpaceGuardStoppingAllRecordings(sessions.Count);
-            StopAllRecordings();
-            return true;
+            StopRecording(session.CameraId);
         }
 
-        return false;
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public DiskSpaceGuardResult ReclaimDiskSpace()
+    {
+        var cleanup = settingsService.Recording.Cleanup;
+        if (!cleanup.EnableDiskSpaceGuard)
+        {
+            return DiskSpaceGuardResult.None;
+        }
+
+        try
+        {
+            var folders = GetRecordingFolders();
+            var request = new DiskSpaceGuardRequest(
+                folders,
+                settingsService.CameraDisplay.SnapshotPath,
+                (long)cleanup.MinFreeSpaceMb * 1024L * 1024L,
+                DiskSpaceGuard.ProtectedPaths(sessions.Values.Select(s => s.CurrentFilePath), folders),
+                RecordingFileExtensions,
+                SnapshotFileExtensions);
+            var result = diskSpaceGuard.Enforce(request);
+            DiskSpaceGuardLog.Write(logger, result, cleanup.MinFreeSpaceMb);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            LogDiskSpaceReclaimFailed(ex);
+            return DiskSpaceGuardResult.None;
+        }
     }
 
     /// <summary>
@@ -496,71 +545,36 @@ public partial class RecordingService : IRecordingService, IDisposable
         disposed = true;
     }
 
-    private bool ReclaimDiskSpaceIfNeeded()
+    // A recording may start when the volume of its folder has the free space the guard keeps.
+    // When that space cannot be read (a share that is gone), it may not: better no recording
+    // than one that fills a disk nobody can see.
+    private bool MayRecordInto(string folder)
     {
-        var cleanup = settingsService.Recording.Cleanup;
-        if (!cleanup.EnableDiskSpaceGuard)
+        if (!settingsService.Recording.Cleanup.EnableDiskSpaceGuard)
         {
             return true;
         }
 
-        var recordingPath = settingsService.Recording.RecordingPath;
-        if (string.IsNullOrEmpty(recordingPath))
+        var result = ReclaimDiskSpace();
+        if (result == DiskSpaceGuardResult.None)
         {
-            return true;
+            return false;
         }
 
-        try
-        {
-            var driveRoot = Path.GetPathRoot(Path.GetFullPath(recordingPath));
-            if (string.IsNullOrEmpty(driveRoot))
-            {
-                return true;
-            }
+        return result.StateOf(folder) is DiskSpaceVolumeState.Ok or DiskSpaceVolumeState.Reclaimed;
+    }
 
-            var minFreeBytes = (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
-            var freeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
-            if (freeBytes >= minFreeBytes)
-            {
-                return true;
-            }
-
-            LogDiskSpaceLowBeforeRecording(driveRoot, freeBytes / (1024.0 * 1024.0), cleanup.MinFreeSpaceMb);
-
-            var skipPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var session in sessions.Values)
-            {
-                if (!string.IsNullOrEmpty(session.CurrentFilePath))
-                {
-                    skipPaths.Add(Path.GetFullPath(session.CurrentFilePath));
-                    foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingPath))
-                    {
-                        skipPaths.Add(Path.GetFullPath(thumbnail));
-                    }
-                }
-            }
-
-            var run = MediaCleanupRunner.ReclaimBySize(
-                recordingPath,
-                RecordingFileExtensions,
-                minFreeBytes,
-                skipPaths,
-                deleteCompanionThumbnail: true);
-
-            if (run.StillShort)
-            {
-                LogDiskSpaceReclaimStillShort(driveRoot, run.BytesFreed / (1024.0 * 1024.0));
-                return false;
-            }
-
-            LogDiskSpaceReclaimComplete(run.BytesFreed / (1024.0 * 1024.0), run.DeletedFiles.Count);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            LogDiskSpaceReclaimFailed(ex);
-            return true;
-        }
+    // Every folder recordings go to: the global one (or its default) and each camera's own.
+    private List<string> GetRecordingFolders()
+    {
+        var global = settingsService.Recording.RecordingPath;
+        var folders = new List<string> { string.IsNullOrEmpty(global) ? ApplicationPaths.DefaultRecordingsPath : global };
+        folders.AddRange(cameraStorageService
+            .GetAllCameras()
+            .Select(c => c.Overrides?.Recording.RecordingPath)
+            .Where(f => !string.IsNullOrWhiteSpace(f))
+            .Select(f => f!));
+        return folders;
     }
 
     private string GetEffectiveRecordingPath(CameraConfiguration camera)

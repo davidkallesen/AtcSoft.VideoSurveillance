@@ -12,6 +12,7 @@ public sealed class DiskSpaceGuard
 {
     private readonly IFreeSpaceReader reader;
     private readonly Lock gate = new();
+    private readonly Dictionary<string, DiskSpaceVolumeState> lastStates = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DiskSpaceGuard"/> class.
@@ -73,7 +74,10 @@ public sealed class DiskSpaceGuard
             var volumes = new List<DiskSpaceVolumeResult>();
             foreach (var group in groups)
             {
-                volumes.Add(EnforceVolume(group.Key, [.. group], recordingRoots, snapshotRoot, request));
+                var volume = EnforceVolume(group.Key, [.. group], recordingRoots, snapshotRoot, request);
+                var changed = !lastStates.TryGetValue(volume.Volume, out var last) || last != volume.State;
+                lastStates[volume.Volume] = volume.State;
+                volumes.Add(volume with { StateChanged = changed });
             }
 
             return new DiskSpaceGuardResult(volumes);

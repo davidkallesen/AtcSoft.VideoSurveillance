@@ -74,6 +74,7 @@ global using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutIte
 global using CameraOverrides = AtcSoft.VideoSurveillance.Models.CameraOverrides;
 global using ConnectionSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.ConnectionSettings;
 global using ConnectionState = Atc.Network.ConnectionState;
+global using DiskSpaceGuardResult = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuardResult;
 global using IGitHubReleaseService = AtcSoft.VideoSurveillance.Services.IGitHubReleaseService;
 global using IMediaPipeline = AtcSoft.VideoSurveillance.Services.IMediaPipeline;
 global using IMotionDetectionService = AtcSoft.VideoSurveillance.Services.IMotionDetectionService;

@@ -70,6 +70,8 @@ public partial class CameraWallApp
                 // expose it both as its UI-facing interface and as an
                 // IHostedService so the Generic Host drives the periodic work
                 // and stops it gracefully on shutdown.
+                services.AddSingleton(new MediaCleanupServiceOptions());
+                services.AddSingleton(new DiskSpaceGuard(FreeSpaceReader.Default));
                 services.AddSingleton<MediaCleanupService>();
                 services.AddSingleton<IMediaCleanupService>(sp => sp.GetRequiredService<MediaCleanupService>());
                 services.AddHostedService(sp => sp.GetRequiredService<MediaCleanupService>());

@@ -50,7 +50,6 @@
             <atc:LabelToggleSwitch
                 Margin="0,0,0,10"
                 HideAreas="Validation"
-                IsEnabled="{Binding Path=IsCleanupEnabled}"
                 IsOn="{Binding Path=IsDiskSpaceGuardEnabled, Mode=TwoWay}"
                 LabelPosition="Right"
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,

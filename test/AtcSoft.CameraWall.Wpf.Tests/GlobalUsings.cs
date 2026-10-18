@@ -10,4 +10,7 @@ global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Models;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using Microsoft.Extensions.Logging.Abstractions;
+global using DiskSpaceGuard = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuard;
+global using IMediaPipeline = AtcSoft.VideoSurveillance.Services.IMediaPipeline;
+global using IThumbnailGeneratorService = AtcSoft.VideoSurveillance.Services.IThumbnailGeneratorService;
 global using UsbDeviceDescriptor = AtcSoft.VideoSurveillance.Models.UsbDeviceDescriptor;

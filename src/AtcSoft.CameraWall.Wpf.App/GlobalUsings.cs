@@ -46,11 +46,14 @@ global using Serilog;
 global using Serilog.Events;
 
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
+global using DiskSpaceGuard = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuard;
+global using FreeSpaceReader = AtcSoft.VideoSurveillance.Helpers.FreeSpaceReader;
 global using IMediaCleanupService = AtcSoft.VideoSurveillance.Services.IMediaCleanupService;
 global using IRecordingSegmentationService = AtcSoft.VideoSurveillance.Services.IRecordingSegmentationService;
 global using IUsbCameraEnumerator = AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator;
 global using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;
 global using MediaCleanupService = AtcSoft.CameraWall.Wpf.Services.MediaCleanupService;
+global using MediaCleanupServiceOptions = AtcSoft.CameraWall.Wpf.Services.MediaCleanupServiceOptions;
 global using NullUsbCameraEnumerator = AtcSoft.VideoSurveillance.Services.NullUsbCameraEnumerator;
 global using NullUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.NullUsbCameraWatcher;
 global using RecordingSegmentationService = AtcSoft.CameraWall.Wpf.Services.RecordingSegmentationService;

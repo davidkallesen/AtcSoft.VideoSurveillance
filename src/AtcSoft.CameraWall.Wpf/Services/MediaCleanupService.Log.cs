@@ -37,19 +37,4 @@ public partial class MediaCleanupService
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Access denied removing directory: {Directory}")]
     private partial void LogAccessDeniedRemovingDirectory(Exception ex, string directory);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Disk space OK on '{Drive}': {FreeMb:F0} MB free (threshold {ThresholdMb} MB)")]
-    private partial void LogDiskSpaceOk(string drive, double freeMb, int thresholdMb);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space low on '{Drive}': {FreeMb:F0} MB free (threshold {ThresholdMb} MB) — starting reclaim pass")]
-    private partial void LogDiskSpaceLow(string drive, double freeMb, int thresholdMb);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space check failed for '{Path}'")]
-    private partial void LogDiskSpaceCheckFailed(Exception ex, string path);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Disk space reclaim complete for '{Path}': freed {FreedMb:F2} MB ({Count} files)")]
-    private partial void LogDiskSpaceReclaimComplete(string path, double freedMb, int count);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Disk space reclaim exhausted all non-active recordings in '{Path}': freed {FreedMb:F2} MB but still below threshold")]
-    private partial void LogDiskSpaceReclaimStillShort(string path, double freedMb);
 }

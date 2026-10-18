@@ -351,10 +351,11 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
     /// <summary>
     /// Gets a value indicating whether the minimum free-space dropdown
-    /// should be enabled (cleanup is on AND disk guard is on).
+    /// should be enabled: the disk guard is on. The guard runs whatever the
+    /// cleanup schedule is.
     /// </summary>
     public bool IsDiskSpaceGuardControlEnabled
-        => IsCleanupEnabled && IsDiskSpaceGuardEnabled;
+        => IsDiskSpaceGuardEnabled;
 
     // Recordings Browser Settings
     [ObservableProperty]

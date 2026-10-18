@@ -104,4 +104,12 @@ public interface IRecordingService
     /// Returns false when the disk-space guard is disabled or no recordings are active.
     /// </returns>
     bool EnforceDiskSpaceGuard();
+
+    /// <summary>
+    /// Keeps free space on every volume that holds media (recordings, snapshots, time-lapse
+    /// pictures), deleting the oldest first, and says what it found on each.
+    /// </summary>
+    /// <returns>What was found and done; <see cref="DiskSpaceGuardResult.None"/> when the guard is off.</returns>
+    DiskSpaceGuardResult ReclaimDiskSpace()
+        => DiskSpaceGuardResult.None;
 }

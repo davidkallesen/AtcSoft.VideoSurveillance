@@ -25,17 +25,14 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
     /// <param name="settingsService">The application settings service.</param>
     /// <param name="recordingService">The recording service, used to identify and skip files that are currently being written to.</param>
     /// <param name="cameraStorage">The cameras, whose own recording folders are cleaned too.</param>
+    /// <param name="options">When the cleanup runs; the defaults when not given.</param>
     public MediaCleanupService(
         ILogger<MediaCleanupService> logger,
         IApplicationSettingsService settingsService,
         IRecordingService recordingService,
-        ICameraStorageService? cameraStorage = null)
-        : base(logger, new DefaultBackgroundServiceOptions
-        {
-            ServiceName = nameof(MediaCleanupService),
-            StartupDelaySeconds = 5,
-            RepeatIntervalSeconds = 6 * 60 * 60,
-        })
+        ICameraStorageService? cameraStorage = null,
+        MediaCleanupServiceOptions? options = null)
+        : base(logger, options ?? new MediaCleanupServiceOptions())
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.recordingService = recordingService ?? throw new ArgumentNullException(nameof(recordingService));
@@ -166,27 +163,20 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
         }
     }
 
+    // The free space of every volume with media is kept by the recording service's guard, which
+    // also runs every 30 seconds; this pass runs it once more after the age cleanup.
     private async Task<MediaCleanupResult> ReclaimBySpaceAsync()
     {
-        var cleanup = settingsService.Recording.Cleanup;
-        if (!cleanup.EnableDiskSpaceGuard)
+        var guard = await Task.Run(recordingService.ReclaimDiskSpace).ConfigureAwait(false) ?? DiskSpaceGuardResult.None;
+        var result = new MediaCleanupResult
         {
-            return new MediaCleanupResult();
-        }
+            RecordingsDeleted = guard.Volumes.Sum(v => v.Run.DeletedFiles.Count),
+            ThumbnailsDeleted = guard.Volumes.Sum(v => v.Run.DeletedThumbnails.Count),
+            BytesFreed = guard.Volumes.Sum(v => v.Run.BytesFreed),
+            ErrorCount = guard.Volumes.Sum(v => v.Run.Errors.Count),
+        };
 
-        var minFreeBytes = (long)cleanup.MinFreeSpaceMb * 1024L * 1024L;
-        var activePaths = GetActiveRecordingPaths();
-        var result = new MediaCleanupResult();
-        var reclaimed = false;
-
-        // Each recording folder (the global one and each camera's own) is kept to the free
-        // space of the drive it is on.
-        foreach (var recordingPath in GetRecordingRoots())
-        {
-            reclaimed |= await ReclaimFolderAsync(recordingPath, cleanup.MinFreeSpaceMb, minFreeBytes, activePaths, result).ConfigureAwait(false);
-        }
-
-        if (reclaimed)
+        if (result.RecordingsDeleted > 0)
         {
             OnCleanupCompleted(result);
         }
@@ -194,81 +184,30 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
         return result;
     }
 
-    private async Task<bool> ReclaimFolderAsync(
-        string recordingPath,
-        int minFreeSpaceMb,
-        long minFreeBytes,
-        HashSet<string> activePaths,
-        MediaCleanupResult result)
+    // Every folder recordings go to: the global one (or its default) and each camera's own.
+    private List<string> GetRecordingFolders()
     {
-        try
-        {
-            var driveRoot = Path.GetPathRoot(Path.GetFullPath(recordingPath));
-            if (string.IsNullOrEmpty(driveRoot))
-            {
-                return false;
-            }
-
-            var freeBytes = new DriveInfo(driveRoot).AvailableFreeSpace;
-            if (freeBytes >= minFreeBytes)
-            {
-                LogDiskSpaceOk(driveRoot, freeBytes / (1024.0 * 1024.0), minFreeSpaceMb);
-                return false;
-            }
-
-            LogDiskSpaceLow(driveRoot, freeBytes / (1024.0 * 1024.0), minFreeSpaceMb);
-        }
-        catch (Exception ex)
-        {
-            LogDiskSpaceCheckFailed(ex, recordingPath);
-            return false;
-        }
-
-        var run = await Task.Run(() => MediaCleanupRunner.ReclaimBySize(
-            recordingPath,
-            RecordingExtensions,
-            minFreeBytes,
-            activePaths,
-            deleteCompanionThumbnail: true)).ConfigureAwait(false);
-
-        foreach (var f in run.DeletedFiles)
-        {
-            LogDeletedOldMediaFile(f);
-        }
-
-        foreach (var t in run.DeletedThumbnails)
-        {
-            LogDeletedThumbnail(t);
-        }
-
-        result.RecordingsDeleted += run.DeletedFiles.Count;
-        result.ThumbnailsDeleted += run.DeletedThumbnails.Count;
-        result.BytesFreed += run.BytesFreed;
-        result.ErrorCount += run.Errors.Count;
-
-        if (run.StillShort)
-        {
-            LogDiskSpaceReclaimStillShort(recordingPath, run.BytesFreed / (1024.0 * 1024.0));
-        }
-        else
-        {
-            LogDiskSpaceReclaimComplete(recordingPath, run.BytesFreed / (1024.0 * 1024.0), run.DeletedFiles.Count);
-        }
-
-        return true;
+        var global = settingsService.Recording.RecordingPath;
+        var folders = new List<string> { string.IsNullOrEmpty(global) ? ApplicationPaths.DefaultRecordingsPath : global };
+        folders.AddRange((cameraStorage?.GetAllCameras() ?? [])
+            .Select(c => c.Overrides?.Recording.RecordingPath)
+            .Where(f => !string.IsNullOrWhiteSpace(f))
+            .Select(f => f!));
+        return folders;
     }
 
-    // The global recording folder and each camera's own, each once.
+    // The same folders, each once: a folder inside another is cleaned as part of it.
     private IReadOnlyList<string> GetRecordingRoots()
-        => RecordingRoots.Collect(
-            settingsService.Recording.RecordingPath,
-            cameraStorage?.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath) ?? []);
+        => RecordingRoots.Collect(null, GetRecordingFolders());
 
     private void RunCleanupCore(
         MediaCleanupSettings settings,
         HashSet<string> activePaths,
         MediaCleanupResult result)
     {
+        // A camera's own folder inside the global one keeps its thumbnails in its own
+        // thumbnails folder: the passes read them against that folder.
+        var folders = GetRecordingFolders();
         foreach (var recordingPath in GetRecordingRoots().Where(Directory.Exists))
         {
             var run = MediaCleanupRunner.CleanDirectory(
@@ -276,7 +215,8 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
                 RecordingExtensions,
                 DateTime.Now.AddDays(-settings.RecordingRetentionDays),
                 activePaths,
-                deleteCompanionThumbnail: true);
+                deleteCompanionThumbnail: true,
+                nestedRoots: folders);
 
             ApplyRecordingRunResult(run, result);
 
@@ -286,7 +226,8 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
                 RecordingExtensions,
                 activePaths,
                 MediaCleanupRunner.EmptyDirectoryGracePeriod,
-                excludedDirectories: [settingsService.CameraDisplay.SnapshotPath]);
+                excludedDirectories: [settingsService.CameraDisplay.SnapshotPath],
+                nestedRoots: folders);
 
             ApplyRecordingRunResult(orphans, result);
 
@@ -406,35 +347,18 @@ public partial class MediaCleanupService : BackgroundServiceBase<MediaCleanupSer
     // cleanup so we never call File.Delete on a handle the muxer still owns.
     private HashSet<string> GetActiveRecordingPaths()
     {
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var recordingRoots = GetRecordingRoots();
         try
         {
-            foreach (var session in recordingService.GetActiveSessions())
-            {
-                if (!string.IsNullOrEmpty(session.CurrentFilePath))
-                {
-                    set.Add(Path.GetFullPath(session.CurrentFilePath));
-
-                    // Also protect the live thumbnail companion file
-                    foreach (var recordingRoot in recordingRoots)
-                    {
-                        foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(session.CurrentFilePath, recordingRoot))
-                        {
-                            set.Add(Path.GetFullPath(thumbnail));
-                        }
-                    }
-                }
-            }
+            var files = recordingService.GetActiveSessions().Select(s => s.CurrentFilePath);
+            return new HashSet<string>(DiskSpaceGuard.ProtectedPaths(files, GetRecordingFolders()), StringComparer.OrdinalIgnoreCase);
         }
         catch (Exception ex)
         {
             // If we can't enumerate sessions, fail safe by treating no files as active
             // — but at least don't take down the cleanup pass.
             LogActiveSessionLookupFailed(ex);
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
-
-        return set;
     }
 
     private void OnCleanupCompleted(MediaCleanupResult result)

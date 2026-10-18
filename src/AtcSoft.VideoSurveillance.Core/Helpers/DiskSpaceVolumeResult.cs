@@ -8,9 +8,11 @@ namespace AtcSoft.VideoSurveillance.Helpers;
 /// <param name="State">What the guard found.</param>
 /// <param name="FreeBytes">The free space before the guard deleted anything, when it could be read.</param>
 /// <param name="Run">What was deleted.</param>
+/// <param name="StateChanged">Whether the state differs from the guard's previous pass, so a problem is reported once, not every pass.</param>
 public sealed record DiskSpaceVolumeResult(
     string Volume,
     IReadOnlyList<string> Folders,
     DiskSpaceVolumeState State,
     long? FreeBytes,
-    MediaCleanupRunResult Run);
+    MediaCleanupRunResult Run,
+    bool StateChanged = true);
