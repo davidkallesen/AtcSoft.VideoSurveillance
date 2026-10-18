@@ -35,12 +35,17 @@ public static class MediaCleanupRunner
     /// thumbnail, whether it sits next to the file or in the separate
     /// thumbnails folder below <paramref name="rootPath"/>.
     /// </param>
+    /// <param name="nestedRoots">
+    /// Camera recording folders inside <paramref name="rootPath"/>: a recording in one of them
+    /// has its thumbnail in that folder's own thumbnails folder.
+    /// </param>
     public static MediaCleanupRunResult CleanDirectory(
         string rootPath,
         IReadOnlyCollection<string> extensions,
         DateTime cutoff,
         IReadOnlySet<string> skipPaths,
-        bool deleteCompanionThumbnail)
+        bool deleteCompanionThumbnail,
+        IReadOnlyCollection<string>? nestedRoots = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(rootPath);
         ArgumentNullException.ThrowIfNull(extensions);
@@ -100,7 +105,8 @@ public static class MediaCleanupRunner
 
                 if (deleteCompanionThumbnail)
                 {
-                    bytesFreed += DeleteCompanionThumbnails(file, rootPath, deletedThumbnails);
+                    var thumbnailRoot = RecordingRoots.Innermost(file, [rootPath, .. nestedRoots ?? []]) ?? rootPath;
+                    bytesFreed += DeleteCompanionThumbnails(file, thumbnailRoot, deletedThumbnails);
                 }
             }
             catch (IOException ex)
@@ -378,12 +384,17 @@ public static class MediaCleanupRunner
     /// Folders below the root that do not belong to the recorder, such as a
     /// snapshot folder placed inside the recording folder.
     /// </param>
+    /// <param name="nestedRoots">
+    /// Camera recording folders inside <paramref name="rootPath"/>: a thumbnail in one of them is
+    /// read against that folder, whose own thumbnails folder mirrors its videos.
+    /// </param>
     public static MediaCleanupRunResult RemoveOrphanThumbnails(
         string rootPath,
         IReadOnlyCollection<string> videoExtensions,
         IReadOnlySet<string> skipPaths,
         TimeSpan? minimumAge = null,
-        IReadOnlyCollection<string>? excludedDirectories = null)
+        IReadOnlyCollection<string>? excludedDirectories = null,
+        IReadOnlyCollection<string>? nestedRoots = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(rootPath);
         ArgumentNullException.ThrowIfNull(videoExtensions);
@@ -398,8 +409,8 @@ public static class MediaCleanupRunner
             return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
         }
 
-        var fullRoot = Path.GetFullPath(rootPath);
-        var thumbnailsRoot = Path.Combine(fullRoot, RecordingPathHelper.ThumbnailsFolderName);
+        var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootPath));
+        string[] roots = [fullRoot, .. nestedRoots ?? []];
         var excluded = (excludedDirectories ?? [])
             .Where(d => !string.IsNullOrEmpty(d))
             .Select(d => Path.TrimEndingDirectorySeparator(Path.GetFullPath(d)) + Path.DirectorySeparatorChar)
@@ -431,7 +442,11 @@ public static class MediaCleanupRunner
                     continue;
                 }
 
-                var videoFolder = GetVideoFolderOfThumbnail(thumbnail, fullRoot, thumbnailsRoot);
+                var thumbnailRoot = RecordingRoots.Innermost(thumbnail, roots) ?? fullRoot;
+                var videoFolder = GetVideoFolderOfThumbnail(
+                    thumbnail,
+                    thumbnailRoot,
+                    Path.Combine(thumbnailRoot, RecordingPathHelper.ThumbnailsFolderName));
                 if (videoFolder is null)
                 {
                     continue;

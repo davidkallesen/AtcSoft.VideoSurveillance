@@ -10,3 +10,4 @@ global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Overrides;
 global using AtcSoft.VideoSurveillance.Models.Settings;
+global using AtcSoft.VideoSurveillance.Services;
