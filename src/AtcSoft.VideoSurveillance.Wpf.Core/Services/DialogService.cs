@@ -12,6 +12,7 @@ public class DialogService : IDialogService
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator;
     private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
+    private readonly ICameraStorageService? cameraStorage;
     private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
     private RecordingsBrowserState? lastRecordingsBrowserState;
 
@@ -40,7 +41,8 @@ public class DialogService : IDialogService
         IVideoPlayerFactory videoPlayerFactory,
         AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator,
         AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null,
-        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null)
+        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null,
+        ICameraStorageService? cameraStorage = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));
@@ -48,6 +50,7 @@ public class DialogService : IDialogService
         this.usbCameraEnumerator = usbCameraEnumerator ?? throw new ArgumentNullException(nameof(usbCameraEnumerator));
         this.connectionTypeDetector = connectionTypeDetector;
         this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
+        this.cameraStorage = cameraStorage;
     }
 
     /// <inheritdoc />
@@ -332,7 +335,9 @@ public class DialogService : IDialogService
     /// <inheritdoc />
     public void ShowRecordingsBrowserDialog()
     {
-        var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
+        var viewModel = new RecordingsBrowserDialogViewModel(
+            settingsService,
+            () => cameraStorage?.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath) ?? []);
         if (settingsService.Recording.RememberRecordingsBrowserState &&
             lastRecordingsBrowserState is not null)
         {

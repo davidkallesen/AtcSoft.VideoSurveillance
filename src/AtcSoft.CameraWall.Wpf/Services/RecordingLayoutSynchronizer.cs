@@ -13,15 +13,18 @@ public partial class RecordingLayoutSynchronizer : IRecordingLayoutSynchronizer
     private readonly ILogger<RecordingLayoutSynchronizer> logger;
     private readonly IApplicationSettingsService settingsService;
     private readonly IRecordingService recordingService;
+    private readonly ICameraStorageService? cameraStorage;
 
     public RecordingLayoutSynchronizer(
         ILogger<RecordingLayoutSynchronizer> logger,
         IApplicationSettingsService settingsService,
-        IRecordingService recordingService)
+        IRecordingService recordingService,
+        ICameraStorageService? cameraStorage = null)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.recordingService = recordingService ?? throw new ArgumentNullException(nameof(recordingService));
+        this.cameraStorage = cameraStorage;
     }
 
     /// <inheritdoc />
@@ -29,9 +32,15 @@ public partial class RecordingLayoutSynchronizer : IRecordingLayoutSynchronizer
         CancellationToken cancellationToken = default)
     {
         var recording = settingsService.Recording;
-        var recordingPath = !string.IsNullOrEmpty(recording.RecordingPath)
+        var globalPath = !string.IsNullOrEmpty(recording.RecordingPath)
             ? recording.RecordingPath
             : ApplicationPaths.DefaultRecordingsPath;
+
+        // The global folder and each camera's own folder. A running recording outside the folder
+        // being synchronized counts as in place, so each pass restarts only its own.
+        var roots = RecordingRoots.Collect(
+            globalPath,
+            cameraStorage?.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath) ?? []);
         var layout = RecordingLayoutOptions.From(recording);
         var activeSessions = recordingService.GetActiveSessions();
 
@@ -39,24 +48,34 @@ public partial class RecordingLayoutSynchronizer : IRecordingLayoutSynchronizer
         return Task.Run(
             () =>
             {
-                var result = RecordingLayoutReorganizer.Synchronize(
-                    recordingPath,
-                    layout,
-                    RecordingFileExtensions,
-                    activeSessions,
-                    recordingService.SegmentRecording);
-
-                if (result.MovedRecordings > 0 || result.MovedThumbnails > 0 || result.Errors.Count > 0)
+                var movedRecordings = 0;
+                var movedThumbnails = 0;
+                var errors = new List<MediaCleanupRunError>();
+                foreach (var recordingPath in roots)
                 {
-                    LogSynchronized(recordingPath, result.MovedRecordings, result.MovedThumbnails, result.Errors.Count);
+                    var result = RecordingLayoutReorganizer.Synchronize(
+                        recordingPath,
+                        layout,
+                        RecordingFileExtensions,
+                        activeSessions,
+                        recordingService.SegmentRecording);
+
+                    if (result.MovedRecordings > 0 || result.MovedThumbnails > 0 || result.Errors.Count > 0)
+                    {
+                        LogSynchronized(recordingPath, result.MovedRecordings, result.MovedThumbnails, result.Errors.Count);
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        LogMoveFailed(error.Exception, error.Path);
+                    }
+
+                    movedRecordings += result.MovedRecordings;
+                    movedThumbnails += result.MovedThumbnails;
+                    errors.AddRange(result.Errors);
                 }
 
-                foreach (var error in result.Errors)
-                {
-                    LogMoveFailed(error.Exception, error.Path);
-                }
-
-                return result;
+                return new RecordingLayoutReorganizeResult(movedRecordings, movedThumbnails, errors);
             },
             cancellationToken);
     }

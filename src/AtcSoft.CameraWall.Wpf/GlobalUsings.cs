@@ -58,6 +58,7 @@ global using RecordingLayoutOptions = AtcSoft.VideoSurveillance.Helpers.Recordin
 global using RecordingLayoutReorganizer = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutReorganizer;
 global using RecordingLayoutReorganizeResult = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutReorganizeResult;
 global using RecordingPathHelper = AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper;
+global using RecordingRoots = AtcSoft.VideoSurveillance.Helpers.RecordingRoots;
 global using RecordingSegmentedEventArgs = AtcSoft.VideoSurveillance.Events.RecordingSegmentedEventArgs;
 global using RecordingSession = AtcSoft.VideoSurveillance.Models.RecordingSession;
 global using RecordingSlotCalculator = AtcSoft.VideoSurveillance.Helpers.RecordingSlotCalculator;

@@ -9,6 +9,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     private const string AllCamerasKey = "_ALL_";
 
     private readonly IApplicationSettingsService settingsService;
+    private readonly Func<IEnumerable<string?>>? cameraRecordingPaths;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnSelectedCameraFilterChanged))]
     private string selectedCameraFilter = AllCamerasKey;
@@ -35,10 +36,16 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     /// Initializes a new instance of the <see cref="RecordingsBrowserDialogViewModel"/> class.
     /// </summary>
     /// <param name="settingsService">The application settings service.</param>
+    /// <param name="cameraRecordingPaths">
+    /// Gets each camera's own recording folder (<c>Overrides.Recording.RecordingPath</c>), so
+    /// their recordings are listed too; <see langword="null"/> reads the global folder only.
+    /// </param>
     public RecordingsBrowserDialogViewModel(
-        IApplicationSettingsService settingsService)
+        IApplicationSettingsService settingsService,
+        Func<IEnumerable<string?>>? cameraRecordingPaths = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        this.cameraRecordingPaths = cameraRecordingPaths;
 
         LoadRecordings();
     }
@@ -181,8 +188,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     /// <returns><see langword="true"/> when something in the list changed.</returns>
     public bool UpdateOngoingRecordings()
     {
-        var basePath = GetRecordingsBasePath();
-        if (!Directory.Exists(basePath))
+        var roots = GetRecordingRoots();
+        if (roots.Count == 0)
         {
             return false;
         }
@@ -202,9 +209,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
 
         // Started: a file the list does not have yet.
         var known = new HashSet<string>(Recordings.Select(r => r.FilePath), StringComparer.OrdinalIgnoreCase);
-        var started = EnumerateRecordingFiles(basePath)
+        var started = EnumerateRecordingFiles(roots)
             .Where(f => !known.Contains(f.FilePath))
-            .Select(f => CreateEntry(f.FilePath, f.CameraName, basePath))
+            .Select(f => CreateEntry(f.FilePath, f.CameraName, f.Root))
             .ToList();
 
         if (started.Count > 0)
@@ -278,8 +285,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             // Delete the video file
             File.Delete(SelectedRecording.FilePath);
 
-            // Also delete the thumbnail, wherever its layout put it
-            var basePath = GetRecordingsBasePath();
+            // Also delete the thumbnail, wherever its layout put it, below the root the recording is in
+            var basePath = SelectedRecording.RecordingRoot ?? GetRecordingsBasePath();
             foreach (var thumbnailPath in RecordingPathHelper.GetThumbnailCandidates(SelectedRecording.FilePath, basePath))
             {
                 try
@@ -356,9 +363,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
 
         try
         {
-            var basePath = GetRecordingsBasePath();
+            var roots = GetRecordingRoots();
 
-            if (!Directory.Exists(basePath))
+            if (roots.Count == 0)
             {
                 Recordings.Clear();
                 UpdateCameraFilters();
@@ -366,8 +373,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                 return;
             }
 
-            var entries = EnumerateRecordingFiles(basePath)
-                .Select(f => CreateEntry(f.FilePath, f.CameraName, basePath))
+            var entries = EnumerateRecordingFiles(roots)
+                .Select(f => CreateEntry(f.FilePath, f.CameraName, f.Root))
                 .ToList();
 
             // Sort by date descending (newest first)
@@ -383,9 +390,13 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         }
     }
 
-    // Each folder below the root is a camera. Its recordings may sit
+    // Each folder below a root is a camera. Its recordings may sit
     // directly in it or in a folder per day, so the whole camera folder is
     // searched. The thumbnails folder holds no recordings.
+    private static IEnumerable<(string FilePath, string CameraName, string Root)> EnumerateRecordingFiles(
+        IEnumerable<string> roots)
+        => roots.SelectMany(root => EnumerateRecordingFiles(root).Select(f => (f.FilePath, f.CameraName, root)));
+
     private static IEnumerable<(string FilePath, string CameraName)> EnumerateRecordingFiles(
         string basePath)
     {
@@ -421,6 +432,12 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             ? RecordingEntry.Ongoing(filePath, cameraName, basePath, recordingTime, info.Length)
             : RecordingEntry.Finished(filePath, cameraName, basePath, recordingTime, info.Length, MediaProbe.GetDuration(filePath));
     }
+
+    // The global folder and each camera's own folder, each once, that exist.
+    private List<string> GetRecordingRoots()
+        => RecordingRoots.Collect(GetRecordingsBasePath(), cameraRecordingPaths?.Invoke() ?? [])
+            .Where(Directory.Exists)
+            .ToList();
 
     private string GetRecordingsBasePath()
         => !string.IsNullOrEmpty(settingsService.Recording.RecordingPath)

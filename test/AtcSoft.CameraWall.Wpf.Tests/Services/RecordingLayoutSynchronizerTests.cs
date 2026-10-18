@@ -43,6 +43,28 @@ public sealed class RecordingLayoutSynchronizerTests : IDisposable
     }
 
     [Fact]
+    public async Task Moves_The_Recordings_In_A_Cameras_Own_Folder_Too()
+    {
+        var own = Path.Combine(root, "own");
+        Directory.CreateDirectory(Path.Combine(root, "global"));
+        Touch("own", "Garden", "Garden_20261012_101500_000.mkv");
+        var camera = new CameraConfiguration();
+        camera.Overrides.Recording.RecordingPath = own;
+        var cameraStorage = Substitute.For<ICameraStorageService>();
+        cameraStorage.GetAllCameras().Returns([camera]);
+        var settingsService = Substitute.For<IApplicationSettingsService>();
+        settingsService.Recording.Returns(new RecordingSettings { RecordingPath = Path.Combine(root, "global"), UseDailySubfolders = true });
+        var recordingService = Substitute.For<IRecordingService>();
+        recordingService.GetActiveSessions().Returns([]);
+        var sut = new RecordingLayoutSynchronizer(NullLogger<RecordingLayoutSynchronizer>.Instance, settingsService, recordingService, cameraStorage);
+
+        var result = await sut.SynchronizeAsync(TestContext.Current.CancellationToken);
+
+        result.MovedRecordings.Should().Be(1);
+        File.Exists(Path.Combine(own, "Garden", "2026-10-12", "Garden_20261012_101500_000.mkv")).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Does_Nothing_When_There_Is_No_Recording_Folder_Yet()
     {
         var sut = CreateSut(useDailySubfolders: true, separateThumbnailFolder: true, out _);

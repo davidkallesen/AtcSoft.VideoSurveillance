@@ -79,6 +79,7 @@ global using MotionBoxMapper = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
 global using ReconnectBackoff = AtcSoft.VideoSurveillance.Helpers.ReconnectBackoff;
 global using RecordingPathHelper = AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper;
+global using RecordingRoots = AtcSoft.VideoSurveillance.Helpers.RecordingRoots;
 global using RecordingSession = AtcSoft.VideoSurveillance.Models.RecordingSession;
 global using RecordingStateChangedEventArgs = AtcSoft.VideoSurveillance.Events.RecordingStateChangedEventArgs;
 global using SafeJsonFile = AtcSoft.VideoSurveillance.Helpers.SafeJsonFile;
