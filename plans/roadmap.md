@@ -147,6 +147,7 @@ The details are in the commit messages and in [`docs/`](../docs/).
 | A failed save of the settings or the cameras is logged (2026-10-18) | `CameraStorageService`, `ApplicationSettingsService` |
 | The server records every camera below its own recording folder; a camera's own folder (from a CameraWall import) is not used and is logged (2026-10-18) | [`docs/server.md`](../docs/server.md) |
 | FFmpeg 9.0.2; the apps and the server find, report and install it (set-up dialog, `--install-ffmpeg`); HTTPS cameras with self-signed certificates keep working (2026-10-18) | [FFmpeg 9](roadmap-ffmpeg-9.md) |
+| The disk can no longer run full: the free-space guard covers every volume with media (cameras' own folders, snapshots, time-lapse, network shares), stops only the recordings on a full volume, refuses what it cannot measure; a failed write stops a recording; an optional size limit for all recordings (2026-10-18) | [`docs/disk-space-guard.md`](../docs/disk-space-guard.md) |
 
 ---
 

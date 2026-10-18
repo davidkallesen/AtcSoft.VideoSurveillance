@@ -1,168 +1,94 @@
 # 💾 Disk Space Guard
 
-Automatic disk space management for recording deployments. When free space on the recording drive drops below a configurable threshold, the system deletes the oldest recordings first — keeping the most recent footage while ensuring space is always available for new recordings.
+Keeps the disks that hold recordings from running full. On every volume that holds media, the guard keeps a set amount of space free by deleting the oldest media first. No recording starts where that space is not there, and a recording stops before it fills a disk. An optional size limit keeps all recordings together within a set size.
 
 ## 📖 Overview
 
-The disk space guard runs on two triggers:
+One guard (`DiskSpaceGuard`, Core) serves CameraWall and the server. It looks after every folder media is written to:
 
-- **Write events** — checked synchronously before `StartRecording` and before each hourly segment rollover, so the drive is clear before any new file is opened.
-- **Scheduled cleanup** — runs after every age-based cleanup pass as a secondary safety net for edge cases such as large timelapse bursts between recording events.
+- **The global recording folder**, or its default when the setting is empty.
+- **Each camera's own recording folder** (CameraWall only; the server records every camera below its own folder).
+- **The snapshot folder**, which also holds the time-lapse pictures.
 
-When free space is below the configured threshold, the guard enumerates all recording files under the recording root, sorts them oldest-first by last-write time, and deletes them one by one until the threshold is met or all non-active files are exhausted.
+The folders are grouped by **volume**: a drive, a volume mounted in a folder, or a network share. On Windows the free space is read for the folder itself, so a network share and a mounted folder are measured correctly.
+
+It runs:
+
+| When | What happens |
+|---|---|
+| **Every 30 seconds** | Each volume is checked; a short one is reclaimed. The recordings on a volume that is still short are stopped. |
+| **Before a recording starts** | The volume of the camera's folder must have the space, after reclaiming. Otherwise the recording does not start. |
+| **Before a new segment** | A volume that is still short gets no new segment: the recording stops. |
+| **Every hour** (cleanup pass) | Age-based cleanup, then the size limit, then the guard once more. |
 
 ```mermaid
 graph TD
-    A["StartRecording / SegmentRecording"] --> B{{"Free space ≥ threshold?"}}
-    B -- Yes --> C["Open new recording file"]
-    B -- No --> D["ReclaimBySize: delete oldest files first"]
-    D --> E{{"Target reached?"}}
+    A["Start / new segment / every 30 s"] --> B{{"Free space on the volume ≥ kept?"}}
+    B -- Yes --> C["Record"]
+    B -- No --> D["Delete the oldest media on that volume"]
+    D --> E{{"Enough now?"}}
     E -- Yes --> C
-    E -- No --> F["Log warning: still short\n(active recordings protect remaining files)"]
-    F --> C
-
-    G["Scheduled cleanup tick\n(every 4–6 h)"] --> H["Age-based cleanup"]
-    H --> B
+    E -- No --> F["Still short: stop the recordings on that volume,<br/>refuse new ones"]
+    B -- "Cannot be read" --> G["Refuse new recordings there;<br/>running ones go on"]
 ```
 
-## 🗂️ Deletion Order
+## 🗂️ What Is Deleted, In Which Order
 
-Files are deleted **oldest first** (ascending `LastWriteTime`, global across all camera folders under the recording root). Active recording files are never deleted — they are identified by their current file path and skipped even if they are the oldest files on disk.
+- **Oldest first**, by last-write time, across every folder on the short volume: recordings, snapshots and time-lapse pictures together.
+- **A recording being written is never deleted**, nor its thumbnail.
+- **A recording's thumbnail goes with it**, wherever the layout put it. A camera's own folder inside the global one keeps its thumbnails in its own `thumbnails` folder; they are matched to that folder.
+- **A recording thumbnail is never taken for a snapshot**, even when the recording folder is inside the snapshot folder.
+- Day and camera folders left empty are removed, once they are a minute old.
 
-Companion `.png` thumbnail files are deleted alongside their parent recording file, whether they sit next to it or in the separate `thumbnails` folder. Day and camera folders left empty by a reclaim are removed.
+## 🚦 When Things Go Wrong
 
-This design preserves the most recent footage: when disk is tight, the oldest archive is sacrificed first.
+| Situation | What happens |
+|---|---|
+| A volume is still short after deleting everything it may | The recordings on that volume stop, new ones are refused, and an Error is logged once. Recordings on other volumes go on. |
+| The free space of a volume cannot be read (a share that is gone) | New recordings there are refused and an Error is logged once. Running recordings go on: a share that hiccups for a moment must not end 24/7 recording. |
+| A write fails (the disk filled from elsewhere, a share went away) | The recorder stops writing and reports why (`RecordingError`); the recording is stopped within 30 seconds and the reason is logged. A packet FFmpeg refuses for its timestamp does not count. |
 
 ## ⚙️ Settings Reference
 
-### Media Cleanup Settings
+All under `Recording.Cleanup` in `settings.json`, in **Settings → Recording → Media Cleanup** in both desktop apps, and on the **Storage** tab of the web client.
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `EnableDiskSpaceGuard` | bool | `true` | Enable the disk space guard. When disabled, no automatic reclaim runs — age-based cleanup continues unaffected. |
-| `MinFreeSpaceMb` | int | `2048` | Minimum free disk space to maintain on the recording drive (in MB). The guard fires whenever available space drops below this value. |
+| Setting | API | Default | Description |
+|---|---|---|---|
+| `EnableDiskSpaceGuard` | `enableDiskSpaceGuard` | `true` | The guard. It runs whatever the cleanup schedule is. |
+| `MinFreeSpaceMb` | `minFreeSpaceMb` | `2048` | The space kept free on each volume, in MB. |
+| `MaxRecordingStorageGb` | `maxRecordingStorageGb` | `0` | The most space all recordings together may take, in GB; the oldest go first. `0` is no limit. Kept by the hourly cleanup. |
 
-Both settings live under `Recording.Cleanup` in `settings.json` and are exposed in the **Settings → Recording → Media Cleanup** tab.
+A setting a `PUT /settings` request leaves out keeps its value. `minFreeSpaceMb` as `0` keeps the current value too; `maxRecordingStorageGb` as `0` means no limit.
 
-### Threshold Sizing Guide
+### Sizing the free space kept
 
-| Threshold | Suitable for | Notes |
-|-----------|--------------|-------|
-| 500 MB | Motion-only, low frame rate | Not recommended for 24/7 multi-camera — at 150 MB/min a short gap blows past it |
-| 1 GB | 1 camera 24/7, or 3 cameras motion-only | Borderline |
-| **2 GB** | **2–3 cameras 24/7** | **~13 min buffer at 150 MB/min — recommended default** |
-| 5 GB | 3–8 cameras 24/7 | Comfortable |
-| 10 GB | Large multi-camera / high-bitrate | Conservative |
-| 20 GB | Enterprise 24/7 | Maximum safety |
+| Kept free | Suitable for |
+|---|---|
+| 500 MB | Motion-only, low frame rate |
+| 1 GB | 1 camera 24/7, or 3 cameras motion-only |
+| **2 GB** | **2–3 cameras 24/7 (about 13 minutes at 150 MB/min)** |
+| 5 GB | 3–8 cameras 24/7 |
+| 10–20 GB | Many cameras or high bitrates |
 
-## 🖥️ Setup: WPF Desktop App
+The guard checks every 30 seconds, so the space kept must hold more than 30 seconds of all cameras together.
 
-### 1. Enable the Guard
+## 🌍 Monitoring
 
-Open **Settings** (View tab) → **Recording** → **Media Cleanup**:
-
-- Toggle **Enable Disk Space Guard** on (enabled by default).
-- Set **Minimum Free Space** from the dropdown (2 GB is recommended for 24/7 deployments).
-
-### 2. Pair With Scheduled Cleanup
-
-For best results, enable a cleanup schedule in the same tab so age-based pruning also runs periodically. The disk space guard then acts as a live floor — the scheduled pass handles routine archive management, and the guard catches any surprise spikes between ticks.
-
-### 3. Configure Recording Segmentation
-
-Hourly segmentation (`Recording → Segmentation`) is strongly recommended with 24/7 recording. Each rollover is a reclaim opportunity — the guard runs before every new segment is opened, so disk pressure is addressed continuously rather than only at recording start.
-
-## 🌍 Setup: REST API Server
-
-### Configure via the Settings Endpoint
-
-The settings resource is flat. `GET /settings` returns the current values; send the properties you change:
-
-```http
-PUT /settings
-Content-Type: application/json
-
-{
-  "cleanupSchedule": "onStartupAndPeriodically",
-  "recordingRetentionDays": 30,
-  "enableDiskSpaceGuard": true,
-  "minFreeSpaceMb": 2048
-}
-```
-
-A setting the request leaves out keeps its value, so a client that does not know these properties cannot switch the guard off by accident. `minFreeSpaceMb` as `0` keeps the current value too.
-
-The same two settings are available in the Blazor settings page (Recording tab) and in the settings dialog of the WPF API client.
-
-### Monitor Disk Space via `/health/recordings`
-
-The health endpoint exposes a `DiskSpaceLow` flag at both the summary level and per active session:
-
-```http
-GET /health/recordings
-```
-
-```json
-{
-  "uptimeSeconds": 86400,
-  "activeRecordings": 3,
-  "stuckRecordings": 0,
-  "diskSpaceLow": false,
-  "sessions": [
-    {
-      "cameraId": "...",
-      "cameraName": "Front Door",
-      "filePath": "/recordings/front-door/2026-06-18T14-00-00.mkv",
-      "startedAtUtc": "2026-06-18T14:00:00Z",
-      "durationSeconds": 3541,
-      "isPipelineActive": true,
-      "diskSpaceLow": false
-    }
-  ]
-}
-```
-
-`diskSpaceLow` is `true` when `AvailableFreeSpace < MinFreeSpaceMb` at the time of the request. This flag is suitable for use in monitoring scripts, alerting pipelines, and soak-test dashboards.
+`GET /health/recordings` has a `diskSpaceLow` flag, for the server and per recording. It is `true` when the recording folder's volume has less free space than is kept, read the same way as the guard reads it.
 
 ## 📋 Log Messages
 
-All reclaim activity is logged via structured `[LoggerMessage]` entries. Filter by these messages to audit guard activity:
-
 | Level | Message | Meaning |
-|-------|---------|---------|
-| Debug | `Disk space OK on {Drive}: {FreeMb} MB free` | Drive is above threshold — no action taken |
-| Warning | `Disk space low on {Drive}: {FreeMb} MB free (threshold {ThresholdMb} MB) — starting reclaim pass` | Guard triggered; oldest-file deletion begins |
-| Error | `Disk space critically low on {Drive}: {FreeMb} MB — reclaim could not reach target` | All non-active files exhausted; active recordings still consuming space |
-| Information | `Disk space reclaim: freed {FreedMb} MB ({Count} files)` | Reclaim completed successfully |
-| Warning | `Disk space reclaim exhausted all non-active recordings; still {ShortMb} MB short of target` | Guard ran out of eligible files before meeting the threshold |
+|---|---|---|
+| Warning | `Disk space low on '{Volume}': … deleted the {Count} oldest files` | The guard made room |
+| Error | `Disk space low on '{Volume}' … nothing more may be deleted … Recordings on it are stopped and new ones refused` | Still short (logged when it starts) |
+| Error | `The free space of '{Volume}' cannot be read. New recordings there are refused; running ones go on` | Unreadable volume (logged when it starts) |
+| Information | `Disk space on '{Volume}': … MB free` | A volume is fine again |
+| Error | `Recording of camera '{CameraName}' stopped: nothing more can be written ({Error})` | A write failed |
+| Error | `Not enough free space where camera '{CameraName}' records, or it cannot be read: the recording is not started` | The start was refused |
 
 ## 🔧 Troubleshooting
 
-### Disk fills up despite the guard being enabled
-
-- **Cause**: Write rate exceeds the reclaim rate — cameras produce more data per segment than the guard can recover from older files.
-- **Solutions**:
-  - Increase `MinFreeSpaceMb` so reclaim triggers earlier, with more headroom.
-  - Enable hourly segmentation — more frequent reclaim opportunities.
-  - Reduce recording bitrate or resolution in camera settings.
-  - Reduce `RecordingRetentionDays` so age-based cleanup removes files faster.
-
-### Warning: "disk space reclaim exhausted all non-active recordings; still X MB short"
-
-- **Cause**: All deletable recordings have been removed, but active cameras are still recording and consuming the remaining space. The guard cannot delete files currently being written.
-- **Behavior**: The system continues recording. FFmpeg will close the muxer gracefully if the OS returns a disk-full error; the pipeline error surfaces through the normal connection state handling.
-- **Solutions**:
-  - Add more disk space.
-  - Reduce the number of simultaneously recording cameras.
-  - Reduce recording bitrate or enable motion-only recording.
-
-### Guard triggers too frequently
-
-- **Cause**: `MinFreeSpaceMb` is set close to the typical free-space level, causing near-continuous reclaim passes.
-- **Solution**: Lower `MinFreeSpaceMb` to a value that still provides a comfortable buffer but is well below steady-state free space, or increase total disk capacity.
-
-### Old recordings not being deleted
-
-- **Cause**: All recordings visible on disk belong to active sessions (i.e., every file is currently being written).
-- **Check**: Review the `/health/recordings` endpoint — if `diskSpaceLow` is `true` and `activeRecordings` equals the total file count, all files are protected by active sessions.
-- **Solution**: Stop one or more recordings, or wait for segment rollover (the rolled-off segment immediately becomes eligible).
+- **Recordings stop with "nothing more may be deleted".** The volume is full of files the guard may not delete: recordings being written, or files that are not media. Free space by hand, add disk, or record fewer cameras there.
+- **A camera on a network share does not record.** Its free space cannot be read. Check that the share is reachable from the account the app or the server runs under.
+- **Recordings disappear sooner than the retention.** The free space kept or the size limit is reached first. Raise the size limit, lower the free space kept, or add disk.
