@@ -34,6 +34,7 @@ global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 global using Microsoft.Extensions.Logging;
 
+global using ActivityIndexRecorder = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityIndexRecorder;
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;
 global using BuiltInMotionDetector = AtcSoft.VideoSurveillance.Helpers.MotionDetection.BuiltInMotionDetector;
@@ -63,6 +64,7 @@ global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanup
 global using MediaCleanupRunResult = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunResult;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
 global using MotionFrame = AtcSoft.VideoSurveillance.Models.MotionFrame;
+global using PictureAnalyzedEventArgs = AtcSoft.VideoSurveillance.Events.PictureAnalyzedEventArgs;
 global using RecordingLayoutOptions = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutOptions;
 global using RecordingLayoutReorganizer = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutReorganizer;
 global using RecordingLayoutReorganizeResult = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutReorganizeResult;

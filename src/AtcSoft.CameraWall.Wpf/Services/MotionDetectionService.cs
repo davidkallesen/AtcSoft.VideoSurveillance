@@ -4,6 +4,8 @@ namespace AtcSoft.CameraWall.Wpf.Services;
 /// <summary>
 /// Service for detecting motion in camera video streams using frame differencing.
 /// Uses a staggered scheduler to analyze cameras in sequence, preventing CPU spikes.
+/// A camera that records is also analysed for its activity index (<see cref="StartIndexing"/>);
+/// one analysed only for the index reports no motion.
 /// </summary>
 [Registration(Lifetime.Singleton)]
 public partial class MotionDetectionService : IMotionDetectionService, IDisposable
@@ -42,6 +44,9 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     public event EventHandler<MotionDetectedEventArgs>? MotionDetected;
 
     /// <inheritdoc/>
+    public event EventHandler<PictureAnalyzedEventArgs>? PictureAnalyzed;
+
+    /// <inheritdoc/>
     public void StartDetection(
         Guid cameraId,
         IMediaPipeline pipeline,
@@ -49,49 +54,66 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     {
         ArgumentNullException.ThrowIfNull(pipeline);
 
-        // Stop existing detection if any
-        StopDetection(cameraId);
+        // Started again with new settings: begin anew, still feeding the index if it did.
+        var indexes = contexts.TryGetValue(cameraId, out var running) && running.Indexes;
+        Remove(cameraId);
+        Add(cameraId, pipeline, settings, reportsMotion: true, indexes);
+    }
 
-        var context = new MotionDetectionContext(cameraId, pipeline, settings ?? new MotionDetectionSettings());
-
-        // Mutate contexts and scheduledCameras together under the same lock so
-        // a concurrent Start/Stop pair cannot leave a camera scheduled but
-        // missing from contexts (which would silently stop analysis for it).
-        bool added;
-        lock (schedulerLock)
+    /// <inheritdoc/>
+    /// <remarks>A camera that is also analysed for its activity index goes on being analysed, without reporting motion.</remarks>
+    public void StopDetection(Guid cameraId)
+    {
+        if (contexts.TryGetValue(cameraId, out var context) && context.Indexes)
         {
-            added = contexts.TryAdd(cameraId, context);
-            if (added)
-            {
-                scheduledCameras.Add(cameraId);
-                UpdateSchedulerInterval();
-            }
+            context.ReportsMotion = false;
+            context.IsMotionDetected = false;
+            context.LastBoundingBoxes = [];
+            return;
         }
 
-        if (!added)
+        Remove(cameraId);
+    }
+
+    /// <inheritdoc/>
+    public void StartIndexing(
+        Guid cameraId,
+        IMediaPipeline pipeline,
+        MotionDetectionSettings? settings = null)
+    {
+        ArgumentNullException.ThrowIfNull(pipeline);
+
+        if (contexts.TryGetValue(cameraId, out var running))
         {
-            context.Dispose();
+            running.Indexes = true;
+            return;
+        }
+
+        Add(cameraId, pipeline, settings, reportsMotion: false, indexes: true);
+    }
+
+    /// <inheritdoc/>
+    public void StopIndexing(Guid cameraId)
+    {
+        if (!contexts.TryGetValue(cameraId, out var context))
+        {
+            return;
+        }
+
+        context.Indexes = false;
+        if (!context.ReportsMotion)
+        {
+            Remove(cameraId);
         }
     }
 
     /// <inheritdoc/>
-    public void StopDetection(Guid cameraId)
-    {
-        // Same atomic invariant as StartDetection: both maps move together.
-        MotionDetectionContext? context;
-        lock (schedulerLock)
-        {
-            contexts.TryRemove(cameraId, out context);
-            scheduledCameras.Remove(cameraId);
-            UpdateSchedulerInterval();
-        }
-
-        context?.Dispose();
-    }
+    public bool IsIndexing(Guid cameraId)
+        => contexts.TryGetValue(cameraId, out var context) && context.Indexes;
 
     /// <inheritdoc/>
     public bool IsDetectionActive(Guid cameraId)
-        => contexts.ContainsKey(cameraId);
+        => contexts.TryGetValue(cameraId, out var context) && context.ReportsMotion;
 
     /// <inheritdoc/>
     public bool IsMotionDetected(Guid cameraId)
@@ -151,11 +173,58 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
             foreach (var cameraId in contexts.Keys.ToList())
             {
-                StopDetection(cameraId);
+                Remove(cameraId);
             }
         }
 
         disposed = true;
+    }
+
+    private void Add(
+        Guid cameraId,
+        IMediaPipeline pipeline,
+        MotionDetectionSettings? settings,
+        bool reportsMotion,
+        bool indexes)
+    {
+        var context = new MotionDetectionContext(cameraId, pipeline, settings ?? new MotionDetectionSettings())
+        {
+            ReportsMotion = reportsMotion,
+            Indexes = indexes,
+        };
+
+        // Mutate contexts and scheduledCameras together under the same lock so
+        // a concurrent Start/Stop pair cannot leave a camera scheduled but
+        // missing from contexts (which would silently stop analysis for it).
+        bool added;
+        lock (schedulerLock)
+        {
+            added = contexts.TryAdd(cameraId, context);
+            if (added)
+            {
+                scheduledCameras.Add(cameraId);
+                UpdateSchedulerInterval();
+            }
+        }
+
+        if (!added)
+        {
+            context.Dispose();
+        }
+    }
+
+    private void Remove(Guid cameraId)
+    {
+        // Same atomic invariant as Add: both maps move together.
+        MotionDetectionContext? context;
+        lock (schedulerLock)
+        {
+            contexts.TryRemove(cameraId, out context);
+            scheduledCameras.Remove(cameraId);
+            UpdateSchedulerInterval();
+        }
+
+        context?.Dispose();
     }
 
     /// <summary>
@@ -298,7 +367,18 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
             // The detector is shared with the server: the comparison, the gate and the
             // post-motion hold (ending motion on the first quiet picture made the boxes blink).
-            var result = context.Detector.Process(new MotionFrame(currentFrame, analysisWidth, analysisHeight, DateTimeOffset.UtcNow));
+            var now = DateTimeOffset.UtcNow;
+            var result = context.Detector.Process(new MotionFrame(currentFrame, analysisWidth, analysisHeight, now));
+
+            // The activity index is written off the UI thread; its writer has its own lock.
+            PictureAnalyzed?.Invoke(this, new PictureAnalyzedEventArgs(cameraId, now, result));
+
+            // A camera analysed only for its activity index has no motion to report.
+            if (!context.ReportsMotion)
+            {
+                return;
+            }
+
             var changePercent = result.ChangePercent;
             var boundingBoxes = result.Boxes;
             switch (result.Change)

@@ -84,6 +84,9 @@ public partial class CameraWallApp
                 services.AddSingleton<IRecordingSegmentationService>(sp => sp.GetRequiredService<RecordingSegmentationService>());
                 services.AddHostedService(sp => sp.GetRequiredService<RecordingSegmentationService>());
 
+                // An activity index beside every recording, for the timelines (shared with the server).
+                services.AddHostedService<ActivityIndexService>();
+
                 // Toast notification service (used by library and app)
                 services.AddSingleton<IToastNotificationService, ToastNotificationService>();
 

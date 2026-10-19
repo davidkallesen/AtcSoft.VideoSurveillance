@@ -11,6 +11,8 @@ public abstract class RecordingServiceWithoutSharedPipelines : IRecordingService
 
     public abstract RecordingSession? GetSession(Guid cameraId);
 
+    public abstract IMediaPipeline? FindPipeline(Guid cameraId);
+
     public abstract bool StartRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline);

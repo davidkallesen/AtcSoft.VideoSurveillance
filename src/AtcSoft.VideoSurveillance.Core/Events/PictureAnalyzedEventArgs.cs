@@ -1,4 +1,4 @@
-namespace AtcSoft.VideoSurveillance.Api.Services;
+namespace AtcSoft.VideoSurveillance.Events;
 
 /// <summary>
 /// One picture of a camera was analysed: what the detector found, whether or not it is motion.

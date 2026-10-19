@@ -102,11 +102,7 @@ try
     builder.Services.AddSingleton<ServerRecordingService>();
     builder.Services.AddSingleton<IRecordingService>(sp =>
         sp.GetRequiredService<ServerRecordingService>());
-
-    // The concrete type too: the activity index takes every analysed picture from it.
-    builder.Services.AddSingleton<ServerMotionDetectionService>();
-    builder.Services.AddSingleton<IMotionDetectionService>(sp =>
-        sp.GetRequiredService<ServerMotionDetectionService>());
+    builder.Services.AddSingleton<IMotionDetectionService, ServerMotionDetectionService>();
 
     // Initialize VideoEngine (FFmpeg in-process) and register services.
     // DecoderThreads=1: headless server uses single-threaded decoding per camera

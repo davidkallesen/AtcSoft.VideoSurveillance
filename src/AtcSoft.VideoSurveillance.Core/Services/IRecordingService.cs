@@ -3,13 +3,9 @@ namespace AtcSoft.VideoSurveillance.Services;
 /// <summary>
 /// Service for managing camera recording sessions.
 /// </summary>
-public interface IRecordingService
+public interface IRecordingService : IActiveRecordings
 {
-    event EventHandler<RecordingStateChangedEventArgs>? RecordingStateChanged;
-
     RecordingState GetRecordingState(Guid cameraId);
-
-    RecordingSession? GetSession(Guid cameraId);
 
     bool StartRecording(
         CameraConfiguration camera,
@@ -34,8 +30,6 @@ public interface IRecordingService
 
     void StopRecording(Guid cameraId);
 
-    bool IsRecording(Guid cameraId);
-
     bool TriggerMotionRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline);
@@ -49,8 +43,6 @@ public interface IRecordingService
     void StopAllRecordings();
 
     bool SegmentRecording(Guid cameraId);
-
-    IReadOnlyList<RecordingSession> GetActiveSessions();
 
     /// <summary>
     /// Stops any active recording session whose underlying pipeline is no

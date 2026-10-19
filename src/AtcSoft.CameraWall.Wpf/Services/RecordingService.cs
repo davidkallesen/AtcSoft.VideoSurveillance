@@ -69,6 +69,10 @@ public partial class RecordingService : IRecordingService, IDisposable
     }
 
     /// <inheritdoc/>
+    public IMediaPipeline? FindPipeline(Guid cameraId)
+        => pipelines.GetValueOrDefault(cameraId);
+
+    /// <inheritdoc/>
     public bool StartRecording(
         CameraConfiguration camera,
         IMediaPipeline pipeline)

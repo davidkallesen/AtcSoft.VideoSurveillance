@@ -66,10 +66,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     /// <inheritdoc/>
     public event EventHandler<MotionDetectedEventArgs>? MotionDetected;
 
-    /// <summary>
-    /// Raised for every analysed picture of every camera, watched for motion or analysed only
-    /// for the activity index.
-    /// </summary>
+    /// <inheritdoc/>
     public event EventHandler<PictureAnalyzedEventArgs>? PictureAnalyzed;
 
     /// <summary>
@@ -92,23 +89,14 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         MotionDetectionSettings? settings = null)
         => Start(cameraId, pipeline, settings, reportsMotion: true);
 
-    /// <summary>
-    /// Analyses a camera for its activity index. A camera already analysed goes on as it is;
-    /// one that is not starts without reporting motion.
-    /// </summary>
-    /// <param name="cameraId">The camera.</param>
-    /// <param name="pipeline">The camera's pipeline, to take pictures from.</param>
-    /// <param name="settings">The camera's motion settings.</param>
+    /// <inheritdoc/>
     public void StartIndexing(
         Guid cameraId,
         IMediaPipeline pipeline,
         MotionDetectionSettings? settings = null)
         => Start(cameraId, pipeline, settings, reportsMotion: false);
 
-    /// <summary>
-    /// Stops analysing a camera for its activity index. A camera watched for motion goes on.
-    /// </summary>
-    /// <param name="cameraId">The camera.</param>
+    /// <inheritdoc/>
     public void StopIndexing(Guid cameraId)
     {
         if (!contexts.TryGetValue(cameraId, out var context))
@@ -165,10 +153,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     public bool IsDetectionActive(Guid cameraId)
         => contexts.TryGetValue(cameraId, out var ctx) && ctx.ReportsMotion;
 
-    /// <summary>
-    /// Determines whether a camera is analysed for its activity index.
-    /// </summary>
-    /// <param name="cameraId">The camera.</param>
+    /// <inheritdoc/>
     public bool IsIndexing(Guid cameraId)
         => contexts.TryGetValue(cameraId, out var ctx) && ctx.Indexes;
 

@@ -347,7 +347,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker, ids on the wire, web smoothing by id; WPF overlays still by nearness |
 | 6 | Masks and zones | L | ⬜ |
-| 7 | Activity index (sidecar, API) | M | 🟨 Core and server done; CameraWall, the setting and *Analyse recording* open |
+| 7 | Activity index (sidecar, API) | M | 🟨 Core, server and CameraWall done; the setting and *Analyse recording* open |
 | 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
 | 8b | Server timeline: day index, `GET /timeline`, live events | M | ⬜ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments | L | ⬜ |
@@ -472,12 +472,11 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 - Core: `{video}.activity.jsonl` beside the video in every layout (`RecordingPathHelper.BuildActivityPath`). A header `{"v":1,"start":…}`, then one line per analysed second: `t` offset, `a` level (the largest changed share, 0–100, the tree included), `n` confirmed tracks, `ids`. A second without a line was not analysed, which is not the same as quiet. `ActivityAccumulator` (fed by every analysed picture, not by motion events), `ActivityLogWriter` (a line as soon as the second is over), `ActivityLogReader` (reads while written, skips a cut-off line), `ActivityDownsampler.ByMax`.
 - The index is a companion of its recording (`GetCompanionPaths`): deleted by the remover, the clean-up and the disk-space guard, protected while recorded, moved by the reorganiser.
-- Server: `ActivityIndexService` writes the index of every recording, a new file per segment. A recorded camera is analysed even when it is not watched for motion, in an index-only mode of `ServerMotionDetectionService` (`StartIndexing`) that reports no motion: no badge, webhook or motion recording comes of it.
+- Both apps: `ActivityIndexRecorder` (Core) writes the index of every recording, a new file per segment; each app runs it from a hosted `ActivityIndexService`. It needs only `IActiveRecordings`, which both recording interfaces now extend. A recorded camera is analysed even when it is not watched for motion, in an index-only mode of `IMotionDetectionService` (`StartIndexing`) that reports no motion: no badge, webhook or motion recording comes of it. In CameraWall a tile starting, restarting or stopping its motion watch leaves the index running.
 - `GET /recordings/activity` with `hasIndex` false for a recording without one. Unit tests, handler tests, and a host test that records the live test stream and reads the activity back.
 
 **Open:**
 
-- CameraWall writes the index too (phase 7c).
 - A setting to turn the index off (always on today). It has to pass `SettingsRoundTripTests`, with texts in four languages and both clients.
 - *Analyse recording* for older recordings.
 - The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.

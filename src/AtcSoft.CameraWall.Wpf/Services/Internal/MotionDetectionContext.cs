@@ -26,6 +26,12 @@ internal sealed class MotionDetectionContext : IDisposable
     // The same detector as the server's, behind the shared seam.
     public IMotionDetector Detector { get; }
 
+    // Whether motion is reported (the tile watches for it), and whether the pictures go to the
+    // activity index (the camera records). At least one of them, or the camera is not analysed.
+    public bool ReportsMotion { get; set; }
+
+    public bool Indexes { get; set; }
+
     public bool IsMotionDetected { get; set; }
 
     public DateTime? LastMotionTime { get; set; }

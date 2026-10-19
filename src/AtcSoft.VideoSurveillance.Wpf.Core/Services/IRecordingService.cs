@@ -3,26 +3,14 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Services;
 /// <summary>
 /// Service for managing camera recording sessions.
 /// </summary>
-public interface IRecordingService
+public interface IRecordingService : IActiveRecordings
 {
-    /// <summary>
-    /// Occurs when the recording state changes for a camera.
-    /// </summary>
-    event EventHandler<RecordingStateChangedEventArgs>? RecordingStateChanged;
-
     /// <summary>
     /// Gets the current recording state for a camera.
     /// </summary>
     /// <param name="cameraId">The camera ID.</param>
     /// <returns>The current recording state.</returns>
     RecordingState GetRecordingState(Guid cameraId);
-
-    /// <summary>
-    /// Gets the active recording session for a camera, if any.
-    /// </summary>
-    /// <param name="cameraId">The camera ID.</param>
-    /// <returns>The recording session, or null if not recording.</returns>
-    RecordingSession? GetSession(Guid cameraId);
 
     /// <summary>
     /// Starts a manual recording for a camera.
@@ -39,13 +27,6 @@ public interface IRecordingService
     /// </summary>
     /// <param name="cameraId">The camera ID.</param>
     void StopRecording(Guid cameraId);
-
-    /// <summary>
-    /// Checks if a camera is currently recording.
-    /// </summary>
-    /// <param name="cameraId">The camera ID.</param>
-    /// <returns>True if recording; otherwise, false.</returns>
-    bool IsRecording(Guid cameraId);
 
     /// <summary>
     /// Triggers motion-based recording for a camera.
@@ -87,12 +68,6 @@ public interface IRecordingService
     /// <param name="cameraId">The camera ID.</param>
     /// <returns>True if segmentation was successful; otherwise, false.</returns>
     bool SegmentRecording(Guid cameraId);
-
-    /// <summary>
-    /// Gets all active recording sessions.
-    /// </summary>
-    /// <returns>A read-only list of active recording sessions.</returns>
-    IReadOnlyList<RecordingSession> GetActiveSessions();
 
     /// <summary>
     /// Checks disk space mid-recording. Attempts to reclaim space; if the

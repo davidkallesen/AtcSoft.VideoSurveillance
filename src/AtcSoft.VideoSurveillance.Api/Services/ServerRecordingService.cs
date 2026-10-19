@@ -78,11 +78,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     /// </summary>
     public event Action<Guid, ConnectionState>? CameraConnectionStateChanged;
 
-    /// <summary>
-    /// Gets the pipeline a camera is being recorded on.
-    /// </summary>
-    /// <param name="cameraId">The camera.</param>
-    /// <returns>The pipeline, or <see langword="null"/> when the camera is not recording.</returns>
+    /// <inheritdoc/>
     public IMediaPipeline? FindPipeline(Guid cameraId)
         => pipelines.GetValueOrDefault(cameraId);
 
