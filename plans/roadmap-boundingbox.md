@@ -346,7 +346,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
-| 6 | Masks and zones | L | ⬜ |
+| 6 | Masks and zones | L | 🟨 in progress: ignore masks first |
 | 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
@@ -458,7 +458,7 @@ Cost per picture at 800×600: about 11 ms (today's 2 ms), so about 4–5 % of on
 
 **Test:** S5 gives exactly three tracks; S9 keeps the id; S2 gives none; a host test sees track ids in the event stream.
 
-### Phase 6 — Masks and zones ⬜ (L)
+### Phase 6 — Masks and zones 🟨 (L)
 
 Covers the backlog row *Motion zones / exclusion masks*.
 

@@ -71,16 +71,19 @@ internal sealed class BackgroundModel
     /// <param name="minThreshold">The threshold's minimum in grey levels.</param>
     /// <param name="backgroundRate">How much a background pixel learns now (0 to 1).</param>
     /// <param name="foregroundRate">How much a foreground pixel learns now (0 to 1).</param>
-    /// <returns>The share of the picture that is foreground.</returns>
+    /// <param name="ignored">Pixels never counted as foreground (1), still learnt; <see langword="null"/> for none.</param>
+    /// <returns>The share of the pixels looked at that is foreground.</returns>
     public double Apply(
         byte[] frame,
         byte[] mask,
         double sigmas,
         double minThreshold,
         double backgroundRate,
-        double foregroundRate)
+        double foregroundRate,
+        byte[]? ignored = null)
     {
         var count = 0;
+        var looked = frame.Length;
         var s2 = (float)(sigmas * sigmas);
         var min2 = (float)(minThreshold * minThreshold);
         var bg = (float)backgroundRate;
@@ -90,6 +93,12 @@ internal sealed class BackgroundModel
             var d = frame[i] - mean[i];
             var d2 = d * d;
             var isForeground = d2 > min2 && d2 > s2 * variance[i];
+            if (ignored is not null && ignored[i] != 0)
+            {
+                isForeground = false;
+                looked--;
+            }
+
             mask[i] = isForeground ? (byte)1 : (byte)0;
             if (isForeground)
             {
@@ -103,6 +112,6 @@ internal sealed class BackgroundModel
             variance[i] = Math.Clamp(variance[i] + (rate * (d2 - variance[i])), MinVariance, MaxVariance);
         }
 
-        return count / (double)frame.Length;
+        return looked > 0 ? count / (double)looked : 0;
     }
 }

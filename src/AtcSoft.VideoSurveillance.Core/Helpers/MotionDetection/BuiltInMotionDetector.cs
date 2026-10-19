@@ -5,7 +5,9 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// per pixel (mean and variance), a lighting-change check, morphology on the foreground, blobs,
 /// merging of near blobs, and a tracker. Motion is on while a confirmed track exists: something
 /// that has been seen for a while and has travelled. A tree in the wind sways on the spot and
-/// never confirms; a slow walker differs from the background as a whole figure.
+/// never confirms; a slow walker differs from the background as a whole figure. A camera's ignore
+/// zones are never foreground and do not count towards the changed share, so the activity level
+/// and the lighting check leave them out too.
 /// </summary>
 public sealed class BuiltInMotionDetector : IMotionDetector
 {
@@ -14,6 +16,10 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private readonly BackgroundModel background = new();
     private readonly MotionTracker tracker = new();
     private readonly DetectorBuffers buffers = new();
+    private readonly IReadOnlyList<MotionZone> zones;
+    private byte[]? ignored;
+    private int ignoredWidth;
+    private int ignoredHeight;
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
     private bool lastHadBoxes;
@@ -23,12 +29,15 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     /// </summary>
     /// <param name="settings">The camera's motion settings.</param>
     /// <param name="options">The tuning; from <paramref name="settings"/> when not given.</param>
+    /// <param name="zones">The camera's motion zones; the ignore zones are left out.</param>
     public BuiltInMotionDetector(
         MotionDetectionSettings settings,
-        MotionDetectorOptions? options = null)
+        MotionDetectorOptions? options = null,
+        IReadOnlyList<MotionZone>? zones = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
+        this.zones = zones ?? [];
         this.options = options ?? MotionDetectorOptions.From(settings);
         hold = new MotionHold(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
     }
@@ -52,13 +61,15 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         }
 
         var mask = buffers.Mask;
+        var ignore = Ignored(frame.Width, frame.Height);
         var share = background.Apply(
             blurred,
             mask,
             options.ThresholdSigmas,
             options.MinThreshold,
             Rate(dt, options.BackgroundSeconds),
-            Rate(dt, options.ForegroundSeconds));
+            Rate(dt, options.ForegroundSeconds),
+            ignore);
 
         // Most of the picture changed at once: light (exposure, a cloud, dusk), not an object.
         // Shift the background by the overall change, so what moves stays foreground; if the
@@ -66,7 +77,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         if (share > options.LightingChangeShare)
         {
             background.ShiftTo(blurred);
-            share = background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, 0, 0);
+            share = background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, 0, 0, ignore);
             if (share > options.LightingChangeShare)
             {
                 background.Reset(blurred, frame.Width, frame.Height);
@@ -113,6 +124,21 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         lastTime = null;
         settleUntil = null;
         lastHadBoxes = false;
+    }
+
+    // The ignore zones at this size, filled in once until the size changes.
+    private byte[]? Ignored(
+        int width,
+        int height)
+    {
+        if (ignoredWidth != width || ignoredHeight != height)
+        {
+            ignored = ZoneMask.Ignored(zones, width, height);
+            ignoredWidth = width;
+            ignoredHeight = height;
+        }
+
+        return ignored;
     }
 
     // How much a pixel learns in dt for a time constant: the share of the way to the new value.
