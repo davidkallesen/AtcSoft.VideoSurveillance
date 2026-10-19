@@ -208,6 +208,7 @@ else
     private readonly Dictionary<Guid, string> errors = new();
     private readonly HashSet<Guid> pendingStreamInits = new();
     private readonly Dictionary<Guid, MotionState> motionStates = new();
+    private readonly Dictionary<Guid, MotionBoxSmoother> motionSmoothers = new();
 
     // What each playing video's picture measures, as the browser reports it.
     private readonly Dictionary<Guid, int[]> pictureSizes = new();
@@ -446,15 +447,22 @@ else
         {
             if (e.IsMotionActive)
             {
+                if (!motionSmoothers.TryGetValue(e.CameraId, out var smoother))
+                {
+                    smoother = new MotionBoxSmoother();
+                    motionSmoothers[e.CameraId] = smoother;
+                }
+
                 motionStates[e.CameraId] = new MotionState(
                     true,
-                    e.BoundingBoxes,
+                    smoother.Smooth(e.BoundingBoxes),
                     e.AnalysisWidth,
                     e.AnalysisHeight);
             }
             else
             {
                 motionStates.Remove(e.CameraId);
+                motionSmoothers.Remove(e.CameraId);
             }
 
             StateHasChanged();

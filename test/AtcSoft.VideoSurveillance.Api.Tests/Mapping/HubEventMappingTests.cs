@@ -49,7 +49,7 @@ public sealed class HubEventMappingTests
             CameraId,
             changePercentage: 4.5,
             isMotionActive: true,
-            boundingBoxes: [new BoundingBox { X = 10, Y = 20, Width = 30, Height = 40 }],
+            boundingBoxes: [new BoundingBox { X = 10, Y = 20, Width = 30, Height = 40, TrackId = 7 }],
             analysisWidth: 320,
             analysisHeight: 240);
 
@@ -60,7 +60,7 @@ public sealed class HubEventMappingTests
         hubEvent.AnalysisWidth.Should().Be(320);
         hubEvent.AnalysisHeight.Should().Be(240);
         hubEvent.BoundingBoxes.Should().ContainSingle()
-            .Which.Should().Be(new MotionBox(X: 10, Y: 20, Width: 30, Height: 40));
+            .Which.Should().Be(new MotionBox(X: 10, Y: 20, Width: 30, Height: 40, TrackId: 7), "a client follows each box by its track");
     }
 
     [Theory]

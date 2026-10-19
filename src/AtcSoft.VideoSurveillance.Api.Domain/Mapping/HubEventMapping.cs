@@ -39,7 +39,7 @@ public static class HubEventMapping
             CameraId: e.CameraId,
             IsMotionActive: e.IsMotionActive,
             ChangePercentage: e.ChangePercentage,
-            BoundingBoxes: [.. e.BoundingBoxes.Select(b => new MotionBox(X: b.X, Y: b.Y, Width: b.Width, Height: b.Height))],
+            BoundingBoxes: [.. e.BoundingBoxes.Select(b => new MotionBox(X: b.X, Y: b.Y, Width: b.Width, Height: b.Height, TrackId: b.TrackId))],
             AnalysisWidth: e.AnalysisWidth,
             AnalysisHeight: e.AnalysisHeight,
             Timestamp: new DateTimeOffset(e.Timestamp, TimeSpan.Zero));

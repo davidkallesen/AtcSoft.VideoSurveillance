@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Helpers;
 
 /// <summary>
 /// Smooths motion boxes from one update to the next so they do not jitter. Each new box follows
-/// the box it was a moment ago, found by overlap or else by nearness, never by its place in the
+/// the box it was a moment ago, found by its track id when the detector gives one, else by
+/// overlap or nearness, never by its place in the
 /// list: the detector sorts its boxes by size, so two boxes swap places when one grows past the
 /// other. A new box starts where it is; a box that went away is forgotten.
 /// </summary>
@@ -72,11 +73,17 @@ public sealed class BoxSmoother
     public void Reset()
         => previous = [];
 
-    // Overlap scores above 1; a near box without overlap scores between 0 and 1; a far one 0.
+    // The same track scores above everything; overlap scores above 1; a near box without
+    // overlap scores between 0 and 1; a far one 0. Boxes of two different tracks never match.
     private static double MatchScore(
         BoundingBox a,
         BoundingBox b)
     {
+        if (a.TrackId is { } trackA && b.TrackId is { } trackB)
+        {
+            return trackA == trackB ? 10 : 0;
+        }
+
         var iou = IntersectionOverUnion(a, b);
         if (iou > 0)
         {
@@ -117,9 +124,10 @@ public sealed class BoxSmoother
             Y = (old.Y * keep) + (target.Y * take),
             Width = (old.Width * keep) + (target.Width * take),
             Height = (old.Height * keep) + (target.Height * take),
+            TrackId = target.TrackId,
         };
     }
 
     private static BoundingBox Copy(BoundingBox box)
-        => new() { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height };
+        => new() { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height, TrackId = box.TrackId };
 }

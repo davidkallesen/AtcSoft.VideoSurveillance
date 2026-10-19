@@ -57,6 +57,20 @@ public sealed class BoxSmootherTests
     }
 
     [Fact]
+    public void A_Box_Follows_Its_Own_Track_Even_When_Another_Box_Is_Nearer()
+    {
+        // Two people cross: the nearest previous box is the other person's.
+        var sut = new BoxSmoother(smoothingFactor: 0.5);
+        sut.Smooth([Box(100, 100, 40, 100, track: 1), Box(160, 100, 40, 100, track: 2)]);
+
+        var smoothed = sut.Smooth([Box(150, 100, 40, 100, track: 1), Box(110, 100, 40, 100, track: 2)]);
+
+        smoothed[0].X.Should().Be(125, "track 1 moved from 100 to 150");
+        smoothed[1].X.Should().Be(135, "track 2 moved from 160 to 110");
+        smoothed[0].TrackId.Should().Be(1);
+    }
+
+    [Fact]
     public void Without_Smoothing_The_Boxes_Are_Shown_As_They_Are()
     {
         var sut = new BoxSmoother(smoothingFactor: 0);
@@ -69,6 +83,7 @@ public sealed class BoxSmootherTests
         double x,
         double y,
         double width,
-        double height)
-        => new() { X = x, Y = y, Width = width, Height = height };
+        double height,
+        int? track = null)
+        => new() { X = x, Y = y, Width = width, Height = height, TrackId = track };
 }

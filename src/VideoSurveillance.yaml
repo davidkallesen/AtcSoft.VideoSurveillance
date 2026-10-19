@@ -3002,6 +3002,10 @@ components:
         height:
           type: number
           format: double
+        trackId:
+          type: integer
+          format: int32
+          description: The track the box belongs to. The same moving thing keeps its id from event to event, so a client can follow (and smooth) each box; left out by a detector that does not track.
 
     MotionDetectedEvent:
       title: MotionDetectedEvent

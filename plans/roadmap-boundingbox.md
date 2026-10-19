@@ -345,7 +345,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 2 | Grey frames with their time from the engine | M | ⬜ |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
-| 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker and ids built; ids on the wire and smoothing by id open |
+| 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker, ids on the wire, web smoothing by id; WPF overlays still by nearness |
 | 6 | Masks and zones | L | ⬜ |
 | 7 | Activity index (sidecar, API) | M | ⬜ |
 | 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
@@ -447,7 +447,7 @@ Cost per picture at 800×600: about 11 ms (today's 2 ms), so about 4–5 % of on
 
 ### Phase 5 — Tracker 🟨 (M)
 
-**Done 2026-10-19:** `MotionTracker` (constant-velocity guess, matching by overlap or nearness, confirmation after 0.4 s and 3 % travel, end after 1 s unseen); motion is on while a confirmed track exists. **Open:** `trackId` in the spec and both clients smoothing by id; webhooks and motion recordings starting on a confirmed track (they follow motion, which now means that already).
+**Done 2026-10-19:** `MotionTracker` (constant-velocity guess, matching by overlap or nearness, confirmation after 0.4 s and 3 % travel, end after 1 s unseen); motion is on while a confirmed track exists, so webhooks and motion recordings already start on a confirmed track. `MotionBox.trackId` in the spec and on `GET /events`; Core's `BoxSmoother` follows a box by its id first; the web client smooths by id too (`Logic/MotionBoxSmoother`, kept equal to Core by a test). **Open:** the WPF overlays take plain rectangles, so they still match by nearness (ids would have to reach `MotionBoundingBoxOverlay`); a host test that sees track ids in the event stream.
 
 - A SORT-style tracker written from the paper (the reference code is GPL): prediction, IoU or centre matching, confirmation after N hits **and** a minimum net travel, end after M misses.
 - Motion is active while a confirmed track exists. `MinimumChangePercent` stays readable in old files but no longer decides (deprecated, like the server's `language`).
