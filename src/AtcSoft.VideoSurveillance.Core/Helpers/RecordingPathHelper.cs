@@ -24,6 +24,7 @@ public static partial class RecordingPathHelper
 
     private const string TimestampFormat = "yyyyMMdd_HHmmss_fff";
     private const string ThumbnailExtension = ".png";
+    private const string ActivityExtension = ".activity.jsonl";
 
     /// <summary>
     /// Gets the folder name used for a camera: its display name with every
@@ -162,6 +163,29 @@ public static partial class RecordingPathHelper
             ? [separatePath, sameFolder]
             : [sameFolder];
     }
+
+    /// <summary>
+    /// Builds the path of a recording's activity index (what moved when). It always sits next to
+    /// the video, in every layout, so it moves with the video.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    public static string BuildActivityPath(string videoPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(videoPath);
+
+        return Path.ChangeExtension(videoPath, ActivityExtension);
+    }
+
+    /// <summary>
+    /// Gets every file that belongs to a recording besides the video: the places its thumbnail
+    /// may be, and its activity index. Use it to delete or protect a recording with all it has.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    /// <param name="recordingRoot">The recording root the video lives under.</param>
+    public static IReadOnlyList<string> GetCompanionPaths(
+        string videoPath,
+        string? recordingRoot)
+        => [.. GetThumbnailCandidates(videoPath, recordingRoot), BuildActivityPath(videoPath)];
 
     /// <summary>
     /// Finds the existing thumbnail of a recording, whichever layout it was made under.

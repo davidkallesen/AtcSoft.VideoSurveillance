@@ -10,7 +10,7 @@ public static class RecordingRemover
     private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi"];
 
     /// <summary>
-    /// Removes a recording together with its thumbnail, and the day folder
+    /// Removes a recording together with its thumbnail and activity index, and the day folder
     /// it leaves empty.
     /// </summary>
     /// <param name="recordingRoot">The recording folder.</param>
@@ -50,7 +50,7 @@ public static class RecordingRemover
             return RecordingRemovalOutcome.InProgress;
         }
 
-        foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(fullPath, recordingRoot))
+        foreach (var thumbnail in RecordingPathHelper.GetCompanionPaths(fullPath, recordingRoot))
         {
             try
             {
@@ -58,7 +58,7 @@ public static class RecordingRemover
             }
             catch (IOException)
             {
-                // The recording is gone; a thumbnail left behind is removed by the clean-up.
+                // The recording is gone; a companion left behind is removed by the clean-up.
             }
             catch (UnauthorizedAccessException)
             {

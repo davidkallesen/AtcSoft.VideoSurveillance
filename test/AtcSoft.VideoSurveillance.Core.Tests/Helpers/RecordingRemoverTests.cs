@@ -44,6 +44,18 @@ public sealed class RecordingRemoverTests : IDisposable
     }
 
     [Fact]
+    public void A_Recording_Is_Removed_With_Its_Activity_Index()
+    {
+        Write("Front Door", "Front Door_20261012_101500_000.mkv");
+        var activity = Write("Front Door", "Front Door_20261012_101500_000.activity.jsonl");
+
+        RecordingRemover.Remove(root, "Front Door/Front Door_20261012_101500_000.mkv", NoneActive)
+            .Should().Be(RecordingRemovalOutcome.Removed);
+
+        File.Exists(activity).Should().BeFalse();
+    }
+
+    [Fact]
     public void A_Path_With_Backslashes_Names_The_Same_Recording()
     {
         var video = Write("Garden", "Garden_20261012_101500_000.mp4");

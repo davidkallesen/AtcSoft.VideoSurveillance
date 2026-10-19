@@ -46,9 +46,9 @@ public sealed class DiskSpaceGuard
         foreach (var file in activeFiles.Where(f => !string.IsNullOrEmpty(f)))
         {
             set.Add(Path.GetFullPath(file));
-            foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(file, RecordingRoots.Innermost(file, recordingFolders)))
+            foreach (var companion in RecordingPathHelper.GetCompanionPaths(file, RecordingRoots.Innermost(file, recordingFolders)))
             {
-                set.Add(Path.GetFullPath(thumbnail));
+                set.Add(Path.GetFullPath(companion));
             }
         }
 
@@ -151,7 +151,7 @@ public sealed class DiskSpaceGuard
                     file.Delete();
                     deleted.Add(file.FullName);
                     freed += size;
-                    DeleteThumbnails(file.FullName, request, deletedThumbnails, errors);
+                    DeleteCompanions(file.FullName, request, deletedThumbnails, errors);
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
@@ -203,7 +203,7 @@ public sealed class DiskSpaceGuard
                 freed += size;
                 if (isRecording)
                 {
-                    freed += DeleteThumbnails(file.FullName, request, deletedThumbnails, errors);
+                    freed += DeleteCompanions(file.FullName, request, deletedThumbnails, errors);
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -281,18 +281,18 @@ public sealed class DiskSpaceGuard
             .ToList();
     }
 
-    private static long DeleteThumbnails(
+    private static long DeleteCompanions(
         string video,
         DiskSpaceGuardRequest request,
         List<string> deletedThumbnails,
         List<MediaCleanupRunError> errors)
     {
         long freed = 0;
-        foreach (var thumbnail in RecordingPathHelper.GetThumbnailCandidates(video, RecordingRoots.Innermost(video, request.RecordingFolders)))
+        foreach (var companion in RecordingPathHelper.GetCompanionPaths(video, RecordingRoots.Innermost(video, request.RecordingFolders)))
         {
             try
             {
-                var info = new FileInfo(thumbnail);
+                var info = new FileInfo(companion);
                 if (!info.Exists || request.ProtectedPaths.Contains(info.FullName))
                 {
                     continue;
@@ -305,7 +305,7 @@ public sealed class DiskSpaceGuard
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                errors.Add(new MediaCleanupRunError(thumbnail, ex));
+                errors.Add(new MediaCleanupRunError(companion, ex));
             }
         }
 

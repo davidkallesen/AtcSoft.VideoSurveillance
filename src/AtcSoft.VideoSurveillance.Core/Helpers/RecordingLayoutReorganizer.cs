@@ -79,6 +79,13 @@ public static class RecordingLayoutReorganizer
                 if (!PathEquals(video, targetVideo))
                 {
                     movedRecordings++;
+
+                    // The activity index sits next to the video in every layout.
+                    var activity = RecordingPathHelper.BuildActivityPath(video);
+                    if (File.Exists(activity))
+                    {
+                        Move(activity, RecordingPathHelper.BuildActivityPath(targetVideo), emptiedFolders, errors);
+                    }
                 }
 
                 if (thumbnail is null)

@@ -28,12 +28,12 @@ public static class MediaCleanupRunner
     /// <param name="cutoff">Files older than this are eligible for deletion.</param>
     /// <param name="skipPaths">
     /// Case-insensitive set of full paths to leave untouched (active recordings
-    /// and their thumbnail companions).
+    /// and their companions: thumbnails and activity indexes).
     /// </param>
     /// <param name="deleteCompanionThumbnail">
-    /// When <c>true</c>, deleting a media file also deletes its <c>.png</c>
+    /// When <c>true</c>, deleting a media file also deletes its companions: its <c>.png</c>
     /// thumbnail, whether it sits next to the file or in the separate
-    /// thumbnails folder below <paramref name="rootPath"/>.
+    /// thumbnails folder below <paramref name="rootPath"/>, and its activity index.
     /// </param>
     /// <param name="nestedRoots">
     /// Camera recording folders inside <paramref name="rootPath"/>: a recording in one of them
@@ -106,7 +106,7 @@ public static class MediaCleanupRunner
                 if (deleteCompanionThumbnail)
                 {
                     var thumbnailRoot = RecordingRoots.Innermost(file, [rootPath, .. nestedRoots ?? []]) ?? rootPath;
-                    bytesFreed += DeleteCompanionThumbnails(file, thumbnailRoot, deletedThumbnails);
+                    bytesFreed += DeleteCompanions(file, thumbnailRoot, deletedThumbnails);
                 }
             }
             catch (IOException ex)
@@ -139,12 +139,12 @@ public static class MediaCleanupRunner
     /// </param>
     /// <param name="skipPaths">
     /// Case-insensitive set of full paths to leave untouched (active recordings
-    /// and their thumbnail companions).
+    /// and their companions: thumbnails and activity indexes).
     /// </param>
     /// <param name="deleteCompanionThumbnail">
-    /// When <c>true</c>, deleting a media file also deletes its <c>.png</c>
+    /// When <c>true</c>, deleting a media file also deletes its companions: its <c>.png</c>
     /// thumbnail, whether it sits next to the file or in the separate
-    /// thumbnails folder below <paramref name="rootPath"/>.
+    /// thumbnails folder below <paramref name="rootPath"/>, and its activity index.
     /// </param>
     /// <returns>
     /// A <see cref="MediaCleanupRunResult"/> describing the deleted files and
@@ -256,7 +256,7 @@ public static class MediaCleanupRunner
 
                 if (deleteCompanionThumbnail)
                 {
-                    bytesFreed += DeleteCompanionThumbnails(file.FullName, rootPath, deletedThumbnails);
+                    bytesFreed += DeleteCompanions(file.FullName, rootPath, deletedThumbnails);
                 }
             }
             catch (IOException ex)
@@ -509,17 +509,17 @@ public static class MediaCleanupRunner
     }
 
     /// <summary>
-    /// Deletes the thumbnail of a deleted media file from every place a
-    /// layout may have put it. Returns the bytes freed.
+    /// Deletes the companions of a deleted media file: its thumbnail from every place a
+    /// layout may have put it, and its activity index. Returns the bytes freed.
     /// </summary>
-    private static long DeleteCompanionThumbnails(
+    private static long DeleteCompanions(
         string mediaFilePath,
         string rootPath,
         List<string> deletedThumbnails)
     {
         long bytesFreed = 0;
 
-        foreach (var thumbnailPath in RecordingPathHelper.GetThumbnailCandidates(mediaFilePath, rootPath))
+        foreach (var thumbnailPath in RecordingPathHelper.GetCompanionPaths(mediaFilePath, rootPath))
         {
             if (!File.Exists(thumbnailPath))
             {

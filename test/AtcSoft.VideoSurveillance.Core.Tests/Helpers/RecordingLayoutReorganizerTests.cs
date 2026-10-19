@@ -41,6 +41,21 @@ public sealed class RecordingLayoutReorganizerTests : IDisposable
     }
 
     [Fact]
+    public void The_Activity_Index_Moves_With_Its_Recording_And_Stays_Beside_It()
+    {
+        Touch("Cam", "Cam_20261012_101500_000.mkv");
+        Touch("Cam", "Cam_20261012_101500_000.activity.jsonl");
+
+        var result = RecordingLayoutReorganizer.Reorganize(root, DailyAndSeparate, Extensions);
+
+        Files().Should().BeEquivalentTo(
+            @"Cam\2026-10-12\Cam_20261012_101500_000.mkv",
+            @"Cam\2026-10-12\Cam_20261012_101500_000.activity.jsonl");
+        result.MovedRecordings.Should().Be(1, "the index is not a recording of its own");
+        result.Errors.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Flat_To_Daily_And_Separate_Moves_Thumbnails_To_The_Thumbnails_Folder()
     {
         Touch("Cam", "Cam_20261012_101500_000.mkv");

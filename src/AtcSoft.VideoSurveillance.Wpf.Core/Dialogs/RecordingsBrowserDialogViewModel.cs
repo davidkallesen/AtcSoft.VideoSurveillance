@@ -285,9 +285,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             // Delete the video file
             File.Delete(SelectedRecording.FilePath);
 
-            // Also delete the thumbnail, wherever its layout put it, below the root the recording is in
+            // Also delete the thumbnail, wherever its layout put it, and the activity index
             var basePath = SelectedRecording.RecordingRoot ?? GetRecordingsBasePath();
-            foreach (var thumbnailPath in RecordingPathHelper.GetThumbnailCandidates(SelectedRecording.FilePath, basePath))
+            foreach (var thumbnailPath in RecordingPathHelper.GetCompanionPaths(SelectedRecording.FilePath, basePath))
             {
                 try
                 {
@@ -295,7 +295,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
                 }
                 catch
                 {
-                    // Ignore thumbnail deletion errors
+                    // Ignore companion deletion errors
                 }
             }
 
