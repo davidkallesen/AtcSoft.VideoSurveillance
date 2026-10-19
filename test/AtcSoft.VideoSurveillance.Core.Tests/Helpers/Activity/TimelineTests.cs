@@ -47,8 +47,8 @@ public sealed class TimelineTests : IDisposable
         timeline.Stretches.Select(s => (s.IsRecorded, s.IsAnalysed)).Should().Equal(
             (true, true), (true, false), (false, false), (false, false), (true, false), (true, false));
         timeline.Coverage.Should().Equal(
-            new CoverageSpan(Nine, Nine.AddMinutes(20), "Cam/a.mkv"),
-            new CoverageSpan(Nine.AddMinutes(40), Nine.AddHours(1), "Cam/b.mkv"));
+            new CoverageSpan(Nine, Nine.AddMinutes(20), "Cam/a.mkv", Nine),
+            new CoverageSpan(Nine.AddMinutes(40), Nine.AddHours(1), "Cam/b.mkv", Nine.AddMinutes(40)));
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class TimelineTests : IDisposable
         var timeline = TimelineBuilder.Build([recording], Nine.AddMinutes(20), Nine.AddMinutes(40), 10);
 
         timeline.Events.Should().ContainSingle().Which.Start.Should().Be(Nine.AddSeconds(1800));
-        timeline.Coverage.Should().ContainSingle().Which.Should().Be(new CoverageSpan(Nine.AddMinutes(20), Nine.AddMinutes(40), "Cam/a.mkv"));
+        timeline.Coverage.Should().ContainSingle().Which.Should().Be(new CoverageSpan(Nine.AddMinutes(20), Nine.AddMinutes(40), "Cam/a.mkv", Nine), "the cut keeps where the recording starts");
     }
 
     [Fact]

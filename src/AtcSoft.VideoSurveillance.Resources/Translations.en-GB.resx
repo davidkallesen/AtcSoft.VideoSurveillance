@@ -2670,4 +2670,19 @@
   <data name="NextEvent" xml:space="preserve">
     <value>Next event</value>
   </data>
+  <data name="Timeline" xml:space="preserve">
+    <value>Timeline</value>
+  </data>
+  <data name="TimelineHelp" xml:space="preserve">
+    <value>Every camera over the day. Grey: nothing recorded. Bars: how much changed. Orange: something went somewhere. Click a lane to play from there.</value>
+  </data>
+  <data name="Last24Hours" xml:space="preserve">
+    <value>Last 24 hours</value>
+  </data>
+  <data name="NothingRecordedThen" xml:space="preserve">
+    <value>Nothing was recorded then.</value>
+  </data>
+  <data name="NoEventWithinAWeek" xml:space="preserve">
+    <value>No event within a week of there.</value>
+  </data>
 </root>

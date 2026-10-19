@@ -1,0 +1,211 @@
+@page "/timeline"
+@inject GatewayService Gateway
+@inject BrowserSession Session
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudText Typo="Typo.h4" Class="mb-2">@Translations.Timeline</MudText>
+<MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">@Translations.TimelineHelp</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
+    <MudButton Variant="@(day is null ? Variant.Filled : Variant.Outlined)"
+               Color="Color.Primary"
+               OnClick="ShowLast24HoursAsync">@Translations.Last24Hours</MudButton>
+    <MudDatePicker Label="@Translations.Day"
+                   Date="@(day?.ToDateTime(TimeOnly.MinValue))"
+                   DateChanged="OnDayChangedAsync"
+                   MaxDate="@DateTime.Today"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Style="max-width: 200px;" />
+    <MudTooltip Text="@Translations.PreviousEvent">
+        <MudIconButton Icon="@Icons.Material.Filled.SkipPrevious"
+                       aria-label="@Translations.PreviousEvent"
+                       OnClick="@(() => JumpAsync(forward: false))" />
+    </MudTooltip>
+    <MudTooltip Text="@Translations.NextEvent">
+        <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
+                       aria-label="@Translations.NextEvent"
+                       OnClick="@(() => JumpAsync(forward: true))" />
+    </MudTooltip>
+    <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">@Translations.Refresh</MudButton>
+</MudStack>
+
+@if (loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (timeline is { } shown)
+{
+    @foreach (var lane in shown.Lanes)
+    {
+        <div class="d-flex align-center mb-1">
+            <MudText Typo="Typo.body2" Style="width: 160px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@lane.CameraName</MudText>
+            <svg id="@LaneId(lane)"
+                 role="img"
+                 aria-label="@lane.CameraName"
+                 viewBox="0 0 @lane.Buckets.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
+                 preserveAspectRatio="none"
+                 style="flex: 1; height: 36px; cursor: pointer; background: rgba(128,128,128,0.06);"
+                 @onclick="@(e => PlayAtAsync(lane, e))">
+                @foreach (var shape in TimelineLaneShapes.Gaps(lane))
+                {
+                    <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.35)" />
+                }
+                @foreach (var shape in TimelineLaneShapes.NotAnalysed(lane))
+                {
+                    <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.15)" />
+                }
+                @foreach (var shape in TimelineLaneShapes.Bars(lane))
+                {
+                    <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.8)" />
+                }
+                @foreach (var shape in TimelineLaneShapes.Bands(lane, span))
+                {
+                    <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="#FF8C00" />
+                }
+                @if (span.FractionOf(DateTimeOffset.UtcNow) is { } now)
+                {
+                    <rect x="@SvgNumber.Format(now * lane.Buckets.Count)" y="0" width="1" height="@SvgNumber.Format(ActivityTimelineShapes.BoxHeight)" fill="#E53935" />
+                }
+            </svg>
+        </div>
+    }
+
+    <div class="d-flex">
+        <div style="width: 160px; flex: none;"></div>
+        <div style="flex: 1; position: relative; height: 20px;">
+            @foreach (var tick in TimelineTicks.For(span, TimeZoneInfo.Local, CultureInfo.CurrentCulture))
+            {
+                <MudText Typo="Typo.caption" Style="@($"position: absolute; left: {tick.Left}; transform: translateX(-50%);")">@tick.Label</MudText>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    // About one stretch per two pixels of a wide page.
+    private const int BucketCount = 720;
+
+    private TimelineSpan span = TimelineSpan.Last24Hours(DateTimeOffset.UtcNow);
+    private DateOnly? day;
+    private Timeline? timeline;
+    private bool loading = true;
+
+    // Where previous and next count from: the last place played, else the end of the span.
+    private DateTimeOffset? cursor;
+
+    protected override Task OnInitializedAsync()
+        => LoadAsync();
+
+    private static string LaneId(TimelineLane lane)
+        => "timeline-lane-" + lane.CameraId.ToString("N");
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        if (day is null)
+        {
+            span = TimelineSpan.Last24Hours(DateTimeOffset.UtcNow);
+        }
+
+        try
+        {
+            timeline = await Gateway.GetTimelineAsync(span.From, span.To, BucketCount);
+        }
+        catch (HttpRequestException)
+        {
+            timeline = null;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private Task ShowLast24HoursAsync()
+    {
+        day = null;
+        cursor = null;
+        return LoadAsync();
+    }
+
+    private Task OnDayChangedAsync(DateTime? date)
+    {
+        if (date is not { } chosen)
+        {
+            return ShowLast24HoursAsync();
+        }
+
+        day = DateOnly.FromDateTime(chosen);
+        span = TimelineSpan.Day(day.Value, TimeZoneInfo.Local);
+        cursor = null;
+        return LoadAsync();
+    }
+
+    private async Task PlayAtAsync(TimelineLane lane, MouseEventArgs e)
+    {
+        var fraction = await JS.InvokeAsync<double>("timelineInterop.fractionAt", LaneId(lane), e.ClientX);
+        var moment = span.At(fraction);
+        cursor = moment;
+
+        if (TimelinePlayback.At(lane, moment) is { } playback)
+        {
+            await PlayAsync(lane.CameraName, playback, moment);
+        }
+        else
+        {
+            Snackbar.Add(Translations.NothingRecordedThen, Severity.Info);
+        }
+    }
+
+    private async Task JumpAsync(bool forward)
+    {
+        var from = cursor ?? (forward ? span.From : span.To);
+        TimelineEvent? found;
+        try
+        {
+            found = await Gateway.FindTimelineEventAsync(from, forward);
+        }
+        catch (HttpRequestException)
+        {
+            found = null;
+        }
+
+        if (found is null)
+        {
+            Snackbar.Add(Translations.NoEventWithinAWeek, Severity.Info);
+            return;
+        }
+
+        cursor = found.Start;
+        var lane = timeline?.Lanes.FirstOrDefault(l => l.CameraId == found.CameraId);
+        await PlayAsync(lane?.CameraName ?? string.Empty, TimelinePlayback.Of(found), found.Start);
+    }
+
+    private async Task PlayAsync(string cameraName, TimelinePlayback playback, DateTimeOffset moment)
+    {
+        var name = string.IsNullOrEmpty(cameraName) ? Translations.Recording : cameraName;
+        var parameters = new DialogParameters<RecordingPlaybackDialog>
+        {
+            { x => x.VideoUrl, RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, playback.FilePath, Session.MediaToken) ?? string.Empty },
+            { x => x.DownloadUrl, RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, playback.FilePath, Session.MediaToken) ?? string.Empty },
+            { x => x.Title, $"{name} - {moment.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)}" },
+            { x => x.FileName, RecordingDisplay.FileName(playback.FilePath) },
+            { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(playback.FilePath) },
+            { x => x.FilePath, playback.FilePath },
+            { x => x.StartSeconds, playback.OffsetSeconds },
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+        };
+
+        await DialogService.ShowAsync<RecordingPlaybackDialog>(Translations.RecordingPlayback, parameters, options);
+    }
+}

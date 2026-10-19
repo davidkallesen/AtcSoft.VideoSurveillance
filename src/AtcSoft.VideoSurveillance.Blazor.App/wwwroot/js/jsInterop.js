@@ -127,3 +127,31 @@ window.recordingTimeline = {
         }
     }
 };
+
+window.timelineInterop = {
+    // Where on the element a click landed, as a fraction of its width.
+    fractionAt: function (elementId, clientX) {
+        var element = document.getElementById(elementId);
+        if (!element) {
+            return 0;
+        }
+
+        var box = element.getBoundingClientRect();
+        return box.width > 0 ? Math.max(0, Math.min(1, (clientX - box.left) / box.width)) : 0;
+    },
+
+    // Starts a recording this far in, once the player knows its length.
+    startAt: function (videoId, seconds) {
+        var video = document.getElementById(videoId);
+        if (!video) {
+            return;
+        }
+
+        var seek = function () { video.currentTime = Math.min(seconds, isFinite(video.duration) ? video.duration : seconds); };
+        if (video.readyState >= 1) {
+            seek();
+        } else {
+            video.addEventListener('loadedmetadata', seek, { once: true });
+        }
+    }
+};

@@ -45,7 +45,7 @@ public sealed class TimelineHandlerTests : IDisposable
         timeline.Lanes.Select(l => l.CameraName).Should().Equal("Garden", "Porch");
 
         var lane = timeline.Lanes[0];
-        lane.Coverage.Should().ContainSingle().Which.Should().Be(new TimelineCoverage(Nine, Nine.AddMinutes(10), "Garden/Garden_20261019_090000_000.mkv"));
+        lane.Coverage.Should().ContainSingle().Which.Should().Be(new TimelineCoverage(Nine, Nine.AddMinutes(10), "Garden/Garden_20261019_090000_000.mkv", Nine));
         lane.Buckets.Select(b => (b.IsRecorded, b.IsAnalysed)).Should().Equal(
             (true, true), (false, false), (false, false), (false, false), (false, false), (false, false));
         lane.Buckets[0].Tracks.Should().Be(1);

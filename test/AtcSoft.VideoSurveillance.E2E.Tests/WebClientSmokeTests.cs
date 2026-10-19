@@ -13,7 +13,7 @@ namespace AtcSoft.VideoSurveillance.E2E;
 [Collection(E2ETestGroup.Name)]
 public sealed class WebClientSmokeTests(ServerFixture server)
 {
-    private static readonly string[] Pages = ["/", "/cameras", "/cameras/create", "/layouts", "/live", "/recordings", "/webhooks", "/settings", "/users"];
+    private static readonly string[] Pages = ["/", "/cameras", "/cameras/create", "/layouts", "/live", "/recordings", "/timeline", "/webhooks", "/settings", "/users"];
 
     [Fact]
     public async Task Every_Page_Opens_Without_Errors()
@@ -93,6 +93,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         }
 
         await run("play a recording with its activity timeline", () => PlayWithTimelineAsync(page));
+        await run("timeline lanes", () => TimelineLanesAsync(page));
         await run("Add user", () => OpenAndCancelAsync(page, "/users", "Add user"));
         await run("Make API key", () => OpenAndCancelAsync(page, "/users", "Make API key", tab: "API keys"));
         await run("Add receiver", () => OpenAndCancelAsync(page, "/webhooks", "Add receiver"));
@@ -113,6 +114,17 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
+    }
+
+    // Every camera has a lane on the Timeline page; the offline camera's is all gap.
+    private static async Task TimelineLanesAsync(IPage page)
+    {
+        await VisitAsync(page, "/timeline");
+        foreach (var name in new[] { TestCameras.LiveCameraName, TestCameras.DeadCameraName })
+        {
+            await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = name, Exact = true })
+                .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        }
     }
 
     private static async Task SaveEvidenceAsync(

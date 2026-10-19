@@ -2491,6 +2491,7 @@ components:
         - start
         - end
         - filePath
+        - recordingStart
       properties:
         start:
           type: string
@@ -2501,6 +2502,10 @@ components:
         filePath:
           type: string
           description: The recording's path relative to the recordings root, as the listing gives it.
+        recordingStart:
+          type: string
+          format: date-time
+          description: When the recording itself starts, before it was cut to the span. A moment in the span is played this far into the file.
 
     TimelineBucket:
       title: TimelineBucket

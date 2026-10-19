@@ -18,3 +18,4 @@ global using VideoSurveillance.Generated.Events.Models;
 global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Timeline.Models;

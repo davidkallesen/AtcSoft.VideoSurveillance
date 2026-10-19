@@ -132,6 +132,20 @@
     [Parameter]
     public double DurationSeconds { get; set; }
 
+    /// <summary>
+    /// Where to start, in seconds into the recording: the Timeline page plays from a moment.
+    /// </summary>
+    [Parameter]
+    public double StartSeconds { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && StartSeconds > 0 && !failed)
+        {
+            await JS.InvokeVoidAsync("timelineInterop.startAt", videoId, StartSeconds);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         if (string.IsNullOrEmpty(FilePath))

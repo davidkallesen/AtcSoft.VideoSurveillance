@@ -46,7 +46,7 @@ public static class TimelineBuilder
                 continue;
             }
 
-            coverage.Add(new CoverageSpan(start, end, recording.VideoPath));
+            coverage.Add(new CoverageSpan(start, end, recording.VideoPath, recording.Start));
             ForEachStretch((start - from).TotalSeconds, (end - from).TotalSeconds, i => recorded[i] = true);
 
             if (recording.Activity is not { } activity)

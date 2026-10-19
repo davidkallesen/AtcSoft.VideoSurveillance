@@ -2673,4 +2673,19 @@ Vorschaubild:
   <data name="NextEvent" xml:space="preserve">
     <value>Nächstes Ereignis</value>
   </data>
+  <data name="Timeline" xml:space="preserve">
+    <value>Zeitleiste</value>
+  </data>
+  <data name="TimelineHelp" xml:space="preserve">
+    <value>Alle Kameras über den Tag. Grau: nichts aufgezeichnet. Balken: wie viel sich geändert hat. Orange: etwas hat sich fortbewegt. Klicken Sie auf eine Spur, um von dort abzuspielen.</value>
+  </data>
+  <data name="Last24Hours" xml:space="preserve">
+    <value>Letzte 24 Stunden</value>
+  </data>
+  <data name="NothingRecordedThen" xml:space="preserve">
+    <value>Zu diesem Zeitpunkt wurde nichts aufgezeichnet.</value>
+  </data>
+  <data name="NoEventWithinAWeek" xml:space="preserve">
+    <value>Kein Ereignis innerhalb einer Woche davon.</value>
+  </data>
 </root>

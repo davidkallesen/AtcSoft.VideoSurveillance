@@ -57,7 +57,7 @@ public sealed class GetTimelineHandler(
                 return new TimelineLane(
                     CameraId: camera.Id,
                     CameraName: camera.Display.DisplayName,
-                    Coverage: [.. timeline.Coverage.Select(c => new TimelineCoverage(Start: c.Start, End: c.End, FilePath: c.VideoPath))],
+                    Coverage: [.. timeline.Coverage.Select(c => new TimelineCoverage(Start: c.Start, End: c.End, FilePath: c.VideoPath, RecordingStart: c.RecordingStart))],
                     Buckets: [.. timeline.Stretches.Select(s => new TimelineBucket(Level: s.Level, Tracks: s.Tracks, IsRecorded: s.IsRecorded, IsAnalysed: s.IsAnalysed))],
                     Events: [.. timeline.Events.Select(e => TimelineRecordings.ToApi(camera.Id, e))]);
             })

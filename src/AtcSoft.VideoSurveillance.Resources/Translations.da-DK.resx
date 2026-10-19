@@ -2673,4 +2673,19 @@ Miniature:
   <data name="NextEvent" xml:space="preserve">
     <value>Næste hændelse</value>
   </data>
+  <data name="Timeline" xml:space="preserve">
+    <value>Tidslinje</value>
+  </data>
+  <data name="TimelineHelp" xml:space="preserve">
+    <value>Alle kameraer over dagen. Gråt: intet optaget. Søjler: hvor meget der ændrede sig. Orange: noget flyttede sig. Klik på en bane for at afspille derfra.</value>
+  </data>
+  <data name="Last24Hours" xml:space="preserve">
+    <value>Seneste 24 timer</value>
+  </data>
+  <data name="NothingRecordedThen" xml:space="preserve">
+    <value>Der blev ikke optaget noget på det tidspunkt.</value>
+  </data>
+  <data name="NoEventWithinAWeek" xml:space="preserve">
+    <value>Ingen hændelse inden for en uge derfra.</value>
+  </data>
 </root>
