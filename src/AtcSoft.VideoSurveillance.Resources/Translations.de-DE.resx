@@ -2661,4 +2661,16 @@ Vorschaubild:
   <data name="MaxRecordingStorageHelp" xml:space="preserve">
     <value>Belegen die Aufnahmen mehr, werden die ältesten zuerst gelöscht.</value>
   </data>
+  <data name="ActivityTimeline" xml:space="preserve">
+    <value>Aktivität</value>
+  </data>
+  <data name="ActivityTimelineHint" xml:space="preserve">
+    <value>Was sich wann bewegt hat. Orange zeigt, wo sich etwas fortbewegt hat. Klicken, um dorthin zu springen.</value>
+  </data>
+  <data name="PreviousEvent" xml:space="preserve">
+    <value>Vorheriges Ereignis</value>
+  </data>
+  <data name="NextEvent" xml:space="preserve">
+    <value>Nächstes Ereignis</value>
+  </data>
 </root>

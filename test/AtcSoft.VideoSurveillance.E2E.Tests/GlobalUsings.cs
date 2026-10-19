@@ -12,6 +12,7 @@ global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.E2E.Infrastructure;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers;
+global using AtcSoft.VideoSurveillance.Helpers.Activity;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Models;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using FlaUI.Core;

@@ -6,6 +6,7 @@
     xmlns:atcValueConverters="https://github.com/atc-net/atc-wpf/tree/main/schemas/value-converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:userControls="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.UserControls"
     xmlns:windows="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Windows"
     Title="{Binding Path=FileName}"
     d:DataContext="{d:DesignInstance Type=windows:FullScreenRecordingWindowViewModel,
@@ -213,6 +214,45 @@
                             Text="{Binding Path=SpeedText}" />
                     </Button>
 
+                    <!--  Previous / next event: shown when the recording has an activity index  -->
+                    <StackPanel
+                        Margin="0,0,12,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=HasActivity, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                        <Button
+                            Width="36"
+                            Height="40"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=PreviousEvent}"
+                            Command="{Binding Path=PreviousEventCommand}"
+                            Style="{StaticResource FullScreenIconButtonStyle}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=PreviousEvent}">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M2,2 L4,2 L4,14 L2,14 Z M14,2 L6,8 L14,14 Z"
+                                Fill="#FF8C00"
+                                Stretch="Uniform" />
+                        </Button>
+                        <Button
+                            Width="36"
+                            Height="40"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=NextEvent}"
+                            Command="{Binding Path=NextEventCommand}"
+                            Style="{StaticResource FullScreenIconButtonStyle}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=NextEvent}">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M12,2 L14,2 L14,14 L12,14 Z M2,2 L10,8 L2,14 Z"
+                                Fill="#FF8C00"
+                                Stretch="Uniform" />
+                        </Button>
+                    </StackPanel>
+
                     <!--  Position Text  -->
                     <TextBlock
                         MinWidth="50"
@@ -222,19 +262,34 @@
                         Foreground="White"
                         Text="{Binding Path=PositionText}" />
 
-                    <!--  Seek Slider  -->
-                    <Slider
-                        x:Name="SeekSlider"
+                    <!--  Activity timeline over the seek slider: one stretch per pixel  -->
+                    <StackPanel
                         Width="400"
                         Margin="0,0,12,0"
-                        VerticalAlignment="Center"
-                        Focusable="True"
-                        IsEnabled="{Binding Path=CanSeek}"
-                        IsMoveToPointEnabled="True"
-                        IsSnapToTickEnabled="False"
-                        Maximum="{Binding Path=SeekMaximum}"
-                        Minimum="0"
-                        Value="{Binding Path=SeekPosition, Mode=TwoWay}" />
+                        VerticalAlignment="Center">
+                        <userControls:ActivityTimeline
+                            Height="28"
+                            Margin="5,0,5,2"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=ActivityTimeline}"
+                            Buckets="{Binding Path=ActivityBuckets}"
+                            Position="{Binding Path=ActivityPosition}"
+                            SeekCommand="{Binding Path=SeekActivityCommand}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=ActivityTimelineHint}"
+                            Visibility="{Binding Path=HasActivity, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+
+                        <!--  Seek Slider  -->
+                        <Slider
+                            x:Name="SeekSlider"
+                            Focusable="True"
+                            IsEnabled="{Binding Path=CanSeek}"
+                            IsMoveToPointEnabled="True"
+                            IsSnapToTickEnabled="False"
+                            Maximum="{Binding Path=SeekMaximum}"
+                            Minimum="0"
+                            Value="{Binding Path=SeekPosition, Mode=TwoWay}" />
+                    </StackPanel>
 
                     <!--  Duration Text  -->
                     <TextBlock

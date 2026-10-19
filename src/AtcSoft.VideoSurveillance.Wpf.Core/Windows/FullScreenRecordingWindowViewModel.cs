@@ -7,11 +7,24 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 /// </summary>
 public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialogBase, IDisposable
 {
+    /// <summary>
+    /// How many stretches the activity timeline shows: one per pixel of the seek bar under it.
+    /// </summary>
+    public const int ActivityBucketCount = 400;
+
     private static readonly double[] SpeedOptions = [1.0, 2.0, 4.0, 8.0, 16.0];
+
+    // A jump to an event lands this much before it, so its start is seen; and "previous" right
+    // after a jump goes one further back.
+    private static readonly TimeSpan EventLeadIn = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan PreviousEventSlack = TimeSpan.FromSeconds(2);
 
     private readonly string filePath;
     private readonly DateTime? recordingStartTime;
     private readonly PlaybackOverlaySettings overlaySettings;
+    private readonly RecordingActivityLoader? activityLoader;
+    private readonly CancellationTokenSource activityCancellation = new();
+    private IReadOnlyList<ActivityEvent> activityEvents = [];
     private MediaElement? mediaElement;
     private DispatcherTimer? overlayHideTimer;
     private DispatcherTimer? positionUpdateTimer;
@@ -74,6 +87,21 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private double videoRotationAngle;
 
     /// <summary>
+    /// The activity of the recording for its timeline, or <see langword="null"/> while there is none.
+    /// </summary>
+    [ObservableProperty]
+    private IReadOnlyList<ActivityBucket>? activityBuckets;
+
+    [ObservableProperty]
+    private bool hasActivity;
+
+    /// <summary>
+    /// Where the player is, as a fraction of the recording, for the timeline.
+    /// </summary>
+    [ObservableProperty]
+    private double activityPosition;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="FullScreenRecordingWindowViewModel"/> class.
     /// </summary>
     /// <param name="filePath">The path to the recording file.</param>
@@ -85,16 +113,22 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// by the standalone app. A caller that knows the real start time (the
     /// server names its files in UTC) should pass it.
     /// </param>
+    /// <param name="activityLoader">
+    /// Gets the recording's activity for the timeline under the player; without one, or for a
+    /// recording without an activity index, there is no timeline.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
         PlaybackOverlaySettings? overlaySettings = null,
-        DateTime? recordingStartTime = null)
+        DateTime? recordingStartTime = null,
+        RecordingActivityLoader? activityLoader = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
 
         this.filePath = filePath;
+        this.activityLoader = activityLoader;
         this.overlaySettings = overlaySettings ?? new PlaybackOverlaySettings();
         FileName = fileName;
         this.recordingStartTime = recordingStartTime ?? ParseRecordingStartTime(fileName);
@@ -263,7 +297,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         // Probing opens the file (or URL), so keep it off the UI thread.
         var path = filePath;
         var dispatcher = Dispatcher.CurrentDispatcher;
-        _ = Task.Run(() =>
+        _ = Task.Run(Probe, CancellationToken.None);
+
+        void Probe()
         {
             int degrees;
             try
@@ -280,7 +316,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             {
                 _ = dispatcher.BeginInvoke(() => VideoRotationAngle = degrees);
             }
-        });
+        }
     }
 
     private void OnMediaOpened(
@@ -293,7 +329,105 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             DurationText = FormatDuration(duration);
             SeekMaximum = duration > 0 ? duration : 100;
             CanSeek = duration > 0;
+
+            if (activityLoader is not null && duration > 0)
+            {
+                _ = LoadActivityAsync(TimeSpan.FromTicks(duration).TotalSeconds, Dispatcher.CurrentDispatcher);
+            }
         }
+    }
+
+    private async Task LoadActivityAsync(
+        double durationSeconds,
+        Dispatcher dispatcher)
+    {
+        IReadOnlyList<ActivityBucket>? buckets;
+        try
+        {
+            buckets = await activityLoader!(ActivityBucketCount, durationSeconds, activityCancellation.Token).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // No activity is the same as an unreadable one: the recording plays without a timeline.
+            return;
+        }
+
+        if (buckets is not { Count: > 0 })
+        {
+            return;
+        }
+
+        _ = dispatcher.BeginInvoke(() =>
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            activityEvents = ActivityTimelineLayout.FindEvents(buckets);
+            ActivityBuckets = buckets;
+            HasActivity = true;
+            CommandManager.InvalidateRequerySuggested();
+        });
+    }
+
+    [RelayCommand]
+    private void SeekActivity(double fraction)
+        => SeekTo(fraction);
+
+    [RelayCommand(CanExecute = nameof(CanJumpToEvent))]
+    private void NextEvent()
+    {
+        if (ActivityTimelineLayout.NextEventStart(activityEvents, CurrentFraction() + Fraction(EventLeadIn)) is { } start)
+        {
+            SeekTo(start - Fraction(EventLeadIn));
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanJumpToEvent))]
+    private void PreviousEvent()
+    {
+        var at = CurrentFraction() + Fraction(EventLeadIn);
+        if (ActivityTimelineLayout.PreviousEventStart(activityEvents, at, Fraction(PreviousEventSlack)) is { } start)
+        {
+            SeekTo(start - Fraction(EventLeadIn));
+        }
+    }
+
+    private bool CanJumpToEvent()
+        => CanSeek && activityEvents.Count > 0;
+
+    private double CurrentFraction()
+        => mediaElement is not null && SeekMaximum > 0
+            ? mediaElement.Position.Ticks / SeekMaximum
+            : 0;
+
+    private double Fraction(TimeSpan span)
+        => SeekMaximum > 0 ? span.Ticks / SeekMaximum : 0;
+
+    private void SeekTo(double fraction)
+    {
+        if (mediaElement is null || !CanSeek)
+        {
+            return;
+        }
+
+        var ticks = (long)(Math.Clamp(fraction, 0, 1) * SeekMaximum);
+        mediaElement.Position = TimeSpan.FromTicks(ticks);
+
+        isUpdatingPositionFromPlayer = true;
+        try
+        {
+            SeekPosition = ticks;
+            PositionText = FormatDuration(ticks);
+            ActivityPosition = ticks / SeekMaximum;
+        }
+        finally
+        {
+            isUpdatingPositionFromPlayer = false;
+        }
+
+        UpdateRecordingTimeText(ticks);
     }
 
     private void OnMediaEnded(
@@ -343,6 +477,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
                     {
                         SeekPosition = position;
                         PositionText = FormatDuration(position);
+                        ActivityPosition = SeekMaximum > 0 ? position / SeekMaximum : 0;
                     }
                     finally
                     {
@@ -372,6 +507,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
 
         if (disposing)
         {
+            activityCancellation.Cancel();
+            activityCancellation.Dispose();
+
             overlayHideTimer?.Stop();
             overlayHideTimer = null;
 

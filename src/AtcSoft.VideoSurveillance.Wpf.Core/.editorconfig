@@ -24,3 +24,7 @@ dotnet_diagnostic.MA0048.severity = none            # To support partial classes
 [*.xaml.cs]
 dotnet_diagnostic.CS0169.severity = none   # Field is never used
 dotnet_diagnostic.CS0414.severity = none   # Field is assigned but never used
+
+# The same for a control drawn in code, without XAML.
+[UserControls/ActivityTimeline.cs]
+dotnet_diagnostic.CS0169.severity = none   # Field is never used

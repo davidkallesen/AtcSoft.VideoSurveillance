@@ -195,7 +195,11 @@ public partial class RecordingsBrowserDialog : IDisposable
     {
         // Open fullscreen recording window with playback overlay settings
         var overlaySettings = viewModel.PlaybackOverlaySettings;
-        using var fullScreenViewModel = new FullScreenRecordingWindowViewModel(recording.FilePath, recording.FileName, overlaySettings);
+        using var fullScreenViewModel = new FullScreenRecordingWindowViewModel(
+            recording.FilePath,
+            recording.FileName,
+            overlaySettings,
+            activityLoader: RecordingActivityLoaders.FromFile(recording.FilePath));
         using var fullScreenWindow = new FullScreenRecordingWindow(fullScreenViewModel)
         {
             // A browser that closed itself cannot own the player

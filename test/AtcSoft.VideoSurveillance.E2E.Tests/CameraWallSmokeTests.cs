@@ -46,6 +46,7 @@ public sealed class CameraWallSmokeTests
         // Ribbon: View
         steps.Run("View tab", () => SelectTab(app, main, "View"));
         steps.Run("Browse Recordings", () => Walk(app, main, "Browse Recordings"));
+        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
 
         // Backstage
         steps.Run("Settings", () => app.WalkAndClose(app.OpenWindow(() => app.PressBackstageItem(main, "Settings"), "Settings")));
@@ -76,6 +77,25 @@ public sealed class CameraWallSmokeTests
         Window main,
         string buttonName)
         => app.WalkAndClose(app.OpenWindow(() => DesktopApp.Press(app.Find(main, buttonName, ControlType.Button)), buttonName));
+
+    // The seeded recordings have an activity index with one event: the player shows the timeline,
+    // and "Next event" jumps to it.
+    private static void PlayWithTimeline(
+        DesktopApp app,
+        Window main)
+    {
+        var browser = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Browse Recordings", ControlType.Button)), "Browse Recordings");
+        var row = app.FindWhere(browser, e => e.ControlType == ControlType.DataItem, "a recording row");
+        row.Patterns.SelectionItem.Pattern.Select();
+
+        var player = app.OpenWindow(() => DesktopApp.Press(app.Find(browser, "Play", ControlType.Button)), "Play");
+        app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
+        DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));
+
+        app.CloseWindow(player);
+        app.CloseWindow(browser);
+    }
 
     private static void CloseDialogs(
         DesktopApp app,

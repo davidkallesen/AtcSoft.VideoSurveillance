@@ -2658,4 +2658,16 @@
   <data name="MaxRecordingStorageHelp" xml:space="preserve">
     <value>When the recordings take more, the oldest are deleted first.</value>
   </data>
+  <data name="ActivityTimeline" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="ActivityTimelineHint" xml:space="preserve">
+    <value>What moved when. Orange marks where something went somewhere. Click to jump there.</value>
+  </data>
+  <data name="PreviousEvent" xml:space="preserve">
+    <value>Previous event</value>
+  </data>
+  <data name="NextEvent" xml:space="preserve">
+    <value>Next event</value>
+  </data>
 </root>

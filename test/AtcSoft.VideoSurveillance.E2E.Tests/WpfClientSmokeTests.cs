@@ -35,6 +35,9 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
             });
         }
 
+        // Recordings: play the one the fixture recorded, with its activity from the server
+        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
+
         // Cameras: add, and edit each camera
         steps.Run("Cameras view", () => ShowView(app, main, "Cameras"));
         steps.Run("Add Camera", () => Walk(app, main, "Add Camera"));
@@ -75,6 +78,30 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
         DesktopApp.Press(app.Find(main, "Home", ControlType.TabItem));
         DesktopApp.Press(app.Find(main, view, ControlType.Button));
         DesktopApp.Settle(TimeSpan.FromSeconds(1.5));
+    }
+
+    // The server wrote an activity index while the fixture recorded the live camera; whether the
+    // test pattern gives a track is up to the detector, so the event buttons are pressed only
+    // when there is an event.
+    private static void PlayWithTimeline(
+        DesktopApp app,
+        Window main)
+    {
+        ShowView(app, main, "Recordings");
+        var row = app.FindWhere(main, e => e.ControlType == ControlType.DataItem, "a recording row");
+        row.Patterns.SelectionItem.Pattern.Select();
+
+        var player = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Play", ControlType.Button)), "Play");
+        app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        foreach (var name in new[] { "Next event", "Previous event" })
+        {
+            if (app.Find(player, name, ControlType.Button) is { IsEnabled: true } button)
+            {
+                DesktopApp.Press(button);
+            }
+        }
+
+        app.CloseWindow(player);
     }
 
     private static void Walk(

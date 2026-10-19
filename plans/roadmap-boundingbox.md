@@ -341,14 +341,14 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | # | Phase | Size | Status |
 |---|-------|:--:|:--:|
 | 0 | Quick fixes in today's pipeline | S | ✅ |
-| 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and five scenes done |
+| 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and ten scenes done; S10, S11, the encoder pipe and render time open |
 | 2 | Grey frames with their time from the engine | M | ⬜ |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker, ids on the wire, web smoothing by id; WPF overlays still by nearness |
 | 6 | Masks and zones | L | ⬜ |
 | 7 | Activity index (sidecar, API) | M | 🟨 Core, server and CameraWall done; the setting and *Analyse recording* open |
-| 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
+| 8 | Activity timeline in both WPF apps and the web client | L | 🟨 both WPF apps done; web client, hover, play events only, zoom, sparklines open |
 | 8b | Server timeline: day index, `GET /timeline`, live events | M | ⬜ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments | L | ⬜ |
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
@@ -483,7 +483,9 @@ Covers the backlog row *Motion zones / exclusion masks*.
 - Analysis costs a PNG capture per picture for every recorded camera; a camera analysed only for the index is held to 4 a second in both apps. Phase 2's grey frames would make it cheap.
 - The `MaxRecordingStorageGb` cap counts the videos only, not their thumbnails and indexes (an index is about 2 MB per camera per day). The clean-up's orphan pass removes an index whose video is gone.
 
-### Phase 8 — Activity timeline ⬜ (L)
+### Phase 8 — Activity timeline 🟨 (L)
+
+**Done 2026-10-19 (both WPF apps):** `ActivityTimelineLayout` in Core (bar height by square root, event bands of at least 3 px, next and previous event); the drawn `ActivityTimeline` control in Wpf.Core above the player's seek bar, with previous / next event buttons (texts in four languages). CameraWall reads the index beside the file, the server client asks `GET /recordings/activity`; the client's Recordings view got a Play button (it played only on a double click, which a keyboard cannot do). Unit tests, a drawn-to-bitmap control test, and a step in both WPF walks. **Open:** the web client (8a's web half), hover with a thumbnail, *play events only*, zoom, sparklines in the recordings lists.
 
 - A shared `ActivityTimeline` control in Wpf.Core (both WPF apps) and a web component with its logic in `Logic/`.
 - Bars, bands, hover with thumbnail, next and previous event, *play events only*, zoom, sparklines in the recordings lists.

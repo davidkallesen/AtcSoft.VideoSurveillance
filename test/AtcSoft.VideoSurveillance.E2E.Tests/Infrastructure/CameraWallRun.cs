@@ -94,7 +94,12 @@ internal sealed class CameraWallRun : IDisposable
                 DateTime.Now.AddMinutes(-5),
                 "mp4",
                 layoutOptions);
-            TestCameras.WriteRecording(video, RecordingPathHelper.BuildThumbnailPath(video, settings.Recording.RecordingPath, layoutOptions));
+            if (TestCameras.WriteRecording(video, RecordingPathHelper.BuildThumbnailPath(video, settings.Recording.RecordingPath, layoutOptions)))
+            {
+                // And its activity, so the player shows a timeline with an event.
+                TestCameras.WriteActivity(video, DateTimeOffset.Now.AddMinutes(-5));
+            }
+
             layout.Items.Add(new CameraLayoutItem { CameraId = camera.Id, OrderNumber = order++ });
         }
 

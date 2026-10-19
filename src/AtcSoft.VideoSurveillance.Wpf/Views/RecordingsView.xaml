@@ -18,7 +18,7 @@
             <atc:GridEx
                 Grid.Row="0"
                 Margin="0,0,0,16"
-                Columns="Auto,Auto,Auto,*,Auto">
+                Columns="Auto,Auto,Auto,*,Auto,Auto">
                 <atc:LabelComboBox
                     Grid.Column="0"
                     Width="260"
@@ -48,8 +48,15 @@
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Time}"
                     LabelWidthSizeDefinition="Auto"
                     SelectedKey="{Binding Path=SelectedTimeFilter, UpdateSourceTrigger=PropertyChanged}" />
+                <!--  Plays the selected recording; a double click on a row does the same  -->
                 <Button
                     Grid.Column="4"
+                    Margin="0,0,8,0"
+                    Padding="16,6"
+                    Command="{Binding Path=PlayCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=PlayRecording}" />
+                <Button
+                    Grid.Column="5"
                     Padding="16,6"
                     Command="{Binding Path=RefreshCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Refresh}" />

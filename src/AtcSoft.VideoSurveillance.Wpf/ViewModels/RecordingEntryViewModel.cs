@@ -36,6 +36,11 @@ public sealed class RecordingEntryViewModel
 
     public string FileName => System.IO.Path.GetFileName(recording.FilePath);
 
+    /// <summary>
+    /// Gets the recording's path below the recordings root, as the server names it.
+    /// </summary>
+    public string FilePath => recording.FilePath;
+
     public DateTimeOffset RecordingTime => recording.StartedAt;
 
     public long FileSizeBytes => recording.FileSizeBytes;

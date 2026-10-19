@@ -2661,4 +2661,16 @@ Miniature:
   <data name="MaxRecordingStorageHelp" xml:space="preserve">
     <value>Når optagelserne fylder mere, slettes de ældste først.</value>
   </data>
+  <data name="ActivityTimeline" xml:space="preserve">
+    <value>Aktivitet</value>
+  </data>
+  <data name="ActivityTimelineHint" xml:space="preserve">
+    <value>Hvad bevægede sig hvornår. Orange viser, hvor noget flyttede sig. Klik for at springe dertil.</value>
+  </data>
+  <data name="PreviousEvent" xml:space="preserve">
+    <value>Forrige hændelse</value>
+  </data>
+  <data name="NextEvent" xml:space="preserve">
+    <value>Næste hændelse</value>
+  </data>
 </root>

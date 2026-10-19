@@ -65,6 +65,11 @@ global using Microsoft.Extensions.Logging.Abstractions;
 global using Microsoft.Win32;
 
 // Type aliases to resolve ambiguities between Core and Wpf.Core namespaces
+global using ActivityBucket = AtcSoft.VideoSurveillance.Models.ActivityBucket;
+global using ActivityDownsampler = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityDownsampler;
+global using ActivityEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
+global using ActivityLogReader = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityLogReader;
+global using ActivityTimelineLayout = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityTimelineLayout;
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using AuthenticationSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.AuthenticationSettings;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;

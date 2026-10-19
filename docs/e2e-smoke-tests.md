@@ -49,6 +49,11 @@ goes, so `LiveTestCamera` starts it again on the same port: the camera survives 
 Each WPF walk selects every tab and opens every drop-down in each dialog before closing it; binding
 errors show up when a template is first used.
 
+Both WPF walks also play a recording: CameraWall the one the fixture writes (with an activity index
+beside it that has one event), the client the one the server recorded from the live camera. The player
+must show its activity timeline; the event buttons are pressed (in the client only when the detector
+found a track in the test pattern).
+
 ## Where to look after a run
 
 Everything of a run is kept in `%TEMP%\AtcSoft.E2E\{yyyyMMdd-HHmmss}`:

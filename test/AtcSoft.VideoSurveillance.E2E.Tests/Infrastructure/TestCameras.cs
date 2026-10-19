@@ -51,6 +51,28 @@ internal static class TestCameras
                && RunFFmpeg("-i", videoPath, "-frames:v", "1", thumbnailPath);
     }
 
+    /// <summary>
+    /// Writes an activity index beside a recording: something moves in its second second, so
+    /// the player shows a timeline with an event to jump to.
+    /// </summary>
+    public static void WriteActivity(
+        string videoPath,
+        DateTimeOffset start)
+    {
+        using var index = ActivityLogWriter.Create(RecordingPathHelper.BuildActivityPath(videoPath), start);
+        for (var second = 0; second < 3; second++)
+        {
+            var moving = second == 1;
+            index.Add(
+                start.AddSeconds(second),
+                new AtcSoft.VideoSurveillance.Models.MotionDetectorResult(
+                    moving,
+                    moving ? MotionHoldChange.Continues : MotionHoldChange.None,
+                    moving ? 20 : 1,
+                    moving ? [new AtcSoft.VideoSurveillance.Models.BoundingBox { X = 10, Y = 10, Width = 40, Height = 80, TrackId = 1 }] : []));
+        }
+    }
+
     private static bool RunFFmpeg(params string[] arguments)
     {
         var startInfo = new ProcessStartInfo(FFmpegTool!)

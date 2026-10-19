@@ -173,10 +173,12 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             return;
         }
 
+        var filePath = SelectedRecording.FilePath;
         var vm = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
             SelectedRecording.PlaybackUrl.AbsoluteUri,
             SelectedRecording.FileName,
-            recordingStartTime: SelectedRecording.RecordingTime.LocalDateTime);
+            recordingStartTime: SelectedRecording.RecordingTime.LocalDateTime,
+            activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken));
 
         var window = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
         window.Show();
@@ -185,6 +187,22 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     [RelayCommand]
     private Task Refresh()
         => LoadAsync();
+
+    // The server keeps the activity index beside the recording; a recording without one has no timeline.
+    private async Task<IReadOnlyList<AtcSoft.VideoSurveillance.Models.ActivityBucket>?> LoadActivityAsync(
+        string filePath,
+        int buckets,
+        double durationSeconds,
+        CancellationToken cancellationToken)
+    {
+        var activity = await gatewayService
+            .GetRecordingActivityAsync(filePath, buckets, durationSeconds, cancellationToken)
+            .ConfigureAwait(false);
+
+        return activity is { HasIndex: true }
+            ? [.. activity.Buckets.Select(b => new AtcSoft.VideoSurveillance.Models.ActivityBucket(b.Level, b.Tracks, b.IsAnalysed))]
+            : null;
+    }
 
     private void OnFilterChanged()
     {
