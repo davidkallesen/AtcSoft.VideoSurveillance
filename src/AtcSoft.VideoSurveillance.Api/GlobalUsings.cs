@@ -22,6 +22,7 @@ global using AtcSoft.VideoSurveillance.Api.Webhooks;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Events;
 global using AtcSoft.VideoSurveillance.Helpers;
+global using AtcSoft.VideoSurveillance.Helpers.Activity;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Models.Settings;

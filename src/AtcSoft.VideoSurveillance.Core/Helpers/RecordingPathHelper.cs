@@ -26,6 +26,8 @@ public static partial class RecordingPathHelper
     private const string ThumbnailExtension = ".png";
     private const string ActivityExtension = ".activity.jsonl";
 
+    private static readonly string[] RecordingVideoExtensions = [".mp4", ".mkv", ".avi"];
+
     /// <summary>
     /// Gets the folder name used for a camera: its display name with every
     /// character that is invalid in a file name replaced by an underscore.
@@ -302,6 +304,53 @@ public static partial class RecordingPathHelper
             StringSplitOptions.RemoveEmptyEntries);
 
         return string.Join('/', segments.Select(Uri.EscapeDataString));
+    }
+
+    /// <summary>
+    /// Resolves the path of a recording that came from outside (a client names a recording by the
+    /// path the listing gave it). It may only lead to a video in a camera folder below the root.
+    /// </summary>
+    /// <param name="recordingRoot">The recording folder.</param>
+    /// <param name="relativePath">The recording's path below it (<c>{camera}/.../{file}</c>), with either kind of slash.</param>
+    /// <param name="fullPath">The full path, when it names a recording.</param>
+    /// <returns>Whether the path names a recording; whether the file is there is not checked.</returns>
+    public static bool TryResolveRecording(
+        string recordingRoot,
+        string? relativePath,
+        out string fullPath)
+    {
+        fullPath = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(recordingRoot) || string.IsNullOrWhiteSpace(relativePath))
+        {
+            return false;
+        }
+
+        var relative = relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+        if (Path.IsPathRooted(relative))
+        {
+            return false;
+        }
+
+        var root = Path.GetFullPath(recordingRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var candidate = Path.GetFullPath(Path.Combine(root, relative));
+
+        // ".." may not lead out of the recording folder.
+        if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // {camera}\...\{file}: a video, in a camera folder, not among the thumbnails.
+        if (!RecordingVideoExtensions.Contains(Path.GetExtension(candidate), StringComparer.OrdinalIgnoreCase) ||
+            RecordingPathHelper.GetCameraFolderFromPath(candidate, recordingRoot) is null ||
+            RecordingPathHelper.IsInThumbnailsFolder(candidate, recordingRoot))
+        {
+            return false;
+        }
+
+        fullPath = candidate;
+        return true;
     }
 
     /// <summary>

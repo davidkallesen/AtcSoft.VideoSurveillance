@@ -187,7 +187,7 @@ The web client's pages read it with `EventStreamService` and the desktop client 
 
 The files themselves are fetched from `/recordings-files/{filePath}` and `/recordings-files/{thumbnailPath}`, signed in, with an API key, or with the session's media token as `?media=` (a video player or an `<img>` cannot send a header). Escape each folder and file name of the path on its own (a camera name may contain `#`, `?`, `&`, `+` or `%`). Only recordings (`.mp4`, `.mkv`, `.avi`) and thumbnails (`.png`) are served, from the recording folder that is in the settings at the time of the request. Every camera records below that folder: a recording folder of its own, which a camera imported from CameraWall can carry, is not used by the server (it logs a warning once per camera), so nothing is recorded where the server cannot list, serve or clean it.
 
-`DELETE /recordings?filePath={filePath}` deletes one finished recording, its thumbnail, and the day folder it leaves empty. `filePath` is the path the listing returned. The answers:
+`DELETE /recordings?filePath={filePath}` deletes one finished recording, its thumbnail, its activity index, and the day folder it leaves empty. `filePath` is the path the listing returned. The answers:
 
 | Answer | When |
 |---|---|
@@ -197,6 +197,10 @@ The files themselves are fetched from `/recordings-files/{filePath}` and `/recor
 | `400` | The path does not name a recording: it leads out of the recording folder, is a full path, or is a thumbnail or any other file. Nothing is touched |
 
 The server makes a thumbnail for every recording file, the way the standalone app does: one picture or a 2 x 2 grid (the *Thumbnail tiles* setting), stored next to the video or in `thumbnails\` (the *Keep thumbnails in a separate folder* setting). Thumbnails are drawn with GDI+, so a server that is not running on Windows records without them.
+
+Beside every recording file the server writes its **activity index**, `{file}.activity.jsonl`: one line for every analysed second, with how much of the picture differed from the learnt scene and how many moving things were followed. A camera that is recorded is analysed (two to four pictures a second) even when it is not watched for motion; that analysis reports no motion, so no badge, webhook or motion recording comes of it. The index moves, is protected and is deleted with its recording.
+
+`GET /recordings/activity?filePath={filePath}&buckets={n}&durationSeconds={s}` gives a recording's activity for a timeline: `n` equal stretches (1 to 4000, 500 when left out) over `s` seconds (the index's own length when left out), each with the most that happened in it, never the average, so a five-second event is not lost in an hour. A stretch with `isAnalysed` false is unknown, not quiet. A recording made before the index has `hasIndex` false. The index of a recording in progress grows every second, so the answer is not cached.
 
 ---
 

@@ -12,6 +12,11 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// picture with movement raises <see cref="MotionDetected"/> with the boxes
 /// (for live overlays); its end raises the event once with
 /// <see cref="MotionDetectedEventArgs.IsMotionActive"/> false.
+/// <para>
+/// A camera that is recorded is also analysed for its activity index
+/// (<see cref="StartIndexing"/>), every picture raising <see cref="PictureAnalyzed"/>. A camera
+/// analysed only for the index reports no motion: no badge, no webhook, no motion recording.
+/// </para>
 /// </remarks>
 public sealed partial class ServerMotionDetectionService : IMotionDetectionService, IDisposable
 {
@@ -62,6 +67,12 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     public event EventHandler<MotionDetectedEventArgs>? MotionDetected;
 
     /// <summary>
+    /// Raised for every analysed picture of every camera, watched for motion or analysed only
+    /// for the activity index.
+    /// </summary>
+    public event EventHandler<PictureAnalyzedEventArgs>? PictureAnalyzed;
+
+    /// <summary>
     /// Gets the time between two analysed pictures for the given settings.
     /// </summary>
     /// <param name="settings">The camera's motion settings.</param>
@@ -79,75 +90,87 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         Guid cameraId,
         IMediaPipeline pipeline,
         MotionDetectionSettings? settings = null)
+        => Start(cameraId, pipeline, settings, reportsMotion: true);
+
+    /// <summary>
+    /// Analyses a camera for its activity index. A camera already analysed goes on as it is;
+    /// one that is not starts without reporting motion.
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    /// <param name="pipeline">The camera's pipeline, to take pictures from.</param>
+    /// <param name="settings">The camera's motion settings.</param>
+    public void StartIndexing(
+        Guid cameraId,
+        IMediaPipeline pipeline,
+        MotionDetectionSettings? settings = null)
+        => Start(cameraId, pipeline, settings, reportsMotion: false);
+
+    /// <summary>
+    /// Stops analysing a camera for its activity index. A camera watched for motion goes on.
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    public void StopIndexing(Guid cameraId)
     {
-        ArgumentNullException.ThrowIfNull(pipeline);
-
-        if (frameReader is null)
-        {
-            LogMotionDetectionNotAvailable(cameraId);
-            return;
-        }
-
-        if (contexts.ContainsKey(cameraId))
+        if (!contexts.TryGetValue(cameraId, out var context))
         {
             return;
         }
 
-        CancellationTokenSource? cts = null;
-        try
+        lock (context.Sync)
         {
-            cts = new CancellationTokenSource();
-            var cameraSettings = settings ?? new MotionDetectionSettings();
-            var context = new DetectionContext(pipeline, cameraSettings, createDetector(cameraSettings), cts);
-
-            if (contexts.TryAdd(cameraId, context))
+            context.Indexes = false;
+            if (context.ReportsMotion)
             {
-                cts = null;
-                if (runLoops)
-                {
-                    _ = RunDetectionLoopAsync(cameraId, context);
-                }
-
-                LogMotionDetectionStarted(cameraId);
+                return;
             }
         }
-        finally
-        {
-            cts?.Dispose();
-        }
+
+        Stop(cameraId);
     }
 
     /// <inheritdoc/>
+    /// <remarks>A camera that is also analysed for its activity index goes on being analysed, without reporting motion.</remarks>
     public void StopDetection(Guid cameraId)
     {
-        if (!contexts.TryRemove(cameraId, out var context))
+        if (!contexts.TryGetValue(cameraId, out var context))
         {
             return;
         }
 
-        context.Cts.Cancel();
-        context.Cts.Dispose();
-
-        // Whoever acted on the motion (a recording) has to hear that it is over.
+        bool indexes;
         bool wasActive;
         lock (context.Sync)
         {
-            wasActive = context.IsMotionActive;
-            context.IsMotionActive = false;
-            context.LastBoundingBoxes = [];
+            indexes = context.Indexes;
+            wasActive = indexes && context.IsMotionActive;
+            if (indexes)
+            {
+                context.ReportsMotion = false;
+                context.IsMotionActive = false;
+                context.LastBoundingBoxes = [];
+            }
         }
 
-        if (wasActive)
+        if (!indexes)
+        {
+            Stop(cameraId);
+        }
+        else if (wasActive)
         {
             RaiseMotionEnded(cameraId, context);
         }
-
-        LogMotionDetectionStopped(cameraId);
     }
 
     /// <inheritdoc/>
     public bool IsDetectionActive(Guid cameraId)
-        => contexts.ContainsKey(cameraId);
+        => contexts.TryGetValue(cameraId, out var ctx) && ctx.ReportsMotion;
+
+    /// <summary>
+    /// Determines whether a camera is analysed for its activity index.
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    public bool IsIndexing(Guid cameraId)
+        => contexts.TryGetValue(cameraId, out var ctx) && ctx.Indexes;
 
     /// <inheritdoc/>
     public bool IsMotionDetected(Guid cameraId)
@@ -199,7 +222,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
             // Whoever owns the pipeline closed it. There will be no more
             // pictures, so the detection ends, and any motion with it.
             LogPipelineClosed(cameraId);
-            StopDetection(cameraId);
+            Stop(cameraId);
             return;
         }
         catch (Exception ex)
@@ -223,8 +246,89 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     {
         foreach (var cameraId in contexts.Keys.ToList())
         {
-            StopDetection(cameraId);
+            Stop(cameraId);
         }
+    }
+
+    private void Start(
+        Guid cameraId,
+        IMediaPipeline pipeline,
+        MotionDetectionSettings? settings,
+        bool reportsMotion)
+    {
+        ArgumentNullException.ThrowIfNull(pipeline);
+
+        if (frameReader is null)
+        {
+            LogMotionDetectionNotAvailable(cameraId);
+            return;
+        }
+
+        if (contexts.TryGetValue(cameraId, out var running))
+        {
+            lock (running.Sync)
+            {
+                running.ReportsMotion |= reportsMotion;
+                running.Indexes |= !reportsMotion;
+            }
+
+            return;
+        }
+
+        CancellationTokenSource? cts = null;
+        try
+        {
+            cts = new CancellationTokenSource();
+            var cameraSettings = settings ?? new MotionDetectionSettings();
+            var context = new DetectionContext(pipeline, cameraSettings, createDetector(cameraSettings), cts)
+            {
+                ReportsMotion = reportsMotion,
+                Indexes = !reportsMotion,
+            };
+
+            if (contexts.TryAdd(cameraId, context))
+            {
+                cts = null;
+                if (runLoops)
+                {
+                    _ = RunDetectionLoopAsync(cameraId, context);
+                }
+
+                LogMotionDetectionStarted(cameraId);
+            }
+        }
+        finally
+        {
+            cts?.Dispose();
+        }
+    }
+
+    // Ends the analysis of a camera altogether, and any motion with it.
+    private void Stop(Guid cameraId)
+    {
+        if (!contexts.TryRemove(cameraId, out var context))
+        {
+            return;
+        }
+
+        context.Cts.Cancel();
+        context.Cts.Dispose();
+
+        // Whoever acted on the motion (a recording) has to hear that it is over.
+        bool wasActive;
+        lock (context.Sync)
+        {
+            wasActive = context.IsMotionActive;
+            context.IsMotionActive = false;
+            context.LastBoundingBoxes = [];
+        }
+
+        if (wasActive)
+        {
+            RaiseMotionEnded(cameraId, context);
+        }
+
+        LogMotionDetectionStopped(cameraId);
     }
 
     private static (int Width, int Height) GetAnalysisSize(
@@ -240,6 +344,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         int height)
     {
         MotionDetectedEventArgs? toRaise = null;
+        PictureAnalyzedEventArgs? analyzed = null;
         var now = timeProvider.GetUtcNow();
 
         lock (context.Sync)
@@ -256,7 +361,13 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
                 ? context.Detector.Process(new MotionFrame(current, width, height, now))
                 : context.Detector.Idle(now);
 
-            if (result.Change is MotionHoldChange.Started or MotionHoldChange.Continues)
+            if (current is not null)
+            {
+                analyzed = new PictureAnalyzedEventArgs(cameraId, now, result);
+            }
+
+            // A camera analysed only for its activity index has no motion to report.
+            if (context.ReportsMotion && result.Change is MotionHoldChange.Started or MotionHoldChange.Continues)
             {
                 context.IsMotionActive = true;
                 context.LastMotionAt = now;
@@ -269,7 +380,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
                     width,
                     height);
             }
-            else if (result.Change == MotionHoldChange.Ended)
+            else if (context.ReportsMotion && result.Change == MotionHoldChange.Ended)
             {
                 context.IsMotionActive = false;
                 context.LastBoundingBoxes = [];
@@ -286,6 +397,18 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         if (toRaise is not null)
         {
             Raise(cameraId, toRaise);
+        }
+
+        if (analyzed is not null)
+        {
+            try
+            {
+                PictureAnalyzed?.Invoke(this, analyzed);
+            }
+            catch (Exception ex)
+            {
+                LogMotionSubscriberFailed(ex, cameraId);
+            }
         }
     }
 
@@ -355,6 +478,12 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         public CancellationTokenSource Cts { get; } = cts;
 
         public bool IsMotionActive { get; set; }
+
+        // Whether motion is reported (watched for motion), and whether the pictures go to the
+        // activity index. At least one of them, or the camera is not analysed.
+        public bool ReportsMotion { get; set; }
+
+        public bool Indexes { get; set; }
 
         // The same detector as the desktop's, behind the shared seam.
         public IMotionDetector Detector { get; } = detector;

@@ -7,8 +7,6 @@
 /// </summary>
 public static class RecordingRemover
 {
-    private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi"];
-
     /// <summary>
     /// Removes a recording together with its thumbnail and activity index, and the day folder
     /// it leaves empty.
@@ -24,7 +22,7 @@ public static class RecordingRemover
     {
         ArgumentNullException.ThrowIfNull(activePaths);
 
-        if (!TryResolve(recordingRoot, relativePath, out var fullPath))
+        if (!RecordingPathHelper.TryResolveRecording(recordingRoot, relativePath, out var fullPath))
         {
             return RecordingRemovalOutcome.NotARecording;
         }
@@ -69,44 +67,5 @@ public static class RecordingRemover
         _ = MediaCleanupRunner.RemoveEmptyDirectoriesBelow(recordingRoot, MediaCleanupRunner.EmptyDirectoryGracePeriod);
 
         return RecordingRemovalOutcome.Removed;
-    }
-
-    private static bool TryResolve(
-        string recordingRoot,
-        string? relativePath,
-        out string fullPath)
-    {
-        fullPath = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(recordingRoot) || string.IsNullOrWhiteSpace(relativePath))
-        {
-            return false;
-        }
-
-        var relative = relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
-        if (Path.IsPathRooted(relative))
-        {
-            return false;
-        }
-
-        var root = Path.GetFullPath(recordingRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        var candidate = Path.GetFullPath(Path.Combine(root, relative));
-
-        // ".." may not lead out of the recording folder.
-        if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        // {camera}\...\{file}: a video, in a camera folder, not among the thumbnails.
-        if (!VideoExtensions.Contains(Path.GetExtension(candidate), StringComparer.OrdinalIgnoreCase) ||
-            RecordingPathHelper.GetCameraFolderFromPath(candidate, recordingRoot) is null ||
-            RecordingPathHelper.IsInThumbnailsFolder(candidate, recordingRoot))
-        {
-            return false;
-        }
-
-        fullPath = candidate;
-        return true;
     }
 }

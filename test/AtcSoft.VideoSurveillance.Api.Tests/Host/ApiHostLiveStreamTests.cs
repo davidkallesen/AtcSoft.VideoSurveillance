@@ -84,6 +84,62 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Recording_Gets_An_Activity_Index_That_Is_Served_While_It_Grows()
+    {
+        var ffmpeg = FindFFmpegTool();
+        Assert.SkipWhen(ffmpeg is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = host.CreateClient();
+        var port = GetFreePort();
+        using var stream = StartTestStream(ffmpeg!, port);
+        var cameraId = Guid.Empty;
+
+        try
+        {
+            // Arrange — a camera that is recorded but not watched for motion
+            var name = "Activity " + Guid.NewGuid().ToString("N")[..8];
+            var created = await client.PostAsJsonAsync(
+                "/cameras",
+                new { displayName = name, ipAddress = "127.0.0.1", port, protocol = "http", path = "live" },
+                cancellationToken);
+            created.StatusCode.Should().Be(HttpStatusCode.Created);
+            cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+
+            // Act
+            var started = await client.PostAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), content: null, cancellationToken);
+            started.StatusCode.Should().Be(HttpStatusCode.OK, await started.Content.ReadAsStringAsync(cancellationToken));
+
+            // Assert — the index is there while recording, and analysed seconds show up in it
+            var activity = await WaitForActivityAsync(client, name, cancellationToken);
+            activity.GetProperty("hasIndex").GetBoolean().Should().BeTrue();
+            activity.GetProperty("startedAt").GetDateTimeOffset().Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+            activity.GetProperty("buckets").GetArrayLength().Should().Be(10);
+
+            // The index is a companion of the recording: it goes with it
+            await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), cancellationToken);
+            var filePath = (await FindRecordingAsync(client, name, cancellationToken))!.Value.GetProperty("filePath").GetString()!;
+            var recordingPath = (await client.GetFromJsonAsync<JsonElement>("/settings", cancellationToken)).GetProperty("recordingPath").GetString()!;
+            var activityFile = RecordingPathHelper.BuildActivityPath(Path.Combine(recordingPath, filePath));
+            File.Exists(activityFile).Should().BeTrue();
+
+            var deleted = await client.DeleteAsync(new Uri("/recordings?filePath=" + Uri.EscapeDataString(filePath), UriKind.Relative), cancellationToken);
+            deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            File.Exists(activityFile).Should().BeFalse();
+        }
+        finally
+        {
+            if (cameraId != Guid.Empty)
+            {
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), CancellationToken.None);
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
+            }
+
+            Stop(stream);
+        }
+    }
+
+    [Fact]
     public async Task A_Camera_Can_Be_Watched_Live_Over_Hls()
     {
         var ffmpeg = FindFFmpegTool();
@@ -196,6 +252,33 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
         }
 
         Assert.Fail($"No thumbnail was listed for '{cameraName}' within {ThumbnailTimeout.TotalSeconds:N0} seconds.");
+        return default;
+    }
+
+    private static async Task<JsonElement> WaitForActivityAsync(
+        HttpClient client,
+        string cameraName,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + ThumbnailTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (await FindRecordingAsync(client, cameraName, cancellationToken) is { } recording)
+            {
+                var filePath = recording.GetProperty("filePath").GetString()!;
+                var activity = await client.GetFromJsonAsync<JsonElement>(
+                    "/recordings/activity?buckets=10&filePath=" + Uri.EscapeDataString(filePath),
+                    cancellationToken);
+                if (activity.GetProperty("buckets").EnumerateArray().Any(b => b.GetProperty("isAnalysed").GetBoolean()))
+                {
+                    return activity;
+                }
+            }
+
+            await Task.Delay(500, cancellationToken);
+        }
+
+        Assert.Fail($"No analysed second showed up in the activity of '{cameraName}' within {ThumbnailTimeout.TotalSeconds:N0} seconds.");
         return default;
     }
 

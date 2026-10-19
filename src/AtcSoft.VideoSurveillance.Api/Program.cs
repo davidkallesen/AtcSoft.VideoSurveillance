@@ -102,7 +102,11 @@ try
     builder.Services.AddSingleton<ServerRecordingService>();
     builder.Services.AddSingleton<IRecordingService>(sp =>
         sp.GetRequiredService<ServerRecordingService>());
-    builder.Services.AddSingleton<IMotionDetectionService, ServerMotionDetectionService>();
+
+    // The concrete type too: the activity index takes every analysed picture from it.
+    builder.Services.AddSingleton<ServerMotionDetectionService>();
+    builder.Services.AddSingleton<IMotionDetectionService>(sp =>
+        sp.GetRequiredService<ServerMotionDetectionService>());
 
     // Initialize VideoEngine (FFmpeg in-process) and register services.
     // DecoderThreads=1: headless server uses single-threaded decoding per camera
@@ -215,6 +219,11 @@ try
     builder.Services.AddSingleton<SurveillanceEventFeed>();
     builder.Services.AddSingleton(new SurveillanceEventBroadcasterOptions());
     builder.Services.AddHostedService<SurveillanceEventBroadcaster>();
+
+    // An activity index beside every recording, for the timelines.
+    builder.Services.AddSingleton(new ActivityIndexServiceOptions());
+    builder.Services.AddSingleton<ActivityIndexService>();
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<ActivityIndexService>());
 
     // GET /devices/usb is cached a few seconds; a camera plugged in or pulled out drops it.
     builder.Services.AddSingleton(new UsbDeviceCacheEvictorOptions());

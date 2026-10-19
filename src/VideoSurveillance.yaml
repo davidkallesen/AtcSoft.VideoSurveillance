@@ -1211,6 +1211,59 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /recordings/activity:
+    # No cache: the index of a recording in progress grows every second.
+    get:
+      summary: Get the activity of a recording
+      description: What moved when in one recording, from the activity index written beside it, shrunk to the given number of equal stretches by keeping the most of each (never the average, so a short event stays visible). A recording made before the index existed has none; the answer then says so in hasIndex.
+      operationId: getRecordingActivity
+      tags:
+        - recordings
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          description: The recording's path relative to the recordings root, as the listing returns it in filePath.
+          schema:
+            type: string
+        - name: buckets
+          in: query
+          required: false
+          description: How many stretches to split the recording into, usually the width of the timeline in pixels.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 4000
+            default: 500
+        - name: durationSeconds
+          in: query
+          required: false
+          description: How long the recording is, in seconds, as the listing gives it. Without it the stretches cover the index as far as it reaches.
+          schema:
+            type: number
+            format: double
+            minimum: 0
+      responses:
+        '200':
+          description: The activity of the recording
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingActivity"
+        '400':
+          description: The path does not name a recording
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: Recording not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /events:
     # No retry: a live stream is not sent again from the start; the client resumes with Last-Event-ID.
     x-retry-enabled: false
@@ -2267,6 +2320,52 @@ components:
         thumbnailPath:
           type: string
           description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
+
+    RecordingActivity:
+      title: RecordingActivity
+      type: object
+      description: What moved when in one recording, in equal stretches from its start.
+      required:
+        - hasIndex
+        - durationSeconds
+        - buckets
+      properties:
+        hasIndex:
+          type: boolean
+          description: Whether the recording has an activity index. Without one the buckets are empty.
+        startedAt:
+          type: string
+          format: date-time
+          description: When the index starts, in UTC. Left out without an index.
+        durationSeconds:
+          type: number
+          format: double
+          description: How many seconds the buckets cover together.
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecordingActivityBucket"
+
+    RecordingActivityBucket:
+      title: RecordingActivityBucket
+      type: object
+      description: One stretch of a recording, with the most that happened in it.
+      required:
+        - level
+        - tracks
+        - isAnalysed
+      properties:
+        level:
+          type: number
+          format: double
+          description: The largest share of the picture that differed from the learnt scene, 0 to 100. Something that only sways (a tree) counts here too.
+        tracks:
+          type: integer
+          format: int32
+          description: The most moving things followed at once (confirmed tracks). Above 0 means something went somewhere.
+        isAnalysed:
+          type: boolean
+          description: Whether any second of the stretch was analysed. A stretch that was not is unknown, not quiet.
 
     AppSettings:
       title: AppSettings

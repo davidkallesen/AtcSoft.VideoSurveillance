@@ -123,7 +123,7 @@ All of this is **one stateful class in Core** (`MotionDetector`, one per camera)
 | Format | JSON Lines: a header line `{"v":1,…}`, then one line per second, appended while recording; readable while `IsBeingWritten` |
 | Size | About 3 600 short lines per hour (~100 KB) |
 | Written by | Both recording services, from the detector's output. Detection must therefore run for **every camera that records**, not only for record-on-motion (`CameraConnectionService.cs:377`) |
-| Read by | `GET /recordings/{id}/activity` (spec-first, all three roles) for the clients; CameraWall reads the file directly |
+| Read by | `GET /recordings/activity?filePath=…&buckets=…&durationSeconds=…` (recordings are named by their path, as for delete; all three roles; no cache, the file grows) for the clients; CameraWall reads the file directly |
 | Old recordings | An *Analyse recording* action (the sample app's offline path, reused) writes the index afterwards |
 | Deleting | A deleted recording takes its sidecar with it. The clean-up code belongs to the disk-space work in progress: a dependency to agree, not a change made by this plan |
 
@@ -347,7 +347,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker, ids on the wire, web smoothing by id; WPF overlays still by nearness |
 | 6 | Masks and zones | L | ⬜ |
-| 7 | Activity index (sidecar, API) | M | ⬜ |
+| 7 | Activity index (sidecar, API) | M | 🟨 Core and server done; CameraWall, the setting and *Analyse recording* open |
 | 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
 | 8b | Server timeline: day index, `GET /timeline`, live events | M | ⬜ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments | L | ⬜ |
@@ -466,14 +466,22 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 **Test:** a storybook scene with a mask over the tree; dialog steps in the E2E walks.
 
-### Phase 7 — Activity index ⬜ (M)
+### Phase 7 — Activity index 🟨 (M)
 
-- The sidecar as designed above, written by both recording services. Detection runs for every recording camera at a low rate (2–4/s) while the index is on (a setting, default on).
-- `RecordingPathHelper` and `RecordingLayoutReorganizer` handle it; deleting it with the recording is agreed with the disk-space work.
-- `GET /recordings/{id}/activity` in the spec (roles: all three; buckets downsampled by max to a requested width).
-- *Analyse recording* writes it for older recordings.
+**Done 2026-10-19:**
 
-**Test:** unit (writer, reader, downsampling by max); a host test records the live test stream with a moving object and reads the activity back.
+- Core: `{video}.activity.jsonl` beside the video in every layout (`RecordingPathHelper.BuildActivityPath`). A header `{"v":1,"start":…}`, then one line per analysed second: `t` offset, `a` level (the largest changed share, 0–100, the tree included), `n` confirmed tracks, `ids`. A second without a line was not analysed, which is not the same as quiet. `ActivityAccumulator` (fed by every analysed picture, not by motion events), `ActivityLogWriter` (a line as soon as the second is over), `ActivityLogReader` (reads while written, skips a cut-off line), `ActivityDownsampler.ByMax`.
+- The index is a companion of its recording (`GetCompanionPaths`): deleted by the remover, the clean-up and the disk-space guard, protected while recorded, moved by the reorganiser.
+- Server: `ActivityIndexService` writes the index of every recording, a new file per segment. A recorded camera is analysed even when it is not watched for motion, in an index-only mode of `ServerMotionDetectionService` (`StartIndexing`) that reports no motion: no badge, webhook or motion recording comes of it.
+- `GET /recordings/activity` with `hasIndex` false for a recording without one. Unit tests, handler tests, and a host test that records the live test stream and reads the activity back.
+
+**Open:**
+
+- CameraWall writes the index too (phase 7c).
+- A setting to turn the index off (always on today). It has to pass `SettingsRoundTripTests`, with texts in four languages and both clients.
+- *Analyse recording* for older recordings.
+- The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.
+- Analysis costs a PNG capture per picture (2–4 a second) for every recorded camera; phase 2's grey frames would make it cheap.
 
 ### Phase 8 — Activity timeline ⬜ (L)
 

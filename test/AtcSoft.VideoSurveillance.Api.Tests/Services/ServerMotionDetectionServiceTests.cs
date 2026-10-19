@@ -205,6 +205,79 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
             .Should().ContainSingle().Which.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task A_Camera_Analysed_Only_For_Its_Index_Reports_No_Motion_But_Every_Picture()
+    {
+        // A camera that is recorded but not watched for motion: no badge, no webhook, no motion
+        // recording may come of it; the activity index still needs every picture.
+        var other = Guid.NewGuid();
+        var analysed = new List<PictureAnalyzedEventArgs>();
+        sut.PictureAnalyzed += (_, e) => analysed.Add(e);
+        sut.StartIndexing(other, pipeline, settings);
+
+        foreach (var scene in new[] { EmptyScene, SceneWithBlock, SceneWithBlock })
+        {
+            pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(new[] { scene });
+            await sut.AnalyzeOnceAsync(other, TestContext.Current.CancellationToken);
+        }
+
+        events.Should().BeEmpty();
+        sut.IsDetectionActive(other).Should().BeFalse("the camera is not watched for motion");
+        sut.IsMotionDetected(other).Should().BeFalse();
+        sut.IsIndexing(other).Should().BeTrue();
+        analysed.Should().HaveCount(3).And.OnlyContain(e => e.CameraId == other);
+        analysed[1].Result.ChangePercent.Should().BeGreaterThan(5);
+    }
+
+    [Fact]
+    public async Task A_Camera_Watched_Again_While_Indexed_Reports_Motion_And_Stops_Reporting_When_No_Longer_Watched()
+    {
+        sut.StopDetection(cameraId);
+        sut.StartIndexing(cameraId, pipeline, settings);
+        sut.StartDetection(cameraId, pipeline, settings);
+
+        await ShowAsync(EmptyScene, SceneWithBlock);
+        events.Should().ContainSingle().Which.IsMotionActive.Should().BeTrue();
+        events.Clear();
+
+        sut.StopDetection(cameraId);
+
+        events.Should().ContainSingle().Which.IsMotionActive.Should().BeFalse("whoever acted on the motion hears it is over");
+        sut.IsDetectionActive(cameraId).Should().BeFalse();
+        sut.IsIndexing(cameraId).Should().BeTrue("the recording still needs its index");
+
+        events.Clear();
+        await ShowAsync(EmptyScene, SceneWithBlock);
+        events.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void A_Camera_Watched_For_Motion_Goes_On_When_Its_Index_Ends()
+    {
+        sut.StartIndexing(cameraId, pipeline, settings);
+
+        sut.StopIndexing(cameraId);
+
+        sut.IsDetectionActive(cameraId).Should().BeTrue();
+        sut.IsIndexing(cameraId).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_Camera_Analysed_Only_For_Its_Index_Is_Let_Go_When_The_Index_Ends()
+    {
+        var other = Guid.NewGuid();
+        var analysed = new List<PictureAnalyzedEventArgs>();
+        sut.PictureAnalyzed += (_, e) => analysed.Add(e);
+        sut.StartIndexing(other, pipeline, settings);
+
+        sut.StopIndexing(other);
+        pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(new[] { SceneWithBlock });
+        await sut.AnalyzeOnceAsync(other, TestContext.Current.CancellationToken);
+
+        sut.IsIndexing(other).Should().BeFalse();
+        analysed.Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData(0, 1000)]
     [InlineData(2, 500)]
