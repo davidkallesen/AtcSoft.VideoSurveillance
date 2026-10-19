@@ -71,9 +71,9 @@ else if (timeline is { } shown)
                  preserveAspectRatio="none"
                  style="flex: 1; height: 36px; cursor: pointer; background: rgba(128,128,128,0.06);"
                  @onclick="@(e => PlayAtAsync(lane, e))">
-                @foreach (var shape in TimelineLaneShapes.Gaps(lane))
+                @foreach (var gap in TimelineLaneShapes.Gaps(lane, span))
                 {
-                    <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.35)" />
+                    <rect x="@SvgNumber.Format(gap.Rect.X)" y="@SvgNumber.Format(gap.Rect.Y)" width="@SvgNumber.Format(gap.Rect.Width)" height="@SvgNumber.Format(gap.Rect.Height)" fill="@gap.Fill"><title>@gap.Text</title></rect>
                 }
                 @foreach (var shape in TimelineLaneShapes.NotAnalysed(lane))
                 {
@@ -103,6 +103,17 @@ else if (timeline is { } shown)
                 <MudText Typo="Typo.caption" Style="@($"position: absolute; left: {tick.Left}; transform: translateX(-50%);")">@tick.Label</MudText>
             }
         </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-center gap-3 mt-2">
+        <div style="width: 160px; flex: none;"></div>
+        @foreach (var reason in TimelineGapStyle.Reasons)
+        {
+            <div class="d-flex align-center gap-1">
+                <span style="@($"display: inline-block; width: 14px; height: 14px; background: {TimelineGapStyle.Fill(reason)};")"></span>
+                <MudText Typo="Typo.caption">@TimelineGapStyle.Text(reason)</MudText>
+            </div>
+        }
     </div>
 }
 

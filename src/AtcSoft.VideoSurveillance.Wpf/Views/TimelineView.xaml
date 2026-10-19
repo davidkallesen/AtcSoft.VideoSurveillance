@@ -100,6 +100,7 @@
                                         Height="36"
                                         AutomationProperties.Name="{Binding Path=CameraName}"
                                         EventBands="{Binding Path=EventBands}"
+                                        GapBands="{Binding Path=GapBands}"
                                         NowFraction="{Binding Path=NowFraction}"
                                         SeekCommand="{Binding Path=PlayAtCommand}"
                                         Stretches="{Binding Path=Stretches}"
@@ -113,6 +114,52 @@
                             Grid.Column="1"
                             Marks="{Binding Path=Marks}"
                             Opacity="0.75" />
+                    </atc:GridEx>
+
+                    <!--  Why a lane has a gap  -->
+                    <atc:GridEx Margin="0,8,0,0" Columns="160,*">
+                        <WrapPanel Grid.Column="1">
+                            <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                                <Rectangle
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Fill="{x:Static coreControls:TimelineGapLook.OfflineBrush}" />
+                                <TextBlock VerticalAlignment="Center" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GapOffline}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                                <Rectangle
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Fill="{x:Static coreControls:TimelineGapLook.DiskFullBrush}" />
+                                <TextBlock VerticalAlignment="Center" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GapDiskFull}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                                <Rectangle
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Fill="{x:Static coreControls:TimelineGapLook.ServerDownBrush}" />
+                                <TextBlock VerticalAlignment="Center" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GapServerDown}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                                <Rectangle
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Fill="{x:Static coreControls:TimelineGapLook.NotRecordingBrush}" />
+                                <TextBlock VerticalAlignment="Center" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GapNotRecording}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                                <Rectangle
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Fill="{x:Static coreControls:TimelineGapLook.UnknownBrush}" />
+                                <TextBlock VerticalAlignment="Center" Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=GapUnknown}" />
+                            </StackPanel>
+                        </WrapPanel>
                     </atc:GridEx>
                 </StackPanel>
             </ScrollViewer>

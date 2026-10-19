@@ -10,14 +10,26 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 public static class TimelineLaneShapes
 {
     /// <summary>
-    /// Gets the gaps: stretches no recording covers.
+    /// Gets the gaps: where no recording covers the span, placed by their time, each with the
+    /// colour and the text of its reason.
     /// </summary>
     /// <param name="lane">The camera's lane.</param>
-    public static IReadOnlyList<TimelineRect> Gaps(TimelineLane lane)
+    /// <param name="span">The span the lane covers.</param>
+    public static IReadOnlyList<TimelineGapShape> Gaps(
+        TimelineLane lane,
+        TimelineSpan span)
     {
         ArgumentNullException.ThrowIfNull(lane);
+        ArgumentNullException.ThrowIfNull(span);
 
-        return Runs(lane.Buckets, b => !b.IsRecorded, ActivityTimelineShapes.BoxHeight);
+        var width = lane.Buckets.Count;
+        return [.. lane.Gaps
+            .Select(g => (Gap: g, Start: span.FractionOf(Clamp(g.Start, span)) ?? 0, End: span.FractionOf(Clamp(g.End, span)) ?? 1))
+            .Where(g => g.End > g.Start)
+            .Select(g => new TimelineGapShape(
+                new TimelineRect(g.Start * width, 0, (g.End - g.Start) * width, ActivityTimelineShapes.BoxHeight),
+                TimelineGapStyle.Fill(g.Gap.Reason.Value),
+                TimelineGapStyle.Text(g.Gap.Reason.Value)))];
     }
 
     /// <summary>

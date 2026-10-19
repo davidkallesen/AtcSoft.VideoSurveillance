@@ -222,6 +222,12 @@ try
     builder.Services.AddSingleton<ActivityIndexService>();
     builder.Services.AddHostedService(sp => sp.GetRequiredService<ActivityIndexService>());
 
+    // When each camera could be recorded and when not: the timeline's gaps say why.
+    builder.Services.AddSingleton(new AvailabilityHistoryServiceOptions());
+    builder.Services.AddSingleton<AvailabilityHistoryService>();
+    builder.Services.AddSingleton<IAvailabilityHistory>(sp => sp.GetRequiredService<AvailabilityHistoryService>());
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<AvailabilityHistoryService>());
+
     // GET /devices/usb is cached a few seconds; a camera plugged in or pulled out drops it.
     builder.Services.AddSingleton(new UsbDeviceCacheEvictorOptions());
     builder.Services.AddHostedService<UsbDeviceCacheEvictor>();

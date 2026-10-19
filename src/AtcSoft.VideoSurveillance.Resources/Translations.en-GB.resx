@@ -2697,4 +2697,19 @@
   <data name="Later" xml:space="preserve">
     <value>Later</value>
   </data>
+  <data name="GapOffline" xml:space="preserve">
+    <value>Camera offline</value>
+  </data>
+  <data name="GapNotRecording" xml:space="preserve">
+    <value>Not recording</value>
+  </data>
+  <data name="GapDiskFull" xml:space="preserve">
+    <value>Disk full</value>
+  </data>
+  <data name="GapServerDown" xml:space="preserve">
+    <value>Server not running</value>
+  </data>
+  <data name="GapUnknown" xml:space="preserve">
+    <value>Nothing recorded</value>
+  </data>
 </root>

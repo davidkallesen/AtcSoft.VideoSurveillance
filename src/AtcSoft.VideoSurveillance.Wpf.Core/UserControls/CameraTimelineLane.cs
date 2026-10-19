@@ -1,7 +1,8 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
-/// One camera's lane on a timeline of every camera: grey where nothing was recorded, dim where a
+/// One camera's lane on a timeline of every camera: a gap where nothing was recorded, coloured by
+/// its reason when <see cref="GapBands"/> are given (the pointer on it tells the reason), dim where a
 /// recording was not analysed, a bar for how much changed in each stretch, an orange band where
 /// something went somewhere, and a red line at now. A click asks to play from there through
 /// <see cref="SeekCommand"/> with the place as a fraction of the span, 0 to 1. The same look as
@@ -23,11 +24,17 @@ public sealed partial class CameraTimelineLane : FrameworkElement
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private IReadOnlyList<ActivityEvent>? eventBands;
 
+    // Null: the gaps come from the stretches, without a reason.
+    [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
+    private IReadOnlyList<TimelineGapBand>? gapBands;
+
     [DependencyProperty(DefaultValue = -1d, PropertyChangedCallback = nameof(OnLookChanged))]
     private double nowFraction;
 
     [DependencyProperty]
     private ICommand? seekCommand;
+
+    private object? laneToolTip;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraTimelineLane"/> class.
@@ -54,6 +61,12 @@ public sealed partial class CameraTimelineLane : FrameworkElement
         }
 
         var barArea = height - BandHeight - 1;
+        foreach (var gap in GapBands ?? [])
+        {
+            var x = gap.Start * width;
+            drawingContext.DrawRectangle(TimelineGapLook.BrushOf(gap.Reason), pen: null, new Rect(x, 0, Math.Max((gap.End - gap.Start) * width, 1), height));
+        }
+
         var step = width / all.Count;
         for (var i = 0; i < all.Count; i++)
         {
@@ -62,7 +75,10 @@ public sealed partial class CameraTimelineLane : FrameworkElement
             var w = Math.Max(step, 1);
             if (!stretch.IsRecorded)
             {
-                drawingContext.DrawRectangle(GapBrush, pen: null, new Rect(x, 0, w, height));
+                if (GapBands is null)
+                {
+                    drawingContext.DrawRectangle(GapBrush, pen: null, new Rect(x, 0, w, height));
+                }
             }
             else if (!stretch.IsAnalysed)
             {
@@ -90,6 +106,19 @@ public sealed partial class CameraTimelineLane : FrameworkElement
     /// <remarks>A plain element has no peer: without one, screen readers and UI tests cannot see the lane.</remarks>
     protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         => new System.Windows.Automation.Peers.FrameworkElementAutomationPeer(this);
+
+    /// <inheritdoc />
+    /// <remarks>On a gap the tooltip tells why nothing was recorded; elsewhere it is the lane's own.</remarks>
+    protected override void OnToolTipOpening(ToolTipEventArgs e)
+    {
+        base.OnToolTipOpening(e);
+
+        // The lane's own tooltip, kept the first time so a gap's text can stand in for it.
+        laneToolTip ??= ToolTip;
+        var fraction = ActualWidth > 0 ? Mouse.GetPosition(this).X / ActualWidth : -1;
+        var gap = GapBands?.FirstOrDefault(g => fraction >= g.Start && fraction <= g.End);
+        ToolTip = gap is null ? laneToolTip : TimelineGapLook.TextOf(gap.Reason);
+    }
 
     /// <inheritdoc />
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)

@@ -2459,6 +2459,7 @@ components:
         - cameraId
         - cameraName
         - coverage
+        - gaps
         - buckets
         - events
       properties:
@@ -2472,6 +2473,11 @@ components:
           description: Where recordings cover the span, cut to it, from its start.
           items:
             $ref: "#/components/schemas/TimelineCoverage"
+        gaps:
+          type: array
+          description: Where no recording covers the span, and why, from its start.
+          items:
+            $ref: "#/components/schemas/TimelineGap"
         buckets:
           type: array
           description: The span in equal stretches, from its start.
@@ -2506,6 +2512,29 @@ components:
           type: string
           format: date-time
           description: When the recording itself starts, before it was cut to the span. A moment in the span is played this far into the file.
+
+    TimelineGap:
+      title: TimelineGap
+      type: object
+      description: A stretch of a lane without a recording, and why.
+      required:
+        - start
+        - end
+        - reason
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          enum: [unknown, offline, notRecording, diskFull, serverDown]
+          description: >-
+            offline - the camera could not be reached; notRecording - it was there but not recorded;
+            diskFull - the recording was stopped or refused for a full disk; serverDown - the server was
+            not running; unknown - no history reaches that far back.
 
     TimelineBucket:
       title: TimelineBucket

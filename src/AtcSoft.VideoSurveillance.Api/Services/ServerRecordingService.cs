@@ -78,6 +78,12 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
     /// </summary>
     public event Action<Guid, ConnectionState>? CameraConnectionStateChanged;
 
+    /// <summary>
+    /// Raised when a camera's recording is stopped or refused because its disk is full, so the
+    /// timeline can say why it has a gap.
+    /// </summary>
+    public event Action<Guid>? DiskSpaceStopped;
+
     /// <inheritdoc/>
     public IMediaPipeline? FindPipeline(Guid cameraId)
         => pipelines.GetValueOrDefault(cameraId);
@@ -125,6 +131,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         if (!MayRecord())
         {
             LogDiskSpaceGateFailed(camera.Display.DisplayName);
+            DiskSpaceStopped?.Invoke(camera.Id);
             return false;
         }
 
@@ -422,6 +429,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         {
             LogDiskSpaceGuardStoppingRecordings(1);
             StopRecording(cameraId);
+            DiskSpaceStopped?.Invoke(cameraId);
             return false;
         }
 
@@ -613,6 +621,7 @@ public sealed partial class ServerRecordingService : IRecordingService, ICameraC
         foreach (var session in shortSessions)
         {
             StopRecording(session.CameraId);
+            DiskSpaceStopped?.Invoke(session.CameraId);
         }
 
         return true;

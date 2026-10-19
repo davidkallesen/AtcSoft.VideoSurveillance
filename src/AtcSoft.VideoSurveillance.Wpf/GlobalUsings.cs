@@ -84,6 +84,8 @@ global using VideoSurveillance.Generated.Users.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Users.Models;
 
 global using ActivityEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
+global using GapReason = AtcSoft.VideoSurveillance.Enums.GapReason;
+global using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
 global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
 global using TimelineMarks = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks;
 global using TimelineStretch = AtcSoft.VideoSurveillance.Models.TimelineStretch;

@@ -2700,4 +2700,19 @@ Vorschaubild:
   <data name="Later" xml:space="preserve">
     <value>Später</value>
   </data>
+  <data name="GapOffline" xml:space="preserve">
+    <value>Kamera offline</value>
+  </data>
+  <data name="GapNotRecording" xml:space="preserve">
+    <value>Keine Aufnahme</value>
+  </data>
+  <data name="GapDiskFull" xml:space="preserve">
+    <value>Festplatte voll</value>
+  </data>
+  <data name="GapServerDown" xml:space="preserve">
+    <value>Server lief nicht</value>
+  </data>
+  <data name="GapUnknown" xml:space="preserve">
+    <value>Nichts aufgezeichnet</value>
+  </data>
 </root>

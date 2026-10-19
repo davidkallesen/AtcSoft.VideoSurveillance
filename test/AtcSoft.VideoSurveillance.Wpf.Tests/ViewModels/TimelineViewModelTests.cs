@@ -1,5 +1,9 @@
 namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
+using GapReason = AtcSoft.VideoSurveillance.Enums.GapReason;
+using TimelineGap = global::VideoSurveillance.Generated.Timeline.Models.TimelineGap;
+using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
+
 /// <summary>
 /// The client's Timeline view: the span it asks the server for, and how each camera's lane is
 /// laid out for the lane control.
@@ -31,6 +35,7 @@ public sealed class TimelineViewModelTests
             CameraId: Guid.NewGuid(),
             CameraName: "Garden",
             Coverage: [],
+            Gaps: [],
             Buckets: [new TimelineBucket(Level: 5, Tracks: 1, IsRecorded: true, IsAnalysed: true), new TimelineBucket(Level: 0, Tracks: 0, IsRecorded: false, IsAnalysed: false)],
             Events: [new TimelineEvent(Guid.Empty, Nine.AddMinutes(15), Nine.AddMinutes(30), 5, 1, "Garden/a.mkv", 900)]);
 
@@ -41,6 +46,30 @@ public sealed class TimelineViewModelTests
         shown.NowFraction.Should().Be(0.75);
         past.NowFraction.Should().Be(-1, "now is after the span: no line");
         shown.Stretches.Should().Equal(new TimelineStretch(5, 1, IsRecorded: true, IsAnalysed: true), new TimelineStretch(0, 0, IsRecorded: false, IsAnalysed: false));
+    }
+
+    [Fact]
+    public void A_Lane_Places_Its_Gaps_With_Their_Reasons_Also_One_This_Client_Does_Not_Know()
+    {
+        var lane = new TimelineLane(
+            CameraId: Guid.NewGuid(),
+            CameraName: "Garden",
+            Coverage: [],
+            Gaps:
+            [
+                new TimelineGap(Nine.AddMinutes(-10), Nine.AddMinutes(15), TimelineGapReason.Offline),
+                new TimelineGap(Nine.AddMinutes(30), Nine.AddMinutes(45), TimelineGapReason.ServerDown),
+                new TimelineGap(Nine.AddMinutes(45), Nine.AddMinutes(60), new TimelineGapReason("somethingNew")),
+            ],
+            Buckets: [],
+            Events: []);
+
+        var shown = new TimelineLaneViewModel(lane, Nine, Nine.AddHours(1), Nine, (_, _) => { });
+
+        shown.GapBands.Should().Equal(
+            new TimelineGapBand(0, 0.25, GapReason.Offline),
+            new TimelineGapBand(0.5, 0.75, GapReason.ServerDown),
+            new TimelineGapBand(0.75, 1, GapReason.Unknown));
     }
 
     [Fact]
@@ -56,6 +85,7 @@ public sealed class TimelineViewModelTests
                     new TimelineCoverage(Nine, Nine.AddHours(1), "Garden/a.mkv", Nine),
                     new TimelineCoverage(Nine.AddHours(1), Nine.AddHours(1.5), "Garden/b.mkv", Nine.AddHours(1)),
                 ],
+                Gaps: [],
                 Buckets: [],
                 Events: []),
             Nine,
@@ -79,7 +109,7 @@ public sealed class TimelineViewModelTests
     [Fact]
     public void A_Click_On_A_Lane_Hands_Its_Place_To_The_View()
     {
-        var lane = new TimelineLane(Guid.NewGuid(), "Garden", [], [], []);
+        var lane = new TimelineLane(Guid.NewGuid(), "Garden", [], [], [], []);
         (TimelineLaneViewModel Lane, double Fraction)? played = null;
         var viewModel = new TimelineLaneViewModel(lane, Nine, Nine.AddHours(1), Nine, (l, f) => played = (l, f));
 

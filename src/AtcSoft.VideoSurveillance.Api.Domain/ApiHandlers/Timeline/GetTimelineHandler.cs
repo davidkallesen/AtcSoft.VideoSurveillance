@@ -9,12 +9,14 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Timeline;
 /// <param name="cameraStorageService">The cameras.</param>
 /// <param name="summaryCache">The summaries of the activity indexes already read.</param>
 /// <param name="timeProvider">The clock: a recording in progress reaches now.</param>
+/// <param name="availabilityHistory">When each camera could be recorded, to say why a gap is there; without it every gap is unknown.</param>
 public sealed class GetTimelineHandler(
     IRecordingService recordingService,
     IApplicationSettingsService settingsService,
     ICameraStorageService cameraStorageService,
     ActivitySummaryCache summaryCache,
-    TimeProvider timeProvider) : IGetTimelineHandler
+    TimeProvider timeProvider,
+    IAvailabilityHistory? availabilityHistory = null) : IGetTimelineHandler
 {
     /// <summary>
     /// How many stretches when the caller does not say: the spec's default.
@@ -54,10 +56,12 @@ public sealed class GetTimelineHandler(
             .Select(camera =>
             {
                 var timeline = TimelineBuilder.Build(byCamera.GetValueOrDefault(camera.Id) ?? [], from, to, buckets);
+                var gaps = TimelineGaps.Find(timeline.Coverage, from, to, availabilityHistory?.For(camera.Id) ?? []);
                 return new TimelineLane(
                     CameraId: camera.Id,
                     CameraName: camera.Display.DisplayName,
                     Coverage: [.. timeline.Coverage.Select(c => new TimelineCoverage(Start: c.Start, End: c.End, FilePath: c.VideoPath, RecordingStart: c.RecordingStart))],
+                    Gaps: [.. gaps.Select(g => new TimelineGap(Start: g.Start, End: g.End, Reason: ToApi(g.Reason)))],
                     Buckets: [.. timeline.Stretches.Select(s => new TimelineBucket(Level: s.Level, Tracks: s.Tracks, IsRecorded: s.IsRecorded, IsAnalysed: s.IsAnalysed))],
                     Events: [.. timeline.Events.Select(e => TimelineRecordings.ToApi(camera.Id, e))]);
             })
@@ -65,4 +69,15 @@ public sealed class GetTimelineHandler(
 
         return Task.FromResult(GetTimelineResult.Ok(new global::VideoSurveillance.Generated.Timeline.Models.Timeline(From: from, To: to, Lanes: lanes)));
     }
+
+    private static TimelineGapReason ToApi(
+        AtcSoft.VideoSurveillance.Enums.GapReason reason)
+        => reason switch
+        {
+            AtcSoft.VideoSurveillance.Enums.GapReason.Offline => TimelineGapReason.Offline,
+            AtcSoft.VideoSurveillance.Enums.GapReason.NotRecording => TimelineGapReason.NotRecording,
+            AtcSoft.VideoSurveillance.Enums.GapReason.DiskFull => TimelineGapReason.DiskFull,
+            AtcSoft.VideoSurveillance.Enums.GapReason.ServerDown => TimelineGapReason.ServerDown,
+            _ => TimelineGapReason.Unknown,
+        };
 }

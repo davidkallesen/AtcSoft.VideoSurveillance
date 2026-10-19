@@ -36,6 +36,7 @@ public sealed class ServerDataPaths
         SetupCodePath = Path.Combine(folder, "setup-code.txt");
         SigningKeyPath = Path.Combine(folder, "signing.key");
         AuditLogPath = Path.Combine(folder, "audit.log");
+        AvailabilityPath = Path.Combine(folder, "availability");
         KeysPath = Path.Combine(folder, "keys");
     }
 
@@ -81,6 +82,13 @@ public sealed class ServerDataPaths
     /// Gets the path of the audit log: what was changed, by whom.
     /// </summary>
     public string AuditLogPath { get; }
+
+    /// <summary>
+    /// Gets the folder with the history of whether each camera could be recorded (one file per
+    /// camera, one for the server's starts and stops), which explains the gaps of the timeline.
+    /// It lies next to the settings file.
+    /// </summary>
+    public string AvailabilityPath { get; }
 
     /// <summary>
     /// Gets the folder with the keys the stored secrets (camera passwords,

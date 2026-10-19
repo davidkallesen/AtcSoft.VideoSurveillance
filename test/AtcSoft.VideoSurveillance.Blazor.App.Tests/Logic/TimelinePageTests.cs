@@ -32,15 +32,38 @@ public sealed class TimelinePageTests
     }
 
     [Fact]
-    public void Gaps_And_Unanalysed_Stretches_Are_One_Rectangle_Per_Run()
+    public void Unanalysed_Stretches_Are_One_Rectangle_Per_Run()
     {
         var lane = Lane(
             [Bucket(recorded: false), Bucket(recorded: false), Bucket(), Bucket(analysed: false), Bucket(analysed: false), Bucket(level: 25)],
             events: []);
 
-        TimelineLaneShapes.Gaps(lane).Should().Equal(new TimelineRect(0, 0, 2, ActivityTimelineShapes.BoxHeight));
         TimelineLaneShapes.NotAnalysed(lane).Should().Equal(new TimelineRect(3, 0, 2, ActivityTimelineShapes.BoxHeight - ActivityTimelineShapes.BandHeight));
         TimelineLaneShapes.Bars(lane).Should().ContainSingle().Which.X.Should().Be(5);
+    }
+
+    [Fact]
+    public void A_Gap_Is_Placed_By_Its_Time_And_Coloured_And_Named_By_Its_Reason()
+    {
+        var span = new TimelineSpan(Nine, Nine.AddHours(1));
+        var lane = Lane(
+            [.. Enumerable.Range(0, 60).Select(_ => Bucket())],
+            events: [],
+            gaps:
+            [
+                new TimelineGap(Nine.AddMinutes(-30), Nine.AddMinutes(15), TimelineGapReason.Offline),
+                new TimelineGap(Nine.AddMinutes(40), Nine.AddMinutes(50), TimelineGapReason.DiskFull),
+                new TimelineGap(Nine.AddMinutes(50), Nine.AddMinutes(55), new TimelineGapReason("somethingNew")),
+            ]);
+
+        var gaps = TimelineLaneShapes.Gaps(lane, span);
+
+        gaps.Select(g => (Math.Round(g.Rect.X, 6), Math.Round(g.Rect.Width, 6))).Should().Equal((0, 15), (40, 10), (50, 5));
+        gaps.Should().AllSatisfy(g => g.Rect.Height.Should().Be(ActivityTimelineShapes.BoxHeight));
+        gaps[0].Text.Should().Be(Translations.GapOffline);
+        gaps[1].Fill.Should().Be(TimelineGapStyle.Fill(TimelineGapReason.Names.DiskFull));
+        gaps[2].Text.Should().Be(Translations.GapUnknown, "a reason this client does not know yet is shown as nothing recorded");
+        TimelineGapStyle.Reasons.Select(TimelineGapStyle.Fill).Should().OnlyHaveUniqueItems();
     }
 
     [Fact]
@@ -183,6 +206,7 @@ public sealed class TimelinePageTests
     private static TimelineLane Lane(
         List<TimelineBucket> buckets,
         List<TimelineEvent> events,
-        List<TimelineCoverage>? coverage = null)
-        => new(CameraId: Guid.Empty, CameraName: "Cam", Coverage: coverage ?? [], Buckets: buckets, Events: events);
+        List<TimelineCoverage>? coverage = null,
+        List<TimelineGap>? gaps = null)
+        => new(CameraId: Guid.Empty, CameraName: "Cam", Coverage: coverage ?? [], Gaps: gaps ?? [], Buckets: buckets, Events: events);
 }

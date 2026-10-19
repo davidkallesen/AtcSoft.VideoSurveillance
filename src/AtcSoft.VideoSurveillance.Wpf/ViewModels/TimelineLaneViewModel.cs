@@ -38,6 +38,14 @@ public sealed partial class TimelineLaneViewModel : ViewModelBase
             : [.. lane.Events.Select(e => new ActivityEvent(
                 Math.Clamp((e.Start - from).TotalSeconds / length, 0, 1),
                 Math.Clamp((e.End - from).TotalSeconds / length, 0, 1)))];
+        GapBands = length <= 0
+            ? []
+            : [.. lane.Gaps
+                .Select(g => new TimelineGapBand(
+                    Math.Clamp((g.Start - from).TotalSeconds / length, 0, 1),
+                    Math.Clamp((g.End - from).TotalSeconds / length, 0, 1),
+                    ToGapReason(g.Reason)))
+                .Where(g => g.End > g.Start)];
         NowFraction = now >= from && now <= to && length > 0 ? (now - from).TotalSeconds / length : -1;
     }
 
@@ -51,7 +59,20 @@ public sealed partial class TimelineLaneViewModel : ViewModelBase
 
     public IReadOnlyList<ActivityEvent> EventBands { get; }
 
+    public IReadOnlyList<TimelineGapBand> GapBands { get; }
+
     public double NowFraction { get; }
+
+    // A reason this client does not know yet is shown as nothing recorded.
+    private static GapReason ToGapReason(TimelineGapReason reason)
+        => reason.Value switch
+        {
+            TimelineGapReason.Names.Offline => GapReason.Offline,
+            TimelineGapReason.Names.NotRecording => GapReason.NotRecording,
+            TimelineGapReason.Names.DiskFull => GapReason.DiskFull,
+            TimelineGapReason.Names.ServerDown => GapReason.ServerDown,
+            _ => GapReason.Unknown,
+        };
 
     [RelayCommand]
     private void PlayAt(double fraction)

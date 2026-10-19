@@ -2700,4 +2700,19 @@ Miniature:
   <data name="Later" xml:space="preserve">
     <value>Senere</value>
   </data>
+  <data name="GapOffline" xml:space="preserve">
+    <value>Kamera offline</value>
+  </data>
+  <data name="GapNotRecording" xml:space="preserve">
+    <value>Optager ikke</value>
+  </data>
+  <data name="GapDiskFull" xml:space="preserve">
+    <value>Disken er fuld</value>
+  </data>
+  <data name="GapServerDown" xml:space="preserve">
+    <value>Serveren kørte ikke</value>
+  </data>
+  <data name="GapUnknown" xml:space="preserve">
+    <value>Intet optaget</value>
+  </data>
 </root>
