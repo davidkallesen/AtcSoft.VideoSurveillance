@@ -47,6 +47,7 @@ public sealed class CameraWallSmokeTests
         steps.Run("View tab", () => SelectTab(app, main, "View"));
         steps.Run("Browse Recordings", () => Walk(app, main, "Browse Recordings"));
         steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
+        steps.Run("Timeline and play all from here", () => TimelineAndPlayAll(app, main));
 
         // Backstage
         steps.Run("Settings", () => app.WalkAndClose(app.OpenWindow(() => app.PressBackstageItem(main, "Settings"), "Settings")));
@@ -95,6 +96,30 @@ public sealed class CameraWallSmokeTests
 
         app.CloseWindow(player);
         app.CloseWindow(browser);
+    }
+
+    // Every camera has a lane from the seeded recordings; play all opens a tile per camera, each
+    // recording opens, and one pause stops them all.
+    private static void TimelineAndPlayAll(
+        DesktopApp app,
+        Window main)
+    {
+        var timeline = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Timeline", ControlType.Button)), "Timeline");
+        app.FindWhere(
+            timeline,
+            e => e.ControlType == ControlType.Custom && e.Name == TestCameras.DeadCameraName,
+            "a timeline lane for the offline camera",
+            TimeSpan.FromSeconds(20));
+
+        var grid = app.OpenWindow(() => DesktopApp.Press(app.Find(timeline, "Play all from here", ControlType.Button)), "Play all from here");
+        app.Find(grid, TestCameras.DeadCameraName, timeout: TimeSpan.FromSeconds(20));
+        app.WaitUntilGone(grid, "Loading...", ControlType.Text, TimeSpan.FromSeconds(20)).Should().BeTrue("the recordings should open");
+        app.TryFind(grid, "Could not be played", ControlType.Text).Should().BeNull();
+        DesktopApp.Press(app.Find(grid, "Pause", ControlType.Button));
+        app.Find(grid, "Play", ControlType.Button);
+
+        app.CloseWindow(grid);
+        app.CloseWindow(timeline);
     }
 
     private static void CloseDialogs(

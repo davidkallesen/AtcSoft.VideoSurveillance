@@ -32,6 +32,7 @@ global using AtcSoft.VideoSurveillance.Wpf.Core.Messages;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Models;
 global using AtcSoft.VideoSurveillance.Wpf.Core.Services;
 global using AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
+global using AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 global using Microsoft.Extensions.Logging;
 
 global using ActivityIndexRecorder = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityIndexRecorder;

@@ -458,6 +458,10 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     private void ShowRecordingsBrowser()
         => Manager.ShowRecordingsBrowserDialog();
 
+    [RelayCommand]
+    private void ShowTimeline()
+        => Manager.ShowTimeline();
+
     /// <summary>
     /// Switches to the layout in the given place of the layout list
     /// (Ctrl+1 to Ctrl+9). A number without a layout does nothing.

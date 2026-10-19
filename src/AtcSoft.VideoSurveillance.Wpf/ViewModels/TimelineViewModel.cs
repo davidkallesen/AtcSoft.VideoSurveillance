@@ -87,18 +87,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
         DateTime? day,
         DateTimeOffset now,
         TimeZoneInfo zone)
-    {
-        ArgumentNullException.ThrowIfNull(zone);
-
-        if (day is not { } chosen)
-        {
-            return (now.AddHours(-24), now);
-        }
-
-        var midnight = chosen.Date;
-        var next = midnight.AddDays(1);
-        return (new DateTimeOffset(midnight, zone.GetUtcOffset(midnight)), new DateTimeOffset(next, zone.GetUtcOffset(next)));
-    }
+        => AtcSoft.VideoSurveillance.Helpers.Activity.TimelineDays.Span(day, now, zone);
 
     [RelayCommand("Load")]
     private async Task LoadAsync()

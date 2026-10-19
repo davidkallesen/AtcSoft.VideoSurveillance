@@ -21,6 +21,9 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
     private readonly ICameraConnectionTypeDetector? connectionTypeDetector;
     private readonly ConcurrentDictionary<Guid, byte> connectionTypeProbedCameras = new();
 
+    // The summaries of the activity indexes already read, kept while the app runs.
+    private readonly AtcSoft.VideoSurveillance.Helpers.Activity.ActivitySummaryCache activitySummaries = new();
+
     private bool sessionSwitchSubscribed;
     private bool usbWatcherSubscribed;
     private bool disposed;
@@ -950,6 +953,29 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
     /// <inheritdoc />
     public void ShowRecordingsBrowserDialog()
         => dialogService.ShowRecordingsBrowserDialog();
+
+    /// <inheritdoc />
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "Window disposes its view model on close via the Closed event handler.")]
+    public void ShowTimeline()
+    {
+        var viewModel = new AtcSoft.CameraWall.Wpf.Timeline.LocalTimelineViewModel(
+            () => [.. storageService.GetAllCameras().Select(c => new AtcSoft.VideoSurveillance.Models.TimelineCamera(c.Id, c.Display.DisplayName))],
+            () => [GlobalRecordingPath(), .. storageService.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath)],
+            recordingService,
+            activitySummaries);
+        new AtcSoft.CameraWall.Wpf.Timeline.LocalTimelineWindow(viewModel)
+        {
+            Owner = Application.Current.MainWindow,
+        }.Show();
+    }
+
+    private string GlobalRecordingPath()
+        => !string.IsNullOrEmpty(settingsService.Recording.RecordingPath)
+            ? settingsService.Recording.RecordingPath
+            : ApplicationPaths.DefaultRecordingsPath;
 
     /// <inheritdoc />
     public async Task CheckForUpdatesOnStartupAsync()

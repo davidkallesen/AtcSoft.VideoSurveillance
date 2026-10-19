@@ -56,7 +56,7 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
             app.Find(grid, TestCameras.LiveCameraName, timeout: TimeSpan.FromSeconds(20));
 
             // The live camera's recording plays: its tile stops saying it is loading, and no tile failed.
-            app.WaitUntilGone(grid, "Loading", ControlType.Text, TimeSpan.FromSeconds(20)).Should().BeTrue("the recording should open");
+            app.WaitUntilGone(grid, "Loading...", ControlType.Text, TimeSpan.FromSeconds(20)).Should().BeTrue("the recording should open");
             app.TryFind(grid, "Could not be played", ControlType.Text).Should().BeNull();
             DesktopApp.Press(app.Find(grid, "Pause", ControlType.Button));
             app.Find(grid, "Play", ControlType.Button);

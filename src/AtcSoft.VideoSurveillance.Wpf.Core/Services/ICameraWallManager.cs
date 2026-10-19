@@ -189,6 +189,11 @@ public interface ICameraWallManager : INotifyPropertyChanged
     void ShowRecordingsBrowserDialog();
 
     /// <summary>
+    /// Shows the timeline of every camera, from the recording folders.
+    /// </summary>
+    void ShowTimeline();
+
+    /// <summary>
     /// Applies the display settings to the camera wall.
     /// </summary>
     void ApplyDisplaySettings();
