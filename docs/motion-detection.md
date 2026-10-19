@@ -95,7 +95,7 @@ The scheduler prevents CPU spikes when monitoring multiple cameras:
 |---------|------|---------|-------|-------------|
 | `Sensitivity` | int | `30` | 0-100 | Detection threshold. Higher values detect more subtle motion. |
 | `MinimumChangePercent` | double | `0.5` | 0.0-100.0 | Minimum percentage of frame pixels that must change. |
-| `AnalysisFrameRate` | int | `30` | 1-30 | Target FPS for analysis (internally clamped to 2-15). |
+| `AnalysisFrameRate` | int | `15` | 1-30 | Target FPS for analysis (internally clamped to 2-15; the server analyses at most 4 a second). |
 | `AnalysisWidth` | int | `800` | - | Width of downscaled analysis frame. |
 | `AnalysisHeight` | int | `600` | - | Height of downscaled analysis frame. |
 | `PostMotionDurationSeconds` | int | `10` | 1-300 | Seconds to continue reporting motion after it stops. |

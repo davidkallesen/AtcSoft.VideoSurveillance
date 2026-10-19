@@ -68,6 +68,7 @@ global using Microsoft.Win32;
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using AuthenticationSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.AuthenticationSettings;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;
+global using BoxSmoother = AtcSoft.VideoSurveillance.Helpers.BoxSmoother;
 global using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConnectionTypeHelper;
 global using CameraDisplaySettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.CameraDisplaySettings;
 global using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
@@ -88,6 +89,5 @@ global using RecordingSession = AtcSoft.VideoSurveillance.Models.RecordingSessio
 global using RecordingStateChangedEventArgs = AtcSoft.VideoSurveillance.Events.RecordingStateChangedEventArgs;
 global using SafeJsonFile = AtcSoft.VideoSurveillance.Helpers.SafeJsonFile;
 global using SharedApplicationPaths = AtcSoft.VideoSurveillance.Helpers.ApplicationPaths;
-global using SmoothedBox = AtcSoft.VideoSurveillance.Models.SmoothedBox;
 global using StreamSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.StreamSettings;
 global using TimelapseFrameCapturedEventArgs = AtcSoft.VideoSurveillance.Events.TimelapseFrameCapturedEventArgs;

@@ -20,6 +20,7 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     private readonly Lock schedulerLock = new();
     private readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
     private readonly ILogger<MotionDetectionService> logger;
+    private readonly IMotionFrameReader frameReader;
     private DispatcherTimer? schedulerTimer;
     private int currentCameraIndex;
     private bool disposed;
@@ -28,9 +29,13 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     /// Initializes a new instance of the <see cref="MotionDetectionService"/> class.
     /// </summary>
     /// <param name="logger">The logger.</param>
-    public MotionDetectionService(ILogger<MotionDetectionService> logger)
+    /// <param name="frameReader">Reads a captured picture as grey at the analysis size; the same reader as the server's.</param>
+    public MotionDetectionService(
+        ILogger<MotionDetectionService> logger,
+        IMotionFrameReader frameReader)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.frameReader = frameReader ?? throw new ArgumentNullException(nameof(frameReader));
     }
 
     /// <inheritdoc/>
@@ -280,15 +285,16 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
         try
         {
-            using var ms = new MemoryStream(frameBytes);
-            using var bitmap = new System.Drawing.Bitmap(ms);
-
             // Get analysis resolution from settings (or use defaults)
             var analysisWidth = context.Settings.AnalysisWidth > 0 ? context.Settings.AnalysisWidth : DefaultAnalysisWidth;
             var analysisHeight = context.Settings.AnalysisHeight > 0 ? context.Settings.AnalysisHeight : DefaultAnalysisHeight;
 
-            // Convert to grayscale and downscale for analysis
-            var currentFrame = ConvertToGrayscale(bitmap, analysisWidth, analysisHeight);
+            // Grey and downscaled by the same reader the server uses.
+            var currentFrame = frameReader.ReadGrayscale(frameBytes, analysisWidth, analysisHeight);
+            if (currentFrame is null)
+            {
+                return;
+            }
 
             // Compare with previous frame
             if (context.PreviousFrame is not null)
@@ -302,33 +308,28 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
                     context.Settings);
                 var changePercent = analysis.ChangePercent;
                 var boundingBoxes = analysis.BoundingBoxes;
+                var moving = changePercent > 0 && changePercent >= context.Settings.MinimumChangePercent;
 
-                var wasMotionDetected = context.IsMotionDetected;
-                var minimumChange = context.Settings.MinimumChangePercent;
-                var isMotionActive = changePercent >= minimumChange;
-
-                if (isMotionActive)
+                // Motion stays on for the post-motion time after the last moving picture, as on
+                // the server; ending it on the first quiet picture made the boxes blink.
+                switch (context.Hold.Update(moving, DateTimeOffset.UtcNow))
                 {
-                    context.IsMotionDetected = true;
-                    context.LastMotionTime = DateTime.UtcNow;
-                    context.LastBoundingBoxes = boundingBoxes;
+                    case MotionHoldChange.Started:
+                    case MotionHoldChange.Continues:
+                        context.LastMotionTime = DateTime.UtcNow;
+                        context.LastBoundingBoxes = boundingBoxes;
 
-                    // Always fire event when motion is active - cooldown is handled by RecordingService for recordings
-                    // Marshal to UI thread since subscribers access DependencyProperties
-                    RaiseMotionDetected(new MotionDetectedEventArgs(
-                        cameraId,
-                        changePercent,
-                        isMotionActive: true,
-                        boundingBoxes,
-                        analysisWidth,
-                        analysisHeight));
-                }
-                else
-                {
-                    // Motion stopped
-                    if (wasMotionDetected)
-                    {
-                        // Raise event indicating motion stopped
+                        // Marshal to UI thread since subscribers access DependencyProperties
+                        RaiseMotionDetected(new MotionDetectedEventArgs(
+                            cameraId,
+                            changePercent,
+                            isMotionActive: true,
+                            boundingBoxes,
+                            analysisWidth,
+                            analysisHeight));
+                        break;
+                    case MotionHoldChange.Ended:
+                        context.LastBoundingBoxes = [];
                         RaiseMotionDetected(new MotionDetectedEventArgs(
                             cameraId,
                             changePercent,
@@ -336,11 +337,10 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
                             boundingBoxes: null,
                             analysisWidth,
                             analysisHeight));
-                    }
-
-                    context.IsMotionDetected = false;
-                    context.LastBoundingBoxes = [];
+                        break;
                 }
+
+                context.IsMotionDetected = context.Hold.IsActive;
             }
 
             // Store current frame for next comparison
@@ -366,57 +366,5 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
         {
             _ = dispatcher.BeginInvoke(() => MotionDetected?.Invoke(this, args));
         }
-    }
-
-    private static byte[] ConvertToGrayscale(
-        System.Drawing.Bitmap bitmap,
-        int targetWidth,
-        int targetHeight)
-    {
-        // Resize and convert to grayscale using LockBits for performance
-        using var resized = new System.Drawing.Bitmap(bitmap, new System.Drawing.Size(targetWidth, targetHeight));
-
-        var grayscale = new byte[targetWidth * targetHeight];
-        var rect = new System.Drawing.Rectangle(0, 0, targetWidth, targetHeight);
-
-        // Lock bits for fast pixel access
-        var bitmapData = resized.LockBits(
-            rect,
-            System.Drawing.Imaging.ImageLockMode.ReadOnly,
-            System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
-        try
-        {
-            var stride = bitmapData.Stride;
-            var scan0 = bitmapData.Scan0;
-
-            // Use unsafe code for maximum performance
-            unsafe
-            {
-                var ptr = (byte*)scan0.ToPointer();
-
-                for (var y = 0; y < targetHeight; y++)
-                {
-                    var row = ptr + (y * stride);
-                    for (var x = 0; x < targetWidth; x++)
-                    {
-                        // BGR format (24bpp)
-                        var b = row[x * 3];
-                        var g = row[(x * 3) + 1];
-                        var r = row[(x * 3) + 2];
-
-                        // Standard grayscale conversion using luminosity method
-                        // Using integer math for speed: (77*R + 150*G + 29*B) >> 8 ≈ 0.299*R + 0.587*G + 0.114*B
-                        grayscale[(y * targetWidth) + x] = (byte)(((77 * r) + (150 * g) + (29 * b)) >> 8);
-                    }
-                }
-            }
-        }
-        finally
-        {
-            resized.UnlockBits(bitmapData);
-        }
-
-        return grayscale;
     }
 }

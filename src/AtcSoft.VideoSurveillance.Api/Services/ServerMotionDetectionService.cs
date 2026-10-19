@@ -254,7 +254,9 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
                 context.PreviousFrame = current;
             }
 
-            if (analysis.ChangePercent > 0 && analysis.ChangePercent >= context.Settings.MinimumChangePercent)
+            var moving = analysis.ChangePercent > 0 && analysis.ChangePercent >= context.Settings.MinimumChangePercent;
+            var change = context.Hold.Update(moving, now);
+            if (change is MotionHoldChange.Started or MotionHoldChange.Continues)
             {
                 context.IsMotionActive = true;
                 context.LastMotionAt = now;
@@ -267,8 +269,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
                     width,
                     height);
             }
-            else if (context.IsMotionActive &&
-                     now - context.LastMotionAt >= TimeSpan.FromSeconds(Math.Max(0, context.Settings.PostMotionDurationSeconds)))
+            else if (change == MotionHoldChange.Ended)
             {
                 context.IsMotionActive = false;
                 context.LastBoundingBoxes = [];
@@ -355,6 +356,9 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         public byte[]? PreviousFrame { get; set; }
 
         public bool IsMotionActive { get; set; }
+
+        // The same post-motion rule as the desktop's.
+        public MotionHold Hold { get; } = new(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
 
         public DateTimeOffset LastMotionAt { get; set; }
 

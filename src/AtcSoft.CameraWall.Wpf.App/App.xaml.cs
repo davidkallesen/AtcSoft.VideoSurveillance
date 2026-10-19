@@ -62,6 +62,10 @@ public partial class CameraWallApp
                 AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
                     .AddWindowsRecordingThumbnails(services);
 
+                // Grey pictures for motion detection (shared with the server)
+                AtcSoft.VideoEngine.Windows.DependencyInjection.ServiceCollectionExtensions
+                    .AddWindowsMotionFrameReader(services);
+
                 // Library services (auto-registered via [Registration] attribute)
                 services.AddDependencyRegistrationsFromWpf(includeReferencedAssemblies: true);
 

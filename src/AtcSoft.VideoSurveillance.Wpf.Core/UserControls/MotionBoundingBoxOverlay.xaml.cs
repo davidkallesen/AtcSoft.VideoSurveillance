@@ -18,8 +18,10 @@ public partial class MotionBoundingBoxOverlay
     // Pool of rectangle elements for reuse
     private readonly List<Rectangle> rectanglePool = [];
 
-    // Smoothed position values for jitter reduction (per box, indexed by position in list)
-    private readonly List<SmoothedBox> smoothedBoxes = [];
+    // Smooths each box against the box it was a moment ago (by overlap or nearness, not by
+    // its place in the list, which the detector sorts by size).
+    private BoxSmoother? smoother;
+    private double smootherFactor = double.NaN;
 
     // Last bounding box state for re-rendering on resize
     private IReadOnlyList<Rect>? lastBoundingBoxes;
@@ -136,54 +138,25 @@ public partial class MotionBoundingBoxOverlay
             VideoWidth,
             VideoHeight);
 
-        // Ensure we have enough smoothed box states
-        while (smoothedBoxes.Count < boxCount)
-        {
-            smoothedBoxes.Add(new SmoothedBox());
-        }
-
-        // Update each bounding box
+        var targets = new List<BoundingBox>(boxCount);
         for (var i = 0; i < boxCount; i++)
         {
             var box = boundingBoxes[i];
-            var rect = rectanglePool[i];
-            var smoothed = smoothedBoxes[i];
-
-            var target = MotionBoxMapper.MapToVideoArea(
+            targets.Add(MotionBoxMapper.MapToVideoArea(
                 new BoundingBox { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height },
                 AnalysisWidth,
                 AnalysisHeight,
-                videoArea);
-            var targetLeft = target.X;
-            var targetTop = target.Y;
-            var targetWidth = target.Width;
-            var targetHeight = target.Height;
+                videoArea));
+        }
 
-            // Apply smoothing to reduce jitter
-            if (!smoothed.HasInitialPosition || SmoothingFactor <= 0)
-            {
-                // First position or no smoothing - set directly
-                smoothed.Left = targetLeft;
-                smoothed.Top = targetTop;
-                smoothed.Width = targetWidth;
-                smoothed.Height = targetHeight;
-                smoothed.HasInitialPosition = true;
-            }
-            else
-            {
-                // Apply exponential smoothing
-                var alpha = 1.0 - SmoothingFactor;
-                smoothed.Left = Lerp(smoothed.Left, targetLeft, alpha);
-                smoothed.Top = Lerp(smoothed.Top, targetTop, alpha);
-                smoothed.Width = Lerp(smoothed.Width, targetWidth, alpha);
-                smoothed.Height = Lerp(smoothed.Height, targetHeight, alpha);
-            }
-
-            // Update rectangle position and size
-            Canvas.SetLeft(rect, smoothed.Left);
-            Canvas.SetTop(rect, smoothed.Top);
-            rect.Width = Math.Max(1, smoothed.Width);
-            rect.Height = Math.Max(1, smoothed.Height);
+        var smoothed = Smoother().Smooth(targets);
+        for (var i = 0; i < boxCount; i++)
+        {
+            var rect = rectanglePool[i];
+            Canvas.SetLeft(rect, smoothed[i].X);
+            Canvas.SetTop(rect, smoothed[i].Y);
+            rect.Width = Math.Max(1, smoothed[i].Width);
+            rect.Height = Math.Max(1, smoothed[i].Height);
             rect.Visibility = Visibility.Visible;
         }
 
@@ -191,12 +164,6 @@ public partial class MotionBoundingBoxOverlay
         for (var i = boxCount; i < rectanglePool.Count; i++)
         {
             rectanglePool[i].Visibility = Visibility.Collapsed;
-        }
-
-        // Reset smoothing for boxes that are no longer visible
-        for (var i = boxCount; i < smoothedBoxes.Count; i++)
-        {
-            smoothedBoxes[i].HasInitialPosition = false;
         }
     }
 
@@ -231,10 +198,7 @@ public partial class MotionBoundingBoxOverlay
             rect.Visibility = Visibility.Collapsed;
         }
 
-        foreach (var smoothed in smoothedBoxes)
-        {
-            smoothed.HasInitialPosition = false;
-        }
+        smoother?.Reset();
     }
 
     /// <summary>
@@ -249,11 +213,17 @@ public partial class MotionBoundingBoxOverlay
     /// Resets the smoothing state for all boxes, causing the next update to set positions directly.
     /// </summary>
     public void ResetSmoothing()
+        => smoother?.Reset();
+
+    private BoxSmoother Smoother()
     {
-        foreach (var smoothed in smoothedBoxes)
+        if (smoother is null || double.IsNaN(smootherFactor) || Math.Abs(smootherFactor - SmoothingFactor) > 1e-9)
         {
-            smoothed.HasInitialPosition = false;
+            smoother = new BoxSmoother(SmoothingFactor);
+            smootherFactor = SmoothingFactor;
         }
+
+        return smoother;
     }
 
     private void OnCanvasSizeChanged(
@@ -378,10 +348,4 @@ public partial class MotionBoundingBoxOverlay
     {
         rect.StrokeThickness = BoxThickness;
     }
-
-    private static double Lerp(
-        double current,
-        double target,
-        double alpha)
-        => current + ((target - current) * alpha);
 }

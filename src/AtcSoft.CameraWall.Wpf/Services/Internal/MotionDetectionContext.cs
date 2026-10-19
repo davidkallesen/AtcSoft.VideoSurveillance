@@ -14,6 +14,7 @@ internal sealed class MotionDetectionContext : IDisposable
         CameraId = cameraId;
         Pipeline = pipeline;
         Settings = settings;
+        Hold = new MotionHold(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
     }
 
     public Guid CameraId { get; }
@@ -23,6 +24,9 @@ internal sealed class MotionDetectionContext : IDisposable
     public MotionDetectionSettings Settings { get; }
 
     public byte[]? PreviousFrame { get; set; }
+
+    // Keeps motion on for the post-motion time after the last moving picture, as the server does.
+    public MotionHold Hold { get; }
 
     public bool IsMotionDetected { get; set; }
 
