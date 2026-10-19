@@ -2,7 +2,7 @@
 
 Plan for making motion detection find **one box per moving object**, **no box for a tree in the wind**, and for showing **where in a recording something happened**. A sample app and a scored test harness come first, so every later change is measured against a stream whose content we know.
 
-Affects **`AtcSoft.VideoSurveillance.Core`** (the detector), **`AtcSoft.VideoEngine`** (frames for analysis), both motion services, the overlays in **both WPF apps** and the **web client**, recordings (a new activity file), the **API spec**, and a new **`sample/BoundingBoxWpfApp`**.
+Affects **`AtcSoft.VideoSurveillance.Core`** (the detector), **`AtcSoft.VideoEngine`** (frames for analysis), both motion services, the overlays in **both WPF apps** and the **web client**, recordings (a new activity file), the **server** (a timeline of every camera across its recordings), the **API spec**, and a new **`sample/BoundingBoxWpfApp`**.
 
 ← Back to the [roadmap home](roadmap.md)
 
@@ -32,6 +32,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 | Small and slow objects are found | A small cat far away and a slow walker are boxed within 0.5 s |
 | Boxes are drawn where the object is | The FlaUI test reads the drawn boxes and they match the truth, also at 90 / 180 / 270° |
 | Every recording shows its activity | A 60 min recording with a person for 5 s at minute 48 shows a visible mark there, in both WPF apps and the web client |
+| The server has a timeline of every camera | One view shows all cameras over a day (or a week), with where recordings exist, where the gaps are and where something happened; a click plays from that moment, across segment boundaries; it grows live |
 | Real recordings become tests | A recording plus the user's verdicts (correct / false box / missed) runs as a regression test |
 | Later: what the box is | A local ONNX model labels a box *person*, *car*, *cat* or *dog* (⏸️) |
 
@@ -140,6 +141,23 @@ All of this is **one stateful class in Core** (`MotionDetector`, one per camera)
 | Recordings lists | A small sparkline and an event count per row; a filter *with activity only* |
 | Feedback | Right-click a band: *correct* / *false alarm* / *missed something here* — writes the review file of phase 9 |
 | Where | WPF: `FullScreenRecordingWindow` (above its seek slider) and the `RecordingsBrowserDialog` rows, one control in Wpf.Core shared by CameraWall and the client. Web: the Recordings page player, its logic in `Logic/` with tests |
+
+### Server timeline (every camera, across recordings)
+
+The per-recording timeline answers *where in this file*. The server timeline answers *what happened at the site*: every camera in one view, over hours or days, without opening recordings one by one. It is built from the activity files of phase 7, so it adds no second detector.
+
+| Part | Design |
+|---|---|
+| What it shows | One lane per camera, over a chosen span (default the last 24 h): **coverage** (where a recording exists), **gaps** (camera offline, not recording, disk full: from the connection and recording events), **activity bars** and **event bands** as in the per-recording timeline, and a **now line** |
+| Day index on the server | Per camera and day, a summary built from that day's activity files: coverage spans with their recording ids, 10 s buckets (max level, max tracks), and the merged events (start, end, peak level, track count, peak thumbnail, later the labels). Kept in the data folder (`{data}/timeline/{camera}/{yyyy-MM-dd}.json`, paths from `ServerDataPaths`) and in memory for recent days. **Rebuilt from the activity files when missing or stale**, so it is a cache, never the only copy |
+| Kept up to date | The recording service appends to today's index as each activity line is written; a finished segment closes its coverage span. The cleanup and the disk-space guard drop deleted recordings from the index (an agreed hook in the guard's result, not a scan) |
+| Live | New events go out on `GET /events` (`activityStarted`, `activityEnded` with camera, time, level, later the label), so an open timeline grows without polling |
+| API (spec-first, all three roles) | `GET /timeline?from=&to=&cameraIds=&width=` returns per camera the coverage spans, the gaps, the buckets **downsampled by max** to the requested width, and the events in the span. `GET /timeline/events?cameraIds=&from=&direction=next\|previous&limit=` finds the next or previous event across all recordings. Spans over a few days are cached (`x-cache-*`) and capped (a `maximum` on the span in the spec) |
+| Playback across segments | A click resolves to *recording id + offset*. The player starts there and moves on to the next segment of that camera at its end, so a long timeline plays as one stream. A gap is skipped or shown, as the user chooses |
+| Several cameras at once | *Play all from here*: the live grid's layout plays every lane from the same moment, kept roughly in step (the slowest sets the pace) |
+| Filters | Cameras or a layout; *with activity only* hides quiet lanes; later per class (person, vehicle, animal) |
+| Thumbnails | Each event's peak frame, stored when the event ends (the suggestion below), served behind the media token like recording thumbnails |
+| Where | Web: a new *Timeline* page (lanes, day picker, zoom from a week to a minute, keyboard next / previous). WPF client: a *Timeline* view with the same control as the per-recording timeline, in lane mode. CameraWall: the same Core index builder over its own folders, later (it has no server) |
 
 ---
 
@@ -328,6 +346,8 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 6 | Masks and zones | L | ⬜ |
 | 7 | Activity index (sidecar, API) | M | ⬜ |
 | 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
+| 8b | Server timeline: day index, `GET /timeline`, live events | M | ⬜ |
+| 8c | Timeline view of every camera: web page and WPF client view, playback across segments | L | ⬜ |
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
 | 10 | Local AI detection (ONNX) on motion regions | L | ⏸️ |
 
@@ -410,6 +430,22 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 **Test:** unit (layout maths: a 5 s event in 60 min is at least 3 px; max downsampling); E2E steps for the recording window and the web Recordings page.
 
+### Phase 8b — Server timeline ⬜ (M)
+
+- `TimelineIndex` in Core: builds a camera's day from its activity files (coverage, gaps, 10 s buckets by max, merged events). Pure and shared, so CameraWall can use it later.
+- The server keeps the day indexes in `{data}/timeline/` and in memory, appends while recording, drops deleted recordings, rebuilds from the activity files when missing.
+- `GET /timeline` and `GET /timeline/events` in the spec (roles, span maximum, caching); `activityStarted` / `activityEnded` on `GET /events`.
+
+**Test:** unit (index from activity files; a gap where no recording exists; max downsampling; next / previous event across days); a host test records two segments of the live test stream with a moving object and reads one lane with coverage and an event back; the event stream test sees `activityStarted`.
+
+### Phase 8c — Timeline view of every camera ⬜ (L)
+
+- Web: a *Timeline* page with its logic in `Logic/` (lane layout, zoom, now line); WPF client: a *Timeline* view using the Wpf.Core control in lane mode.
+- A click plays from that moment and moves on across segments; *play all from here* for a layout.
+- Texts through `Translations`, in four languages.
+
+**Test:** unit (lane layout, the click-to-recording mapping across segment boundaries, live growth from events); E2E steps for the web page and the WPF view against the test server.
+
 ### Phase 9 — Feedback loop ⬜ (M)
 
 - Review mode in the sample app; `*.review.json`; review → truth; the corpus test with `ATCSOFT_BBOX_CORPUS`.
@@ -444,6 +480,9 @@ Covers the backlog row *AI detection (ONNX)*.
 | 8 | **Which AI model, later?** | A permissively licensed one: **YOLOX (Apache-2.0)** or **RF-DETR (Apache-2.0)**. **Not Ultralytics YOLO (AGPL-3.0)** unless an enterprise licence is bought. RT-DETR, D-FINE and NanoDet are candidates; check each repository's LICENSE **and the weights' licence** before choosing |
 | 9 | **Where do the real recordings for the corpus live?** | Outside git, in a folder named by `ATCSOFT_BBOX_CORPUS`. The review files may be in git and name their recording by SHA-256 |
 | 10 | **Release the wire change (`trackId`) with the desktop client?** | Yes. It is optional, so older clients ignore it, and the server and the desktop client are released together anyway |
+| 11 | **Server timeline: day files or a database?** | **Day files in the data folder, rebuilt from the activity files.** No new dependency, nothing to migrate, and a lost or wrong index is fixed by deleting it. Move to SQLite only if many cameras over many months make the files slow |
+| 12 | **How far back does the timeline reach?** | **As far as the recordings do.** The index follows the recordings; the cleanup and the disk-space guard remove days whose recordings are gone |
+| 13 | **Gaps: what explains them?** | Coverage comes from the recordings; the reason (offline, not recording, disk full, the guard stopped it) from the connection and recording events, kept in the day index. A gap without a known reason is shown as *no recording* |
 
 ---
 
@@ -471,6 +510,7 @@ Covers the backlog row *AI detection (ONNX)*.
 | A real 60 min recording with a short event: the event is visible and *next event* finds it, in all three clients | A recording |
 | The first real recording with the user's review file runs as a test | The user's recording and verdicts |
 | CPU with eight cameras recording with the activity index on | A machine and cameras |
+| The server timeline over a day with several cameras: coverage, gaps after unplugging a camera, events, a click that plays across a segment boundary, live growth | The server, cameras, a day |
 
 ---
 
