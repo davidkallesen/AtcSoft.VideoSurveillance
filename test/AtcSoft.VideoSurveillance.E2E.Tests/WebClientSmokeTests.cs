@@ -92,6 +92,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
             await run($"camera form {cameraId}", () => VisitAsync(page, $"/cameras/{cameraId}/edit"));
         }
 
+        await run("play a recording with its activity timeline", () => PlayWithTimelineAsync(page));
         await run("Add user", () => OpenAndCancelAsync(page, "/users", "Add user"));
         await run("Make API key", () => OpenAndCancelAsync(page, "/users", "Make API key", tab: "API keys"));
         await run("Add receiver", () => OpenAndCancelAsync(page, "/webhooks", "Add receiver"));
@@ -101,6 +102,17 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         steps.Failures.Should().BeEmpty(steps.Report());
         problems.Should().BeEmpty("the web client must open every page without errors");
         server.ServerFailures().Should().BeEmpty($"the server must not fail while the web client walks (output: {server.ServerOutputPath})");
+    }
+
+    // The server wrote an activity index while the fixture recorded the live camera: the player
+    // shows it under the video, whether or not the browser plays the file.
+    private static async Task PlayWithTimelineAsync(IPage page)
+    {
+        await VisitAsync(page, "/recordings");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play", Exact = true }).First.ClickAsync();
+        await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
     }
 
     private static async Task SaveEvidenceAsync(

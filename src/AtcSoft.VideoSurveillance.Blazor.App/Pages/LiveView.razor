@@ -168,8 +168,8 @@ else
                                      preserveAspectRatio="none">
                                     @foreach (var box in motion.BoundingBoxes)
                                     {
-                                        <rect x="@box.X" y="@box.Y"
-                                              width="@box.Width" height="@box.Height"
+                                        <rect x="@SvgNumber.Format(box.X)" y="@SvgNumber.Format(box.Y)"
+                                              width="@SvgNumber.Format(box.Width)" height="@SvgNumber.Format(box.Height)"
                                               fill="none" stroke="red" stroke-width="2"
                                               vector-effect="non-scaling-stroke" />
                                     }

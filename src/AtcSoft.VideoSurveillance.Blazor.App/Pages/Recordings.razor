@@ -103,6 +103,7 @@
         <MudTd>
             <MudTooltip Text="@(context.InProgress ? Translations.StillBeingRecorded : Translations.Play)">
                 <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                               aria-label="@Translations.Play"
                                Size="Size.Small"
                                Color="Color.Primary"
                                Disabled="context.InProgress"
@@ -110,6 +111,7 @@
             </MudTooltip>
             <MudTooltip Text="@(context.InProgress ? Translations.StillBeingRecorded : Translations.Download)">
                 <MudIconButton Icon="@Icons.Material.Filled.Download"
+                               aria-label="@Translations.Download"
                                Size="Size.Small"
                                Disabled="context.InProgress"
                                OnClick="@(() => DownloadRecordingAsync(context))" />
@@ -240,6 +242,8 @@
             { x => x.Title, $"{name} - {recording.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}" },
             { x => x.FileName, RecordingDisplay.FileName(recording.FilePath) },
             { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(recording.FilePath) },
+            { x => x.FilePath, recording.FilePath },
+            { x => x.DurationSeconds, RecordingDisplay.DurationSeconds(recording.Duration) },
         };
 
         var options = new DialogOptions

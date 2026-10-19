@@ -1,5 +1,6 @@
 @using MudBlazor
 @inject IJSRuntime JS
+@inject GatewayService Gateway
 
 <MudDialog>
     <TitleContent>
@@ -24,11 +25,54 @@
         }
         else
         {
-            <video controls
+            <video id="@videoId"
+                   controls
                    autoplay
                    style="width: 100%; max-height: 70vh; background: #000;"
                    src="@VideoUrl"
                    @onerror="OnVideoError"></video>
+        }
+
+        @if (buckets is { Count: > 0 } stretches)
+        {
+            @* What moved when: bars for how much changed, orange where something went somewhere. *@
+            <div class="d-flex align-center mt-1">
+                <MudTooltip Text="@Translations.PreviousEvent">
+                    <MudIconButton Icon="@Icons.Material.Filled.SkipPrevious"
+                                   aria-label="@Translations.PreviousEvent"
+                                   Size="Size.Small"
+                                   Disabled="@(events.Count == 0)"
+                                   OnClick="PreviousEventAsync" />
+                </MudTooltip>
+                <svg @ref="timeline"
+                     role="img"
+                     aria-label="@Translations.ActivityTimeline"
+                     viewBox="0 0 @stretches.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
+                     preserveAspectRatio="none"
+                     style="flex: 1; height: 32px; cursor: pointer;"
+                     @onclick="SeekAtAsync">
+                    <title>@Translations.ActivityTimelineHint</title>
+                    @foreach (var shape in notAnalysed)
+                    {
+                        <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.2)" />
+                    }
+                    @foreach (var shape in bars)
+                    {
+                        <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.8)" />
+                    }
+                    @foreach (var shape in bands)
+                    {
+                        <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="#FF8C00" />
+                    }
+                </svg>
+                <MudTooltip Text="@Translations.NextEvent">
+                    <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
+                                   aria-label="@Translations.NextEvent"
+                                   Size="Size.Small"
+                                   Disabled="@(events.Count == 0)"
+                                   OnClick="NextEventAsync" />
+                </MudTooltip>
+            </div>
         }
     </DialogContent>
     <DialogActions>
@@ -40,7 +84,17 @@
 </MudDialog>
 
 @code {
+    // One stretch per two pixels or so of a large dialog.
+    private const int BucketCount = 400;
+
+    private readonly string videoId = "recording-" + Guid.NewGuid().ToString("N");
     private bool failed;
+    private ElementReference timeline;
+    private IReadOnlyList<RecordingActivityBucket>? buckets;
+    private IReadOnlyList<ActivityTimelineEvent> events = [];
+    private IReadOnlyList<TimelineRect> bars = [];
+    private IReadOnlyList<TimelineRect> notAnalysed = [];
+    private IReadOnlyList<TimelineRect> bands = [];
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -65,6 +119,63 @@
     /// </summary>
     [Parameter]
     public bool PlaysInBrowser { get; set; } = true;
+
+    /// <summary>
+    /// The recording's path, as the listing gave it, for its activity.
+    /// </summary>
+    [Parameter]
+    public string FilePath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// How long the recording is, in seconds; 0 when not known.
+    /// </summary>
+    [Parameter]
+    public double DurationSeconds { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(FilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            if (await Gateway.GetRecordingActivityAsync(FilePath, BucketCount, DurationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
+            {
+                buckets = activity.Buckets;
+                events = ActivityTimelineLayout.FindEvents(activity.Buckets);
+                bars = ActivityTimelineShapes.Bars(activity.Buckets);
+                notAnalysed = ActivityTimelineShapes.NotAnalysed(activity.Buckets);
+                bands = ActivityTimelineShapes.Bands(activity.Buckets);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Without its activity the recording plays without a timeline.
+        }
+    }
+
+    private async Task SeekAtAsync(MouseEventArgs e)
+        => await JS.InvokeVoidAsync("recordingTimeline.seekAt", videoId, timeline, e.ClientX);
+
+    private async Task NextEventAsync()
+    {
+        var position = await JS.InvokeAsync<double[]>("recordingTimeline.position", videoId);
+        if (ActivityEventJumps.Next(events, position[0], position[1]) is { } seconds)
+        {
+            await JS.InvokeVoidAsync("recordingTimeline.seekTo", videoId, seconds);
+        }
+    }
+
+    private async Task PreviousEventAsync()
+    {
+        var position = await JS.InvokeAsync<double[]>("recordingTimeline.position", videoId);
+        if (ActivityEventJumps.Previous(events, position[0], position[1]) is { } seconds)
+        {
+            await JS.InvokeVoidAsync("recordingTimeline.seekTo", videoId, seconds);
+        }
+    }
 
     private void OnVideoError()
         => failed = true;

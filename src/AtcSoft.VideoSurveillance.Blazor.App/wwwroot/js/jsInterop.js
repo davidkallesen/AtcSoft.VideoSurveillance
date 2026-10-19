@@ -99,3 +99,31 @@ window.fileInterop = {
         document.body.removeChild(a);
     }
 };
+window.recordingTimeline = {
+    // Where the player is and how long the recording is, in seconds.
+    position: function (videoId) {
+        var video = document.getElementById(videoId);
+        return video && isFinite(video.duration) ? [video.currentTime, video.duration] : [0, 0];
+    },
+
+    seekTo: function (videoId, seconds) {
+        var video = document.getElementById(videoId);
+        if (video && isFinite(video.duration)) {
+            video.currentTime = Math.max(0, Math.min(seconds, video.duration));
+        }
+    },
+
+    // A click on the timeline jumps to the same place in the recording.
+    seekAt: function (videoId, element, clientX) {
+        var video = document.getElementById(videoId);
+        if (!video || !element || !isFinite(video.duration)) {
+            return;
+        }
+
+        var box = element.getBoundingClientRect();
+        if (box.width > 0) {
+            var fraction = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
+            video.currentTime = fraction * video.duration;
+        }
+    }
+};

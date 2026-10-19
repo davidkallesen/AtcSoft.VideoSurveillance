@@ -20,6 +20,33 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
+    /// Gets a recording's activity for its timeline.
+    /// </summary>
+    /// <param name="filePath">The recording's path, as the listing gave it.</param>
+    /// <param name="buckets">How many stretches.</param>
+    /// <param name="durationSeconds">How long the recording is, in seconds; 0 when not known.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The activity, or <see langword="null"/> when the server did not give it.</returns>
+    public async Task<RecordingActivity?> GetRecordingActivityAsync(
+        string filePath,
+        int buckets,
+        double durationSeconds,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new GetRecordingActivityParameters(
+            FilePath: filePath,
+            Buckets: buckets,
+            DurationSeconds: durationSeconds > 0 ? durationSeconds : null);
+        var result = await getRecordingActivityEndpoint
+            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsOk
+            ? result.OkContent
+            : null;
+    }
+
+    /// <summary>
     /// Deletes a finished recording on the server.
     /// </summary>
     /// <param name="filePath">The recording's path, as the listing gave it.</param>

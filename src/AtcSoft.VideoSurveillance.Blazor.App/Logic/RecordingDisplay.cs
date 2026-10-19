@@ -37,6 +37,15 @@ public static class RecordingDisplay
     }
 
     /// <summary>
+    /// Gets a length in seconds, as the activity of a recording is asked for.
+    /// </summary>
+    /// <returns>The seconds, or 0 when the length is not known.</returns>
+    public static double DurationSeconds(string? duration)
+        => TryParseDuration(duration, out var value) && value > TimeSpan.Zero
+            ? value.TotalSeconds
+            : 0;
+
+    /// <summary>
     /// Formats a file size for display.
     /// </summary>
     public static string FormatSize(long bytes)

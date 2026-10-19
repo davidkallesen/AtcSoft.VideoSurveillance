@@ -348,7 +348,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker, ids on the wire, web smoothing by id; WPF overlays still by nearness |
 | 6 | Masks and zones | L | ⬜ |
 | 7 | Activity index (sidecar, API) | M | 🟨 Core, server and CameraWall done; the setting and *Analyse recording* open |
-| 8 | Activity timeline in both WPF apps and the web client | L | 🟨 both WPF apps done; web client, hover, play events only, zoom, sparklines open |
+| 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps and click to seek in all three clients; hover, play events only, zoom, sparklines open |
 | 8b | Server timeline: day index, `GET /timeline`, live events | M | ⬜ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments | L | ⬜ |
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
@@ -485,7 +485,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 ### Phase 8 — Activity timeline 🟨 (L)
 
-**Done 2026-10-19 (both WPF apps):** `ActivityTimelineLayout` in Core (bar height by square root, event bands of at least 3 px, next and previous event); the drawn `ActivityTimeline` control in Wpf.Core above the player's seek bar, with previous / next event buttons (texts in four languages). CameraWall reads the index beside the file, the server client asks `GET /recordings/activity`; the client's Recordings view got a Play button (it played only on a double click, which a keyboard cannot do). Unit tests, a drawn-to-bitmap control test, and a step in both WPF walks. **Open:** the web client (8a's web half), hover with a thumbnail, *play events only*, zoom, sparklines in the recordings lists.
+**Done 2026-10-19 (both WPF apps and the web client):** `ActivityTimelineLayout` in Core (bar height by square root, event bands of at least 3 px, next and previous event); the drawn `ActivityTimeline` control in Wpf.Core above the player's seek bar, with previous / next event buttons (texts in four languages). CameraWall reads the index beside the file, the server client asks `GET /recordings/activity`; the client's Recordings view got a Play button (it played only on a double click, which a keyboard cannot do). The web player draws the same timeline as SVG under the video (its layout a `Logic/` copy kept equal to Core's), with the same jumps; it shows also when the browser cannot play the file. SVG numbers are written with a point in every language (`SvgNumber`), which fixes the live view's motion boxes in Danish and German too. Unit tests, a drawn-to-bitmap control test, and a step in all three walks. **Open:** hover with a thumbnail, *play events only*, zoom, sparklines in the recordings lists, a playhead line on the web timeline.
 
 - A shared `ActivityTimeline` control in Wpf.Core (both WPF apps) and a web component with its logic in `Logic/`.
 - Bars, bands, hover with thumbnail, next and previous event, *play events only*, zoom, sparklines in the recordings lists.
