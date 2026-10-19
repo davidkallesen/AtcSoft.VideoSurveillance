@@ -30,6 +30,9 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool isLoading;
 
+    [ObservableProperty(AfterChangedCallback = nameof(OnSelectedRecordingChanged))]
+    private bool isAnalysing;
+
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
@@ -113,6 +116,17 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     /// </summary>
     public bool CanPlay => SelectedRecording is not null;
 
+    /// <summary>
+    /// Gets a value indicating whether the selected recording can be analysed for its activity
+    /// timeline: a finished recording without an index, while no other is being analysed.
+    /// </summary>
+    public bool CanAnalyse
+        => SelectedRecording is { Activity: null, IsInProgress: false } && !IsAnalysing;
+
+    // How often, and how long, the view looks whether the server has finished an analysis.
+    private static readonly TimeSpan AnalysisPoll = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan AnalysisPatience = TimeSpan.FromMinutes(30);
+
     [RelayCommand("Load")]
     private async Task LoadAsync()
     {
@@ -188,6 +202,43 @@ public sealed partial class RecordingsViewModel : ViewModelBase
     private Task Refresh()
         => LoadAsync();
 
+    // The server analyses in the background; the list shows the sparkline once the index is there.
+    [RelayCommand("Analyse", CanExecute = nameof(CanAnalyse))]
+    private async Task AnalyseAsync()
+    {
+        if (SelectedRecording is not { } recording || !CanAnalyse)
+        {
+            return;
+        }
+
+        IsAnalysing = true;
+        StatusMessage = string.Format(CultureInfo.CurrentCulture, Translations.AnalysingRecording1, recording.FileName);
+        try
+        {
+            await gatewayService.StartRecordingAnalysisAsync(recording.FilePath).ConfigureAwait(true);
+            var waited = TimeSpan.Zero;
+            while (waited < AnalysisPatience)
+            {
+                await Task.Delay(AnalysisPoll).ConfigureAwait(true);
+                waited += AnalysisPoll;
+                if (await gatewayService.GetRecordingActivityAsync(recording.FilePath, 1, 0).ConfigureAwait(true) is { HasIndex: true })
+                {
+                    await LoadAsync().ConfigureAwait(true);
+                    StatusMessage = Translations.RecordingAnalysed;
+                    return;
+                }
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            StatusMessage = string.Format(CultureInfo.CurrentCulture, Translations.FailedWithStatus1, ex.Message);
+        }
+        finally
+        {
+            IsAnalysing = false;
+        }
+    }
+
     // The server keeps the activity index beside the recording; a recording without one has no timeline.
     private async Task<IReadOnlyList<AtcSoft.VideoSurveillance.Models.ActivityBucket>?> LoadActivityAsync(
         string filePath,
@@ -212,6 +263,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
 
     private void OnSelectedRecordingChanged()
     {
+        OnPropertyChanged(nameof(CanAnalyse));
         OnPropertyChanged(nameof(CanPlay));
         CommandManager.InvalidateRequerySuggested();
     }

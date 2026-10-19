@@ -36,6 +36,52 @@ public sealed class ApiHostRecordingsTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task An_Older_Recording_Is_Analysed_In_The_Background_And_Gets_Its_Index()
+    {
+        var folder = AtcSoft.VideoEngine.VideoEngineBootstrap.FindFFmpegPath();
+        var tool = folder is null ? null : Path.Combine(folder, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
+        Assert.SkipUnless(tool is not null && File.Exists(tool), "The FFmpeg command-line tool is not installed.");
+
+        using var client = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(client);
+        var camera = "Analyse " + Guid.NewGuid().ToString("N")[..8];
+        var video = Path.Combine(recordingPath, camera, camera + "_20261012_101500_000.mkv");
+        Directory.CreateDirectory(Path.GetDirectoryName(video)!);
+        using (var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = tool,
+            Arguments = $"-hide_banner -loglevel error -f lavfi -i testsrc=size=320x240:rate=15:duration=6 -c:v mpeg4 -y \"{video}\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        })!)
+        {
+            await process.WaitForExitAsync(TestContext.Current.CancellationToken);
+        }
+
+        var filePath = Uri.EscapeDataString($"{camera}/{camera}_20261012_101500_000.mkv");
+        using var started = await client.PostAsync(new Uri($"/recordings/activity?filePath={filePath}", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+        started.StatusCode.Should().Be(HttpStatusCode.Accepted);
+
+        // The service looks for queued recordings every two seconds; six seconds decode in a moment.
+        JsonElement activity = default;
+        for (var i = 0; i < 60; i++)
+        {
+            activity = await client.GetFromJsonAsync<JsonElement>($"/recordings/activity?filePath={filePath}", TestContext.Current.CancellationToken);
+            if (activity.GetProperty("hasIndex").GetBoolean())
+            {
+                break;
+            }
+
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+        }
+
+        activity.GetProperty("hasIndex").GetBoolean().Should().BeTrue("the recording was analysed");
+        activity.GetProperty("startedAt").GetDateTimeOffset().Should().Be(new DateTimeOffset(2026, 10, 12, 10, 15, 0, TimeSpan.Zero), "the server names its recordings in UTC");
+        using var again = await client.PostAsync(new Uri($"/recordings/activity?filePath={filePath}", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+        again.StatusCode.Should().Be(HttpStatusCode.Conflict, "it has its index now");
+    }
+
+    [Fact]
     public async Task A_Recording_Asked_For_As_A_Download_Is_Sent_As_An_Attachment()
     {
         // A page on another address cannot tell the browser to save a file

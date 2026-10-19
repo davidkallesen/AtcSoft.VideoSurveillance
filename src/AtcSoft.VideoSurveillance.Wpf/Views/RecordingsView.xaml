@@ -19,7 +19,7 @@
             <atc:GridEx
                 Grid.Row="0"
                 Margin="0,0,0,16"
-                Columns="Auto,Auto,Auto,*,Auto,Auto">
+                Columns="Auto,Auto,Auto,*,Auto,Auto,Auto">
                 <atc:LabelComboBox
                     Grid.Column="0"
                     Width="260"
@@ -58,6 +58,12 @@
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=PlayRecording}" />
                 <Button
                     Grid.Column="5"
+                    Margin="0,0,8,0"
+                    Padding="16,6"
+                    Command="{Binding Path=AnalyseCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=AnalyseRecording}" />
+                <Button
+                    Grid.Column="6"
                     Padding="16,6"
                     Command="{Binding Path=RefreshCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Refresh}" />

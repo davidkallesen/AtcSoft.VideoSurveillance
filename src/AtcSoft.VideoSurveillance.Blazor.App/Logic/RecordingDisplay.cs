@@ -79,6 +79,14 @@ public static class RecordingDisplay
     }
 
     /// <summary>
+    /// Gets a value indicating whether a recording can be analysed for its activity timeline: a
+    /// finished recording without an index.
+    /// </summary>
+    /// <param name="recording">The recording, as the listing gave it.</param>
+    public static bool CanAnalyse(Recording recording)
+        => recording is { Activity: null, InProgress: false };
+
+    /// <summary>
     /// Gets a value indicating whether a browser is sure to play the file.
     /// MP4 is; MKV and AVI depend on the browser and usually do not play,
     /// and a browser does not apply the rotation of an MKV.

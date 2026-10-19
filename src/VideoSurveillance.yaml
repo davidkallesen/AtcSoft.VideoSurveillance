@@ -1263,6 +1263,44 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+    post:
+      summary: Analyse a recording for its activity
+      description: Gives a recording made without an activity index (before the index existed, or with it turned off) the index a recording analysed while it was made has, by decoding it and running the motion detector over its pictures, with its camera's own motion settings. The analysis runs in the background, one recording at a time, and an hour takes a few minutes; the recording has its index when getRecordingActivity says hasIndex.
+      operationId: startRecordingAnalysis
+      x-authorize-roles:
+        - operator
+        - admin
+      x-retry-enabled: false
+      tags:
+        - recordings
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          description: The recording's path relative to the recordings root, as the listing returns it in filePath.
+          schema:
+            type: string
+      responses:
+        '202':
+          description: The analysis is queued
+        '400':
+          description: The path does not name a recording
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: Recording not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: The recording has an index already, is still being made, or is being analysed
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 
   /timeline:
     # No cache: a span that reaches now grows every second; the server keeps the summaries

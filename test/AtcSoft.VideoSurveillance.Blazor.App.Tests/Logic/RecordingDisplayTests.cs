@@ -100,4 +100,28 @@ public sealed class RecordingDisplayTests
             CultureInfo.CurrentCulture = previous;
         }
     }
+
+    [Fact]
+    public void Only_A_Finished_Recording_Without_An_Index_Can_Be_Analysed()
+    {
+        RecordingDisplay.CanAnalyse(Recording(activity: null, inProgress: false)).Should().BeTrue();
+        RecordingDisplay.CanAnalyse(Recording(activity: [0, 5], inProgress: false)).Should().BeFalse("it has its index");
+        RecordingDisplay.CanAnalyse(Recording(activity: null, inProgress: true)).Should().BeFalse("it gets its index as it is recorded");
+    }
+
+    private static Recording Recording(
+        List<int>? activity,
+        bool inProgress)
+        => new(
+            Id: Guid.NewGuid(),
+            CameraId: Guid.NewGuid(),
+            CameraName: "Gate",
+            FilePath: "Gate/a.mkv",
+            StartedAt: DateTimeOffset.UnixEpoch,
+            Duration: "PT1M",
+            FileSizeBytes: 1,
+            HasThumbnail: false,
+            InProgress: inProgress,
+            ThumbnailPath: null,
+            Activity: activity);
 }

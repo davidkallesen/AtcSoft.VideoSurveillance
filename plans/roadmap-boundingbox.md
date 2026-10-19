@@ -347,7 +347,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
 | 6 | Masks and zones | L | ⬜ |
-| 7 | Activity index (sidecar, API) | M | 🟨 Core, server, CameraWall, the setting and *Analyse recording* in CameraWall done; *Analyse recording* on the server open |
+| 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | ✅ both API clients and CameraWall: playing on across segments, growing live (CameraWall: on recording changes and every 15 s), zoom, gap reasons (API clients), play all from here |
@@ -468,7 +468,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 **Test:** a storybook scene with a mask over the tree; dialog steps in the E2E walks.
 
-### Phase 7 — Activity index 🟨 (M)
+### Phase 7 — Activity index ✅ (M)
 
 **Done 2026-10-19:**
 
@@ -477,10 +477,10 @@ Covers the backlog row *Motion zones / exclusion masks*.
 - Both apps: `ActivityIndexRecorder` (Core) writes the index of every recording, a new file per segment; each app runs it from a hosted `ActivityIndexService`. It needs only `IActiveRecordings`, which both recording interfaces now extend. A recorded camera is analysed even when it is not watched for motion, in an index-only mode of `IMotionDetectionService` (`StartIndexing`) that reports no motion: no badge, webhook or motion recording comes of it. In CameraWall a tile starting, restarting or stopping its motion watch leaves the index running.
 - `GET /recordings/activity` with `hasIndex` false for a recording without one. Unit tests, handler tests, and a host test that records the live test stream and reads the activity back.
 
-**Open:**
+**Done since, and known limits left as they are:**
 
 - ~~A setting to turn the index off~~ done 2026-10-19: `RecordingSettings.EnableActivityIndex` (on by default), in the spec, both API clients and CameraWall's settings (Capture), asked by `ActivityIndexRecorder` as each recording or segment starts; turned off, no index and no index-only analysis.
-- *Analyse recording* for older recordings: done in CameraWall 2026-10-19. `RecordingAnalysis` (Core) runs the detector over the pictures of `GreyFrameFileReader` at 4 a second and writes the index beside the recording through a `.part` file, so a recording never has half an index; the time in the name is read in the zone it was written in. CameraWall's recordings browser has an *Analyze recording* button for a finished recording without an index (with the app's motion settings, not the camera's own); the walk analyses a seeded recording. **Open:** the server (a background job, as an hour takes minutes to decode) and both API clients.
+- *Analyse recording* for older recordings: done in CameraWall 2026-10-19. `RecordingAnalysis` (Core) runs the detector over the pictures of `GreyFrameFileReader` at 4 a second and writes the index beside the recording through a `.part` file, so a recording never has half an index; the time in the name is read in the zone it was written in. CameraWall's recordings browser has an *Analyze recording* button for a finished recording without an index (with the app's motion settings, not the camera's own); the walk analyses a seeded recording. On the server too (done 2026-10-19): `POST /recordings/activity` (operators and admins) queues a recording without an index and answers 202; 409 when it has one, is still being made, or is queued already. `RecordingAnalysisService` analyses the queue one recording at a time, each with its camera's own motion settings, reading names as UTC. Both API clients have an *Analyze recording* button (the WPF client's Recordings view, a row action on the web page) and wait until the index is there, then refresh the list. Handler tests and a host test that analyses a real file. **Open:** an event on `GET /events` when an analysis ends, instead of the clients asking every three seconds; a `.part` file left by a crash is not cleaned up.
 - The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.
 - Analysis costs a PNG capture per picture for every recorded camera; a camera analysed only for the index is held to 4 a second in both apps. Phase 2's grey frames would make it cheap.
 - The `MaxRecordingStorageGb` cap counts the videos only, not their thumbnails and indexes (an index is about 2 MB per camera per day). The clean-up's orphan pass removes an index whose video is gone.

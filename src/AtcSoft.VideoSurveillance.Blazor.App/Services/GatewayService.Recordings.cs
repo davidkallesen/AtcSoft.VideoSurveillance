@@ -47,6 +47,25 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
+    /// Asks the server to analyse a recording without an activity index for one, in the background.
+    /// </summary>
+    /// <param name="filePath">The recording's path, as the listing gave it.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>Queued, or the server's reason.</returns>
+    public async Task<GatewayResult> StartRecordingAnalysisAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await startRecordingAnalysisEndpoint
+            .ExecuteAsync(new StartRecordingAnalysisParameters(FilePath: filePath), cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsAccepted
+            ? GatewayResult.Done
+            : GatewayResult.Refused(result);
+    }
+
+    /// <summary>
     /// Deletes a finished recording on the server.
     /// </summary>
     /// <param name="filePath">The recording's path, as the listing gave it.</param>

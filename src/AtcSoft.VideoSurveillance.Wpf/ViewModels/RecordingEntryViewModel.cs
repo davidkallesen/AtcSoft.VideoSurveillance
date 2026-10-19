@@ -55,6 +55,11 @@ public sealed class RecordingEntryViewModel
     /// </summary>
     public IReadOnlyList<int>? Activity => recording.Activity;
 
+    /// <summary>
+    /// Gets a value indicating whether the recording is still being made.
+    /// </summary>
+    public bool IsInProgress => recording.InProgress;
+
     public Uri PlaybackUrl
         => BuildFileUrl(recording.FilePath);
 

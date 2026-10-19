@@ -45,6 +45,26 @@ public sealed partial class GatewayService
             : null;
     }
 
+    /// <summary>
+    /// Asks the server to analyse a recording without an activity index for one, in the background.
+    /// </summary>
+    /// <param name="filePath">The recording's path as the listing gives it.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="HttpRequestException">The server refused, in its own words.</exception>
+    public async Task StartRecordingAnalysisAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await startRecordingAnalysisEndpoint
+            .ExecuteAsync(new StartRecordingAnalysisParameters(FilePath: filePath), cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsAccepted)
+        {
+            throw Refused(result);
+        }
+    }
+
     public string GetRecordingFileUrl(string filePath)
         => $"{ApiBaseUrl}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(filePath)}";
 }

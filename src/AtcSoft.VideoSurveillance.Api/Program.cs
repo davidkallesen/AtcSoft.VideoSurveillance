@@ -229,6 +229,12 @@ try
     builder.Services.AddSingleton<IAvailabilityHistory>(sp => sp.GetRequiredService<AvailabilityHistoryService>());
     builder.Services.AddHostedService(sp => sp.GetRequiredService<AvailabilityHistoryService>());
 
+    // Analyse recording: one recording at a time in the background.
+    builder.Services.AddSingleton(new RecordingAnalysisServiceOptions());
+    builder.Services.AddSingleton<RecordingAnalysisService>();
+    builder.Services.AddSingleton<IRecordingAnalyses>(sp => sp.GetRequiredService<RecordingAnalysisService>());
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<RecordingAnalysisService>());
+
     // GET /devices/usb is cached a few seconds; a camera plugged in or pulled out drops it.
     builder.Services.AddSingleton(new UsbDeviceCacheEvictorOptions());
     builder.Services.AddHostedService<UsbDeviceCacheEvictor>();

@@ -132,6 +132,16 @@
                                Disabled="context.InProgress"
                                OnClick="@(() => DownloadRecordingAsync(context))" />
             </MudTooltip>
+            @if (RecordingDisplay.CanAnalyse(context))
+            {
+                <MudTooltip Text="@Translations.AnalyseRecording">
+                    <MudIconButton Icon="@Icons.Material.Filled.Insights"
+                                   aria-label="@Translations.AnalyseRecording"
+                                   Size="Size.Small"
+                                   Disabled="@analysing.Contains(context.FilePath)"
+                                   OnClick="@(() => AnalyseRecordingAsync(context))" />
+                </MudTooltip>
+            }
             <MudTooltip Text="@(context.InProgress ? Translations.StillBeingRecorded : Translations.DeleteRecording)">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Size="Size.Small"
@@ -159,6 +169,13 @@
     private bool loadFailed;
     private bool reloadPending;
     private readonly CancellationTokenSource leaving = new();
+
+    // How often, and how long, the page looks whether the server has finished an analysis.
+    private static readonly TimeSpan AnalysisPoll = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan AnalysisPatience = TimeSpan.FromMinutes(30);
+
+    // The recordings this page has asked the server to analyse and is waiting for.
+    private readonly HashSet<string> analysing = new(StringComparer.Ordinal);
 
     private string StatusText
         => visible.Count == recordings.Length
@@ -278,6 +295,45 @@
         if (RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, recording.FilePath, Session.MediaToken) is { } url)
         {
             await JS.InvokeVoidAsync("fileInterop.downloadFromUrl", url, RecordingDisplay.FileName(recording.FilePath));
+        }
+    }
+
+    // The server analyses in the background; the list shows the sparkline once the index is there.
+    private async Task AnalyseRecordingAsync(Recording recording)
+    {
+        if (!analysing.Add(recording.FilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            var started = await Gateway.StartRecordingAnalysisAsync(recording.FilePath, leaving.Token);
+            if (!started.IsSuccess)
+            {
+                Snackbar.Add(started.Problem!, Severity.Warning);
+                return;
+            }
+
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.AnalysingRecording1, RecordingDisplay.FileName(recording.FilePath)), Severity.Info);
+            for (var waited = TimeSpan.Zero; waited < AnalysisPatience; waited += AnalysisPoll)
+            {
+                await Task.Delay(AnalysisPoll, leaving.Token);
+                if (await Gateway.GetRecordingActivityAsync(recording.FilePath, 1, 0, leaving.Token) is { HasIndex: true })
+                {
+                    Snackbar.Add(Translations.RecordingAnalysed, Severity.Success);
+                    await LoadRecordingsAsync();
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The page was left.
+        }
+        finally
+        {
+            analysing.Remove(recording.FilePath);
         }
     }
 
