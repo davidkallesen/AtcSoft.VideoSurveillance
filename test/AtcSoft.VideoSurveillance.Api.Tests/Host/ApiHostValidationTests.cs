@@ -54,6 +54,55 @@ public sealed class ApiHostValidationTests(ApiHostFixture host)
         errors.TryGetProperty("rows", out _).Should().BeTrue();
     }
 
+    [Theory]
+    [InlineData("two corners")]
+    [InlineData("a corner outside the picture")]
+    [InlineData("seventeen zones")]
+    public async Task Zones_Outside_Their_Limits_Are_Refused(string what)
+    {
+        using var client = host.CreateClient();
+        object[] zones = what switch
+        {
+            "two corners" => [Zone(0.1, corners: 2)],
+            "a corner outside the picture" => [Zone(1.5)],
+            _ => [.. Enumerable.Repeat(Zone(0.1), 17)],
+        };
+
+        using var response = await client.PostAsJsonAsync(
+            "/cameras",
+            new { displayName = "Zones", ipAddress = "192.0.2.21", motionZones = zones },
+            TestContext.Current.CancellationToken);
+
+        var errors = await ReadErrorsAsync(response);
+        errors.EnumerateObject().Should().Contain(e => e.Name.StartsWith("motionZones", StringComparison.OrdinalIgnoreCase), what);
+    }
+
+    [Fact]
+    public async Task Motion_Zones_Inside_Their_Limits_Are_Kept()
+    {
+        using var client = host.CreateClient();
+
+        using var created = await client.PostAsJsonAsync(
+            "/cameras",
+            new { displayName = "Zones", ipAddress = "192.0.2.22", motionZones = new[] { Zone(0.1) } },
+            TestContext.Current.CancellationToken);
+
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var camera = await created.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        camera.GetProperty("motionZones")[0].GetProperty("points").GetArrayLength().Should().Be(3);
+        using var deleted = await client.DeleteAsync(new Uri($"/cameras/{camera.GetProperty("id").GetGuid()}", UriKind.Relative), TestContext.Current.CancellationToken);
+    }
+
+    private static object Zone(
+        double x,
+        int corners = 3)
+        => new
+        {
+            name = "Tree",
+            kind = "ignore",
+            points = new object[] { new { x, y = 0.1 }, new { x = 0.5, y = 0.1 }, new { x = 0.5, y = 0.5 } }.Take(corners).ToArray(),
+        };
+
     private static async Task<JsonElement> ReadErrorsAsync(
         HttpResponseMessage response)
     {

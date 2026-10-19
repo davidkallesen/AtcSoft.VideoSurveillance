@@ -122,5 +122,8 @@ public sealed class IgnoreZoneTests
 
         public void Reset()
             => inner.Reset();
+
+        public void UseZones(IReadOnlyList<MotionZone> zones)
+            => inner.UseZones(zones);
     }
 }

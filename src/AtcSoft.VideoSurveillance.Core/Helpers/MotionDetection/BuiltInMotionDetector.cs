@@ -38,7 +38,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        this.zones = zones ?? [];
+        this.zones = zones is null ? [] : [.. zones.Select(z => z.Clone())];
         this.options = options ?? MotionDetectorOptions.From(settings);
         hold = new MotionHold(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
     }
