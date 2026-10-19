@@ -342,12 +342,12 @@ The recordings stay out of git (size, privacy). The small review files may go in
 |---|-------|:--:|:--:|
 | 0 | Quick fixes in today's pipeline | S | ✅ |
 | 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and ten scenes done; S10, S11, the encoder pipe and render time open |
-| 2 | Grey frames with their time from the engine | M | ⬜ |
+| 2 | Grey frames with their time from the engine | M | 🟨 the offline file reader done; the live grey frames open |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
 | 6 | Masks and zones | L | ⬜ |
-| 7 | Activity index (sidecar, API) | M | 🟨 Core, server, CameraWall and the setting done; *Analyse recording* open |
+| 7 | Activity index (sidecar, API) | M | 🟨 Core, server, CameraWall, the setting and *Analyse recording* in CameraWall done; *Analyse recording* on the server open |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | ✅ both API clients and CameraWall: playing on across segments, growing live (CameraWall: on recording changes and every 15 s), zoom, gap reasons (API clients), play all from here |
@@ -393,7 +393,9 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 
 **Test:** the parsing, truth and scorer tests; the detector-against-scenes test.
 
-### Phase 2 — Grey frames with their time ⬜ (M)
+### Phase 2 — Grey frames with their time 🟨 (M)
+
+**Done 2026-10-19:** the offline reader, `GreyFrameFileReader` (engine): opens a recording, decodes every frame as fast as it can, and scales the ones asked for straight to grey at the analysis size with swscale (area filter), turned the way the picture is displayed, with their place in the file; no PNG, no player. Engine tests on a recording the FFmpeg tool makes (rate, order, size, which side is bright, a quarter turn). It serves *Analyse recording*. **Open:** the live `TryCaptureAnalysisFrame` and the services switching to it.
 
 - Engine: `TryCaptureAnalysisFrame(width, height)` returns the latest decoded frame's **Y plane**, scaled by swscale and rotated, with its pts. No PNG.
 - Engine: an offline reader that decodes a file frame by frame (as fast as it can) to the same grey frames, for the sample app, the scorer and *Analyse recording*.
@@ -478,7 +480,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 **Open:**
 
 - ~~A setting to turn the index off~~ done 2026-10-19: `RecordingSettings.EnableActivityIndex` (on by default), in the spec, both API clients and CameraWall's settings (Capture), asked by `ActivityIndexRecorder` as each recording or segment starts; turned off, no index and no index-only analysis.
-- *Analyse recording* for older recordings.
+- *Analyse recording* for older recordings: done in CameraWall 2026-10-19. `RecordingAnalysis` (Core) runs the detector over the pictures of `GreyFrameFileReader` at 4 a second and writes the index beside the recording through a `.part` file, so a recording never has half an index; the time in the name is read in the zone it was written in. CameraWall's recordings browser has an *Analyze recording* button for a finished recording without an index (with the app's motion settings, not the camera's own); the walk analyses a seeded recording. **Open:** the server (a background job, as an hour takes minutes to decode) and both API clients.
 - The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.
 - Analysis costs a PNG capture per picture for every recorded camera; a camera analysed only for the index is held to 4 a second in both apps. Phase 2's grey frames would make it cheap.
 - The `MaxRecordingStorageGb` cap counts the videos only, not their thumbnails and indexes (an index is about 2 MB per camera per day). The clean-up's orphan pass removes an index whose video is gone.

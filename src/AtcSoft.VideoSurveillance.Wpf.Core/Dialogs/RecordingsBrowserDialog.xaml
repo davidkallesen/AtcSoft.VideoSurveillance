@@ -226,6 +226,12 @@
                 <Button
                     MinWidth="80"
                     Padding="16,8"
+                    Command="{Binding Path=AnalyseCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                  Key=AnalyseRecording}" />
+                <Button
+                    MinWidth="80"
+                    Padding="16,8"
                     Command="{Binding Path=OpenFolderCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                   Key=OpenRecordingsFolder}" />

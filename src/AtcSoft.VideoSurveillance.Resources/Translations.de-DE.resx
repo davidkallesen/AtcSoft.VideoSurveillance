@@ -2739,4 +2739,13 @@ Vorschaubild:
   <data name="PlayEventsOnly" xml:space="preserve">
     <value>Nur Ereignisse abspielen</value>
   </data>
+  <data name="AnalyseRecording" xml:space="preserve">
+    <value>Aufnahme analysieren</value>
+  </data>
+  <data name="AnalysingRecording1" xml:space="preserve">
+    <value>{0} wird analysiert...</value>
+  </data>
+  <data name="RecordingAnalysed" xml:space="preserve">
+    <value>Die Aufnahme hat jetzt ihre Aktivitätszeitleiste.</value>
+  </data>
 </root>

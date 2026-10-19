@@ -145,7 +145,7 @@ public static class LocalTimeline
     }
 
     // A time read from a name has no zone of its own: the zone it was written in gives it one.
-    private static DateTimeOffset InZone(
+    internal static DateTimeOffset InZone(
         DateTime named,
         TimeZoneInfo zone)
     {

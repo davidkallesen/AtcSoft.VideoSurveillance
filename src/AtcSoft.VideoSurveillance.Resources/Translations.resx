@@ -2739,4 +2739,13 @@ Thumbnail:
   <data name="PlayEventsOnly" xml:space="preserve">
     <value>Play events only</value>
   </data>
+  <data name="AnalyseRecording" xml:space="preserve">
+    <value>Analyze recording</value>
+  </data>
+  <data name="AnalysingRecording1" xml:space="preserve">
+    <value>Analyzing {0}...</value>
+  </data>
+  <data name="RecordingAnalysed" xml:space="preserve">
+    <value>The recording has its activity timeline now.</value>
+  </data>
 </root>

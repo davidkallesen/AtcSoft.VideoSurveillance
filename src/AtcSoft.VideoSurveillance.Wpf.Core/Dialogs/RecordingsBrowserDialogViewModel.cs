@@ -126,6 +126,19 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     public bool CanDelete => IsFinished(SelectedRecording);
 
     /// <summary>
+    /// Gets a value indicating whether the selected recording can be analysed for its activity
+    /// timeline: a finished recording without an index, while no other is being analysed.
+    /// </summary>
+    public bool CanAnalyse
+        => IsFinished(SelectedRecording) && SelectedRecording!.Activity is null && !IsAnalysing;
+
+    /// <summary>
+    /// Gets a value indicating whether a recording is being analysed.
+    /// </summary>
+    [ObservableProperty(AfterChangedCallback = nameof(OnSelectedRecordingChanged))]
+    private bool isAnalysing;
+
+    /// <summary>
     /// Gets the playback overlay settings from the application settings.
     /// </summary>
     public PlaybackOverlaySettings PlaybackOverlaySettings
@@ -349,10 +362,73 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         UpdateStatusMessage();
     }
 
+    /// <summary>
+    /// Analyses a recording file for its activity index, with the app's motion settings: the
+    /// pictures are read straight from the file, four a second, as fast as it decodes.
+    /// </summary>
+    /// <param name="videoPath">The recording.</param>
+    /// <param name="settings">The motion settings to analyse with.</param>
+    /// <param name="cancellationToken">Stops the analysis; nothing is written then.</param>
+    /// <returns>How many pictures were analysed.</returns>
+    public static int AnalyseFile(
+        string videoPath,
+        MotionDetectionSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var width = settings.AnalysisWidth > 0 ? settings.AnalysisWidth : 800;
+        var height = settings.AnalysisHeight > 0 ? settings.AnalysisHeight : 600;
+        using var reader = AtcSoft.VideoEngine.Capture.GreyFrameFileReader.Open(
+            videoPath,
+            width,
+            height,
+            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath));
+
+        // CameraWall names its recordings in local time.
+        return RecordingAnalysis.Run(
+            reader.ReadFrames(RecordingAnalysis.FramesPerSecond, cancellationToken).Select(f => (f.Position, f.Pixels)),
+            width,
+            height,
+            new AtcSoft.VideoSurveillance.Helpers.MotionDetection.BuiltInMotionDetector(settings),
+            videoPath,
+            RecordingAnalysis.StartOf(videoPath, TimeZoneInfo.Local),
+            cancellationToken);
+    }
+
+    [RelayCommand("Analyse", CanExecute = nameof(CanAnalyse))]
+    private async Task AnalyseAsync()
+    {
+        if (SelectedRecording is not { } recording || !CanAnalyse)
+        {
+            return;
+        }
+
+        IsAnalysing = true;
+        StatusMessage = string.Format(CultureInfo.CurrentCulture, Translations.AnalysingRecording1, recording.FileName);
+        try
+        {
+            var settings = settingsService.MotionDetection;
+            await Task.Run(() => AnalyseFile(recording.FilePath, settings)).ConfigureAwait(true);
+            LoadRecordings();
+            SelectedRecording = Recordings.FirstOrDefault(r => string.Equals(r.FilePath, recording.FilePath, StringComparison.OrdinalIgnoreCase));
+            StatusMessage = Translations.RecordingAnalysed;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
+        {
+            StatusMessage = string.Format(CultureInfo.CurrentCulture, Translations.FailedWithStatus1, ex.Message);
+        }
+        finally
+        {
+            IsAnalysing = false;
+        }
+    }
+
     private void OnSelectedRecordingChanged()
     {
         OnPropertyChanged(nameof(CanPlay));
         OnPropertyChanged(nameof(CanDelete));
+        OnPropertyChanged(nameof(CanAnalyse));
         CommandManager.InvalidateRequerySuggested();
     }
 

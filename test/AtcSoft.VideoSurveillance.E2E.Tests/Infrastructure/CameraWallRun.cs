@@ -100,6 +100,18 @@ internal sealed class CameraWallRun : IDisposable
                 TestCameras.WriteActivity(video, DateTimeOffset.Now.AddMinutes(-5));
             }
 
+            // An older recording without an index, for "Analyze recording".
+            if (name == TestCameras.DeadCameraName)
+            {
+                var older = RecordingPathHelper.BuildRecordingPath(
+                    settings.Recording.RecordingPath,
+                    RecordingPathHelper.GetCameraFolderName(name, camera.Id),
+                    DateTime.Now.AddDays(-1),
+                    "mp4",
+                    layoutOptions);
+                TestCameras.WriteRecording(older, RecordingPathHelper.BuildThumbnailPath(older, settings.Recording.RecordingPath, layoutOptions));
+            }
+
             layout.Items.Add(new CameraLayoutItem { CameraId = camera.Id, OrderNumber = order++ });
         }
 

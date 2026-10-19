@@ -2739,4 +2739,13 @@ Miniature:
   <data name="PlayEventsOnly" xml:space="preserve">
     <value>Afspil kun hændelser</value>
   </data>
+  <data name="AnalyseRecording" xml:space="preserve">
+    <value>Analysér optagelse</value>
+  </data>
+  <data name="AnalysingRecording1" xml:space="preserve">
+    <value>Analyserer {0}...</value>
+  </data>
+  <data name="RecordingAnalysed" xml:space="preserve">
+    <value>Optagelsen har nu sin aktivitetstidslinje.</value>
+  </data>
 </root>

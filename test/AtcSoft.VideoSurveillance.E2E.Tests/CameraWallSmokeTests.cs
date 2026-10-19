@@ -48,6 +48,7 @@ public sealed class CameraWallSmokeTests
         steps.Run("Browse Recordings", () => Walk(app, main, "Browse Recordings"));
         steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
         steps.Run("Timeline and play all from here", () => TimelineAndPlayAll(app, main));
+        steps.Run("analyze an older recording", () => AnalyseOlderRecording(app, main));
 
         // Backstage
         steps.Run("Settings", () => app.WalkAndClose(app.OpenWindow(() => app.PressBackstageItem(main, "Settings"), "Settings")));
@@ -96,6 +97,22 @@ public sealed class CameraWallSmokeTests
         DesktopApp.Press(app.Find(player, "Play events only"));
 
         app.CloseWindow(player);
+        app.CloseWindow(browser);
+    }
+
+    // The oldest recording was seeded without an activity index: analysing it reads the file
+    // through the engine and writes one.
+    private static void AnalyseOlderRecording(
+        DesktopApp app,
+        Window main)
+    {
+        var browser = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Browse Recordings", ControlType.Button)), "Browse Recordings");
+        app.FindWhere(browser, e => e.ControlType == ControlType.DataItem, "a recording row");
+        var rows = browser.FindAllDescendants(app.Conditions.ByControlType(ControlType.DataItem));
+        rows[^1].Patterns.SelectionItem.Pattern.Select();
+
+        DesktopApp.Press(app.Find(browser, "Analyze recording", ControlType.Button));
+        app.Find(browser, "The recording has its activity timeline now.", timeout: TimeSpan.FromSeconds(60));
         app.CloseWindow(browser);
     }
 

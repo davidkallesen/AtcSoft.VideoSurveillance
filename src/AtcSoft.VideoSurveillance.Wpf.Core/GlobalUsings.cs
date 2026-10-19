@@ -94,6 +94,7 @@ global using PlayAllPacer = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllPa
 global using PlayAllStart = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllStart;
 global using PlayAllTile = AtcSoft.VideoSurveillance.Models.PlayAllTile;
 global using ReconnectBackoff = AtcSoft.VideoSurveillance.Helpers.ReconnectBackoff;
+global using RecordingAnalysis = AtcSoft.VideoSurveillance.Helpers.Activity.RecordingAnalysis;
 global using RecordingPathHelper = AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper;
 global using RecordingRoots = AtcSoft.VideoSurveillance.Helpers.RecordingRoots;
 global using RecordingStateChangedEventArgs = AtcSoft.VideoSurveillance.Events.RecordingStateChangedEventArgs;
