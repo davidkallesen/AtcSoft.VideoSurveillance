@@ -13,6 +13,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private readonly MotionHold hold;
     private readonly BackgroundModel background = new();
     private readonly MotionTracker tracker = new();
+    private readonly DetectorBuffers buffers = new();
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
     private bool lastHadBoxes;
@@ -37,7 +38,9 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     {
         ArgumentNullException.ThrowIfNull(frame);
 
-        var blurred = MaskOperations.Blur3(frame.Gray, frame.Width, frame.Height);
+        buffers.EnsurePixels(frame.Gray.Length);
+        var blurred = buffers.Blurred;
+        MaskOperations.Blur3(frame.Gray, blurred, buffers.Rows, frame.Width, frame.Height);
         var dt = lastTime is { } last ? Math.Max(0, (frame.Time - last).TotalSeconds) : 0;
         lastTime = frame.Time;
 
@@ -48,7 +51,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             return Result(moving: false, frame.Time, 0, []);
         }
 
-        var mask = new byte[blurred.Length];
+        var mask = buffers.Mask;
         var share = background.Apply(
             blurred,
             mask,
@@ -57,12 +60,19 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             Rate(dt, options.BackgroundSeconds),
             Rate(dt, options.ForegroundSeconds));
 
-        // Most of the picture changed at once: light (exposure, a cloud, the IR switch), not an
-        // object. Learn the new picture and hold boxes back a moment.
+        // Most of the picture changed at once: light (exposure, a cloud, dusk), not an object.
+        // Shift the background by the overall change, so what moves stays foreground; if the
+        // change was not even (the IR switch from colour to grey), learn the picture anew.
         if (share > options.LightingChangeShare)
         {
-            background.Reset(blurred, frame.Width, frame.Height);
-            tracker.Reset();
+            background.ShiftTo(blurred);
+            share = background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, 0, 0);
+            if (share > options.LightingChangeShare)
+            {
+                background.Reset(blurred, frame.Width, frame.Height);
+                tracker.Reset();
+            }
+
             settleUntil = frame.Time.AddSeconds(options.LightingSettleSeconds);
             return Result(moving: false, frame.Time, share * 100, []);
         }
@@ -72,11 +82,11 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             return Result(moving: false, frame.Time, share * 100, []);
         }
 
-        MaskOperations.Open(mask, frame.Width, frame.Height, radius: 1);
-        MaskOperations.Close(mask, frame.Width, frame.Height, radius: 3);
+        MaskOperations.Open(mask, frame.Width, frame.Height, radius: 1, buffers.Temp);
+        MaskOperations.Close(mask, frame.Width, frame.Height, radius: 3, buffers.Temp);
 
         var minPixels = options.SmallestObjectShare * frame.Width * frame.Height;
-        var blobs = ConnectedComponents.Find(mask, frame.Width, frame.Height)
+        var blobs = ConnectedComponents.Find(mask, frame.Width, frame.Height, buffers)
             .Where(b => b.Pixels >= minPixels)
             .ToList();
         blobs = ConnectedComponents.Merge(blobs, (int)Math.Ceiling(options.MergeGapShare * frame.Width));

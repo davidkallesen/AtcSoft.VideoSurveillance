@@ -28,12 +28,37 @@ internal sealed class BackgroundModel
     {
         Width = width;
         Height = height;
-        mean = new float[frame.Length];
-        variance = new float[frame.Length];
+        if (mean.Length != frame.Length)
+        {
+            mean = new float[frame.Length];
+            variance = new float[frame.Length];
+        }
+
         for (var i = 0; i < frame.Length; i++)
         {
             mean[i] = frame[i];
             variance[i] = StartVariance;
+        }
+    }
+
+    /// <summary>
+    /// Shifts the whole background by the picture's overall change in brightness, so a lighting
+    /// change (exposure, a cloud, dusk) does not make everything foreground while what is in the
+    /// picture stays as it was.
+    /// </summary>
+    /// <param name="frame">The (blurred) picture after the change.</param>
+    public void ShiftTo(byte[] frame)
+    {
+        double sum = 0;
+        for (var i = 0; i < frame.Length; i++)
+        {
+            sum += frame[i] - mean[i];
+        }
+
+        var shift = (float)(sum / frame.Length);
+        for (var i = 0; i < mean.Length; i++)
+        {
+            mean[i] += shift;
         }
     }
 

@@ -124,6 +124,43 @@ public sealed class SceneRenderer
         return (path[^1].At[0], path[^1].At[1]);
     }
 
+    /// <summary>
+    /// Gets an object's size at a time, as fractions: from its key points' sizes where given,
+    /// straight lines between them, else its own size.
+    /// </summary>
+    /// <param name="item">The object.</param>
+    /// <param name="time">The time in seconds.</param>
+    public static (double Width, double Height) SizeAt(
+        StorybookObject item,
+        double time)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var sized = item.Path.Where(k => k.Size is { Count: 2 }).ToList();
+        if (sized.Count == 0)
+        {
+            return (item.Size[0], item.Size[1]);
+        }
+
+        if (time <= sized[0].T)
+        {
+            return (sized[0].Size![0], sized[0].Size![1]);
+        }
+
+        for (var k = 1; k < sized.Count; k++)
+        {
+            if (time <= sized[k].T)
+            {
+                var a = sized[k - 1];
+                var b = sized[k];
+                var f = (time - a.T) / (b.T - a.T);
+                return (a.Size![0] + ((b.Size![0] - a.Size![0]) * f), a.Size![1] + ((b.Size![1] - a.Size![1]) * f));
+            }
+        }
+
+        return (sized[^1].Size![0], sized[^1].Size![1]);
+    }
+
     private PixelBox? DrawObject(
         Canvas canvas,
         StorybookObject item,
@@ -134,8 +171,9 @@ public sealed class SceneRenderer
             return null;
         }
 
-        var w = item.Size[0] * width;
-        var h = item.Size[1] * height;
+        var (sw, sh) = SizeAt(item, time);
+        var w = sw * width;
+        var h = sh * height;
         var left = (at.X * width) - (w / 2);
         var top = (at.Y * height) - (h / 2);
 
@@ -155,9 +193,13 @@ public sealed class SceneRenderer
             return false;
         }
 
+        // Coming closer moves the object as much as walking past: its size changes.
+        var sizeBefore = SizeAt(item, Math.Max(item.Path[0].T, time - MovingWindowSeconds));
+        var sizeNow = SizeAt(item, time);
         var dx = (b.X - a.X) * width;
         var dy = (b.Y - a.Y) * height;
-        return (dx * dx) + (dy * dy) >= 1;
+        var grown = Math.Max(Math.Abs(sizeNow.Width - sizeBefore.Width) * width, Math.Abs(sizeNow.Height - sizeBefore.Height) * height);
+        return (dx * dx) + (dy * dy) >= 1 || grown >= 1;
     }
 
     private TruthState ObjectState(
@@ -188,8 +230,9 @@ public sealed class SceneRenderer
             return 0;
         }
 
-        var w = item.Size[0] * width;
-        var h = item.Size[1] * height;
+        var (sw, sh) = SizeAt(item, time);
+        var w = sw * width;
+        var h = sh * height;
         var left = (at.X * width) - (w / 2);
         var top = (at.Y * height) - (h / 2);
         var visibleW = Math.Min(left + w, width) - Math.Max(left, 0);

@@ -71,6 +71,30 @@
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": 0.733
   },
+  "s04-fast-car@15": {
+    "recall": 1,
+    "precision": 0.1471,
+    "falseBoxesPerFrame": 0.8011,
+    "meanLatencySeconds": 0
+  },
+  "s04-fast-car@15/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.267
+  },
+  "s04-fast-car@4": {
+    "recall": 1,
+    "precision": 0.175,
+    "falseBoxesPerFrame": 0.6735,
+    "meanLatencySeconds": 0
+  },
+  "s04-fast-car@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.467
+  },
   "s05-car-human-cat@15": {
     "recall": 0.8046,
     "precision": 0.2878,
@@ -95,6 +119,78 @@
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": 0.222
   },
+  "s06-lighting-step@15": {
+    "recall": 0.4054,
+    "precision": 0.3881,
+    "falseBoxesPerFrame": 0.5467,
+    "meanLatencySeconds": 0
+  },
+  "s06-lighting-step@15/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.467
+  },
+  "s06-lighting-step@4": {
+    "recall": 1,
+    "precision": 0.8857,
+    "falseBoxesPerFrame": 0.1,
+    "meanLatencySeconds": 0
+  },
+  "s06-lighting-step@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.467
+  },
+  "s08-small-far-cat@15": {
+    "recall": 0,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": null
+  },
+  "s08-small-far-cat@15/builtIn": {
+    "recall": 0.9789,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.733
+  },
+  "s08-small-far-cat@4": {
+    "recall": 0,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": null
+  },
+  "s08-small-far-cat@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.733
+  },
+  "s09-stop-and-go@15": {
+    "recall": 0,
+    "precision": 0.0366,
+    "falseBoxesPerFrame": 0.8729,
+    "meanLatencySeconds": 0
+  },
+  "s09-stop-and-go@15/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.4
+  },
+  "s09-stop-and-go@4": {
+    "recall": 1,
+    "precision": 0.8621,
+    "falseBoxesPerFrame": 0.0816,
+    "meanLatencySeconds": 0
+  },
+  "s09-stop-and-go@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.2
+  },
   "s12-camera-clock@15": {
     "recall": 1,
     "precision": 1,
@@ -118,5 +214,29 @@
     "precision": 1,
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": null
+  },
+  "s13-coming-closer@15": {
+    "recall": 0.5089,
+    "precision": 0.3725,
+    "falseBoxesPerFrame": 0.5304,
+    "meanLatencySeconds": 2.8
+  },
+  "s13-coming-closer@15/builtIn": {
+    "recall": 0.9732,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.733
+  },
+  "s13-coming-closer@4": {
+    "recall": 0.9655,
+    "precision": 0.3836,
+    "falseBoxesPerFrame": 0.9184,
+    "meanLatencySeconds": 1
+  },
+  "s13-coming-closer@4/builtIn": {
+    "recall": 0.9655,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 1
   }
 }

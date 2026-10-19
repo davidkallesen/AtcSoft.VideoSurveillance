@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 
 /// <summary>
 /// Picture and mask operations of the detector: a light blur, and morphology on the foreground
-/// mask (open removes specks, close fills holes). Separable 3×3 passes over flat arrays.
+/// mask (open removes specks, close fills holes). Separable 3×3 passes over flat arrays; the
+/// overloads with buffers allocate nothing.
 /// </summary>
 internal static class MaskOperations
 {
@@ -14,7 +15,21 @@ internal static class MaskOperations
         int width,
         int height)
     {
-        var rows = new ushort[source.Length];
+        var result = new byte[source.Length];
+        Blur3(source, result, new ushort[source.Length], width, height);
+        return result;
+    }
+
+    /// <summary>
+    /// Blurs a grey picture with a 3×3 box into <paramref name="result"/>.
+    /// </summary>
+    public static void Blur3(
+        byte[] source,
+        byte[] result,
+        ushort[] rows,
+        int width,
+        int height)
+    {
         for (var y = 0; y < height; y++)
         {
             var row = y * width;
@@ -26,7 +41,6 @@ internal static class MaskOperations
             }
         }
 
-        var result = new byte[source.Length];
         for (var y = 0; y < height; y++)
         {
             var up = Math.Max(0, y - 1) * width;
@@ -37,8 +51,6 @@ internal static class MaskOperations
                 result[row + x] = (byte)((rows[up + x] + rows[row + x] + rows[down + x] + 4) / 9);
             }
         }
-
-        return result;
     }
 
     /// <summary>
@@ -48,10 +60,12 @@ internal static class MaskOperations
         byte[] mask,
         int width,
         int height,
-        int radius)
+        int radius,
+        byte[]? temp = null)
     {
-        Erode(mask, width, height, radius);
-        Dilate(mask, width, height, radius);
+        temp ??= new byte[mask.Length];
+        Apply(mask, temp, width, height, radius, keepIfAny: false);
+        Apply(mask, temp, width, height, radius, keepIfAny: true);
     }
 
     /// <summary>
@@ -61,29 +75,18 @@ internal static class MaskOperations
         byte[] mask,
         int width,
         int height,
-        int radius)
+        int radius,
+        byte[]? temp = null)
     {
-        Dilate(mask, width, height, radius);
-        Erode(mask, width, height, radius);
+        temp ??= new byte[mask.Length];
+        Apply(mask, temp, width, height, radius, keepIfAny: true);
+        Apply(mask, temp, width, height, radius, keepIfAny: false);
     }
-
-    public static void Dilate(
-        byte[] mask,
-        int width,
-        int height,
-        int radius)
-        => Apply(mask, width, height, radius, keepIfAny: true);
-
-    public static void Erode(
-        byte[] mask,
-        int width,
-        int height,
-        int radius)
-        => Apply(mask, width, height, radius, keepIfAny: false);
 
     // A square element, as a horizontal then a vertical pass: max (dilate) or min (erode).
     private static void Apply(
         byte[] mask,
+        byte[] temp,
         int width,
         int height,
         int radius,
@@ -94,13 +97,12 @@ internal static class MaskOperations
             return;
         }
 
-        var temp = new byte[mask.Length];
         for (var y = 0; y < height; y++)
         {
             var row = y * width;
             for (var x = 0; x < width; x++)
             {
-                temp[row + x] = Reduce(mask, row, Math.Max(0, x - radius), Math.Min(width - 1, x + radius), 1, keepIfAny);
+                temp[row + x] = Reduce(mask, row, Math.Max(0, x - radius), Math.Min(width - 1, x + radius), keepIfAny);
             }
         }
 
@@ -137,10 +139,9 @@ internal static class MaskOperations
         int row,
         int x0,
         int x1,
-        int step,
         bool keepIfAny)
     {
-        for (var x = x0; x <= x1; x += step)
+        for (var x = x0; x <= x1; x++)
         {
             var v = mask[row + x];
             if (keepIfAny && v != 0)

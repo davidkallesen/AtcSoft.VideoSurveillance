@@ -7,15 +7,21 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 internal static class ConnectedComponents
 {
     /// <summary>
-    /// Finds the blobs of a mask.
+    /// Finds the blobs of a mask; with <paramref name="buffers"/>, without allocating per picture.
     /// </summary>
     public static List<Blob> Find(
         byte[] mask,
         int width,
-        int height)
+        int height,
+        DetectorBuffers? buffers = null)
     {
-        var labels = new int[mask.Length];
-        var parent = new List<int> { 0 };
+        buffers ??= new DetectorBuffers();
+        buffers.EnsurePixels(mask.Length);
+        var labels = buffers.Labels;
+        Array.Clear(labels);
+        var parent = buffers.Parent;
+        parent.Clear();
+        parent.Add(0);
 
         for (var y = 0; y < height; y++)
         {
@@ -49,17 +55,18 @@ internal static class ConnectedComponents
         }
 
         // Resolve every label to its root once, then gather the boxes in arrays by root.
-        var roots = new int[parent.Count];
+        buffers.EnsureLabels(parent.Count);
+        var roots = buffers.Roots;
         for (var label = 1; label < parent.Count; label++)
         {
             roots[label] = Root(parent, label);
         }
 
-        var minX = new int[parent.Count];
-        var minY = new int[parent.Count];
-        var maxX = new int[parent.Count];
-        var maxY = new int[parent.Count];
-        var count = new int[parent.Count];
+        var minX = buffers.MinX;
+        var minY = buffers.MinY;
+        var maxX = buffers.MaxX;
+        var maxY = buffers.MaxY;
+        var count = buffers.Count;
         for (var y = 0; y < height; y++)
         {
             var row = y * width;

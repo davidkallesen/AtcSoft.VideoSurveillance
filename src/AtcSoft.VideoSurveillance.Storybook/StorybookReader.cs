@@ -172,6 +172,11 @@ public static class StorybookReader
                 yield return $"{where}.path[{k}].at: two numbers";
             }
 
+            if (item.Path[k].Size is { } size && size is not [> 0 and <= 1, > 0 and <= 1])
+            {
+                yield return $"{where}.path[{k}].size: two fractions above 0, at most 1";
+            }
+
             if (k > 0 && item.Path[k].T <= item.Path[k - 1].T)
             {
                 yield return $"{where}.path[{k}].t: must be after path[{k - 1}].t";

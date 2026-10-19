@@ -421,9 +421,21 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 | S5 car + human + cat | 0.955, **1.612** | 1.000, **0.000**, 3 tracks | 0.805, **3.199** | 0.996, **0.000**, 3 tracks |
 | S12 camera clock | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 |
 
-Cost per picture at 800×600: about 10 ms (today's 2 ms), so about 4 % of one core per camera at the server's 4/s. Latency: about 0.7 s for a slow walker (it must travel 3 % of the width first), 0.2–0.3 s for the others; the plan's 0.5 s goal is met except for the slow walker.
+Scenes written after the tuning, run without changing it (unseen), with a size per key point added to the storybook for S13:
 
-**Still open:** the new settings in plain words (smallest object, learning speed, ignore lighting changes) end to end; analysis size from the width only (keep the aspect ratio); SIMD; scenes S4, S6, S8–S11; checking with real cameras.
+| Scene | Today 4/s | New 4/s | Today 15/s | New 15/s |
+|---|---|---|---|---|
+| S4 fast car | 1.000, **0.673** | 1.000, 0.000 | 1.000, **0.801** | 1.000, 0.000 |
+| S6 lighting step | 1.000, 0.100 | 1.000, 0.000 | **0.405**, 0.547 | 1.000, 0.000 |
+| S8 small cat far away | **0.000**, 0.000 | **1.000**, 0.000 | **0.000**, 0.000 | **0.979**, 0.000 |
+| S9 stops for 4 s, walks on | 1.000, 0.082 | 1.000, 0.000 | **0.000**, 0.873 | 1.000, 0.000 |
+| S13 walks up to the camera | 0.966, **0.918** | 0.966, 0.000 | **0.509**, 0.530 | 0.973, 0.000 |
+
+S4, S8 and S9 passed at once. S13 needed growth to count as travel (a sustained change of 30 % in the smoothed size), and the lighting change now shifts the background by the overall brightness change instead of re-learning everything (which left a ghost of whoever was in the picture). Today's detector never finds the small cat: the 0.5 % gate.
+
+Cost per picture at 800×600: about 11 ms (today's 2 ms), so about 4–5 % of one core per camera at the server's 4/s; about 2 KB allocated per picture (the working arrays are kept per detector). Latency: 0.2–0.5 s for most, 0.7 s for a slow walker or a small cat (3 % of the width first), 0.7–1 s for someone coming straight at the camera.
+
+**Still open:** the new settings in plain words (smallest object, learning speed, ignore lighting changes) end to end; analysis size from the width only (keep the aspect ratio); SIMD; scenes S10 (rain) and S11 (low bitrate, needs the encoder); a person filling more than half of the picture (a door or USB camera) is not covered by a scene yet; checking with real cameras.
 
 - `IMotionDetector` (the seam) and `BuiltInMotionDetector` (stateful, in Core, pure C# with `Vector128` / `Vector<T>`): steps 2–9 of the pipeline above. An OpenCV detector can later plug into the same seam from a package of its own.
 - Both services and the sample app use it; `MotionFrameAnalyzer` remains only until the services have moved.

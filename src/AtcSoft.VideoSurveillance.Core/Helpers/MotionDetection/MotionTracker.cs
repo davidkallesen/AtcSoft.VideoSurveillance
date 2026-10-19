@@ -3,8 +3,9 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// <summary>
 /// Follows blobs from picture to picture (SORT-like: a constant-velocity guess, then matching by
 /// overlap or nearness). A track shows only when it has been seen for a while <b>and</b> has
-/// travelled: a branch swaying on the spot never does, a person walking by does. A track keeps
-/// its id while it is followed.
+/// travelled (moved, or grown or shrunk by coming closer or going away): a branch swaying on the
+/// spot never does, a person walking by or up to the camera does. A track keeps its id while it
+/// is followed.
 /// </summary>
 internal sealed class MotionTracker
 {
@@ -105,8 +106,12 @@ internal sealed class MotionTracker
         Blob box,
         double time)
     {
+        private const double GrowthRatio = 1.3;
+
         private readonly double originX = box.CenterX;
         private readonly double originY = box.CenterY;
+        private readonly double originSide = Math.Max(box.Width, box.Height);
+        private double smoothedSide = Math.Max(box.Width, box.Height);
         private double velocityX;
         private double velocityY;
 
@@ -147,7 +152,14 @@ internal sealed class MotionTracker
             LastSeen = time;
             var tx = blob.CenterX - originX;
             var ty = blob.CenterY - originY;
-            Travel = Math.Max(Travel, Math.Sqrt((tx * tx) + (ty * ty)));
+
+            // Coming towards the camera or going away changes the size more than the place. A
+            // swaying or flickering blob changes size too, back and forth, so only a sustained
+            // change counts: the smoothed size must have grown or shrunk by 30 %.
+            smoothedSide = (0.7 * smoothedSide) + (0.3 * Math.Max(blob.Width, blob.Height));
+            var ratio = smoothedSide / Math.Max(1, originSide);
+            var grown = ratio is >= GrowthRatio or <= 1 / GrowthRatio ? Math.Abs(smoothedSide - originSide) : 0;
+            Travel = Math.Max(Travel, Math.Max(Math.Sqrt((tx * tx) + (ty * ty)), grown));
         }
     }
 }
