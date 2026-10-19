@@ -10,6 +10,7 @@ global using System.Threading.Tasks;
 
 global using AtcSoft.VideoSurveillance.Api.Domain.Events;
 global using AtcSoft.VideoSurveillance.Api.Domain.Mapping;
+global using AtcSoft.VideoSurveillance.Api.Domain.Recordings;
 global using AtcSoft.VideoSurveillance.Api.Domain.Security;
 global using AtcSoft.VideoSurveillance.Api.Domain.Streaming;
 global using AtcSoft.VideoSurveillance.Api.Domain.Webhooks;
@@ -56,6 +57,10 @@ global using VideoSurveillance.Generated.Settings.Handlers;
 global using VideoSurveillance.Generated.Settings.Models;
 global using VideoSurveillance.Generated.Settings.Parameters;
 global using VideoSurveillance.Generated.Settings.Results;
+global using VideoSurveillance.Generated.Timeline.Handlers;
+global using VideoSurveillance.Generated.Timeline.Models;
+global using VideoSurveillance.Generated.Timeline.Parameters;
+global using VideoSurveillance.Generated.Timeline.Results;
 global using VideoSurveillance.Generated.Users.Handlers;
 global using VideoSurveillance.Generated.Users.Models;
 global using VideoSurveillance.Generated.Users.Parameters;

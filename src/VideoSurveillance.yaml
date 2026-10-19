@@ -1264,6 +1264,116 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /timeline:
+    # No cache: a span that reaches now grows every second; the server keeps the summaries
+    # of the activity indexes instead.
+    get:
+      summary: Get the timeline of the cameras
+      description: One lane per camera over the span, from its recordings and their activity indexes. Coverage is where a recording exists; a stretch is recorded, recorded but not analysed, or a gap. Each stretch keeps the most that happened in it, never the average, and the events are given to the second with the recording and offset to play them from. The span may be at most seven days.
+      operationId: getTimeline
+      tags:
+        - timeline
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: The start of the span.
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          description: The end of the span, after from and at most seven days later.
+          schema:
+            type: string
+            format: date-time
+        - name: cameraId
+          in: query
+          required: false
+          description: Only this camera's lane; every camera's when left out.
+          schema:
+            type: string
+            format: uuid
+        - name: buckets
+          in: query
+          required: false
+          description: How many equal stretches to split the span into, usually the width of the timeline in pixels.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 4000
+            default: 1000
+      responses:
+        '200':
+          description: The timeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Timeline"
+        '400':
+          description: The span does not end after it starts, or is longer than seven days
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /timeline/events:
+    get:
+      summary: Find the next or previous events
+      description: The events nearest after a moment (earliest first) or before it (latest first), across the recordings of the cameras, looking at most seven days away. Give after or before, not both.
+      operationId: listTimelineEvents
+      tags:
+        - timeline
+      parameters:
+        - name: after
+          in: query
+          required: false
+          description: Find the events that start after this moment.
+          schema:
+            type: string
+            format: date-time
+        - name: before
+          in: query
+          required: false
+          description: Find the events that start before this moment.
+          schema:
+            type: string
+            format: date-time
+        - name: cameraId
+          in: query
+          required: false
+          description: Only this camera's events; every camera's when left out.
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: How many events at most.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 1
+      responses:
+        '200':
+          description: The events, nearest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+        '400':
+          description: Neither after nor before was given, or both
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /events:
     # No retry: a live stream is not sent again from the start; the client resumes with Last-Event-ID.
     x-retry-enabled: false
@@ -2320,6 +2430,140 @@ components:
         thumbnailPath:
           type: string
           description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
+
+    Timeline:
+      title: Timeline
+      type: object
+      description: The cameras' activity over a span, one lane per camera.
+      required:
+        - from
+        - to
+        - lanes
+      properties:
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        lanes:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineLane"
+
+    TimelineLane:
+      title: TimelineLane
+      type: object
+      description: One camera's timeline over the span.
+      required:
+        - cameraId
+        - cameraName
+        - coverage
+        - buckets
+        - events
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        cameraName:
+          type: string
+        coverage:
+          type: array
+          description: Where recordings cover the span, cut to it, from its start.
+          items:
+            $ref: "#/components/schemas/TimelineCoverage"
+        buckets:
+          type: array
+          description: The span in equal stretches, from its start.
+          items:
+            $ref: "#/components/schemas/TimelineBucket"
+        events:
+          type: array
+          description: What moved in the span, from its start.
+          items:
+            $ref: "#/components/schemas/TimelineEvent"
+
+    TimelineCoverage:
+      title: TimelineCoverage
+      type: object
+      description: Where a recording covers the span.
+      required:
+        - start
+        - end
+        - filePath
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        filePath:
+          type: string
+          description: The recording's path relative to the recordings root, as the listing gives it.
+
+    TimelineBucket:
+      title: TimelineBucket
+      type: object
+      description: One stretch of a lane, with the most that happened in it.
+      required:
+        - level
+        - tracks
+        - isRecorded
+        - isAnalysed
+      properties:
+        level:
+          type: number
+          format: double
+          description: The largest share of the picture that differed from the learnt scene, 0 to 100.
+        tracks:
+          type: integer
+          format: int32
+          description: The most moving things followed at once.
+        isRecorded:
+          type: boolean
+          description: Whether a recording covers any of the stretch. A stretch without one is a gap.
+        isAnalysed:
+          type: boolean
+          description: Whether any of it was analysed. Recorded but not analysed is unknown, not quiet.
+
+    TimelineEvent:
+      title: TimelineEvent
+      type: object
+      description: Something that moved, to the second, and where to play it.
+      required:
+        - cameraId
+        - start
+        - end
+        - peakLevel
+        - tracks
+        - filePath
+        - offsetSeconds
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        peakLevel:
+          type: number
+          format: double
+          description: The highest level in it, 0 to 100.
+        tracks:
+          type: integer
+          format: int32
+          description: The most moving things at once in it.
+        filePath:
+          type: string
+          description: The recording it starts in, as the listing gives it.
+        offsetSeconds:
+          type: number
+          format: double
+          description: Where in that recording it starts, in seconds.
 
     RecordingActivity:
       title: RecordingActivity

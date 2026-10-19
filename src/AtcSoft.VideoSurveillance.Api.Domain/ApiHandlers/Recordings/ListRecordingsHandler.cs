@@ -13,136 +13,50 @@ public sealed class ListRecordingsHandler(
     ICameraStorageService cameraStorageService,
     IRecordingDurationProvider? durationProvider = null) : IListRecordingsHandler
 {
-    private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi"];
-
     public Task<ListRecordingsResult> ExecuteAsync(
         ListRecordingsParameters parameters,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
-        var cameras = cameraStorageService.GetAllCameras();
-        var cameraNames = cameras.ToDictionary(c => c.Id, c => c.Display.DisplayName);
-
         var recordingPath = settingsService.Recording.RecordingPath;
-
-        // Active recording sessions
-        var sessions = recordingService.GetActiveSessions();
-        var activeRecordings = sessions
-            .Where(s => parameters.CameraId is null || s.CameraId == parameters.CameraId)
-            .Select(s =>
-            {
-                var thumbnail = FindRelativeThumbnail(s.CurrentFilePath, recordingPath);
-                return new Recording(
-                    Id: s.CameraId,
-                    CameraId: s.CameraId,
-                    CameraName: cameraNames.GetValueOrDefault(s.CameraId, string.Empty),
-                    FilePath: ToRelativePath(s.CurrentFilePath, recordingPath),
-                    StartedAt: new DateTimeOffset(s.StartTime, TimeSpan.Zero),
-                    Duration: System.Xml.XmlConvert.ToString(s.Duration),
-                    FileSizeBytes: 0,
-                    HasThumbnail: thumbnail is not null,
-                    InProgress: true,
-                    ThumbnailPath: thumbnail);
-            })
-            .ToList();
-
-        // Historical recordings from filesystem
-        if (Directory.Exists(recordingPath))
-        {
-            var activeFilePaths = new HashSet<string>(
-                sessions.Select(s => s.CurrentFilePath),
-                StringComparer.OrdinalIgnoreCase);
-
-            // Files are stored under {RecordingPath}/{camera folder}/, directly
-            // or in a folder per day, so the camera is the first folder below
-            // the root, whatever the layout. Two cameras can share a folder
-            // name (same display name); the first one wins rather than the
-            // whole listing failing.
-            var camerasByFolderName = new Dictionary<string, AtcSoft.VideoSurveillance.Models.CameraConfiguration>(StringComparer.OrdinalIgnoreCase);
-            foreach (var camera in cameras)
-            {
-                camerasByFolderName.TryAdd(
-                    RecordingPathHelper.GetCameraFolderName(camera.Display.DisplayName, camera.Id),
-                    camera);
-            }
-
-            var files = Directory.EnumerateFiles(recordingPath, "*.*", SearchOption.AllDirectories)
-                .Where(f => VideoExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
-                .Where(f => !RecordingPathHelper.IsInThumbnailsFolder(f, recordingPath))
-                .Where(f => !activeFilePaths.Contains(f));
-
-            foreach (var file in files)
-            {
-                var fileInfo = new FileInfo(file);
-                var relativePath = ToRelativePath(file, recordingPath);
-
-                var folderName = RecordingPathHelper.GetCameraFolderFromPath(file, recordingPath) ?? string.Empty;
-                var cameraId = Guid.Empty;
-                var cameraName = string.Empty;
-                if (camerasByFolderName.TryGetValue(folderName, out var matched))
-                {
-                    cameraId = matched.Id;
-                    cameraName = matched.Display.DisplayName;
-                }
-
-                if (parameters.CameraId is not null && cameraId != parameters.CameraId)
-                {
-                    continue;
-                }
-
-                // The name carries the start time (in UTC on the server); the
-                // file's creation time changes when it is moved or copied.
-                var startedAt = RecordingPathHelper.TryParseTimestamp(fileInfo.Name, out var timestamp)
-                    ? new DateTimeOffset(DateTime.SpecifyKind(timestamp, DateTimeKind.Unspecified), TimeSpan.Zero)
-                    : new DateTimeOffset(fileInfo.CreationTimeUtc, TimeSpan.Zero);
-
-                var thumbnail = FindRelativeThumbnail(file, recordingPath);
-                var length = durationProvider?.GetDuration(file) is { } duration
-                    ? System.Xml.XmlConvert.ToString(duration)
-                    : string.Empty;
-
-                activeRecordings.Add(new Recording(
-                    Id: RecordingMappingExtensions.CreateId(relativePath),
-                    CameraId: cameraId,
-                    CameraName: cameraName,
-                    FilePath: relativePath,
-                    StartedAt: startedAt,
-                    Duration: length,
-                    FileSizeBytes: fileInfo.Length,
-                    HasThumbnail: thumbnail is not null,
-                    InProgress: false,
-                    ThumbnailPath: thumbnail));
-            }
-        }
-
-        var sorted = activeRecordings
+        var recordings = RecordingCatalog
+            .Find(recordingPath, cameraStorageService.GetAllCameras(), recordingService.GetActiveSessions(), parameters.CameraId, DateTimeOffset.UtcNow)
+            .Select(file => ToRecording(file, recordingPath))
             .OrderByDescending(r => r.StartedAt)
             .ToList();
 
-        return Task.FromResult(ListRecordingsResult.Ok(sorted));
+        return Task.FromResult(ListRecordingsResult.Ok(recordings));
     }
 
-    /// <summary>
-    /// Gets a path the way clients use it: relative to the recording root,
-    /// with forward slashes. A file outside the root keeps its full path.
-    /// </summary>
-    private static string ToRelativePath(
-        string filePath,
+    private Recording ToRecording(
+        RecordingFile file,
         string recordingPath)
     {
-        if (string.IsNullOrEmpty(recordingPath) || !Path.IsPathRooted(filePath))
+        var thumbnail = FindRelativeThumbnail(file.FullPath, recordingPath);
+        string length;
+        if (file.InProgress)
         {
-            return filePath;
+            length = System.Xml.XmlConvert.ToString(file.LastWrittenAt - file.StartedAt);
+        }
+        else
+        {
+            length = durationProvider?.GetDuration(file.FullPath) is { } duration
+                ? System.Xml.XmlConvert.ToString(duration)
+                : string.Empty;
         }
 
-        var relative = Path.GetRelativePath(recordingPath, filePath);
-        if (Path.IsPathRooted(relative) || relative.StartsWith("..", StringComparison.Ordinal))
-        {
-            return filePath;
-        }
-
-        return relative.Replace('\\', '/');
+        return new Recording(
+            Id: file.InProgress ? file.CameraId : RecordingMappingExtensions.CreateId(file.RelativePath),
+            CameraId: file.CameraId,
+            CameraName: file.CameraName,
+            FilePath: file.RelativePath,
+            StartedAt: file.StartedAt,
+            Duration: length,
+            FileSizeBytes: file.Length,
+            HasThumbnail: thumbnail is not null,
+            InProgress: file.InProgress,
+            ThumbnailPath: thumbnail);
     }
 
     private static string? FindRelativeThumbnail(
@@ -160,7 +74,7 @@ public sealed class ListRecordingsHandler(
             return null;
         }
 
-        var relative = ToRelativePath(thumbnail, recordingPath);
+        var relative = RecordingCatalog.ToRelativePath(thumbnail, recordingPath);
         return Path.IsPathRooted(relative) ? null : relative;
     }
 }

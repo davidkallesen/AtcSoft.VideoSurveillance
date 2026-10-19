@@ -202,6 +202,8 @@ Beside every recording file the server writes its **activity index**, `{file}.ac
 
 `GET /recordings/activity?filePath={filePath}&buckets={n}&durationSeconds={s}` gives a recording's activity for a timeline: `n` equal stretches (1 to 4000, 500 when left out) over `s` seconds (the index's own length when left out), each with the most that happened in it, never the average, so a five-second event is not lost in an hour. A stretch with `isAnalysed` false is unknown, not quiet. A recording made before the index has `hasIndex` false. The index of a recording in progress grows every second, so the answer is not cached.
 
+`GET /timeline?from={from}&to={to}&cameraId={id}&buckets={n}` gives one lane per camera over a span of at most seven days: where recordings cover it (from the video files, so a recording without an index still counts as recorded), the span in `n` equal stretches (1 to 4000, 1000 when left out), each recorded or a gap, analysed or not, with the most that happened in it, and the events to the second with the recording and offset to play each from. `GET /timeline/events?after={moment}` (or `before`) finds the nearest events across the recordings, looking at most seven days away (`limit` 1 to 100). The server reads each activity index once into a short summary and keeps the summaries in memory; a cold day of ten cameras takes under a second.
+
 ---
 
 ## 📺 Live streaming

@@ -140,6 +140,69 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task The_Timeline_Covers_A_Recording_Across_Its_Segments_Without_A_Gap()
+    {
+        var ffmpeg = FindFFmpegTool();
+        Assert.SkipWhen(ffmpeg is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = host.CreateClient();
+        var port = GetFreePort();
+        using var stream = StartTestStream(ffmpeg!, port);
+        var cameraId = Guid.Empty;
+
+        try
+        {
+            // Arrange — a camera recorded into two segments
+            var name = "Timeline " + Guid.NewGuid().ToString("N")[..8];
+            var created = await client.PostAsJsonAsync(
+                "/cameras",
+                new { displayName = name, ipAddress = "127.0.0.1", port, protocol = "http", path = "live" },
+                cancellationToken);
+            cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+            var from = DateTimeOffset.UtcNow.AddMinutes(-1);
+
+            var started = await client.PostAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), content: null, cancellationToken);
+            started.StatusCode.Should().Be(HttpStatusCode.OK, await started.Content.ReadAsStringAsync(cancellationToken));
+            await WaitForActivityAsync(client, name, cancellationToken);
+            host.GetService<IRecordingService>().SegmentRecording(cameraId).Should().BeTrue("the recording goes on in a new file");
+            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), cancellationToken);
+            var to = DateTimeOffset.UtcNow.AddMinutes(1);
+
+            // Act
+            var timeline = await client.GetFromJsonAsync<JsonElement>(
+                $"/timeline?cameraId={cameraId}&buckets=120&from={Uri.EscapeDataString(from.ToString("O"))}&to={Uri.EscapeDataString(to.ToString("O"))}",
+                cancellationToken);
+
+            // Assert — one lane, both files, recorded from the first file's start to the second's end
+            var lane = timeline.GetProperty("lanes").EnumerateArray().Should().ContainSingle().Subject;
+            List<JsonElement> coverage = [.. lane.GetProperty("coverage").EnumerateArray()];
+            coverage.Should().HaveCount(2);
+            coverage.Select(c => c.GetProperty("filePath").GetString()).Should().OnlyContain(p => p!.StartsWith(name + "/", StringComparison.Ordinal));
+
+            List<bool> buckets = [.. lane.GetProperty("buckets").EnumerateArray().Select(b => b.GetProperty("isRecorded").GetBoolean())];
+            var first = buckets.IndexOf(true);
+            var last = buckets.LastIndexOf(true);
+            buckets.Skip(first).Take(last - first + 1).Should().OnlyContain(r => r, "the two segments follow each other: one second a stretch, no gap between them");
+            lane.GetProperty("buckets").EnumerateArray().Should().Contain(b => b.GetProperty("isAnalysed").GetBoolean());
+
+            var next = await client.GetAsync(new Uri($"/timeline/events?cameraId={cameraId}&after={Uri.EscapeDataString(from.ToString("O"))}", UriKind.Relative), cancellationToken);
+            next.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+        finally
+        {
+            if (cameraId != Guid.Empty)
+            {
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), CancellationToken.None);
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
+            }
+
+            Stop(stream);
+        }
+    }
+
+    [Fact]
     public async Task A_Camera_Can_Be_Watched_Live_Over_Hls()
     {
         var ffmpeg = FindFFmpegTool();
