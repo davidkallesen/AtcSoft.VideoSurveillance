@@ -36,7 +36,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 
 | Area | Plan | Status | Open |
 |---|---|:--:|---|
-| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`). Open: the timelines (per recording, server, every camera), masks and zones, grey frames from the engine, `sample/BoundingBoxWpfApp`, the feedback loop; ONNX detection deferred |
+| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`), the activity timeline under the player in all three clients. Open: the timeline extras (hover, play events only, zoom), the server timeline and the view of every camera, masks and zones, grey frames from the engine, `sample/BoundingBoxWpfApp`, the feedback loop; ONNX detection deferred |
 | 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Everything is built on v3; waits for v3 on nuget.org, then the switch from the local package |
 | 🧪 24/7 soak | [`docs/soak-test.md`](../docs/soak-test.md) | ⬜ | The procedure has never been run |
 
