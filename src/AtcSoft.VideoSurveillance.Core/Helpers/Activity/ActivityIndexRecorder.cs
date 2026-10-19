@@ -44,6 +44,11 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     }
 
     /// <summary>
+    /// Raised when activity on a recorded camera starts or ends, so an open timeline can grow.
+    /// </summary>
+    public event EventHandler<CameraActivityChangedEventArgs>? ActivityChanged;
+
+    /// <summary>
     /// Gets the path of the index being written for a camera.
     /// </summary>
     /// <param name="cameraId">The camera.</param>
@@ -140,12 +145,14 @@ public sealed partial class ActivityIndexRecorder : IDisposable
             return;
         }
 
+        CameraActivityChangedEventArgs? change = null;
         try
         {
             lock (file.Sync)
             {
                 if (!file.IsClosed)
                 {
+                    change = file.Activity.Add(e.Time, e.Result);
                     file.Writer.Add(e.Time, e.Result);
                 }
             }
@@ -155,6 +162,26 @@ public sealed partial class ActivityIndexRecorder : IDisposable
             // A full disk or a file taken away: this segment's index ends here, the recording goes on.
             LogIndexFailed(logger, ex, e.CameraId);
             Close(e.CameraId);
+        }
+
+        Raise(change);
+    }
+
+    // A subscriber that throws must not end the index of the camera.
+    private void Raise(CameraActivityChangedEventArgs? change)
+    {
+        if (change is null)
+        {
+            return;
+        }
+
+        try
+        {
+            ActivityChanged?.Invoke(this, change);
+        }
+        catch (Exception ex)
+        {
+            LogIndexFailed(logger, ex, change.CameraId);
         }
     }
 
@@ -178,7 +205,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         try
         {
             writer = ActivityLogWriter.Create(path, start);
-            files[cameraId] = new IndexFile(videoPath, path, writer);
+            files[cameraId] = new IndexFile(videoPath, path, writer, new ActivityTracker(cameraId, videoPath, start));
             writer = null;
         }
         finally
@@ -202,11 +229,14 @@ public sealed partial class ActivityIndexRecorder : IDisposable
             return;
         }
 
+        // Activity going on when its recording ends ends with it.
+        CameraActivityChangedEventArgs? ended = null;
         try
         {
             lock (file.Sync)
             {
                 file.IsClosed = true;
+                ended = file.Activity.End();
                 file.Writer.Dispose();
             }
         }
@@ -214,6 +244,8 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         {
             LogIndexFailed(logger, ex, cameraId);
         }
+
+        Raise(ended);
     }
 
     private static DateTimeOffset ToUtc(DateTime time)
@@ -230,8 +262,11 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     private sealed class IndexFile(
         string videoPath,
         string path,
-        ActivityLogWriter writer)
+        ActivityLogWriter writer,
+        ActivityTracker activity)
     {
+        public ActivityTracker Activity { get; } = activity;
+
         public Lock Sync { get; } = new();
 
         public string VideoPath { get; } = videoPath;

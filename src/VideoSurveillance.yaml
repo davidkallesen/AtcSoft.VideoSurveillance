@@ -3463,6 +3463,49 @@ components:
           type: string
           description: webhook.test - what the test is.
 
+    ActivityChangedEvent:
+      title: ActivityChangedEvent
+      type: object
+      description: Event (GET /events) - on a camera that is recorded, something started to move somewhere (a confirmed track), or nothing has moved for a few seconds. An open timeline grows by it.
+      required:
+        - cameraId
+        - isActive
+        - start
+        - filePath
+        - offsetSeconds
+        - peakLevel
+        - tracks
+      properties:
+        cameraId:
+          type: string
+          format: uuid
+        isActive:
+          type: boolean
+          description: True when it started, false when it ended.
+        start:
+          type: string
+          format: date-time
+          description: When it started.
+        end:
+          type: string
+          format: date-time
+          description: When it ended; left out while it goes on.
+        filePath:
+          type: string
+          description: The recording it started in, as the listing gives it.
+        offsetSeconds:
+          type: number
+          format: double
+          description: Where in that recording it started, in seconds.
+        peakLevel:
+          type: number
+          format: double
+          description: The highest level so far, 0 to 100.
+        tracks:
+          type: integer
+          format: int32
+          description: The most moving things at once so far.
+
     SurveillanceEvent:
       title: SurveillanceEvent
       type: object
@@ -3476,7 +3519,7 @@ components:
       properties:
         type:
           type: string
-          description: connectionStateChanged, recordingStateChanged, motionDetected or usbCameraLifecycleChanged.
+          description: connectionStateChanged, recordingStateChanged, motionDetected, usbCameraLifecycleChanged or activityChanged.
         cameraId:
           type: string
           format: uuid
@@ -3491,3 +3534,5 @@ components:
           $ref: "#/components/schemas/MotionDetectedEvent"
         usb:
           $ref: "#/components/schemas/UsbCameraLifecycleEvent"
+        activity:
+          $ref: "#/components/schemas/ActivityChangedEvent"

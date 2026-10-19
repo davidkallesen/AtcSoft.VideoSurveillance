@@ -52,6 +52,11 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     public event Action<UsbCameraLifecycleEvent>? OnUsbCameraLifecycleChanged;
 
     /// <summary>
+    /// Raised when activity on a recorded camera starts or ends: an open timeline grows by it.
+    /// </summary>
+    public event Action<ActivityChangedEvent>? OnActivityChanged;
+
+    /// <summary>
     /// Raised when the stream opens and the client may have missed events:
     /// the server was not there at the start (what the client showed came from
     /// this computer alone), or it could not send again all that came while
@@ -208,6 +213,11 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
         if (surveillanceEvent.Usb is { } usb)
         {
             OnUsbCameraLifecycleChanged?.Invoke(usb);
+        }
+
+        if (surveillanceEvent.Activity is { } activity)
+        {
+            OnActivityChanged?.Invoke(activity);
         }
     }
 

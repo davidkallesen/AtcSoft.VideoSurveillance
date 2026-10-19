@@ -109,6 +109,21 @@ public sealed class ActivityIndexRecorderTests : IDisposable
     }
 
     [Fact]
+    public void Activity_That_Starts_Is_Told_And_Ends_With_The_Recording()
+    {
+        var changes = new List<CameraActivityChangedEventArgs>();
+        sut.ActivityChanged += (_, e) => changes.Add(e);
+        var video = Video("101500");
+        recordings.Start(camera, video, pipeline);
+
+        motion.MovingPicture(camera, DateTimeOffset.UtcNow);
+        recordings.Stop(camera);
+
+        changes.Select(c => c.IsActive).Should().Equal(true, false);
+        changes.Should().OnlyContain(c => c.CameraId == camera && c.VideoPath == video);
+    }
+
+    [Fact]
     public void A_Camera_That_Is_Not_Known_Gets_An_Index_But_Is_Not_Analysed()
     {
         var stranger = Guid.NewGuid();

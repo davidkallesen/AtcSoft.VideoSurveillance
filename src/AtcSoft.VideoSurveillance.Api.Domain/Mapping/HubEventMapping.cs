@@ -98,6 +98,17 @@ public static class HubEventMapping
             Motion: e);
     }
 
+    public static SurveillanceEvent ToStreamEvent(this ActivityChangedEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new SurveillanceEvent(
+            Type: StreamEventTypes.ActivityChanged,
+            CameraId: e.CameraId,
+            Timestamp: e.End ?? e.Start,
+            Activity: e);
+    }
+
     public static SurveillanceEvent ToStreamEvent(
         this UsbCameraLifecycleEvent e)
     {
@@ -108,5 +119,28 @@ public static class HubEventMapping
             CameraId: e.CameraId,
             Timestamp: e.Timestamp,
             Usb: e);
+    }
+
+    /// <summary>
+    /// Maps a change of a recorded camera's activity to its event, with the recording named the
+    /// way the listing names it.
+    /// </summary>
+    /// <param name="e">The change.</param>
+    /// <param name="recordingPath">The recordings root.</param>
+    public static ActivityChangedEvent ToEvent(
+        this AtcSoft.VideoSurveillance.Events.CameraActivityChangedEventArgs e,
+        string recordingPath)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        return new ActivityChangedEvent(
+            CameraId: e.CameraId,
+            IsActive: e.IsActive,
+            Start: e.Start,
+            FilePath: RecordingCatalog.ToRelativePath(e.VideoPath, recordingPath),
+            OffsetSeconds: e.OffsetSeconds,
+            PeakLevel: e.PeakLevel,
+            Tracks: e.Tracks,
+            End: e.End);
     }
 }

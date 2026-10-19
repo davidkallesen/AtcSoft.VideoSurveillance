@@ -467,7 +467,8 @@ public partial class App
                 services.AddSingleton(sp => new TimelineViewModel(
                     sp.GetRequiredService<GatewayService>(),
                     new Uri(apiBaseAddress),
-                    sp.GetRequiredService<ClientSession>()));
+                    sp.GetRequiredService<ClientSession>(),
+                    sp.GetRequiredService<SurveillanceEventService>()));
                 services.AddSingleton<NotificationHistoryViewModel>();
 
                 // App

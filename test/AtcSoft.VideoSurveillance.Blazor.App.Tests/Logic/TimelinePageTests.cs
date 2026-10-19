@@ -126,6 +126,22 @@ public sealed class TimelinePageTests
         TimelinePlayback.Following(lane, "Other/x.mkv").Should().BeEmpty();
     }
 
+    [Fact]
+    public void The_Page_Reloads_On_Activity_And_Recordings_Only_While_It_Shows_Now_And_Not_Too_Often()
+    {
+        var activity = new SurveillanceEvent("activityChanged", Guid.Empty, Nine, Activity: new ActivityChangedEvent(Guid.Empty, true, Nine, "Cam/a.mkv", 0, 5, 1));
+        var connection = new SurveillanceEvent("connectionStateChanged", Guid.Empty, Nine);
+        var unknown = new SurveillanceEvent("somethingNew", Guid.Empty, Nine);
+
+        TimelineRefresh.ShouldReload(activity, showsNow: true).Should().BeTrue();
+        TimelineRefresh.ShouldReload(activity, showsNow: false).Should().BeFalse("a past day does not change");
+        TimelineRefresh.ShouldReload(connection, showsNow: true).Should().BeFalse();
+        TimelineRefresh.ShouldReload(unknown, showsNow: true).Should().BeFalse();
+
+        TimelineRefresh.Wait(Nine, Nine.AddSeconds(2)).Should().Be(TimeSpan.FromSeconds(3));
+        TimelineRefresh.Wait(Nine, Nine.AddSeconds(9)).Should().Be(TimeSpan.Zero);
+    }
+
     private static TimelineBucket Bucket(
         bool recorded = true,
         bool analysed = true,

@@ -9,4 +9,5 @@ public static class StreamEventTypes
     public const string RecordingStateChanged = "recordingStateChanged";
     public const string MotionDetected = "motionDetected";
     public const string UsbCameraLifecycleChanged = "usbCameraLifecycleChanged";
+    public const string ActivityChanged = "activityChanged";
 }

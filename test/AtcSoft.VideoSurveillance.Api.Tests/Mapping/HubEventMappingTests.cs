@@ -80,4 +80,27 @@ public sealed class HubEventMappingTests
         hubEvent.FriendlyName.Should().Be("Logitech BRIO");
         hubEvent.Timestamp.Should().Be(Now);
     }
+
+    [Fact]
+    public void An_Activity_Change_Names_The_Recording_As_The_Listing_Does_And_Goes_Out_As_Its_Own_Type()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "recordings");
+        var cameraId = Guid.NewGuid();
+        var change = new AtcSoft.VideoSurveillance.Events.CameraActivityChangedEventArgs(
+            cameraId,
+            isActive: false,
+            start: Now,
+            end: Now.AddSeconds(7),
+            videoPath: Path.Combine(root, "Garden", "Garden_20261019_090000_000.mkv"),
+            offsetSeconds: 42,
+            peakLevel: 18,
+            tracks: 2);
+
+        var streamEvent = change.ToEvent(root).ToStreamEvent();
+
+        streamEvent.Type.Should().Be("activityChanged");
+        streamEvent.CameraId.Should().Be(cameraId);
+        streamEvent.Timestamp.Should().Be(Now.AddSeconds(7), "an ended activity is told when it ended");
+        streamEvent.Activity.Should().Be(new ActivityChangedEvent(cameraId, false, Now, "Garden/Garden_20261019_090000_000.mkv", 42, 18, 2, Now.AddSeconds(7)));
+    }
 }

@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// Runs the <see cref="ActivityIndexRecorder"/> on the server: an activity index beside every
-/// recording, with each camera's own motion settings.
+/// recording, with each camera's own motion settings. When activity starts or ends on a recorded
+/// camera it goes out on <c>GET /events</c> (<c>activityChanged</c>), so an open timeline grows.
 /// </summary>
 /// <remarks>
 /// Event-driven, on <see cref="BackgroundServiceBase{T}"/> like the other hosted workers:
@@ -11,6 +12,8 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexService>
 {
     private readonly ActivityIndexRecorder recorder;
+    private readonly IApplicationSettingsService settingsService;
+    private readonly SurveillanceEventFeed feed;
 
     public ActivityIndexService(
         ILogger<ActivityIndexService> logger,
@@ -18,11 +21,16 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
         IRecordingService recordingService,
         IMotionDetectionService motionDetectionService,
         ICameraStorageService storageService,
-        IApplicationSettingsService settingsService)
+        IApplicationSettingsService settingsService,
+        SurveillanceEventFeed feed)
         : base(logger, options)
     {
         ArgumentNullException.ThrowIfNull(storageService);
         ArgumentNullException.ThrowIfNull(settingsService);
+        ArgumentNullException.ThrowIfNull(feed);
+
+        this.settingsService = settingsService;
+        this.feed = feed;
 
         recorder = new ActivityIndexRecorder(
             logger,
@@ -44,6 +52,7 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
     /// <inheritdoc />
     public override Task StartAsync(CancellationToken cancellationToken)
     {
+        recorder.ActivityChanged += OnActivityChanged;
         recorder.Start();
         return base.StartAsync(cancellationToken);
     }
@@ -52,12 +61,18 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         recorder.Stop();
+        recorder.ActivityChanged -= OnActivityChanged;
         return base.StopAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public override Task DoWorkAsync(CancellationToken stoppingToken)
         => Task.CompletedTask; // Event-driven: the recorder works in the handlers it subscribes in Start.
+
+    private void OnActivityChanged(
+        object? sender,
+        CameraActivityChangedEventArgs e)
+        => feed.Publish(e.ToEvent(settingsService.Recording.RecordingPath).ToStreamEvent());
 
     /// <inheritdoc />
     public override void Dispose()

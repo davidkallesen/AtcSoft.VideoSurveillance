@@ -14,11 +14,16 @@ public sealed partial class TimelineViewModel : ViewModelBase
     // An event plays from a second before it, so its start is seen.
     private static readonly TimeSpan EventLeadIn = TimeSpan.FromSeconds(1);
 
+    // The view grows by itself while it shows a span up to now, at most this often.
+    private static readonly TimeSpan LiveReloadInterval = TimeSpan.FromSeconds(5);
+
     private readonly GatewayService gatewayService;
     private readonly Uri apiBaseUri;
     private readonly ClientSession? session;
     private DateTimeOffset from;
     private DateTimeOffset to;
+    private DateTimeOffset lastLoad;
+    private int reloadPending;
 
     // Where previous and next count from: the last place played, else an end of the span.
     private DateTimeOffset? cursor;
@@ -44,10 +49,12 @@ public sealed partial class TimelineViewModel : ViewModelBase
     /// <param name="gatewayService">The server.</param>
     /// <param name="apiBaseUri">The server's address, for the recordings' files.</param>
     /// <param name="session">The signed-in session, for the media token.</param>
+    /// <param name="eventService">The server's events: the view grows by them while it shows now.</param>
     public TimelineViewModel(
         GatewayService gatewayService,
         Uri apiBaseUri,
-        ClientSession? session = null)
+        ClientSession? session = null,
+        SurveillanceEventService? eventService = null)
     {
         ArgumentNullException.ThrowIfNull(gatewayService);
         ArgumentNullException.ThrowIfNull(apiBaseUri);
@@ -55,7 +62,17 @@ public sealed partial class TimelineViewModel : ViewModelBase
         this.gatewayService = gatewayService;
         this.apiBaseUri = apiBaseUri;
         this.session = session;
+        if (eventService is not null)
+        {
+            eventService.OnActivityChanged += _ => ReloadLive();
+            eventService.OnRecordingStateChanged += _ => ReloadLive();
+        }
     }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the view is on screen; only then does it grow live.
+    /// </summary>
+    public bool IsShown { get; set; }
 
     /// <summary>
     /// Gets the span shown: one day of the viewer's calendar, or the last 24 hours up to now.
@@ -84,6 +101,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
     private async Task LoadAsync()
     {
         var now = DateTimeOffset.UtcNow;
+        lastLoad = now;
         (from, to) = SpanOf(SelectedDay, now, TimeZoneInfo.Local);
         IsLoading = true;
         StatusMessage = string.Empty;
@@ -122,6 +140,37 @@ public sealed partial class TimelineViewModel : ViewModelBase
     [RelayCommand("PreviousEvent")]
     private Task PreviousEventAsync()
         => JumpAsync(forward: false);
+
+    // Activity started or ended, or a recording started or stopped: reload, a few seconds at most
+    // after the last load, while the view shows a span up to now.
+    private void ReloadLive()
+    {
+        if (!IsShown || SelectedDay is not null || Interlocked.Exchange(ref reloadPending, 1) == 1)
+        {
+            return;
+        }
+
+        var wait = lastLoad + LiveReloadInterval - DateTimeOffset.UtcNow;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (wait > TimeSpan.Zero)
+                {
+                    await Task.Delay(wait).ConfigureAwait(false);
+                }
+
+                if (Application.Current?.Dispatcher is { } dispatcher)
+                {
+                    await dispatcher.InvokeAsync(() => LoadCommand.Execute(parameter: null));
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref reloadPending, 0);
+            }
+        });
+    }
 
     private void OnSelectedDayChanged()
     {

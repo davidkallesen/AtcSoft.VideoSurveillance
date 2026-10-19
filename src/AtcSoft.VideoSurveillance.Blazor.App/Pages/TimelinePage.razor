@@ -4,6 +4,8 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
+@inject EventStreamService EventStream
+@implements IDisposable
 
 <MudText Typo="Typo.h4" Class="mb-2">@Translations.Timeline</MudText>
 <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">@Translations.TimelineHelp</MudText>
@@ -96,15 +98,57 @@ else if (timeline is { } shown)
     // Where previous and next count from: the last place played, else the end of the span.
     private DateTimeOffset? cursor;
 
+    // The page grows by itself while it shows a span up to now.
+    private readonly CancellationTokenSource leaving = new();
+    private DateTimeOffset lastLoad;
+    private bool reloadPending;
+
     protected override Task OnInitializedAsync()
-        => LoadAsync();
+    {
+        _ = EventStream.RunAsync(OnEventAsync, leaving.Token);
+        return LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        leaving.Cancel();
+        leaving.Dispose();
+    }
+
+    private async Task OnEventAsync(SurveillanceEvent surveillanceEvent)
+    {
+        if (reloadPending || !TimelineRefresh.ShouldReload(surveillanceEvent, showsNow: day is null))
+        {
+            return;
+        }
+
+        reloadPending = true;
+        try
+        {
+            await Task.Delay(TimelineRefresh.Wait(lastLoad, DateTimeOffset.UtcNow), leaving.Token);
+            await InvokeAsync(async () =>
+            {
+                await LoadAsync();
+                StateHasChanged();
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // The page was left.
+        }
+        finally
+        {
+            reloadPending = false;
+        }
+    }
 
     private static string LaneId(TimelineLane lane)
         => "timeline-lane-" + lane.CameraId.ToString("N");
 
     private async Task LoadAsync()
     {
-        loading = true;
+        lastLoad = DateTimeOffset.UtcNow;
+        loading = timeline is null;
         if (day is null)
         {
             span = TimelineSpan.Last24Hours(DateTimeOffset.UtcNow);

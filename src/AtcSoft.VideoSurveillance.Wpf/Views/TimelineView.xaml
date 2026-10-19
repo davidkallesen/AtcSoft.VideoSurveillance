@@ -10,6 +10,7 @@
     xmlns:viewModels="clr-namespace:AtcSoft.VideoSurveillance.Wpf.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewModels:TimelineViewModel}"
     Loaded="OnLoaded"
+    Unloaded="OnUnloaded"
     mc:Ignorable="d">
 
     <Grid Margin="16">

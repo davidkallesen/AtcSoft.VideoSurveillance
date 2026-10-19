@@ -56,6 +56,11 @@ public sealed class FakeMotionDetection : IMotionDetectionService
         double level)
         => PictureAnalyzed?.Invoke(this, new PictureAnalyzedEventArgs(cameraId, time, new MotionDetectorResult(false, MotionHoldChange.None, level, [])));
 
+    public void MovingPicture(
+        Guid cameraId,
+        DateTimeOffset time)
+        => PictureAnalyzed?.Invoke(this, new PictureAnalyzedEventArgs(cameraId, time, new MotionDetectorResult(true, MotionHoldChange.Continues, 20, [new BoundingBox { Width = 5, Height = 5, TrackId = 1 }])));
+
     public void Motion(MotionDetectedEventArgs args)
         => MotionDetected?.Invoke(this, args);
 }
