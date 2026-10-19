@@ -42,7 +42,10 @@ public static class ActivityLogReader
             return null;
         }
 
-        var seconds = new SortedDictionary<int, ActivitySecond>();
+        // The lines come in order, one per second; anything else (a second written twice, a
+        // line out of place) is sorted out at the end.
+        var seconds = new List<ActivitySecond>(capacity: 4096);
+        var inOrder = true;
         while (reader.ReadLine() is { } line)
         {
             if (!ActivityLogFormat.TryReadSecond(line, out var second))
@@ -50,16 +53,23 @@ public static class ActivityLogReader
                 continue;
             }
 
-            // Written once per second; should one come twice, the most of both counts.
-            seconds[second.Offset] = seconds.TryGetValue(second.Offset, out var known)
-                ? new ActivitySecond(
-                    second.Offset,
-                    Math.Max(known.Level, second.Level),
-                    Math.Max(known.Tracks, second.Tracks),
-                    [.. known.TrackIds.Union(second.TrackIds).Order()])
-                : second;
+            inOrder &= seconds.Count == 0 || second.Offset > seconds[^1].Offset;
+            seconds.Add(second);
         }
 
-        return new ActivityLog(start, [.. seconds.Values]);
+        return new ActivityLog(start, inOrder ? seconds : Merge(seconds));
     }
+
+    // Should a second come twice, the most of both counts.
+    private static List<ActivitySecond> Merge(List<ActivitySecond> seconds)
+        => [.. seconds
+            .GroupBy(s => s.Offset)
+            .OrderBy(g => g.Key)
+            .Select(g => g.Count() == 1
+                ? g.First()
+                : new ActivitySecond(
+                    g.Key,
+                    g.Max(s => s.Level),
+                    g.Max(s => s.Tracks),
+                    [.. g.SelectMany(s => s.TrackIds).Distinct().Order()]))];
 }

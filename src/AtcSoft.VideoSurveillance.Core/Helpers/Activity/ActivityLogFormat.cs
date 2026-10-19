@@ -48,32 +48,97 @@ internal static class ActivityLogFormat
                DateTimeOffset.TryParse(value.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out start);
     }
 
+    // A line per second, thousands per hour: read with the forward-only reader, not a document per
+    // line, so a timeline over days stays quick to build.
     public static bool TryReadSecond(
         string line,
         [NotNullWhen(true)] out ActivitySecond? second)
     {
         second = null;
-        if (!TryParse(line, out var root) ||
-            !root.TryGetProperty("t", out var t) || !t.TryGetInt32(out var offset) || offset < 0)
+        if (string.IsNullOrWhiteSpace(line))
         {
             return false;
         }
 
-        var level = root.TryGetProperty("a", out var a) && a.TryGetDouble(out var l) ? l : 0;
-        var tracks = root.TryGetProperty("n", out var n) && n.TryGetInt32(out var c) ? c : 0;
-        var ids = new List<int>();
-        if (root.TryGetProperty("ids", out var array) && array.ValueKind == JsonValueKind.Array)
+        var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetMaxByteCount(line.Length));
+        try
         {
-            foreach (var item in array.EnumerateArray())
+            var length = Encoding.UTF8.GetBytes(line, bytes);
+            return TryReadSecond(bytes.AsSpan(0, length), out second);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    private static bool TryReadSecond(
+        ReadOnlySpan<byte> json,
+        [NotNullWhen(true)] out ActivitySecond? second)
+    {
+        second = null;
+        int? offset = null;
+        double level = 0;
+        var tracks = 0;
+        List<int>? ids = null;
+
+        try
+        {
+            var reader = new Utf8JsonReader(json);
+            if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
             {
-                if (item.TryGetInt32(out var id))
+                return false;
+            }
+
+            while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+            {
+                if (reader.ValueTextEquals("t"u8))
                 {
-                    ids.Add(id);
+                    offset = reader.Read() && reader.TryGetInt32(out var t) ? t : null;
+                }
+                else if (reader.ValueTextEquals("a"u8))
+                {
+                    level = reader.Read() && reader.TryGetDouble(out var a) ? a : 0;
+                }
+                else if (reader.ValueTextEquals("n"u8))
+                {
+                    tracks = reader.Read() && reader.TryGetInt32(out var n) ? n : 0;
+                }
+                else if (reader.ValueTextEquals("ids"u8) && reader.Read() && reader.TokenType == JsonTokenType.StartArray)
+                {
+                    ids = [];
+                    while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+                    {
+                        if (reader.TryGetInt32(out var id))
+                        {
+                            ids.Add(id);
+                        }
+                    }
+                }
+                else
+                {
+                    reader.Read();
+                    reader.Skip();
                 }
             }
+
+            // A line cut off before its end is not a second.
+            if (reader.TokenType != JsonTokenType.EndObject || offset is not >= 0)
+            {
+                return false;
+            }
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            // A number where none was expected, in a line someone edited.
+            return false;
         }
 
-        second = new ActivitySecond(offset, level, tracks, ids);
+        second = new ActivitySecond(offset.Value, level, tracks, ids ?? []);
         return true;
     }
 
