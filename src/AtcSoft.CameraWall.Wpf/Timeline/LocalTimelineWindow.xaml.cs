@@ -18,7 +18,7 @@ public partial class LocalTimelineWindow
         DataContext = viewModel;
         Loaded += (_, _) =>
         {
-            viewModel.IsShown = true;
+            viewModel.StartLive();
             viewModel.LoadCommand.Execute(parameter: null);
         };
         Closed += (_, _) => viewModel.Dispose();

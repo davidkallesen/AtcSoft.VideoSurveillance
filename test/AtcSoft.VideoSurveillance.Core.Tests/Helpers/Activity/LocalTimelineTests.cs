@@ -67,6 +67,7 @@ public sealed class LocalTimelineTests : IDisposable
         var recording = recordings[garden.Id].Should().ContainSingle().Subject;
         recording.VideoPath.Should().Be(current);
         recording.End.Should().Be(now);
+        recording.Start.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1), "the session started as the test ran, an instant in any zone");
     }
 
     [Fact]

@@ -14,7 +14,9 @@ using TimelineZoom = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineZoom;
 /// <summary>
 /// CameraWall's timeline of every camera, from its own recording folders: the last 24 hours or a
 /// chosen day, zoom and move, previous and next event, a click that plays from that moment on
-/// across the camera's recordings, and *play all from here*. It grows while it shows now.
+/// across the camera's recordings, and *play all from here*. While it shows a span up to now it
+/// grows: on every recording change, and every <see cref="LiveRefreshInterval"/> for the activity of
+/// the recordings in progress.
 /// </summary>
 /// <remarks>
 /// CameraWall keeps no history of when a camera could be recorded, so a gap has no reason.
@@ -31,6 +33,9 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     // The window grows by itself while it shows a span up to now, at most this often.
     private static readonly TimeSpan LiveReloadInterval = TimeSpan.FromSeconds(5);
 
+    // How often the recordings in progress are read again for their activity.
+    private static readonly TimeSpan LiveRefreshInterval = TimeSpan.FromSeconds(15);
+
     private readonly Func<IReadOnlyList<TimelineCamera>> cameras;
     private readonly Func<IReadOnlyList<string?>> folders;
     private readonly IActiveRecordings recordings;
@@ -42,6 +47,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     private bool zoomed;
     private int reloadPending;
     private DateTimeOffset? cursor;
+    private DispatcherTimer? liveTimer;
 
     [ObservableProperty]
     private ObservableCollection<LocalTimelineLaneViewModel> lanes = [];
@@ -91,11 +97,33 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     /// </summary>
     public bool IsShown { get; set; }
 
+    /// <summary>
+    /// Starts reading the recordings in progress again now and then, while the window is open.
+    /// </summary>
+    public void StartLive()
+    {
+        IsShown = true;
+        if (liveTimer is not null)
+        {
+            return;
+        }
+
+        liveTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveRefreshInterval };
+        liveTimer.Tick += OnLiveTick;
+        liveTimer.Start();
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
         IsShown = false;
         recordings.RecordingStateChanged -= OnRecordingStateChanged;
+        if (liveTimer is not null)
+        {
+            liveTimer.Stop();
+            liveTimer.Tick -= OnLiveTick;
+            liveTimer = null;
+        }
     }
 
     /// <summary>
@@ -170,11 +198,11 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         try
         {
             var (span, start, end) = (BucketCount, from, to);
-            var all = cameras();
+            var sources = Sources();
             var built = await Task.Run(() =>
             {
-                var found = Find(start, end, now, all);
-                return all
+                var found = Find(sources, start, end, now);
+                return sources.Cameras
                     .Select(c => (Camera: c, Timeline: TimelineBuilder.Build(found.GetValueOrDefault(c.Id) ?? [], start, end, span)))
                     .ToList();
             }).ConfigureAwait(true);
@@ -276,13 +304,13 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     private async Task JumpAsync(bool forward)
     {
         var moment = cursor ?? (forward ? from : to);
-        var all = cameras();
+        var sources = Sources();
         var now = DateTimeOffset.UtcNow;
         var found = await Task.Run(() =>
         {
             var around = forward
-                ? Find(moment, moment + LocalTimeline.MaximumSpan, now, all)
-                : Find(moment - LocalTimeline.MaximumSpan, moment, now, all);
+                ? Find(sources, moment, moment + LocalTimeline.MaximumSpan, now)
+                : Find(sources, moment - LocalTimeline.MaximumSpan, moment, now);
             return LocalTimeline.FindEvent(around, moment, forward);
         }).ConfigureAwait(true);
 
@@ -342,12 +370,22 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         DateTimeOffset moment)
         => $"{cameraName} - {moment.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}";
 
+    // The cameras, folders and recordings in progress, read on the UI thread: the scan runs on
+    // another one, and must not touch the app's own lists while they change.
+    private (IReadOnlyList<TimelineCamera> Cameras, IReadOnlyList<string?> Folders, IReadOnlyList<RecordingSession> Sessions) Sources()
+        => ([.. cameras()], [.. folders()], [.. recordings.GetActiveSessions()]);
+
     private IReadOnlyDictionary<Guid, IReadOnlyList<TimelineRecording>> Find(
+        (IReadOnlyList<TimelineCamera> Cameras, IReadOnlyList<string?> Folders, IReadOnlyList<RecordingSession> Sessions) sources,
         DateTimeOffset start,
         DateTimeOffset end,
-        DateTimeOffset now,
-        IReadOnlyList<TimelineCamera> all)
-        => LocalTimeline.FindRecordings(folders(), all, recordings.GetActiveSessions(), start, end, zone, now, cache);
+        DateTimeOffset now)
+        => LocalTimeline.FindRecordings(sources.Folders, sources.Cameras, sources.Sessions, start, end, zone, now, cache);
+
+    private void OnLiveTick(
+        object? sender,
+        EventArgs e)
+        => ReloadLive();
 
     private void OnRecordingStateChanged(
         object? sender,
