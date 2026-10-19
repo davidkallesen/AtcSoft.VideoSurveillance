@@ -110,7 +110,7 @@ else if (timeline is { } shown)
         @foreach (var reason in TimelineGapStyle.Reasons)
         {
             <div class="d-flex align-center gap-1">
-                <span style="@($"display: inline-block; width: 14px; height: 14px; background: {TimelineGapStyle.Fill(reason)};")"></span>
+                <span style="@TimelineGapStyle.Swatch(reason)"></span>
                 <MudText Typo="Typo.caption">@TimelineGapStyle.Text(reason)</MudText>
             </div>
         }

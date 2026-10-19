@@ -7,12 +7,14 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 /// camera in <see cref="ServerDataPaths.AvailabilityPath"/>, one for the server.
 /// </summary>
 /// <remarks>
-/// Event-driven, on <see cref="BackgroundServiceBase{T}"/> like the other hosted workers:
-/// <see cref="DoWorkAsync"/> is a no-op.
+/// The changes are noted as their events fire. <see cref="DoWorkAsync"/> only notes the time in
+/// <c>server.alive</c>: a server that stopped without saying so (a crash, a power cut) is noted as
+/// stopped then, at its next start.
 /// </remarks>
 public sealed partial class AvailabilityHistoryService : BackgroundServiceBase<AvailabilityHistoryService>, IAvailabilityHistory
 {
     private const string ServerFileName = "server.jsonl";
+    private const string AliveFileName = "server.alive";
 
     private readonly ServerRecordingService recordingService;
     private readonly string folder;
@@ -46,6 +48,7 @@ public sealed partial class AvailabilityHistoryService : BackgroundServiceBase<A
         recordingService.CameraConnectionStateChanged += OnConnectionStateChanged;
         recordingService.RecordingStateChanged += OnRecordingStateChanged;
         recordingService.DiskSpaceStopped += OnDiskSpaceStopped;
+        NoteUnannouncedStop();
         Write(Path.Combine(folder, ServerFileName), AvailabilityChange.ServerStarted);
         return base.StartAsync(cancellationToken);
     }
@@ -61,8 +64,46 @@ public sealed partial class AvailabilityHistoryService : BackgroundServiceBase<A
     }
 
     /// <inheritdoc />
-    public override Task DoWorkAsync(CancellationToken stoppingToken)
-        => Task.CompletedTask; // Event-driven: all work runs in the handlers wired up in StartAsync.
+    public override async Task DoWorkAsync(CancellationToken stoppingToken)
+    {
+        var path = Path.Combine(folder, AliveFileName);
+        try
+        {
+            Directory.CreateDirectory(folder);
+            await File.WriteAllTextAsync(path, timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture), stoppingToken);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            LogHistoryWriteFailed(ex, path);
+        }
+    }
+
+    // The last run ended without a stop: it stopped when it last said it was alive.
+    private void NoteUnannouncedStop()
+    {
+        var serverFile = Path.Combine(folder, ServerFileName);
+        var history = AvailabilityLog.Read(serverFile);
+        if (history.Count == 0 || history[^1].Change != AvailabilityChange.ServerStarted)
+        {
+            return;
+        }
+
+        var started = history[^1].Time;
+        var alive = started;
+        try
+        {
+            if (DateTimeOffset.TryParse(File.ReadAllText(Path.Combine(folder, AliveFileName)), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var said) && said > started)
+            {
+                alive = said;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // No sign of life after the start: it stopped at once.
+        }
+
+        Write(serverFile, AvailabilityChange.ServerStopped, alive);
+    }
 
     private void OnConnectionStateChanged(
         Guid cameraId,
@@ -117,11 +158,12 @@ public sealed partial class AvailabilityHistoryService : BackgroundServiceBase<A
     // The events fire on the threads that raise them: a failure here is logged, never thrown into them.
     private void Write(
         string path,
-        AvailabilityChange change)
+        AvailabilityChange change,
+        DateTimeOffset? time = null)
     {
         try
         {
-            AvailabilityLog.Append(path, new AvailabilityEntry(timeProvider.GetUtcNow(), change));
+            AvailabilityLog.Append(path, new AvailabilityEntry(time ?? timeProvider.GetUtcNow(), change));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

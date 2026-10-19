@@ -81,6 +81,27 @@ public sealed class TimelineGapsTests : IDisposable
     }
 
     [Fact]
+    public void A_Camera_That_Went_On_And_Off_Every_Minute_For_A_Week_Is_Read_In_One_Pass()
+    {
+        // A recording every other minute for a week, offline in between.
+        var start = Nine.AddDays(-7);
+        var coverage = new List<CoverageSpan>();
+        var history = new List<AvailabilityEntry>();
+        for (var minute = 0; minute < 7 * 24 * 60; minute += 2)
+        {
+            coverage.Add(new CoverageSpan(start.AddMinutes(minute), start.AddMinutes(minute + 1), "a", start.AddMinutes(minute)));
+            history.Add(new AvailabilityEntry(start.AddMinutes(minute), AvailabilityChange.Online));
+            history.Add(new AvailabilityEntry(start.AddMinutes(minute + 1), AvailabilityChange.Offline));
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var gaps = TimelineGaps.Find(coverage, start, Nine, history);
+
+        gaps.Should().HaveCount(coverage.Count).And.OnlyContain(g => g.Reason == GapReason.Offline);
+        watch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
     public void A_Span_With_No_Recording_Is_One_Gap()
         => TimelineGaps.Find([], Nine, Nine.AddHours(1), []).Should().Equal(new TimelineGap(Nine, Nine.AddHours(1), GapReason.Unknown));
 

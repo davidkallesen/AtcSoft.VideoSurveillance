@@ -5,8 +5,15 @@ namespace AtcSoft.VideoSurveillance.Helpers.Activity;
 /// history of whether the camera could be recorded: the state at the gap's start decides, and a
 /// gap whose reason changes on the way (back online, but the disk is full) is cut in two there.
 /// </summary>
+/// <remarks>
+/// The history is replayed once for all gaps, so a camera that went on and off thousands of times
+/// costs no more than reading its history.
+/// </remarks>
 public static class TimelineGaps
 {
+    // A second of slack: the recording's end and the change that ended it are noted apart.
+    private static readonly TimeSpan Slack = TimeSpan.FromSeconds(1);
+
     /// <summary>
     /// Finds the gaps of a span.
     /// </summary>
@@ -25,13 +32,14 @@ public static class TimelineGaps
         ArgumentNullException.ThrowIfNull(history);
 
         var ordered = history.OrderBy(e => e.Time).ToList();
+        var replay = new Replay(ordered);
         var gaps = new List<TimelineGap>();
         var cursor = from;
         foreach (var span in coverage.OrderBy(c => c.Start))
         {
             if (span.Start > cursor)
             {
-                AddExplained(gaps, ordered, cursor, span.Start);
+                AddExplained(gaps, replay, cursor, span.Start);
             }
 
             if (span.End > cursor)
@@ -42,41 +50,10 @@ public static class TimelineGaps
 
         if (cursor < to)
         {
-            AddExplained(gaps, ordered, cursor, to);
+            AddExplained(gaps, replay, cursor, to);
         }
 
         return gaps;
-    }
-
-    private static void AddExplained(
-        List<TimelineGap> gaps,
-        List<AvailabilityEntry> ordered,
-        DateTimeOffset start,
-        DateTimeOffset end)
-    {
-        var reason = Explain(ordered, start);
-        foreach (var entry in ordered)
-        {
-            if (entry.Time <= start.AddSeconds(1))
-            {
-                continue;
-            }
-
-            if (entry.Time >= end)
-            {
-                break;
-            }
-
-            var next = Explain(ordered, entry.Time);
-            if (next != reason)
-            {
-                gaps.Add(new TimelineGap(start, entry.Time, reason));
-                start = entry.Time;
-                reason = next;
-            }
-        }
-
-        gaps.Add(new TimelineGap(start, end, reason));
     }
 
     /// <summary>
@@ -90,58 +67,80 @@ public static class TimelineGaps
     {
         ArgumentNullException.ThrowIfNull(history);
 
-        // A second of slack: the recording's end and the change that ended it are noted apart.
-        var known = false;
-        var offline = false;
-        var serverDown = false;
-        var diskFull = false;
-        foreach (var entry in history)
-        {
-            if (entry.Time > moment.AddSeconds(1))
-            {
-                break;
-            }
+        var replay = new Replay(history);
+        replay.ApplyUntil(moment + Slack);
+        return replay.Reason;
+    }
 
-            known = true;
-            switch (entry.Change)
+    private static void AddExplained(
+        List<TimelineGap> gaps,
+        Replay replay,
+        DateTimeOffset start,
+        DateTimeOffset end)
+    {
+        replay.ApplyUntil(start + Slack);
+        var reason = replay.Reason;
+        while (replay.Next is { } change && change < end)
+        {
+            replay.ApplyUntil(change + Slack);
+            if (replay.Reason != reason)
             {
-                case AvailabilityChange.Online:
-                    offline = false;
-                    break;
-                case AvailabilityChange.Offline:
-                    offline = true;
-                    break;
-                case AvailabilityChange.RecordingStarted:
-                    diskFull = false;
-                    break;
-                case AvailabilityChange.DiskFull:
-                    diskFull = true;
-                    break;
-                case AvailabilityChange.ServerStarted:
-                    serverDown = false;
-                    offline = false;
-                    break;
-                case AvailabilityChange.ServerStopped:
-                    serverDown = true;
-                    break;
+                gaps.Add(new TimelineGap(start, change, reason));
+                start = change;
+                reason = replay.Reason;
             }
         }
 
-        if (!known)
-        {
-            return GapReason.Unknown;
-        }
+        gaps.Add(new TimelineGap(start, end, reason));
+    }
 
-        if (serverDown)
-        {
-            return GapReason.ServerDown;
-        }
+    // The state of the history, moved forward only.
+    private sealed class Replay(IReadOnlyList<AvailabilityEntry> ordered)
+    {
+        private int index;
+        private bool known;
+        private bool offline;
+        private bool serverDown;
+        private bool diskFull;
 
-        if (offline)
-        {
-            return GapReason.Offline;
-        }
+        public DateTimeOffset? Next
+            => index < ordered.Count ? ordered[index].Time : null;
 
-        return diskFull ? GapReason.DiskFull : GapReason.NotRecording;
+        public GapReason Reason
+            => !known ? GapReason.Unknown
+                : serverDown ? GapReason.ServerDown
+                : offline ? GapReason.Offline
+                : diskFull ? GapReason.DiskFull
+                : GapReason.NotRecording;
+
+        public void ApplyUntil(DateTimeOffset moment)
+        {
+            for (; index < ordered.Count && ordered[index].Time <= moment; index++)
+            {
+                known = true;
+                switch (ordered[index].Change)
+                {
+                    case AvailabilityChange.Online:
+                        offline = false;
+                        break;
+                    case AvailabilityChange.Offline:
+                        offline = true;
+                        break;
+                    case AvailabilityChange.RecordingStarted:
+                        diskFull = false;
+                        break;
+                    case AvailabilityChange.DiskFull:
+                        diskFull = true;
+                        break;
+                    case AvailabilityChange.ServerStarted:
+                        serverDown = false;
+                        offline = false;
+                        break;
+                    case AvailabilityChange.ServerStopped:
+                        serverDown = true;
+                        break;
+                }
+            }
+        }
     }
 }

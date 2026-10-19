@@ -49,8 +49,9 @@ public static class AvailabilityLog
             using var reader = new StreamReader(stream, Encoding.UTF8);
             lines = reader.ReadToEnd().Split('\n');
         }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // Missing or unreadable: a gap is then explained as unknown, the timeline still answers.
             return [];
         }
 

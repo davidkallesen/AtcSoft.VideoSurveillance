@@ -66,6 +66,24 @@ public sealed class TimelinePageTests
         TimelineGapStyle.Reasons.Select(TimelineGapStyle.Fill).Should().OnlyHaveUniqueItems();
     }
 
+    [Theory]
+    [InlineData("offline", AtcSoft.VideoSurveillance.Enums.GapReason.Offline)]
+    [InlineData("diskFull", AtcSoft.VideoSurveillance.Enums.GapReason.DiskFull)]
+    [InlineData("serverDown", AtcSoft.VideoSurveillance.Enums.GapReason.ServerDown)]
+    [InlineData("notRecording", AtcSoft.VideoSurveillance.Enums.GapReason.NotRecording)]
+    [InlineData("unknown", AtcSoft.VideoSurveillance.Enums.GapReason.Unknown)]
+    public void The_Gap_Colours_Are_The_Same_As_The_Desktop_Clients(
+        string reason,
+        AtcSoft.VideoSurveillance.Enums.GapReason core)
+    {
+        var (a, r, g, b) = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineGapColors.Of(core);
+        var parts = TimelineGapStyle.Fill(reason)["rgba(".Length..^1].Split(',');
+
+        parts[..3].Select(p => byte.Parse(p, CultureInfo.InvariantCulture)).Should().Equal(r, g, b);
+        Math.Round(double.Parse(parts[3], CultureInfo.InvariantCulture) * 255).Should().Be(a);
+        TimelineGapStyle.Reasons.Should().Contain(reason);
+    }
+
     [Fact]
     public void An_Event_Is_Placed_By_Its_Time_And_Drawn_At_Least_Three_Stretches_Wide()
     {

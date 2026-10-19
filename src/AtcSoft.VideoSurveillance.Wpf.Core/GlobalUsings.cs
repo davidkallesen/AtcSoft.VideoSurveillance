@@ -97,5 +97,6 @@ global using SharedApplicationPaths = AtcSoft.VideoSurveillance.Helpers.Applicat
 global using StreamSettings = AtcSoft.VideoSurveillance.Wpf.Core.Models.Settings.StreamSettings;
 global using TimelapseFrameCapturedEventArgs = AtcSoft.VideoSurveillance.Events.TimelapseFrameCapturedEventArgs;
 global using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
+global using TimelineGapColors = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineGapColors;
 global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
 global using TimelineStretch = AtcSoft.VideoSurveillance.Models.TimelineStretch;
