@@ -44,6 +44,39 @@ public sealed class TimelineViewModelTests
     }
 
     [Fact]
+    public void After_A_Recording_The_Player_Moves_On_To_The_Lanes_Next_Recordings_In_Time_Order()
+    {
+        var lane = new TimelineLaneViewModel(
+            new TimelineLane(
+                Guid.NewGuid(),
+                "Garden",
+                Coverage:
+                [
+                    new TimelineCoverage(Nine.AddHours(2), Nine.AddHours(3), "Garden/c.mkv", Nine.AddHours(2)),
+                    new TimelineCoverage(Nine, Nine.AddHours(1), "Garden/a.mkv", Nine),
+                    new TimelineCoverage(Nine.AddHours(1), Nine.AddHours(1.5), "Garden/b.mkv", Nine.AddHours(1)),
+                ],
+                Buckets: [],
+                Events: []),
+            Nine,
+            Nine.AddHours(4),
+            Nine,
+            (_, _) => { });
+
+        var next = TimelineViewModel.NextSegments(
+            lane,
+            "Garden/a.mkv",
+            path => new Uri("http://server/recordings-files/" + path),
+            _ => (_, _, _) => Task.FromResult<IReadOnlyList<ActivityBucket>?>(null));
+
+        next()!.FilePath.Should().Be("http://server/recordings-files/Garden/b.mkv");
+        var third = next()!;
+        third.FilePath.Should().EndWith("Garden/c.mkv", "the gap between b and c is skipped");
+        third.RecordingStartTime.Should().Be(Nine.AddHours(2).LocalDateTime);
+        next().Should().BeNull("nothing follows the last recording of the span");
+    }
+
+    [Fact]
     public void A_Click_On_A_Lane_Hands_Its_Place_To_The_View()
     {
         var lane = new TimelineLane(Guid.NewGuid(), "Garden", [], [], []);

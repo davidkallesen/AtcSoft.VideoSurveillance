@@ -140,6 +140,14 @@ window.timelineInterop = {
         return box.width > 0 ? Math.max(0, Math.min(1, (clientX - box.left) / box.width)) : 0;
     },
 
+    // Tells the dialog when a recording has played to its end, so it can move on to the next.
+    onEnded: function (videoId, dotNetRef) {
+        var video = document.getElementById(videoId);
+        if (video) {
+            video.addEventListener('ended', function () { dotNetRef.invokeMethodAsync('OnEndedAsync'); });
+        }
+    },
+
     // Starts a recording this far in, once the player knows its length.
     startAt: function (videoId, seconds) {
         var video = document.getElementById(videoId);

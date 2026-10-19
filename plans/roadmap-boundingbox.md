@@ -350,7 +350,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 7 | Activity index (sidecar, API) | M | 🟨 Core, server and CameraWall done; the setting and *Analyse recording* open |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps and click to seek in all three clients; hover, play events only, zoom, sparklines open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
-| 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | 🟨 both views built; playing on across segments, live events, gap reasons, zoom open |
+| 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | 🟨 both views built, playing on across segments; live events, gap reasons, zoom open |
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
 | 10 | Local AI detection (ONNX) on motion regions: moved to the [AI support plan](roadmap-AI-support.md) | L | ⏸️ |
 
@@ -506,7 +506,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 ### Phase 8c — Timeline view of every camera 🟨 (L)
 
-**Done 2026-10-19:** a *Timeline* page in the web client and a *Timeline* view in the WPF client (ribbon, Ctrl+7): every camera as a lane over the last 24 hours or a chosen day (midnight to midnight in the viewer's zone, 23 or 25 hours when the clocks change), with gaps, recorded-but-not-analysed stretches, bars, orange event bands, a red now line and hour marks (`TimelineMarks` in Core, a `Logic/` copy kept equal). A click plays the recording that covers that moment from that far in (coverage now carries the recording's own start); previous / next event jump across recordings through `GET /timeline/events`. Wpf.Core has the drawn `CameraTimelineLane` and `TimelineMarksBar`, ready for CameraWall. Unit tests, drawn-to-bitmap control tests, and steps in the web and WPF client walks. **Open:** playing on into the next segment when one ends, *play all from here*, zoom, live growth from `activityStarted` / `activityEnded`, the reasons of gaps, CameraWall's own timeline.
+**Done 2026-10-19:** a *Timeline* page in the web client and a *Timeline* view in the WPF client (ribbon, Ctrl+7): every camera as a lane over the last 24 hours or a chosen day (midnight to midnight in the viewer's zone, 23 or 25 hours when the clocks change), with gaps, recorded-but-not-analysed stretches, bars, orange event bands, a red now line and hour marks (`TimelineMarks` in Core, a `Logic/` copy kept equal). A click plays the recording that covers that moment from that far in (coverage now carries the recording's own start); previous / next event jump across recordings through `GET /timeline/events`. Wpf.Core has the drawn `CameraTimelineLane` and `TimelineMarksBar`, ready for CameraWall. Unit tests, drawn-to-bitmap control tests, and steps in the web and WPF client walks. When a recording ends the player moves on to the camera's next recording in the span, gaps skipped (WPF player window and web dialog alike). **Open:** *play all from here*, zoom, live growth from `activityStarted` / `activityEnded`, the reasons of gaps, CameraWall's own timeline.
 
 
 - Web: a *Timeline* page with its logic in `Logic/` (lane layout, zoom, now line); WPF client: a *Timeline* view using the Wpf.Core control in lane mode.

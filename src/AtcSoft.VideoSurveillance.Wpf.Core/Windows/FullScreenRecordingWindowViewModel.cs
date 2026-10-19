@@ -19,12 +19,16 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private static readonly TimeSpan EventLeadIn = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan PreviousEventSlack = TimeSpan.FromSeconds(2);
 
-    private readonly string filePath;
-    private readonly DateTime? recordingStartTime;
     private readonly PlaybackOverlaySettings overlaySettings;
-    private readonly RecordingActivityLoader? activityLoader;
-    private readonly TimeSpan startPosition;
+    private readonly Func<RecordingSegment?>? nextSegment;
     private readonly CancellationTokenSource activityCancellation = new();
+    private string filePath;
+    private DateTime? recordingStartTime;
+    private RecordingActivityLoader? activityLoader;
+    private TimeSpan startPosition;
+
+    // Counts the recordings played in this window: an activity that arrives for an earlier one is dropped.
+    private int segment;
     private IReadOnlyList<ActivityEvent> activityEvents = [];
     private MediaElement? mediaElement;
     private DispatcherTimer? overlayHideTimer;
@@ -119,13 +123,18 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// recording without an activity index, there is no timeline.
     /// </param>
     /// <param name="startPosition">Where to start in the recording: a timeline plays from a moment.</param>
+    /// <param name="nextSegment">
+    /// Gets the recording to move on to when this one ends (a timeline plays a camera's segments one
+    /// after another); <see langword="null"/>, or a function that returns it, ends playback.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
         PlaybackOverlaySettings? overlaySettings = null,
         DateTime? recordingStartTime = null,
         RecordingActivityLoader? activityLoader = null,
-        TimeSpan? startPosition = null)
+        TimeSpan? startPosition = null,
+        Func<RecordingSegment?>? nextSegment = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
@@ -133,6 +142,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         this.filePath = filePath;
         this.activityLoader = activityLoader;
         this.startPosition = startPosition ?? TimeSpan.Zero;
+        this.nextSegment = nextSegment;
         this.overlaySettings = overlaySettings ?? new PlaybackOverlaySettings();
         FileName = fileName;
         this.recordingStartTime = recordingStartTime ?? ParseRecordingStartTime(fileName);
@@ -341,19 +351,21 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
 
             if (activityLoader is not null && duration > 0)
             {
-                _ = LoadActivityAsync(TimeSpan.FromTicks(duration).TotalSeconds, Dispatcher.CurrentDispatcher);
+                _ = LoadActivityAsync(activityLoader, segment, TimeSpan.FromTicks(duration).TotalSeconds, Dispatcher.CurrentDispatcher);
             }
         }
     }
 
     private async Task LoadActivityAsync(
+        RecordingActivityLoader loader,
+        int forSegment,
         double durationSeconds,
         Dispatcher dispatcher)
     {
         IReadOnlyList<ActivityBucket>? buckets;
         try
         {
-            buckets = await activityLoader!(ActivityBucketCount, durationSeconds, activityCancellation.Token).ConfigureAwait(false);
+            buckets = await loader(ActivityBucketCount, durationSeconds, activityCancellation.Token).ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -368,7 +380,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
 
         _ = dispatcher.BeginInvoke(() =>
         {
-            if (disposed)
+            if (disposed || forSegment != segment)
             {
                 return;
             }
@@ -443,7 +455,51 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         object? sender,
         RoutedEventArgs e)
     {
+        if (mediaElement is not null && nextSegment?.Invoke() is { } next)
+        {
+            PlayNext(mediaElement, next);
+            return;
+        }
+
         IsPlaying = false;
+    }
+
+    // Moves on to the next recording in the same window, from its start.
+    private void PlayNext(
+        MediaElement element,
+        RecordingSegment next)
+    {
+        segment++;
+        filePath = next.FilePath;
+        FileName = next.FileName;
+        recordingStartTime = next.RecordingStartTime ?? ParseRecordingStartTime(next.FileName);
+        activityLoader = next.ActivityLoader;
+        startPosition = TimeSpan.Zero;
+
+        activityEvents = [];
+        ActivityBuckets = null;
+        HasActivity = false;
+        ActivityPosition = 0;
+        CanSeek = false;
+        isUpdatingPositionFromPlayer = true;
+        try
+        {
+            SeekPosition = 0;
+            PositionText = FormatDuration(0);
+        }
+        finally
+        {
+            isUpdatingPositionFromPlayer = false;
+        }
+
+        UpdateRecordingTimeText(0);
+        VideoRotationAngle = 0;
+        LoadVideoRotation();
+        CommandManager.InvalidateRequerySuggested();
+
+        element.Source = new Uri(filePath);
+        element.Play();
+        IsPlaying = true;
     }
 
     private void StartOverlayHideTimer()

@@ -152,9 +152,9 @@ public sealed partial class TimelineViewModel : ViewModelBase
         }
 
         cursor = found.Start;
-        var name = Lanes.FirstOrDefault(l => l.CameraId == found.CameraId)?.CameraName ?? string.Empty;
+        var lane = Lanes.FirstOrDefault(l => l.CameraId == found.CameraId);
         var offset = TimeSpan.FromSeconds(found.OffsetSeconds) - EventLeadIn;
-        Play(name, found.FilePath, offset > TimeSpan.Zero ? offset : TimeSpan.Zero, found.Start);
+        Play(lane, lane?.CameraName ?? string.Empty, found.FilePath, offset > TimeSpan.Zero ? offset : TimeSpan.Zero, found.Start);
     }
 
     private void PlayAt(
@@ -171,7 +171,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
 
         StatusMessage = string.Empty;
         var offset = moment - covering.RecordingStart;
-        Play(lane.CameraName, covering.FilePath, offset > TimeSpan.Zero ? offset : TimeSpan.Zero, moment);
+        Play(lane, lane.CameraName, covering.FilePath, offset > TimeSpan.Zero ? offset : TimeSpan.Zero, moment);
     }
 
     [SuppressMessage(
@@ -179,6 +179,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
         "CA2000:Dispose objects before losing scope",
         Justification = "Window self-disposes on close via the Closed event handler.")]
     private void Play(
+        TimelineLaneViewModel? lane,
         string cameraName,
         string filePath,
         TimeSpan offset,
@@ -187,13 +188,72 @@ public sealed partial class TimelineViewModel : ViewModelBase
         var url = RecordingEntryViewModel.FileUrl(apiBaseUri, filePath, session?.MediaToken);
         var viewModel = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
             url.AbsoluteUri,
-            string.IsNullOrEmpty(cameraName) ? System.IO.Path.GetFileName(filePath) : $"{cameraName} - {moment.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}",
+            Title(cameraName, filePath, moment),
             recordingStartTime: (moment - offset).LocalDateTime,
             activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken),
-            startPosition: offset);
+            startPosition: offset,
+            nextSegment: lane is null ? null : NextSegments(lane, filePath));
 
         new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(viewModel).Show();
     }
+
+    private static string Title(
+        string cameraName,
+        string filePath,
+        DateTimeOffset moment)
+        => string.IsNullOrEmpty(cameraName)
+            ? System.IO.Path.GetFileName(filePath)
+            : $"{cameraName} - {moment.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)}";
+
+    /// <summary>
+    /// Gets what plays after a recording of a lane: the lane's following recordings in the span, one
+    /// after another, gaps skipped.
+    /// </summary>
+    /// <param name="lane">The camera's lane.</param>
+    /// <param name="filePath">The recording that plays first.</param>
+    /// <param name="fileUrl">Turns a recording into the address the player opens.</param>
+    /// <param name="loadActivity">Loads a recording's activity for the player's timeline.</param>
+    /// <returns>A function that gives the next recording each time, then <see langword="null"/>.</returns>
+    public static Func<AtcSoft.VideoSurveillance.Wpf.Core.Windows.RecordingSegment?> NextSegments(
+        TimelineLaneViewModel lane,
+        string filePath,
+        Func<string, Uri> fileUrl,
+        Func<string, AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingActivityLoader> loadActivity)
+    {
+        ArgumentNullException.ThrowIfNull(lane);
+        ArgumentNullException.ThrowIfNull(fileUrl);
+        ArgumentNullException.ThrowIfNull(loadActivity);
+
+        var following = lane.Coverage
+            .OrderBy(c => c.Start)
+            .SkipWhile(c => !string.Equals(c.FilePath, filePath, StringComparison.Ordinal))
+            .Skip(1)
+            .ToList();
+        var next = 0;
+        return () =>
+        {
+            if (next >= following.Count)
+            {
+                return null;
+            }
+
+            var coverage = following[next++];
+            return new AtcSoft.VideoSurveillance.Wpf.Core.Windows.RecordingSegment(
+                fileUrl(coverage.FilePath).AbsoluteUri,
+                Title(lane.CameraName, coverage.FilePath, coverage.RecordingStart),
+                coverage.RecordingStart.LocalDateTime,
+                loadActivity(coverage.FilePath));
+        };
+    }
+
+    private Func<AtcSoft.VideoSurveillance.Wpf.Core.Windows.RecordingSegment?> NextSegments(
+        TimelineLaneViewModel lane,
+        string filePath)
+        => NextSegments(
+            lane,
+            filePath,
+            path => RecordingEntryViewModel.FileUrl(apiBaseUri, path, session?.MediaToken),
+            path => (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(path, buckets, durationSeconds, cancellationToken));
 
     private async Task<IReadOnlyList<AtcSoft.VideoSurveillance.Models.ActivityBucket>?> LoadActivityAsync(
         string filePath,

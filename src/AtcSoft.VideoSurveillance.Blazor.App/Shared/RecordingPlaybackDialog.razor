@@ -1,6 +1,7 @@
 @using MudBlazor
 @inject IJSRuntime JS
 @inject GatewayService Gateway
+@implements IDisposable
 
 <MudDialog>
     <TitleContent>
@@ -95,6 +96,8 @@
     private IReadOnlyList<TimelineRect> bars = [];
     private IReadOnlyList<TimelineRect> notAnalysed = [];
     private IReadOnlyList<TimelineRect> bands = [];
+    private DotNetObjectReference<RecordingPlaybackDialog>? self;
+    private int nextSegment;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -138,13 +141,59 @@
     [Parameter]
     public double StartSeconds { get; set; }
 
+    /// <summary>
+    /// The recordings to move on to, one after another, when the one playing ends.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<RecordingPlaybackSegment> FollowingSegments { get; set; } = [];
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && StartSeconds > 0 && !failed)
+        if (!firstRender || failed)
+        {
+            return;
+        }
+
+        if (StartSeconds > 0)
         {
             await JS.InvokeVoidAsync("timelineInterop.startAt", videoId, StartSeconds);
         }
+
+        if (FollowingSegments.Count > 0)
+        {
+            self = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("timelineInterop.onEnded", videoId, self);
+        }
     }
+
+    /// <summary>
+    /// The recording played to its end: the next one plays from its start, with its own activity.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnEndedAsync()
+    {
+        if (nextSegment >= FollowingSegments.Count)
+        {
+            return;
+        }
+
+        var next = FollowingSegments[nextSegment++];
+        VideoUrl = next.VideoUrl;
+        DownloadUrl = next.DownloadUrl;
+        Title = next.Title;
+        FileName = RecordingDisplay.FileName(next.FilePath);
+        FilePath = next.FilePath;
+        DurationSeconds = 0;
+        StartSeconds = 0;
+        buckets = null;
+        events = [];
+        StateHasChanged();
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+        => self?.Dispose();
 
     protected override async Task OnInitializedAsync()
     {

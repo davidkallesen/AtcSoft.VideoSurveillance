@@ -27,6 +27,24 @@ public sealed record TimelinePlayback(
     }
 
     /// <summary>
+    /// Gets the lane's recordings that follow one, in time order: what plays after it, gaps skipped.
+    /// </summary>
+    /// <param name="lane">The camera's lane.</param>
+    /// <param name="filePath">The recording that plays first.</param>
+    /// <returns>The following recordings; none when the recording is not in the lane.</returns>
+    public static IReadOnlyList<TimelineCoverage> Following(
+        TimelineLane lane,
+        string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(lane);
+
+        return [.. lane.Coverage
+            .OrderBy(c => c.Start)
+            .SkipWhile(c => !string.Equals(c.FilePath, filePath, StringComparison.Ordinal))
+            .Skip(1)];
+    }
+
+    /// <summary>
     /// Gets where an event plays from: a second before it starts, so its start is seen.
     /// </summary>
     /// <param name="activityEvent">The event.</param>

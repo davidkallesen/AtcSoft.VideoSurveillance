@@ -108,6 +108,24 @@ public sealed class TimelinePageTests
             .Should().Be(new TimelinePlayback("Cam/a.mkv", 0), "an event plays from a second before it, never before the file");
     }
 
+    [Fact]
+    public void After_A_Recording_The_Player_Moves_On_To_The_Lanes_Next_Recordings_In_Time_Order()
+    {
+        var lane = Lane(
+            [],
+            events: [],
+            coverage:
+            [
+                new TimelineCoverage(Nine.AddHours(2), Nine.AddHours(3), "Cam/c.mkv", Nine.AddHours(2)),
+                new TimelineCoverage(Nine, Nine.AddHours(1), "Cam/a.mkv", Nine),
+                new TimelineCoverage(Nine.AddHours(1), Nine.AddHours(1.5), "Cam/b.mkv", Nine.AddHours(1)),
+            ]);
+
+        TimelinePlayback.Following(lane, "Cam/a.mkv").Select(c => c.FilePath).Should().Equal("Cam/b.mkv", "Cam/c.mkv");
+        TimelinePlayback.Following(lane, "Cam/c.mkv").Should().BeEmpty();
+        TimelinePlayback.Following(lane, "Other/x.mkv").Should().BeEmpty();
+    }
+
     private static TimelineBucket Bucket(
         bool recorded = true,
         bool analysed = true,

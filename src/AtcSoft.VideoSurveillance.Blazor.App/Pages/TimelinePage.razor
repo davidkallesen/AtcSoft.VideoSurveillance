@@ -152,7 +152,7 @@ else if (timeline is { } shown)
 
         if (TimelinePlayback.At(lane, moment) is { } playback)
         {
-            await PlayAsync(lane.CameraName, playback, moment);
+            await PlayAsync(lane, playback, moment);
         }
         else
         {
@@ -181,17 +181,28 @@ else if (timeline is { } shown)
 
         cursor = found.Start;
         var lane = timeline?.Lanes.FirstOrDefault(l => l.CameraId == found.CameraId);
-        await PlayAsync(lane?.CameraName ?? string.Empty, TimelinePlayback.Of(found), found.Start);
+        await PlayAsync(lane, TimelinePlayback.Of(found), found.Start);
     }
 
-    private async Task PlayAsync(string cameraName, TimelinePlayback playback, DateTimeOffset moment)
+    private async Task PlayAsync(TimelineLane? lane, TimelinePlayback playback, DateTimeOffset moment)
     {
-        var name = string.IsNullOrEmpty(cameraName) ? Translations.Recording : cameraName;
+        // What plays after it: the camera's following recordings in the span, gaps skipped.
+        var following = lane is null
+            ? []
+            : TimelinePlayback.Following(lane, playback.FilePath)
+                .Select(c => new RecordingPlaybackSegment(
+                    c.FilePath,
+                    RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, c.FilePath, Session.MediaToken) ?? string.Empty,
+                    RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, c.FilePath, Session.MediaToken) ?? string.Empty,
+                    TitleOf(lane.CameraName, c.RecordingStart)))
+                .ToList();
+
         var parameters = new DialogParameters<RecordingPlaybackDialog>
         {
             { x => x.VideoUrl, RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, playback.FilePath, Session.MediaToken) ?? string.Empty },
             { x => x.DownloadUrl, RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, playback.FilePath, Session.MediaToken) ?? string.Empty },
-            { x => x.Title, $"{name} - {moment.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)}" },
+            { x => x.Title, TitleOf(lane?.CameraName, moment) },
+            { x => x.FollowingSegments, following },
             { x => x.FileName, RecordingDisplay.FileName(playback.FilePath) },
             { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(playback.FilePath) },
             { x => x.FilePath, playback.FilePath },
@@ -208,4 +219,7 @@ else if (timeline is { } shown)
 
         await DialogService.ShowAsync<RecordingPlaybackDialog>(Translations.RecordingPlayback, parameters, options);
     }
+
+    private static string TitleOf(string? cameraName, DateTimeOffset moment)
+        => $"{(string.IsNullOrEmpty(cameraName) ? Translations.Recording : cameraName)} - {moment.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)}";
 }
