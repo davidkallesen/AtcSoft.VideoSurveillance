@@ -54,6 +54,21 @@ public sealed class ApiHostEventsTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Motion_Box_Reaches_The_Stream_With_Its_Track_Id()
+    {
+        var cameraId = Guid.NewGuid();
+        using var client = host.CreateClient();
+        using var response = await OpenAsync(client, $"/events?cameraId={cameraId}");
+
+        host.GetService<SurveillanceEventFeed>().Publish(Motion(cameraId, new MotionBox(X: 10, Y: 20, Width: 30, Height: 40, TrackId: 7)));
+        var received = (await ReadEventsAsync(response, count: 1)).Single();
+
+        using var data = JsonDocument.Parse(received.Data);
+        var box = data.RootElement.GetProperty("motion").GetProperty("boundingBoxes")[0];
+        box.GetProperty("trackId").GetInt32().Should().Be(7, "a client follows each box by its track");
+    }
+
+    [Fact]
     public async Task A_Client_That_Resumes_Gets_What_It_Missed()
     {
         var cameraId = Guid.NewGuid();
@@ -87,12 +102,14 @@ public sealed class ApiHostEventsTests(ApiHostFixture host)
         received.Id.Should().Be(mine.ToString(CultureInfo.InvariantCulture));
     }
 
-    private static SurveillanceEvent Motion(Guid cameraId)
+    private static SurveillanceEvent Motion(
+        Guid cameraId,
+        params MotionBox[] boxes)
         => new MotionDetectedEvent(
             cameraId,
             IsMotionActive: true,
             ChangePercentage: 2.5,
-            BoundingBoxes: [],
+            BoundingBoxes: [.. boxes],
             AnalysisWidth: 320,
             AnalysisHeight: 240,
             Timestamp: DateTimeOffset.UtcNow).ToStreamEvent();

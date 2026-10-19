@@ -18,13 +18,13 @@ public partial class MotionBoundingBoxOverlay
     // Pool of rectangle elements for reuse
     private readonly List<Rectangle> rectanglePool = [];
 
-    // Smooths each box against the box it was a moment ago (by overlap or nearness, not by
-    // its place in the list, which the detector sorts by size).
+    // Smooths each box against the box it was a moment ago: by its track id when it has one, else
+    // by overlap or nearness, never by its place in the list, which the detector sorts by size.
     private BoxSmoother? smoother;
     private double smootherFactor = double.NaN;
 
     // Last bounding box state for re-rendering on resize
-    private IReadOnlyList<Rect>? lastBoundingBoxes;
+    private IReadOnlyList<BoundingBox>? lastBoundingBoxes;
     private int lastAnalysisWidth = DefaultAnalysisWidth;
     private int lastAnalysisHeight = DefaultAnalysisHeight;
     private int lastVideoWidth;
@@ -54,10 +54,17 @@ public partial class MotionBoundingBoxOverlay
     /// </summary>
     /// <summary>
     /// The boxes to draw, for a host that binds them (the server client's tiles); a host that
-    /// drives the overlay from code calls <see cref="UpdateBoundingBoxes"/> instead.
+    /// drives the overlay from code calls <see cref="UpdateBoundingBoxes(IReadOnlyList{Rect}, Size)"/> instead.
     /// </summary>
     [DependencyProperty(PropertyChangedCallback = nameof(OnBoundingBoxesChanged))]
     private IReadOnlyList<Rect>? boundingBoxes;
+
+    /// <summary>
+    /// The boxes to draw with their track ids, for a host that binds them: each box is smoothed
+    /// against the earlier box of its own track.
+    /// </summary>
+    [DependencyProperty(PropertyChangedCallback = nameof(OnMotionBoxesChanged))]
+    private IReadOnlyList<BoundingBox>? motionBoxes;
 
     [DependencyProperty(DefaultValue = 0)]
     private int videoWidth;
@@ -90,6 +97,18 @@ public partial class MotionBoundingBoxOverlay
         }
     }
 
+    private static void OnMotionBoxesChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MotionBoundingBoxOverlay overlay)
+        {
+            overlay.UpdateBoundingBoxes(
+                e.NewValue as IReadOnlyList<BoundingBox>,
+                new Size(overlay.ActualWidth, overlay.ActualHeight));
+        }
+    }
+
     /// <summary>
     /// Updates the bounding box display with new positions for multiple motion regions.
     /// </summary>
@@ -97,6 +116,19 @@ public partial class MotionBoundingBoxOverlay
     /// <param name="containerSize">The size of the container to map coordinates to.</param>
     public void UpdateBoundingBoxes(
         IReadOnlyList<Rect>? boundingBoxes,
+        Size containerSize)
+        => UpdateBoundingBoxes(
+            boundingBoxes?.Select(b => new BoundingBox { X = b.X, Y = b.Y, Width = b.Width, Height = b.Height }).ToList(),
+            containerSize);
+
+    /// <summary>
+    /// Updates the bounding box display with boxes that may carry their track ids: a box with an
+    /// id is smoothed against the earlier box of its own track.
+    /// </summary>
+    /// <param name="boundingBoxes">The bounding boxes in analysis coordinates, or null/empty to hide all.</param>
+    /// <param name="containerSize">The size of the container to map coordinates to.</param>
+    public void UpdateBoundingBoxes(
+        IReadOnlyList<BoundingBox>? boundingBoxes,
         Size containerSize)
     {
         if (!IsOverlayEnabled ||
@@ -143,7 +175,7 @@ public partial class MotionBoundingBoxOverlay
         {
             var box = boundingBoxes[i];
             targets.Add(MotionBoxMapper.MapToVideoArea(
-                new BoundingBox { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height },
+                box,
                 AnalysisWidth,
                 AnalysisHeight,
                 videoArea));
@@ -182,7 +214,7 @@ public partial class MotionBoundingBoxOverlay
         }
         else
         {
-            UpdateBoundingBoxes(null, containerSize);
+            UpdateBoundingBoxes((IReadOnlyList<BoundingBox>?)null, containerSize);
         }
     }
 

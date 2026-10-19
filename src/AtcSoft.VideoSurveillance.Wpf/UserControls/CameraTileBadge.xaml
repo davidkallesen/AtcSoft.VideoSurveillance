@@ -151,7 +151,7 @@
                 <coreControls:MotionBoundingBoxOverlay
                     AnalysisHeight="{Binding Path=HostDataContext.AnalysisHeight}"
                     AnalysisWidth="{Binding Path=HostDataContext.AnalysisWidth}"
-                    BoundingBoxes="{Binding Path=HostDataContext.CurrentBoundingBoxes}"
+                    MotionBoxes="{Binding Path=HostDataContext.CurrentBoundingBoxes}"
                     IsHitTestVisible="False"
                     VideoHeight="{Binding Path=HostDataContext.MotionVideoHeight}"
                     VideoWidth="{Binding Path=HostDataContext.MotionVideoWidth}" />

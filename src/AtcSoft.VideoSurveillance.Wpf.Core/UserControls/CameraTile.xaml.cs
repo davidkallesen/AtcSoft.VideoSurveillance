@@ -2633,7 +2633,7 @@ public partial class CameraTile : IDisposable
             // Update bounding box overlay
             if (e is { IsMotionActive: true, HasBoundingBoxes: true })
             {
-                UpdateMotionBoundingBoxes(e.BoundingBoxes.ToRects(), e.AnalysisWidth, e.AnalysisHeight);
+                UpdateMotionBoundingBoxes(e.BoundingBoxes, e.AnalysisWidth, e.AnalysisHeight);
             }
             else
             {
@@ -2794,7 +2794,7 @@ public partial class CameraTile : IDisposable
     }
 
     private void UpdateMotionBoundingBoxes(
-        IReadOnlyList<Rect>? boundingBoxes,
+        IReadOnlyList<BoundingBox>? boundingBoxes,
         int analysisWidth = 320,
         int analysisHeight = 240)
     {

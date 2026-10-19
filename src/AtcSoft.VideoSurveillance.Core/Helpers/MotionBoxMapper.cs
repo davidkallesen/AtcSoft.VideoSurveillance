@@ -73,7 +73,7 @@ public static class MotionBoxMapper
 
         if (analysisWidth <= 0 || analysisHeight <= 0)
         {
-            return new BoundingBox { X = videoArea.X, Y = videoArea.Y };
+            return new BoundingBox { X = videoArea.X, Y = videoArea.Y, TrackId = box.TrackId };
         }
 
         var scaleX = videoArea.Width / analysisWidth;
@@ -85,6 +85,7 @@ public static class MotionBoxMapper
             Y = (box.Y * scaleY) + videoArea.Y,
             Width = box.Width * scaleX,
             Height = box.Height * scaleY,
+            TrackId = box.TrackId,
         };
     }
 }

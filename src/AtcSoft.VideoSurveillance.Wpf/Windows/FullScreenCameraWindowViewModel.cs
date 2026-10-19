@@ -41,7 +41,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
     private bool isMotionDetected;
 
     [ObservableProperty]
-    private IReadOnlyList<Rect> currentBoundingBoxes = [];
+    private IReadOnlyList<AtcSoft.VideoSurveillance.Models.BoundingBox> currentBoundingBoxes = [];
 
     [ObservableProperty]
     private int analysisWidth = 320;
@@ -188,8 +188,9 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
 
             if (e.IsMotionActive && e.BoundingBoxes.Count > 0)
             {
+                // With its track id, so the overlay smooths each box against its own track.
                 CurrentBoundingBoxes = e.BoundingBoxes
-                    .Select(b => new Rect(b.X, b.Y, b.Width, b.Height))
+                    .Select(b => new AtcSoft.VideoSurveillance.Models.BoundingBox { X = b.X, Y = b.Y, Width = b.Width, Height = b.Height, TrackId = b.TrackId })
                     .ToList();
             }
             else

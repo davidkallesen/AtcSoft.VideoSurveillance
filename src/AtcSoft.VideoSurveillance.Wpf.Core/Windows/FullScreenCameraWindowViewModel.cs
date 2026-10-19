@@ -75,7 +75,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
     private double boundingBoxSmoothing = 0.3;
 
     [ObservableProperty]
-    private IReadOnlyList<Rect> currentBoundingBoxes = [];
+    private IReadOnlyList<BoundingBox> currentBoundingBoxes = [];
 
     [ObservableProperty]
     private int analysisWidth = 320;
@@ -274,7 +274,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelDialogBas
         {
             if (e.IsMotionActive && e.HasBoundingBoxes)
             {
-                CurrentBoundingBoxes = e.BoundingBoxes.ToRects();
+                CurrentBoundingBoxes = e.BoundingBoxes;
             }
             else
             {

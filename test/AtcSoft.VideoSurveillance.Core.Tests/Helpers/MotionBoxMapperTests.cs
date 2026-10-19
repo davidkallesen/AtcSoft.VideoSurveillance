@@ -109,6 +109,15 @@ public class MotionBoxMapperTests
     }
 
     [Fact]
+    public void MapToVideoArea_Keeps_The_Track_Id_So_The_Overlay_Can_Follow_The_Box()
+        => MotionBoxMapper.MapToVideoArea(
+                new BoundingBox { X = 10, Y = 10, Width = 10, Height = 10, TrackId = 7 },
+                100,
+                100,
+                new BoundingBox { Width = 200, Height = 200 })
+            .TrackId.Should().Be(7);
+
+    [Fact]
     public void MapToVideoArea_Without_An_Analysis_Size_Returns_An_Empty_Box()
     {
         var mapped = MotionBoxMapper.MapToVideoArea(
