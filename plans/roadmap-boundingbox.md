@@ -165,17 +165,20 @@ The per-recording timeline answers *where in this file*. The server timeline ans
 
 Only what the searches confirmed. "Not checked" means no source was found, not that the product lacks it.
 
-| Product | Activity level | Event marks | Per-class colour / icon | Preview on hover | Skip / filter | Search |
-|---|---|---|---|---|---|---|
-| **Frigate** | ✅ lines whose length is the amount of motion | ✅ shaded bands: alerts red, detections orange; motion yellow | Severity colours; person and car are alerts by default | Not checked | ✅ *motion only* mode skips periods already covered by alerts and detections; all cameras scrubbed together | Review items grouped per camera |
-| **Google Home / Nest** | Grey for motion outside zones | ✅ dots and bars | ✅ **colour per activity zone**; event filters | Not checked | Gaps between events (event plans) | Not checked |
-| **UniFi Protect** | Not checked | ✅ timeline in the detection player; horizontal event scrubber | Colours not confirmed | ✅ frame preview scrubbing in detection clips | Not checked | ✅ *Find Anything* (replaced the Detections page) |
-| **Synology Surveillance Station** | Not checked | ✅ | ✅ **colour per trigger** (motion, I/O, manual, …) | Not checked | Smart Time Lapse condenses long recordings | Smart Search (not in Timeline) |
-| **Milestone XProtect** | Not checked | ✅ bookmarks (blue), other markers in other colours | Marker colour by source | ✅ bookmark preview on hover | Not checked | ✅ motion search in a drawn area |
-| **Blue Iris** (community sources only) | Not checked | ✅ clip bars, alert markers (orange/red) | Per camera; add-ons colour by AI class | Not checked | High-speed playback | Not checked |
-| **Reolink** | Not checked | ✅ | ✅ **icons**: dot for motion, person, vehicle, paw | Not checked | Not checked | Not checked |
-| **Ring** | Not checked | ✅ event history timeline | Event types person / animal / vehicle | Not checked | ✅ filter by device and type | Not checked |
-| Arlo, Eufy, Scrypted, HomeKit Secure Video | Not checked | Not checked | Not checked | Not checked | Not checked | Not checked |
+| Product | Activity level | Event marks | Per-class colour / icon | Preview on hover | Skip / filter | Search | OpenCV in motion detection |
+|---|---|---|---|---|---|---|---|
+| **Frigate** | ✅ lines whose length is the amount of motion | ✅ shaded bands: alerts red, detections orange; motion yellow | Severity colours; person and car are alerts by default | Not checked | ✅ *motion only* mode skips periods already covered by alerts and detections; all cameras scrubbed together | Review items grouped per camera | ✅ **Yes**: its motion detector calls `cv2.accumulateWeighted` (running background), `absdiff`, `threshold`, `dilate`, `findContours`, `boundingRect`; the blur is SciPy |
+| **Google Home / Nest** | Grey for motion outside zones | ✅ dots and bars | ✅ **colour per activity zone**; event filters | Not checked | Gaps between events (event plans) | Not checked | ❔ Closed source; no component list found |
+| **UniFi Protect** | Not checked | ✅ timeline in the detection player; horizontal event scrubber | Colours not confirmed | ✅ frame preview scrubbing in detection clips | Not checked | ✅ *Find Anything* (replaced the Detections page) | ❔ Closed source; Ubiquiti names no libraries |
+| **Synology Surveillance Station** | Not checked | ✅ | ✅ **colour per trigger** (motion, I/O, manual, …) | Not checked | Smart Time Lapse condenses long recordings | Smart Search (not in Timeline) | ❔ Licence list inside the package; not checked |
+| **Milestone XProtect** | Not checked | ✅ bookmarks (blue), other markers in other colours | Marker colour by source | ✅ bookmark preview on hover | Not checked | ✅ motion search in a drawn area | ❔ Third-party terms ship in the install folder; not checked |
+| **Blue Iris** (community sources only) | Not checked | ✅ clip bars, alert markers (orange/red) | Per camera; add-ons colour by AI class | Not checked | High-speed playback | Not checked | ❔ Not found; its help calls its own algorithms "fairly simple" (one is "Gaussian") |
+| **Reolink** | Not checked | ✅ | ✅ **icons**: dot for motion, person, vehicle, paw | Not checked | Not checked | Not checked | ❔ Not found (detection is in the camera) |
+| **Ring** | Not checked | ✅ event history timeline | Event types person / animal / vehicle | Not checked | ✅ filter by device and type | Not checked | ❔ Not found (cloud) |
+| **Scrypted** | Not checked | Not checked | Not checked | Not checked | Not checked | Not checked | ✅ **Optional**: an *OpenCV Motion Detection* plugin (more CPU and memory, better results than its PAM Diff detector); its NVR uses a WebAssembly motion detector instead |
+| Arlo, Eufy, HomeKit Secure Video | Not checked | Not checked | Not checked | Not checked | Not checked | Not checked | ❔ Not found |
+
+**OpenCV:** confirmed only where the code is open: **Frigate** (core) and **Scrypted** (an optional plugin). The closed products publish no component lists that a search found, so ❔ means unknown, not "no". What Frigate does with OpenCV is the same short chain this plan writes in C# (decision 1): a running-average background, a difference, a threshold, dilation and contours. So the pure-C# detector follows a proven design without bringing OpenCV's native runtime into the published Core package.
 
 **What to take:**
 
@@ -515,6 +518,12 @@ Covers the backlog row *AI detection (ONNX)*.
 ---
 
 ## 📚 Sources
+
+- Frigate's motion detector, `frigate/motion/improved_motion.py`: https://github.com/blakeblackshear/frigate/blob/dev/frigate/motion/improved_motion.py
+- Scrypted motion detection: https://docs.scrypted.app/detection/motion-detection.html and the HomeKit Secure Video setup: https://github.com/koush/scrypted/wiki/HomeKit-Secure-Video-Setup
+- Blue Iris help on its motion algorithms (quoted on IPCamTalk): https://ipcamtalk.com/threads/blue-iris-motion-detection.60238/post-616819
+- Milestone's third-party terms notice: https://www.milestonesys.com/globalassets/techcomm/ltsb/provms/english-united-states/2769.htm
+- Ubiquiti's open-source licence statement: https://www.ui.com/download/unifi-protect
 
 Detection and tracking:
 
