@@ -9,7 +9,7 @@
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding DialogTitle}"
-    Width="500"
+    Width="960"
     SizeToContent="Height"
     WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=dialogs:CameraEditDialogViewModel}"
@@ -19,12 +19,18 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <!--  Connection Settings  -->
-        <GroupBox Grid.Row="0" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Connection}">
+        <!--  Connection Settings (left)  -->
+        <GroupBox
+            Grid.Row="0"
+            Grid.Column="0"
+            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Connection}">
             <StackPanel Margin="8">
                 <atc:LabelTextBox
                     Margin="0,4"
@@ -80,57 +86,56 @@
             </StackPanel>
         </GroupBox>
 
-        <!--  Authentication  -->
-        <GroupBox
-            Grid.Row="1"
-            Margin="0,8,0,0"
-            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Authentication}">
-            <StackPanel Margin="8">
-                <atc:LabelTextBox
-                    Margin="0,4"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Username}"
-                    Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
-                <atc:LabelPasswordBox
-                    Margin="0,4"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Password}"
-                    Text="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            </StackPanel>
-        </GroupBox>
+        <!--  Authentication and Stream Settings (right)  -->
+        <StackPanel Grid.Row="0" Grid.Column="2">
+            <GroupBox Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Authentication}">
+                <StackPanel Margin="8">
+                    <atc:LabelTextBox
+                        Margin="0,4"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Username}"
+                        Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                    <atc:LabelPasswordBox
+                        Margin="0,4"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Password}"
+                        Text="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </GroupBox>
 
-        <!--  Stream Settings  -->
-        <GroupBox
-            Grid.Row="2"
-            Margin="0,8,0,0"
-            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StreamSettings}">
-            <StackPanel Margin="8">
-                <atc:LabelComboBox
-                    Margin="0,4"
-                    Items="{Binding OverlayPositionItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=OverlayPosition}"
-                    SelectedKey="{Binding SelectedOverlayPositionKey, UpdateSourceTrigger=PropertyChanged}" />
-                <atc:LabelComboBox
-                    Margin="0,4"
-                    Items="{Binding RtspTransportItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RtspTransport}"
-                    SelectedKey="{Binding SelectedRtspTransportKey, UpdateSourceTrigger=PropertyChanged}" />
-                <atc:LabelCheckBox
-                    Margin="0,4"
-                    IsChecked="{Binding StreamUseLowLatencyMode}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=UseLowLatencyMode}" />
-                <atc:LabelIntegerBox
-                    Margin="0,4"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MaxLatencyMs}"
-                    Value="{Binding StreamMaxLatencyMs, UpdateSourceTrigger=PropertyChanged}" />
-                <atc:LabelIntegerBox
-                    Margin="0,4"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=BufferDurationMs}"
-                    Value="{Binding StreamBufferDurationMs, UpdateSourceTrigger=PropertyChanged}" />
-            </StackPanel>
-        </GroupBox>
+            <GroupBox
+                Margin="0,8,0,0"
+                Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=StreamSettings}">
+                <StackPanel Margin="8">
+                    <atc:LabelComboBox
+                        Margin="0,4"
+                        Items="{Binding OverlayPositionItems}"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=OverlayPosition}"
+                        SelectedKey="{Binding SelectedOverlayPositionKey, UpdateSourceTrigger=PropertyChanged}" />
+                    <atc:LabelComboBox
+                        Margin="0,4"
+                        Items="{Binding RtspTransportItems}"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=RtspTransport}"
+                        SelectedKey="{Binding SelectedRtspTransportKey, UpdateSourceTrigger=PropertyChanged}" />
+                    <atc:LabelCheckBox
+                        Margin="0,4"
+                        IsChecked="{Binding StreamUseLowLatencyMode}"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=UseLowLatencyMode}" />
+                    <atc:LabelIntegerBox
+                        Margin="0,4"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MaxLatencyMs}"
+                        Value="{Binding StreamMaxLatencyMs, UpdateSourceTrigger=PropertyChanged}" />
+                    <atc:LabelIntegerBox
+                        Margin="0,4"
+                        LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=BufferDurationMs}"
+                        Value="{Binding StreamBufferDurationMs, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
 
         <!--  Buttons  -->
         <StackPanel
-            Grid.Row="3"
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
             Margin="0,16,0,0"
             HorizontalAlignment="Right"
             Orientation="Horizontal">
