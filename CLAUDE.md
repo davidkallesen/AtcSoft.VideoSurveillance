@@ -19,7 +19,8 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host (REST, `GET /events`, HLS streams)
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
 - `AtcSoft.VideoSurveillance.Blazor.App` - Blazor WebAssembly client for the API server (MudBlazor). Its logic lives in plain classes under `Logic/`, tested in `AtcSoft.VideoSurveillance.Blazor.App.Tests`
-- `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App), plus `AtcSoft.VideoSurveillance.E2E.Tests` (smoke tests of the running apps, see below)
+- `AtcSoft.VideoSurveillance.Storybook` - Scenes with known content for measuring motion detection: the storybook model, a deterministic renderer with its truth, the scorer (net10.0, not published; see `plans/roadmap-boundingbox.md`)
+- `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App, Storybook), plus `AtcSoft.VideoSurveillance.E2E.Tests` (smoke tests of the running apps, see below). The storybook tests keep every detector score in `baseline.json` and fail when one gets worse; `ATCSOFT_BBOX_UPDATE_BASELINE=1` writes new scores after an improvement
 
 ## NuGet Packages
 Six projects are published to nuget.org so external WPF apps can embed live camera tiles:

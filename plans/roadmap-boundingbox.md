@@ -298,7 +298,7 @@ A scene, its objects and what is expected. The generator draws the frames from i
 | S4 | A car passing fast | One box, no ghost behind it |
 | S5 | **Car + human + cat at the same time**, crossing once | Exactly three tracks, at most one id switch each |
 | S6 | Lighting step and IR switch (colour → grey) | No box during the step; detection resumes after |
-| S7 | S3 at 90 / 180 / 270° | Boxes on the object in the drawn picture (the 180° bug) |
+| S7 | S3 at 90 / 180 / 270° | Boxes on the object in the drawn picture (the 180° bug). Through the player only (phase 3): the fast path already sees the shown picture |
 | S8 | A small cat far away | Found |
 | S9 | A person stops for 5 s, then walks on | Same id after the stop |
 | S10 | Rain or snow specks | No box |
@@ -340,8 +340,8 @@ The recordings stay out of git (size, privacy). The small review files may go in
 
 | # | Phase | Size | Status |
 |---|-------|:--:|:--:|
-| 0 | Quick fixes in today's pipeline | S | ⬜ |
-| 1 | Storybook, generator, truth and scorer; today's baseline | L | ⬜ |
+| 0 | Quick fixes in today's pipeline | S | ✅ |
+| 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and five scenes done |
 | 2 | Grey frames with their time from the engine | M | ⬜ |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | ⬜ |
@@ -354,7 +354,9 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
 | 10 | Local AI detection (ONNX) on motion regions | L | ⏸️ |
 
-### Phase 0 — Quick fixes ⬜ (S)
+### Phase 0 — Quick fixes ✅ (S)
+
+Done 2026-10-19: `BoxSmoother` (Core) smooths each box against its own previous box; `MotionHold` (Core) holds motion on the desktop as on the server; CameraWall reads its pictures through `IMotionFrameReader`; the doc default is fixed.
 
 - Smoothing matched to the **nearest previous box** (IoU or centre), not to the list index (`MotionBoundingBoxOverlay.xaml.cs:150`).
 - CameraWall holds motion for `PostMotionDurationSeconds` as the server does, so boxes stop blinking (`MotionDetectionService.cs:326-343`).
@@ -363,7 +365,27 @@ The recordings stay out of git (size, privacy). The small review files may go in
 
 **Test:** unit tests for the overlay matching (moved into a plain class, out of the code-behind); the existing `MotionFrameAnalyzerTests` stay green.
 
-### Phase 1 — Storybook, generator, truth and scorer ⬜ (L)
+### Phase 1 — Storybook, generator, truth and scorer 🟨 (L)
+
+**Done 2026-10-19:**
+
+- The detector seam `IMotionDetector` (Core) with today's detection as `FrameDifferenceMotionDetector`; CameraWall and the server use only the seam, so the baseline measures what ships.
+- `src/AtcSoft.VideoSurveillance.Storybook` (not packable): the model and its reader (errors name the place, such as `objects[0].path[1].t`), a deterministic renderer (our own random generator keyed by seed and frame; truth from the pixels actually drawn; standing still and less than half visible are *dontCare*), the scorer and the fast-path runner. The runner squeezes to 800×600 as the apps do and scores the boxes the apps show (kept until the detector replaces them or motion ends).
+- Scenes S1, S2, S3, S5 and S12; a ratchet: `baseline.json` holds every score, a test fails when one gets worse, `ATCSOFT_BBOX_UPDATE_BASELINE=1` writes new scores on purpose.
+
+**Baseline of today's detector** (default settings; recall over must-box frames after 0.5 s, false boxes per analysed frame):
+
+| Scene | 4/s recall | 4/s false/frame | 15/s recall | 15/s false/frame |
+|---|---|---|---|---|
+| S1 empty, noise | 1.000 | 0.000 | 1.000 | 0.000 |
+| S2 tree in the wind | 1.000 | **2.286** | 1.000 | **3.591** |
+| S3 slow walker | **0.405** | 0.531 | **0.021** | 0.845 |
+| S5 car + human + cat | 0.955 | **1.612** | 0.805 | **3.199** |
+| S12 camera clock | 1.000 | 0.000 | 1.000 | 0.000 |
+
+It shows both complaints: a tree gives two to four boxes in every frame, and a slow walker is mostly missed, at 15/s almost always (two pictures 1/15 s apart barely differ). The clock gives no box because its change stays under the 0.5 % gate, the gate that also hides small objects.
+
+**Still to do in phase 1:** scenes S4, S6, S8–S11; the encoder pipe and `*.truth.jsonl`; the render time (10 runs take about 40 s).
 
 - A non-packable `src/AtcSoft.VideoSurveillance.Storybook` (net10.0): the model, JSON reading with clear errors, the frame renderer, the truth writer, the encoder pipe, the scorer.
 - Scenes S1–S12 as files under `test/AtcSoft.VideoSurveillance.Storybook.Tests/Scenes`.

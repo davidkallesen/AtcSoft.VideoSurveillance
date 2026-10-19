@@ -1,0 +1,290 @@
+namespace AtcSoft.VideoSurveillance.Storybook.Rendering;
+
+/// <summary>
+/// Draws a storybook's frames as grey pictures, with the truth of each: where every object and
+/// distractor was actually drawn and what a detector should do about it. Deterministic: frame
+/// <c>n</c> of a scene is the same picture on every machine and every run, and any frame can be
+/// drawn on its own.
+/// </summary>
+public sealed class SceneRenderer
+{
+    private const int PurposeNoise = 1;
+    private const int PurposeRain = 2;
+    private const double MovingWindowSeconds = 0.5;
+    private const double MinVisibleShare = 0.5;
+
+    private readonly StorybookScene scene;
+    private readonly int width;
+    private readonly int height;
+    private readonly int[] background;
+    private readonly List<TreeShape> trees = [];
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SceneRenderer"/> class.
+    /// </summary>
+    /// <param name="scene">The storybook.</param>
+    public SceneRenderer(StorybookScene scene)
+    {
+        this.scene = scene ?? throw new ArgumentNullException(nameof(scene));
+        width = scene.Video.Width;
+        height = scene.Video.Height;
+        background = DrawBackground();
+        for (var i = 0; i < scene.Background.Distractors.Count; i++)
+        {
+            var distractor = scene.Background.Distractors[i];
+            if (distractor.Kind == "swayingTree")
+            {
+                trees.Add(TreeShape.Create(distractor, scene.Background.Seed + (i * 101), width, height));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of frames in the scene.
+    /// </summary>
+    public int FrameCount
+        => scene.Video.FrameCount;
+
+    /// <summary>
+    /// Draws a frame.
+    /// </summary>
+    /// <param name="frameIndex">The frame, from 0.</param>
+    /// <returns>Its grey pixels and its truth.</returns>
+    public RenderedFrame Render(int frameIndex)
+    {
+        var time = frameIndex / (double)scene.Video.Fps;
+        var canvas = new Canvas(width, height);
+        Array.Copy(background, canvas.Pixels, background.Length);
+        var truth = new List<TruthBox>();
+
+        foreach (var tree in trees)
+        {
+            tree.Draw(canvas, time);
+            truth.Add(new TruthBox(tree.Id, tree.Region, DistractorState(tree.Id, time), IsDistractor: true));
+        }
+
+        foreach (var item in scene.Objects)
+        {
+            if (DrawObject(canvas, item, time) is { } box)
+            {
+                truth.Add(new TruthBox(item.Id, box, ObjectState(item, time), IsDistractor: false));
+            }
+        }
+
+        foreach (var distractor in scene.Background.Distractors)
+        {
+            switch (distractor.Kind)
+            {
+                case "clockOverlay":
+                    truth.Add(new TruthBox(distractor.Id, ClockShape.Draw(canvas, distractor, time), DistractorState(distractor.Id, time), IsDistractor: true));
+                    break;
+                case "rain":
+                    DrawRain(canvas, distractor, frameIndex);
+                    break;
+                case "brightnessStep" when time >= distractor.AtSeconds:
+                    canvas.AddAll(distractor.Delta);
+                    break;
+            }
+        }
+
+        AddNoise(canvas, frameIndex);
+
+        return new RenderedFrame(frameIndex, time, canvas.ToBytes(), width, height, truth, IgnoreAll(time));
+    }
+
+    /// <summary>
+    /// Gets where an object's centre is at a time, as fractions; <see langword="null"/> before its
+    /// first and after its last key point.
+    /// </summary>
+    /// <param name="item">The object.</param>
+    /// <param name="time">The time in seconds.</param>
+    public static (double X, double Y)? PositionAt(
+        StorybookObject item,
+        double time)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var path = item.Path;
+        if (path.Count == 0 || time < path[0].T || time > path[^1].T)
+        {
+            return null;
+        }
+
+        for (var k = 1; k < path.Count; k++)
+        {
+            if (time <= path[k].T)
+            {
+                var a = path[k - 1];
+                var b = path[k];
+                var f = (time - a.T) / (b.T - a.T);
+                return (a.At[0] + ((b.At[0] - a.At[0]) * f), a.At[1] + ((b.At[1] - a.At[1]) * f));
+            }
+        }
+
+        return (path[^1].At[0], path[^1].At[1]);
+    }
+
+    private PixelBox? DrawObject(
+        Canvas canvas,
+        StorybookObject item,
+        double time)
+    {
+        if (PositionAt(item, time) is not { } at)
+        {
+            return null;
+        }
+
+        var w = item.Size[0] * width;
+        var h = item.Size[1] * height;
+        var left = (at.X * width) - (w / 2);
+        var top = (at.Y * height) - (h / 2);
+
+        canvas.ResetTrace();
+        ObjectShapes.Draw(canvas, item.Kind, left, top, w, h, time, IsMoving(item, time), scene.Background.Seed);
+        return canvas.TracedBox();
+    }
+
+    private bool IsMoving(
+        StorybookObject item,
+        double time)
+    {
+        var before = PositionAt(item, Math.Max(item.Path[0].T, time - MovingWindowSeconds));
+        var now = PositionAt(item, time);
+        if (before is not { } a || now is not { } b)
+        {
+            return false;
+        }
+
+        var dx = (b.X - a.X) * width;
+        var dy = (b.Y - a.Y) * height;
+        return (dx * dx) + (dy * dy) >= 1;
+    }
+
+    private TruthState ObjectState(
+        StorybookObject item,
+        double time)
+    {
+        if (SpanState(s => s.ObjectId == item.Id, time) is { } state)
+        {
+            return state;
+        }
+
+        // Standing still is invisible to motion detection, and an object mostly outside the
+        // picture is no fair test yet.
+        if (!IsMoving(item, time) || VisibleShare(item, time) < MinVisibleShare)
+        {
+            return TruthState.DontCare;
+        }
+
+        return TruthState.MustBox;
+    }
+
+    private double VisibleShare(
+        StorybookObject item,
+        double time)
+    {
+        if (PositionAt(item, time) is not { } at)
+        {
+            return 0;
+        }
+
+        var w = item.Size[0] * width;
+        var h = item.Size[1] * height;
+        var left = (at.X * width) - (w / 2);
+        var top = (at.Y * height) - (h / 2);
+        var visibleW = Math.Min(left + w, width) - Math.Max(left, 0);
+        var visibleH = Math.Min(top + h, height) - Math.Max(top, 0);
+        return visibleW <= 0 || visibleH <= 0 ? 0 : visibleW * visibleH / (w * h);
+    }
+
+    private TruthState DistractorState(
+        string id,
+        double time)
+        => SpanState(s => s.DistractorId == id, time) ?? TruthState.MustNotBox;
+
+    private bool IgnoreAll(double time)
+        => scene.Expect.Spans.Any(s => s.ObjectId is null && s.DistractorId is null && s.State == "dontCare" && time >= s.From && time <= s.To);
+
+    private TruthState? SpanState(
+        Func<StorybookSpan, bool> about,
+        double time)
+    {
+        var span = scene.Expect.Spans.FirstOrDefault(s => about(s) && time >= s.From && time <= s.To);
+        return span?.State switch
+        {
+            "mustBox" => TruthState.MustBox,
+            "mustNotBox" => TruthState.MustNotBox,
+            "dontCare" => TruthState.DontCare,
+            _ => null,
+        };
+    }
+
+    // A procedural scene: lighter towards the ground, with a coarse and a fine texture.
+    private int[] DrawBackground()
+    {
+        var seed = scene.Background.Seed;
+        var pixels = new int[width * height];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var gradient = 70 + (60.0 * y / height);
+                var coarse = (ValueNoise(seed, x / 48.0, y / 48.0) - 0.5) * 36;
+                var fine = (ScenePrng.Hash(seed + 7, x, y) - 0.5) * 10;
+                pixels[(y * width) + x] = (int)Math.Round(gradient + coarse + fine);
+            }
+        }
+
+        return pixels;
+    }
+
+    private static double ValueNoise(
+        int seed,
+        double x,
+        double y)
+    {
+        var x0 = (int)Math.Floor(x);
+        var y0 = (int)Math.Floor(y);
+        var fx = x - x0;
+        var fy = y - y0;
+        var sx = fx * fx * (3 - (2 * fx));
+        var sy = fy * fy * (3 - (2 * fy));
+        var a = ScenePrng.Hash(seed, x0, y0);
+        var b = ScenePrng.Hash(seed, x0 + 1, y0);
+        var c = ScenePrng.Hash(seed, x0, y0 + 1);
+        var d = ScenePrng.Hash(seed, x0 + 1, y0 + 1);
+        return (a + ((b - a) * sx)) + (((c + ((d - c) * sx)) - (a + ((b - a) * sx))) * sy);
+    }
+
+    private void DrawRain(
+        Canvas canvas,
+        StorybookDistractor rain,
+        int frameIndex)
+    {
+        var prng = new ScenePrng(scene.Background.Seed, frameIndex, PurposeRain);
+        for (var i = 0; i < rain.Count; i++)
+        {
+            var x = prng.Next(0, width);
+            var y = prng.Next(0, height);
+            canvas.FillRect(x, y, 1, 6, (_, _) => 210);
+        }
+    }
+
+    private void AddNoise(
+        Canvas canvas,
+        int frameIndex)
+    {
+        var noise = scene.Video.Noise;
+        if (noise <= 0)
+        {
+            return;
+        }
+
+        var prng = new ScenePrng(scene.Background.Seed, frameIndex, PurposeNoise);
+        var pixels = canvas.Pixels;
+        for (var i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] += (int)Math.Round(prng.NextTriangle() * noise * 1.5);
+        }
+    }
+}

@@ -1,0 +1,12 @@
+global using System.Diagnostics.CodeAnalysis;
+global using System.Globalization;
+global using System.Runtime.InteropServices;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+
+global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Services;
+global using AtcSoft.VideoSurveillance.Storybook.Model;
+global using AtcSoft.VideoSurveillance.Storybook.Rendering;
+global using AtcSoft.VideoSurveillance.Storybook.Truth;

@@ -6,18 +6,14 @@
     <File Path="docs/settings.md" />
     <File Path="docs/disk-space-guard.md" />
     <File Path="docs/usb-cameras.md" />
+    <File Path="docs/e2e-smoke-tests.md" />
+    <File Path="docs/soak-test.md" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/plans/">
     <File Path="plans/roadmap.md" />
-    <File Path="plans/roadmap-cameras-connection-icons.md" />
-    <File Path="plans/roadmap-suggestions.md" />
-    <File Path="plans/roadmap-ffmpeg-9.md" />
-    <File Path="plans/roadmap-recording-storage.md" />
-    <File Path="plans/roadmap-usb-cameras.md" />
-    <File Path="plans/roadmap-video-rotation.md" />
-    <File Path="plans/roadmap-wpf-api-client.md" />
-    <File Path="plans/soak-test-plan.md" />
+    <File Path="plans/roadmap-boundingbox.md" />
+    <File Path="plans/roadmap-rest-api-sg.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/AtcSoft.VideoSurveillance.Aspire/AtcSoft.VideoSurveillance.Aspire.csproj" />
@@ -40,6 +36,9 @@
     <Project Path="src/AtcSoft.VideoSurveillance.Wpf.Core/AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
     <Project Path="src/AtcSoft.VideoSurveillance.Wpf/AtcSoft.VideoSurveillance.Wpf.csproj" />
   </Folder>
+  <Folder Name="/src/Testing/">
+    <Project Path="src/AtcSoft.VideoSurveillance.Storybook/AtcSoft.VideoSurveillance.Storybook.csproj" />
+  </Folder>
   <Folder Name="/src/Services-API/">
     <Project Path="src/AtcSoft.VideoSurveillance.Api.Contracts/AtcSoft.VideoSurveillance.Api.Contracts.csproj" />
     <Project Path="src/AtcSoft.VideoSurveillance.Api.Domain/AtcSoft.VideoSurveillance.Api.Domain.csproj" />
@@ -56,6 +55,7 @@
     <Project Path="test/AtcSoft.VideoSurveillance.Core.Tests/AtcSoft.VideoSurveillance.Core.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.E2E.Tests/AtcSoft.VideoSurveillance.E2E.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Resources.Tests/AtcSoft.VideoSurveillance.Resources.Tests.csproj" />
+    <Project Path="test/AtcSoft.VideoSurveillance.Storybook.Tests/AtcSoft.VideoSurveillance.Storybook.Tests.csproj" />
     <Project Path="test/AtcSoft.CameraWall.Wpf.Tests/AtcSoft.CameraWall.Wpf.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Core.Tests/AtcSoft.VideoSurveillance.Wpf.Core.Tests.csproj" />
     <Project Path="test/AtcSoft.VideoSurveillance.Wpf.Tests/AtcSoft.VideoSurveillance.Wpf.Tests.csproj" />
