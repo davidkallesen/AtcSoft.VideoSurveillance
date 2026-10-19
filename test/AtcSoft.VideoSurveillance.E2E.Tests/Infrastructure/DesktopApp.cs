@@ -123,6 +123,30 @@ internal sealed class DesktopApp : IDisposable
         throw Fail($"No {controlType?.ToString() ?? "element"} named '{name}' in '{SafeName(root)}'.");
     }
 
+    /// <summary>
+    /// Waits until no element with the name is left under the root.
+    /// </summary>
+    /// <returns>Whether it went within the time.</returns>
+    public bool WaitUntilGone(
+        AutomationElement root,
+        string name,
+        ControlType? controlType,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (TryFind(root, name, controlType) is not null)
+        {
+            if (DateTime.UtcNow >= deadline)
+            {
+                return false;
+            }
+
+            Thread.Sleep(200);
+        }
+
+        return true;
+    }
+
     public AutomationElement? TryFind(
         AutomationElement root,
         string name,

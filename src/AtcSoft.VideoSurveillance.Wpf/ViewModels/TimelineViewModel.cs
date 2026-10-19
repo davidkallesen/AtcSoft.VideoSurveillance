@@ -174,6 +174,57 @@ public sealed partial class TimelineViewModel : ViewModelBase
         SelectedDay = null;
     }
 
+    /// <summary>
+    /// Gets the tiles of *play all from here*: every lane that has a recording ending after the
+    /// moment, with those recordings in time order.
+    /// </summary>
+    /// <param name="lanes">The lanes shown.</param>
+    /// <param name="moment">The moment every tile plays from.</param>
+    /// <param name="fileUrl">Turns a recording into the address the player opens.</param>
+    /// <returns>One tile per lane that has something to play.</returns>
+    public static IReadOnlyList<AtcSoft.VideoSurveillance.Wpf.Core.Windows.PlayAllTileViewModel> PlayAllTiles(
+        IEnumerable<TimelineLaneViewModel> lanes,
+        DateTimeOffset moment,
+        Func<string, Uri> fileUrl)
+    {
+        ArgumentNullException.ThrowIfNull(lanes);
+        ArgumentNullException.ThrowIfNull(fileUrl);
+
+        return [.. lanes
+            .Select(l => (Lane: l, Segments: l.Coverage
+                .Where(c => c.End > moment)
+                .OrderBy(c => c.Start)
+                .Select(c => new AtcSoft.VideoSurveillance.Wpf.Core.Windows.PlayAllSegment(fileUrl(c.FilePath), c.Start, c.RecordingStart))
+                .ToList()))
+            .Where(l => l.Segments.Count > 0)
+            .Select(l => new AtcSoft.VideoSurveillance.Wpf.Core.Windows.PlayAllTileViewModel(l.Lane.CameraName, l.Segments))];
+    }
+
+    // From the place last clicked or played, else from the first recording in the span.
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "Window disposes its view model on close via the Closed event handler.")]
+    [RelayCommand]
+    private void PlayAll()
+    {
+        var moment = cursor ?? Lanes
+            .SelectMany(l => l.Coverage)
+            .Select(c => c.Start < from ? from : c.Start)
+            .DefaultIfEmpty(from)
+            .Min();
+        var tiles = PlayAllTiles(Lanes, moment, path => RecordingEntryViewModel.FileUrl(apiBaseUri, path, session?.MediaToken));
+        if (tiles.Count == 0)
+        {
+            StatusMessage = Translations.NothingRecordedThen;
+            return;
+        }
+
+        StatusMessage = string.Empty;
+        new AtcSoft.VideoSurveillance.Wpf.Core.Windows.PlayAllWindow(
+            new AtcSoft.VideoSurveillance.Wpf.Core.Windows.PlayAllWindowViewModel(moment, tiles)).Show();
+    }
+
     [RelayCommand("NextEvent")]
     private Task NextEventAsync()
         => JumpAsync(forward: true);

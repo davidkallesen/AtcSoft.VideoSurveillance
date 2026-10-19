@@ -49,6 +49,20 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
                 TimeSpan.FromSeconds(20));
         });
 
+        // Play all from here: a tile per camera with a recording, one pause for all
+        steps.Run("play all from here", () =>
+        {
+            var grid = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Play all from here", ControlType.Button)), "Play all from here");
+            app.Find(grid, TestCameras.LiveCameraName, timeout: TimeSpan.FromSeconds(20));
+
+            // The live camera's recording plays: its tile stops saying it is loading, and no tile failed.
+            app.WaitUntilGone(grid, "Loading", ControlType.Text, TimeSpan.FromSeconds(20)).Should().BeTrue("the recording should open");
+            app.TryFind(grid, "Could not be played", ControlType.Text).Should().BeNull();
+            DesktopApp.Press(app.Find(grid, "Pause", ControlType.Button));
+            app.Find(grid, "Play", ControlType.Button);
+            app.CloseWindow(grid);
+        });
+
         // Cameras: add, and edit each camera
         steps.Run("Cameras view", () => ShowView(app, main, "Cameras"));
         steps.Run("Add Camera", () => Walk(app, main, "Add Camera"));

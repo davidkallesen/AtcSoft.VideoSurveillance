@@ -2715,4 +2715,22 @@ Vorschaubild:
   <data name="GapUnknown" xml:space="preserve">
     <value>Nichts aufgezeichnet</value>
   </data>
+  <data name="PlayAllFromHere" xml:space="preserve">
+    <value>Alle ab hier abspielen</value>
+  </data>
+  <data name="PlayAllFrom1" xml:space="preserve">
+    <value>Alle Kameras ab {0}</value>
+  </data>
+  <data name="NextRecordingAt1" xml:space="preserve">
+    <value>Nächste Aufnahme um {0}</value>
+  </data>
+  <data name="CouldNotBePlayed" xml:space="preserve">
+    <value>Konnte nicht abgespielt werden</value>
+  </data>
+  <data name="NoMoreRecordings" xml:space="preserve">
+    <value>Keine weiteren Aufnahmen</value>
+  </data>
+  <data name="PlayAllShowsFirst1" xml:space="preserve">
+    <value>Zeigt die ersten {0} Kameras</value>
+  </data>
 </root>

@@ -1,6 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Wpf.ViewModels;
 
 using GapReason = AtcSoft.VideoSurveillance.Enums.GapReason;
+using PlayAllTileState = AtcSoft.VideoSurveillance.Enums.PlayAllTileState;
 using TimelineGap = global::VideoSurveillance.Generated.Timeline.Models.TimelineGap;
 using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
 
@@ -104,6 +105,28 @@ public sealed class TimelineViewModelTests
         third.FilePath.Should().EndWith("Garden/c.mkv", "the gap between b and c is skipped");
         third.RecordingStartTime.Should().Be(Nine.AddHours(2).LocalDateTime);
         next().Should().BeNull("nothing follows the last recording of the span");
+    }
+
+    [Fact]
+    public void Play_All_Gives_A_Tile_To_Every_Lane_With_A_Recording_Ending_After_The_Moment()
+    {
+        TimelineLaneViewModel Lane(
+            string name,
+            params TimelineCoverage[] coverage)
+            => new(new TimelineLane(Guid.NewGuid(), name, [.. coverage], [], [], []), Nine, Nine.AddHours(4), Nine, (_, _) => { });
+
+        var tiles = TimelineViewModel.PlayAllTiles(
+            [
+                Lane("Garden", new TimelineCoverage(Nine.AddHours(2), Nine.AddHours(3), "Garden/c.mkv", Nine.AddHours(2)), new TimelineCoverage(Nine, Nine.AddHours(1.5), "Garden/a.mkv", Nine)),
+                Lane("Porch", new TimelineCoverage(Nine, Nine.AddMinutes(30), "Porch/a.mkv", Nine)),
+                Lane("Gate"),
+            ],
+            Nine.AddHours(1),
+            path => new Uri("http://server/recordings-files/" + path));
+
+        tiles.Select(t => t.CameraName).Should().Equal("Garden");
+        tiles[0].State.Should().Be(PlayAllTileState.Waiting);
+        tiles[0].Report().NextStart.Should().BeNull("the tile has no player yet");
     }
 
     [Fact]

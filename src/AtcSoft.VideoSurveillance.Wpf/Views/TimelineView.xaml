@@ -55,6 +55,11 @@
                     Command="{Binding Path=NextEventCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=NextEvent}" />
                 <Button
+                    Margin="0,0,16,0"
+                    Padding="16,6"
+                    Command="{Binding Path=PlayAllCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=PlayAllFromHere}" />
+                <Button
                     Margin="0,0,8,0"
                     Padding="12,6"
                     Command="{Binding Path=EarlierCommand}"

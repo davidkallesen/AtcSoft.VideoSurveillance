@@ -2715,4 +2715,22 @@ Miniature:
   <data name="GapUnknown" xml:space="preserve">
     <value>Intet optaget</value>
   </data>
+  <data name="PlayAllFromHere" xml:space="preserve">
+    <value>Afspil alle herfra</value>
+  </data>
+  <data name="PlayAllFrom1" xml:space="preserve">
+    <value>Alle kameraer fra {0}</value>
+  </data>
+  <data name="NextRecordingAt1" xml:space="preserve">
+    <value>Næste optagelse kl. {0}</value>
+  </data>
+  <data name="CouldNotBePlayed" xml:space="preserve">
+    <value>Kunne ikke afspilles</value>
+  </data>
+  <data name="NoMoreRecordings" xml:space="preserve">
+    <value>Ikke flere optagelser</value>
+  </data>
+  <data name="PlayAllShowsFirst1" xml:space="preserve">
+    <value>Viser de første {0} kameraer</value>
+  </data>
 </root>
