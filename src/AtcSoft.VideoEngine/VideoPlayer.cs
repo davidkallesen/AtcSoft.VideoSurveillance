@@ -18,6 +18,10 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     private readonly IGpuAccelerator? gpuAccelerator;
     private readonly Lock frameLock = new();
 
+    // Guards the frame capture: captures run on pool threads, can overlap (motion analysis,
+    // snapshots, thumbnails), and must not outlive Dispose.
+    private readonly Lock captureLock = new();
+
     // Guards the encoder: a recording is started, switched and stopped from
     // other threads than the one that reads the camera and feeds it.
     private readonly Lock encoderLock = new();
@@ -583,10 +587,21 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
 
                 try
                 {
-                    // The GPU snapshot is already rotated; rotate here too so
-                    // a capture looks the same whichever path produced it.
-                    frameCapture ??= new FrameCapture();
-                    return frameCapture.CaptureFrame(clone, rotation);
+                    // One capture at a time: the scaler and the PNG encoder are
+                    // not thread-safe, and Dispose must not free them under a
+                    // capture that is still running.
+                    lock (captureLock)
+                    {
+                        if (disposed)
+                        {
+                            return null;
+                        }
+
+                        // The GPU snapshot is already rotated; rotate here too so
+                        // a capture looks the same whichever path produced it.
+                        frameCapture ??= new FrameCapture();
+                        return frameCapture.CaptureFrame(clone, rotation);
+                    }
                 }
                 finally
                 {
@@ -610,8 +625,11 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         demuxThread?.Join(ThreadJoinTimeoutMs);
         demuxThread = null;
 
-        frameCapture?.Dispose();
-        frameCapture = null;
+        lock (captureLock)
+        {
+            frameCapture?.Dispose();
+            frameCapture = null;
+        }
     }
 
     // A camera that is opened together with a microphone does not open at
