@@ -77,7 +77,7 @@ public sealed class CameraStorageServiceUsbTests : IDisposable
     public void Load_V1JsonWithoutSourceField_DefaultsToNetwork()
     {
         // v1 storage files (pre-USB) carry no `source` field. The
-        // additive-migration claim in roadmap-usb-cameras.md Phase 5
+        // additive migration of USB cameras into existing files
         // hinges on `Source` defaulting to Network when absent — this
         // test pins that contract so a serializer change can't silently
         // break end-users on upgrade.

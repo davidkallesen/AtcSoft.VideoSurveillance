@@ -1,15 +1,10 @@
-# Soak test plan — WPF Camera Wall (24/7 stability)
+# 🧪 Soak Test — 24/7 Stability
 
-← Back to the [roadmap home](roadmap.md)
-
-Plan for the long-running soak that validates branch `fix/rdp-stability-24x7`.
-The 77-minute run on 2026-04-29 was clean across one RDP cycle, but a single
-event isn't enough to declare 24/7 stability — this document defines what to
-run next, for how long, and what counts as a pass.
+How to run the long soak of the CameraWall app (the server has its own report script, `scripts/soak-report-server.sh`). A 77-minute run on 2026-04-29 was clean across one RDP cycle, but a single event isn't enough to declare 24/7 stability. This document defines what to run, for how long, and what counts as a pass. It has never been run in full; it is listed in the [roadmap](../plans/roadmap.md).
 
 ## Pre-conditions
 
-- [ ] `fix/rdp-stability-24x7` deployed to the test machine (`DKPC-MTS1` or equivalent)
+- [ ] The build under test deployed to the test machine (`DKPC-MTS1` or equivalent)
 - [ ] At least 3 cameras configured with `RecordOnConnect=true`
 - [ ] `EnableHourlySegmentation=true` (15-minute segments)
 - [ ] `EnableDebugLogging=true` so the log file survives across the run
@@ -103,8 +98,8 @@ that's investigating the run.
 - [ ] Snapshot the log file to `docs/soak-runs/{date}-{duration}.log` (or a
       shared location)
 - [ ] Note which scenarios actually fired and at what times
-- [ ] If pass: merge `fix/rdp-stability-24x7` to `main`, tag the commit
-- [ ] If fail: open an issue with the log excerpt, do not merge
+- [ ] If pass: note the run (date, length, scenarios) in the roadmap
+- [ ] If fail: open an issue with the log excerpt, do not release
 - [ ] If two consecutive 24 h soaks pass, consider running a weekend soak as
       the final gate before declaring 24/7-ready
 
