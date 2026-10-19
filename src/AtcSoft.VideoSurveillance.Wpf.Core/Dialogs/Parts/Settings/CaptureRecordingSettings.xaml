@@ -88,6 +88,12 @@
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=EnableRecordingOnConnect}" />
 
+            <atc:LabelToggleSwitch
+                IsOn="{Binding Path=EnableActivityIndex, Mode=TwoWay}"
+                LabelPosition="Right"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=EnableActivityIndex}" />
+
         </StackPanel>
     </GroupBox>
 </UserControl>

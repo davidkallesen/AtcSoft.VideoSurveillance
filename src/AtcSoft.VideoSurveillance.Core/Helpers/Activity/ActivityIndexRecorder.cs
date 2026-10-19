@@ -13,6 +13,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     private readonly IActiveRecordings recordingService;
     private readonly IMotionDetectionService motionDetectionService;
     private readonly Func<Guid, MotionDetectionSettings?> settingsFor;
+    private readonly Func<bool> isEnabled;
     private readonly ConcurrentDictionary<Guid, IndexFile> files = new();
     private bool started;
 
@@ -26,11 +27,16 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     /// A camera's motion settings, its own overrides applied; <see langword="null"/> for a camera
     /// that is not known, which is then not analysed.
     /// </param>
+    /// <param name="isEnabled">
+    /// Whether indexes are kept (the <c>EnableActivityIndex</c> setting), asked as each recording or
+    /// segment starts; always when <see langword="null"/>.
+    /// </param>
     public ActivityIndexRecorder(
         ILogger logger,
         IActiveRecordings recordingService,
         IMotionDetectionService motionDetectionService,
-        Func<Guid, MotionDetectionSettings?> settingsFor)
+        Func<Guid, MotionDetectionSettings?> settingsFor,
+        Func<bool>? isEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(recordingService);
@@ -41,6 +47,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         this.recordingService = recordingService;
         this.motionDetectionService = motionDetectionService;
         this.settingsFor = settingsFor;
+        this.isEnabled = isEnabled ?? (() => true);
     }
 
     /// <summary>
@@ -196,6 +203,13 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         }
 
         Close(cameraId);
+
+        // Turned off: no index, and no analysis for one.
+        if (!isEnabled())
+        {
+            motionDetectionService.StopIndexing(cameraId);
+            return;
+        }
 
         var start = recordingService.GetSession(cameraId) is { } session
             ? ToUtc(session.StartTime)

@@ -147,6 +147,30 @@ public sealed class ActivityIndexRecorderTests : IDisposable
         late.GetIndexPath(other).Should().Be(RecordingPathHelper.BuildActivityPath(video));
     }
 
+    [Fact]
+    public void Turned_Off_A_Recording_Gets_No_Index_And_No_Analysis_And_Turned_On_The_Next_Segment_Does()
+    {
+        var ownRecordings = new FakeActiveRecordings();
+        var ownMotion = new FakeMotionDetection();
+        var enabled = false;
+        using var recorder = new ActivityIndexRecorder(NullLogger.Instance, ownRecordings, ownMotion, _ => GardenSettings, () => enabled);
+        recorder.Start();
+        var first = Video("121500");
+        var second = Video("123000");
+
+        ownRecordings.Start(camera, first, pipeline);
+
+        recorder.GetIndexPath(camera).Should().BeNull();
+        File.Exists(RecordingPathHelper.BuildActivityPath(first)).Should().BeFalse();
+        ownMotion.Indexing.Should().BeEmpty();
+
+        enabled = true;
+        ownRecordings.Segment(camera, second);
+
+        recorder.GetIndexPath(camera).Should().Be(RecordingPathHelper.BuildActivityPath(second));
+        ownMotion.Indexing.Should().ContainKey(camera);
+    }
+
     private static DateTimeOffset Utc(DateTime time)
         => new(DateTime.SpecifyKind(time.ToUniversalTime(), DateTimeKind.Utc));
 

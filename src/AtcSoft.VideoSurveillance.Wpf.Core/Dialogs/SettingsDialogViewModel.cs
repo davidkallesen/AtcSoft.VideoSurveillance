@@ -222,6 +222,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     [ObservableProperty]
     private bool enableRecordingOnConnect;
 
+    [ObservableProperty]
+    private bool enableActivityIndex = true;
+
     // Recording Storage Layout Settings
     [ObservableProperty(DependentPropertyNames = [nameof(RecordingPathExample), nameof(ThumbnailPathExample), nameof(RecordingLayoutExampleSummary), nameof(SeparateThumbnailFolderHint)])]
     private bool useDailySubfolders = true;
@@ -513,6 +516,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedTranscodeVideoCodec = AtcSoft.VideoSurveillance.Factories.DropDownItemsFactory.DefaultTranscodeVideoCodec;
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
+        EnableActivityIndex = true;
 
         // Recording Storage Layout
         UseDailySubfolders = true;
@@ -627,6 +631,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         SelectedTranscodeVideoCodec = recording.TranscodeVideoCodec.ToString();
         EnableRecordingOnMotion = recording.EnableRecordingOnMotion;
         EnableRecordingOnConnect = recording.EnableRecordingOnConnect;
+        EnableActivityIndex = recording.EnableActivityIndex;
 
         // Recording Storage Layout Settings
         UseDailySubfolders = recording.UseDailySubfolders;
@@ -797,6 +802,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
                 : VideoTranscodeCodec.None,
             EnableRecordingOnMotion = EnableRecordingOnMotion,
             EnableRecordingOnConnect = EnableRecordingOnConnect,
+            EnableActivityIndex = EnableActivityIndex,
             EnableHourlySegmentation = EnableHourlySegmentation,
             UseDailySubfolders = UseDailySubfolders,
             SeparateThumbnailFolder = SeparateThumbnailFolder,

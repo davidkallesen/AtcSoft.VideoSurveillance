@@ -178,6 +178,7 @@ Recording paths, formats, segmentation, and timelapse configuration.
 | `TranscodeVideoCodec` | enum | `None` | Yes | `None` records what the camera sends, untouched. `H264` records every camera as H.264 — see [Recording as H.264](#recording-as-h264) |
 | `EnableRecordingOnMotion` | bool | `false` | Yes | Auto-record when motion is detected |
 | `EnableRecordingOnConnect` | bool | `false` | Yes | Auto-record when camera connects |
+| `EnableActivityIndex` | bool | `true` | No | Keep an activity index (`{video}.activity.jsonl`) beside every recording, for the timelines; costs the analysis of the recorded cameras. Turned off, the next recording or segment is made without one |
 | `EnableHourlySegmentation` | bool | `true` | No | Split recordings into clock-aligned segments |
 | `MaxRecordingDurationMinutes` | int | `60` | No | Maximum segment length in minutes |
 | `ThumbnailTileCount` | int | `4` | Yes | Thumbnail grid: 1 (single 320x240) or 4 (2x2 640x480) |
@@ -605,6 +606,7 @@ The standalone CameraWall app keeps its files in `%ProgramData%\AtcSoft\CameraWa
     "transcodeVideoCodec": "none",
     "enableRecordingOnMotion": false,
     "enableRecordingOnConnect": false,
+    "enableActivityIndex": true,
     "enableHourlySegmentation": true,
     "maxRecordingDurationMinutes": 60,
     "thumbnailTileCount": 4,

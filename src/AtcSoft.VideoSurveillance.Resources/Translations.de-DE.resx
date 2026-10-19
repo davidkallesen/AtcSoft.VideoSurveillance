@@ -2733,4 +2733,7 @@ Vorschaubild:
   <data name="PlayAllShowsFirst1" xml:space="preserve">
     <value>Zeigt die ersten {0} Kameras</value>
   </data>
+  <data name="EnableActivityIndex" xml:space="preserve">
+    <value>Zu jeder Aufnahme eine Aktivitätszeitleiste führen</value>
+  </data>
 </root>

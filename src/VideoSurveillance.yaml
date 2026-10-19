@@ -2700,6 +2700,7 @@ components:
         - recordAsH264
         - enableRecordingOnMotion
         - enableRecordingOnConnect
+        - enableActivityIndex
         - enableHourlySegmentation
         - maxRecordingDurationMinutes
         - thumbnailTileCount
@@ -2875,6 +2876,9 @@ components:
           type: boolean
         enableRecordingOnConnect:
           type: boolean
+        enableActivityIndex:
+          type: boolean
+          description: Keep an activity index beside every recording, for the timelines. It costs the analysis of the recorded cameras; turned off, the next recording or segment is made without one.
         enableHourlySegmentation:
           type: boolean
         maxRecordingDurationMinutes:
@@ -3092,6 +3096,9 @@ components:
           type: boolean
         enableRecordingOnConnect:
           type: boolean
+        enableActivityIndex:
+          type: boolean
+          description: Keep an activity index beside every recording, for the timelines. It costs the analysis of the recorded cameras; turned off, the next recording or segment is made without one.
         enableHourlySegmentation:
           type: boolean
         maxRecordingDurationMinutes:

@@ -2733,4 +2733,7 @@ Miniature:
   <data name="PlayAllShowsFirst1" xml:space="preserve">
     <value>Viser de første {0} kameraer</value>
   </data>
+  <data name="EnableActivityIndex" xml:space="preserve">
+    <value>Gem en aktivitetstidslinje for hver optagelse</value>
+  </data>
 </root>

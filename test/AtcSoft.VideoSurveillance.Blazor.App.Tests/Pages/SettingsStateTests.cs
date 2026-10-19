@@ -214,6 +214,7 @@ public sealed class SettingsStateTests
             RecordAsH264: false,
             EnableRecordingOnMotion: true,
             EnableRecordingOnConnect: true,
+            EnableActivityIndex: false,
             EnableHourlySegmentation: false,
             MaxRecordingDurationMinutes: 30,
             ThumbnailTileCount: 1,

@@ -36,7 +36,8 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
             motionDetectionService,
             cameraId => storageService.GetCameraById(cameraId) is { } camera
                 ? Resolve(camera, settingsService.MotionDetection)
-                : null);
+                : null,
+            () => settingsService.Recording.EnableActivityIndex);
     }
 
     /// <inheritdoc />

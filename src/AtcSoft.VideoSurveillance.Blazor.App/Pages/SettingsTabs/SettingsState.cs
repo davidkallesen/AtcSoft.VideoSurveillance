@@ -128,6 +128,8 @@ public sealed class SettingsState
 
     public bool EnableRecordingOnConnect { get; set; }
 
+    public bool EnableActivityIndex { get; set; } = true;
+
     public bool EnableHourlySegmentation { get; set; } = true;
 
     public bool UseDailySubfolders { get; set; } = true;
@@ -262,6 +264,7 @@ public sealed class SettingsState
         RecordAsH264 = settings.RecordAsH264;
         EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
         EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
+        EnableActivityIndex = settings.EnableActivityIndex;
         EnableHourlySegmentation = settings.EnableHourlySegmentation;
         MaxRecordingDurationMinutes = settings.MaxRecordingDurationMinutes;
 
@@ -340,6 +343,7 @@ public sealed class SettingsState
             RecordAsH264: RecordAsH264,
             EnableRecordingOnMotion: EnableRecordingOnMotion,
             EnableRecordingOnConnect: EnableRecordingOnConnect,
+            EnableActivityIndex: EnableActivityIndex,
             EnableHourlySegmentation: EnableHourlySegmentation,
             MaxRecordingDurationMinutes: MaxRecordingDurationMinutes,
             ThumbnailTileCount: ThumbnailTileCount,

@@ -15,6 +15,13 @@ public class RecordingSettings
 
     public bool EnableRecordingOnConnect { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether an activity index is kept beside every recording
+    /// (<c>{video}.activity.jsonl</c>), for the timelines. It costs the analysis of the recorded
+    /// cameras; turned off, the next recording or segment is made without one.
+    /// </summary>
+    public bool EnableActivityIndex { get; set; } = true;
+
     public MediaCleanupSettings Cleanup { get; set; } = new();
 
     public PlaybackOverlaySettings PlaybackOverlay { get; set; } = new();

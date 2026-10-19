@@ -69,6 +69,7 @@ internal static class SettingsMappingExtensions
             RecordAsH264: recording.TranscodeVideoCodec == AtcSoft.VideoSurveillance.Enums.VideoTranscodeCodec.H264,
             EnableRecordingOnMotion: recording.EnableRecordingOnMotion,
             EnableRecordingOnConnect: recording.EnableRecordingOnConnect,
+            EnableActivityIndex: recording.EnableActivityIndex,
             EnableHourlySegmentation: recording.EnableHourlySegmentation,
             MaxRecordingDurationMinutes: recording.MaxRecordingDurationMinutes,
             ThumbnailTileCount: recording.ThumbnailTileCount,
@@ -359,6 +360,11 @@ internal static class SettingsMappingExtensions
         if (api.EnableRecordingOnConnect is { } enableRecordingOnConnect)
         {
             recording.EnableRecordingOnConnect = enableRecordingOnConnect;
+        }
+
+        if (api.EnableActivityIndex is { } enableActivityIndex)
+        {
+            recording.EnableActivityIndex = enableActivityIndex;
         }
 
         if (api.EnableHourlySegmentation is { } enableHourlySegmentation)

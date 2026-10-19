@@ -347,7 +347,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
 | 6 | Masks and zones | L | ⬜ |
-| 7 | Activity index (sidecar, API) | M | 🟨 Core, server and CameraWall done; the setting and *Analyse recording* open |
+| 7 | Activity index (sidecar, API) | M | 🟨 Core, server, CameraWall and the setting done; *Analyse recording* open |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps and click to seek in all three clients; hover, play events only, zoom, sparklines open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | ✅ both API clients and CameraWall: playing on across segments, growing live (CameraWall: on recording changes and every 15 s), zoom, gap reasons (API clients), play all from here |
@@ -477,7 +477,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 **Open:**
 
-- A setting to turn the index off (always on today). It has to pass `SettingsRoundTripTests`, with texts in four languages and both clients.
+- ~~A setting to turn the index off~~ done 2026-10-19: `RecordingSettings.EnableActivityIndex` (on by default), in the spec, both API clients and CameraWall's settings (Capture), asked by `ActivityIndexRecorder` as each recording or segment starts; turned off, no index and no index-only analysis.
 - *Analyse recording* for older recordings.
 - The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.
 - Analysis costs a PNG capture per picture for every recorded camera; a camera analysed only for the index is held to 4 a second in both apps. Phase 2's grey frames would make it cheap.

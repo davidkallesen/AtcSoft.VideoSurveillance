@@ -228,6 +228,9 @@ public partial class SettingsDialogViewModel : ViewModelBase
     [ObservableProperty]
     private bool enableRecordingOnConnect;
 
+    [ObservableProperty]
+    private bool enableActivityIndex = true;
+
     // Storage layout
     [ObservableProperty(DependentPropertyNames = [nameof(RecordingLayoutExampleSummary), nameof(SeparateThumbnailFolderHint)])]
     private bool useDailySubfolders = true;
@@ -456,6 +459,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             SelectedTranscodeVideoCodec = settings.RecordAsH264 ? "H264" : "None";
             EnableRecordingOnMotion = settings.EnableRecordingOnMotion;
             EnableRecordingOnConnect = settings.EnableRecordingOnConnect;
+            EnableActivityIndex = settings.EnableActivityIndex;
             EnableHourlySegmentation = settings.EnableHourlySegmentation;
             UseDailySubfolders = settings.UseDailySubfolders;
             SeparateThumbnailFolder = settings.SeparateThumbnailFolder;
@@ -597,6 +601,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
         SelectedTranscodeVideoCodec = "None";
         EnableRecordingOnMotion = false;
         EnableRecordingOnConnect = false;
+        EnableActivityIndex = true;
         EnableHourlySegmentation = true;
         UseDailySubfolders = true;
         SeparateThumbnailFolder = true;
@@ -755,6 +760,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             RecordAsH264: string.Equals(SelectedTranscodeVideoCodec, "H264", StringComparison.OrdinalIgnoreCase),
             EnableRecordingOnMotion: EnableRecordingOnMotion,
             EnableRecordingOnConnect: EnableRecordingOnConnect,
+            EnableActivityIndex: EnableActivityIndex,
             EnableHourlySegmentation: EnableHourlySegmentation,
             UseDailySubfolders: UseDailySubfolders,
             SeparateThumbnailFolder: SeparateThumbnailFolder,
