@@ -13,7 +13,7 @@ namespace AtcSoft.VideoSurveillance.E2E;
 [Collection(E2ETestGroup.Name)]
 public sealed class WpfClientSmokeTests(ServerFixture server)
 {
-    private static readonly string[] Views = ["Live View", "Dashboard", "Cameras", "Layouts", "Recordings", "Notifications"];
+    private static readonly string[] Views = ["Live View", "Dashboard", "Cameras", "Layouts", "Recordings", "Timeline", "Notifications"];
 
     [Fact]
     public void Every_Window_Opens_Without_Binding_Errors()
@@ -37,6 +37,17 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
 
         // Recordings: play the one the fixture recorded, with its activity from the server
         steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
+
+        // Timeline: every camera gets a lane from the server's timeline
+        steps.Run("timeline lanes", () =>
+        {
+            ShowView(app, main, "Timeline");
+            app.FindWhere(
+                main,
+                e => e.ControlType == ControlType.Custom && e.Name == TestCameras.LiveCameraName,
+                "a timeline lane for the live camera",
+                TimeSpan.FromSeconds(20));
+        });
 
         // Cameras: add, and edit each camera
         steps.Run("Cameras view", () => ShowView(app, main, "Cameras"));

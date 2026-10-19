@@ -23,6 +23,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private readonly DateTime? recordingStartTime;
     private readonly PlaybackOverlaySettings overlaySettings;
     private readonly RecordingActivityLoader? activityLoader;
+    private readonly TimeSpan startPosition;
     private readonly CancellationTokenSource activityCancellation = new();
     private IReadOnlyList<ActivityEvent> activityEvents = [];
     private MediaElement? mediaElement;
@@ -117,18 +118,21 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// Gets the recording's activity for the timeline under the player; without one, or for a
     /// recording without an activity index, there is no timeline.
     /// </param>
+    /// <param name="startPosition">Where to start in the recording: a timeline plays from a moment.</param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
         PlaybackOverlaySettings? overlaySettings = null,
         DateTime? recordingStartTime = null,
-        RecordingActivityLoader? activityLoader = null)
+        RecordingActivityLoader? activityLoader = null,
+        TimeSpan? startPosition = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
 
         this.filePath = filePath;
         this.activityLoader = activityLoader;
+        this.startPosition = startPosition ?? TimeSpan.Zero;
         this.overlaySettings = overlaySettings ?? new PlaybackOverlaySettings();
         FileName = fileName;
         this.recordingStartTime = recordingStartTime ?? ParseRecordingStartTime(fileName);
@@ -329,6 +333,11 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             DurationText = FormatDuration(duration);
             SeekMaximum = duration > 0 ? duration : 100;
             CanSeek = duration > 0;
+
+            if (startPosition > TimeSpan.Zero && duration > 0)
+            {
+                SeekTo(startPosition.Ticks / (double)duration);
+            }
 
             if (activityLoader is not null && duration > 0)
             {

@@ -464,6 +464,10 @@ public partial class App
                     sp.GetRequiredService<GatewayService>(),
                     new Uri(apiBaseAddress),
                     sp.GetRequiredService<ClientSession>()));
+                services.AddSingleton(sp => new TimelineViewModel(
+                    sp.GetRequiredService<GatewayService>(),
+                    new Uri(apiBaseAddress),
+                    sp.GetRequiredService<ClientSession>()));
                 services.AddSingleton<NotificationHistoryViewModel>();
 
                 // App
@@ -483,6 +487,7 @@ public partial class App
                     sp.GetRequiredService<CameraListViewModel>(),
                     sp.GetRequiredService<LayoutListViewModel>(),
                     sp.GetRequiredService<RecordingsViewModel>(),
+                    sp.GetRequiredService<TimelineViewModel>(),
                     sp.GetRequiredService<NotificationHistoryViewModel>(),
                     apiBaseAddress,
                     aspireManaged));

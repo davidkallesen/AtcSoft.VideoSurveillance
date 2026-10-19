@@ -68,11 +68,25 @@ public sealed class RecordingEntryViewModel
     public string FormattedRecordingTime
         => RecordingTime.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
 
-    private Uri BuildFileUrl(string relativePath)
+    /// <summary>
+    /// Gets where a player or an image fetches a recording's file from, with the session's media token.
+    /// </summary>
+    /// <param name="apiBaseUrl">The server.</param>
+    /// <param name="relativePath">The file's path below the recordings root, as the server names it.</param>
+    /// <param name="mediaToken">The session's media token, or <see langword="null"/>.</param>
+    public static Uri FileUrl(
+        Uri apiBaseUrl,
+        string relativePath,
+        string? mediaToken)
     {
+        ArgumentNullException.ThrowIfNull(apiBaseUrl);
+
         var query = string.IsNullOrEmpty(mediaToken) ? string.Empty : "?media=" + Uri.EscapeDataString(mediaToken);
         return new Uri($"{apiBaseUrl.GetLeftPart(UriPartial.Authority)}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(relativePath)}{query}");
     }
+
+    private Uri BuildFileUrl(string relativePath)
+        => FileUrl(apiBaseUrl, relativePath, mediaToken);
 
     private static TimeSpan ParseIsoDuration(string? duration)
     {

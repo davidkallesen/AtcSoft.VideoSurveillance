@@ -76,6 +76,14 @@ global using VideoSurveillance.Generated.Recordings.Models;
 global using VideoSurveillance.Generated.Settings.Client;
 global using VideoSurveillance.Generated.Settings.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Timeline.Client;
+global using VideoSurveillance.Generated.Timeline.Endpoints.Interfaces;
+global using VideoSurveillance.Generated.Timeline.Models;
 global using VideoSurveillance.Generated.Users.Client;
 global using VideoSurveillance.Generated.Users.Endpoints.Interfaces;
 global using VideoSurveillance.Generated.Users.Models;
+
+global using ActivityEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
+global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
+global using TimelineMarks = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks;
+global using TimelineStretch = AtcSoft.VideoSurveillance.Models.TimelineStretch;

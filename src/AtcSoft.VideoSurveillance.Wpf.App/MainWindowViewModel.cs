@@ -19,6 +19,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly CameraListViewModel cameraListViewModel;
     private readonly LayoutListViewModel layoutListViewModel;
     private readonly RecordingsViewModel recordingsViewModel;
+    private readonly TimelineViewModel timelineViewModel;
     private readonly NotificationHistoryViewModel notificationHistoryViewModel;
 
     private WindowState previousWindowState = WindowState.Normal;
@@ -82,6 +83,7 @@ public partial class MainWindowViewModel : ViewModelBase
         CameraListViewModel cameraListViewModel,
         LayoutListViewModel layoutListViewModel,
         RecordingsViewModel recordingsViewModel,
+        TimelineViewModel timelineViewModel,
         NotificationHistoryViewModel notificationHistoryViewModel,
         string apiBaseAddress,
         bool isAspireManaged)
@@ -100,6 +102,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(cameraListViewModel);
         ArgumentNullException.ThrowIfNull(layoutListViewModel);
         ArgumentNullException.ThrowIfNull(recordingsViewModel);
+        ArgumentNullException.ThrowIfNull(timelineViewModel);
         ArgumentNullException.ThrowIfNull(notificationHistoryViewModel);
 
         this.gatewayService = gatewayService;
@@ -116,6 +119,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.cameraListViewModel = cameraListViewModel;
         this.layoutListViewModel = layoutListViewModel;
         this.recordingsViewModel = recordingsViewModel;
+        this.timelineViewModel = timelineViewModel;
         this.notificationHistoryViewModel = notificationHistoryViewModel;
         serverUrl = apiBaseAddress;
         this.isAspireManaged = isAspireManaged;
@@ -192,6 +196,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         CurrentView = recordingsViewModel;
         recordingsViewModel.LoadCommand.Execute(parameter: null);
+    }
+
+    [RelayCommand]
+    private void ViewTimeline()
+    {
+        CurrentView = timelineViewModel;
+        timelineViewModel.LoadCommand.Execute(parameter: null);
     }
 
     [RelayCommand]
@@ -401,6 +412,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 vm.LoadCommand.Execute(parameter: null);
                 break;
             case RecordingsViewModel vm:
+                vm.LoadCommand.Execute(parameter: null);
+                break;
+            case TimelineViewModel vm:
                 vm.LoadCommand.Execute(parameter: null);
                 break;
         }

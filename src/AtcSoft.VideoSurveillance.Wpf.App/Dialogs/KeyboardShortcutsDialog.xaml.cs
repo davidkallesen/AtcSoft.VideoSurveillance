@@ -17,6 +17,7 @@ public partial class KeyboardShortcutsDialog
             new { Key = "Ctrl+4", Description = Translations.Layouts },
             new { Key = "Ctrl+5", Description = Translations.Recordings },
             new { Key = "Ctrl+6", Description = Translations.Notifications },
+            new { Key = "Ctrl+7", Description = Translations.Timeline },
             new { Key = "Ctrl+N", Description = Translations.ViewCameras },
             new { Key = "Ctrl+,", Description = Translations.Settings },
             new { Key = "F5", Description = Translations.RefreshCurrentView },

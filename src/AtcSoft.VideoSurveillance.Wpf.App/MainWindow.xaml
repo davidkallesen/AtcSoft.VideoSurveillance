@@ -43,6 +43,10 @@
             Command="{Binding Path=ViewNotificationsCommand}"
             Modifiers="Ctrl" />
         <KeyBinding
+            Key="D7"
+            Command="{Binding Path=ViewTimelineCommand}"
+            Modifiers="Ctrl" />
+        <KeyBinding
             Key="N"
             Command="{Binding Path=ViewCamerasCommand}"
             Modifiers="Ctrl" />
@@ -251,6 +255,14 @@
                         Size="Large">
                         <fluent:Button.LargeIcon>
                             <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="Film" />
+                        </fluent:Button.LargeIcon>
+                    </fluent:Button>
+                    <fluent:Button
+                        Command="{Binding Path=ViewTimelineCommand}"
+                        Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Timeline}"
+                        Size="Large">
+                        <fluent:Button.LargeIcon>
+                            <fontIcons:ImageAwesomeSolid Foreground="{DynamicResource AtcApps.Brushes.ThemeForeground}" Icon="History" />
                         </fluent:Button.LargeIcon>
                     </fluent:Button>
                 </fluent:RibbonGroupBox>

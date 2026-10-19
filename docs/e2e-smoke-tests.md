@@ -53,7 +53,8 @@ Both WPF walks also play a recording: CameraWall the one the fixture writes (wit
 beside it that has one event), the client the one the server recorded from the live camera. The player
 must show its activity timeline; the event buttons are pressed (in the client only when the detector
 found a track in the test pattern). The web walk plays the server's recording too and waits for the
-timeline (an SVG named Activity), which shows whether or not the browser can play the file.
+timeline (an SVG named Activity), which shows whether or not the browser can play the file. The web and
+WPF client walks also open the Timeline view and wait for the live camera's lane.
 
 ## Where to look after a run
 

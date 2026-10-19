@@ -32,4 +32,5 @@ global using VideoSurveillance.Generated.Layouts.Models;
 global using VideoSurveillance.Generated.Models;
 global using VideoSurveillance.Generated.Resilience;
 global using VideoSurveillance.Generated.Settings.Models;
+global using VideoSurveillance.Generated.Timeline.Models;
 global using VideoSurveillance.Generated.Users.Models;

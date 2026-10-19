@@ -74,6 +74,29 @@ public sealed class TimelinePageTests
     }
 
     [Fact]
+    public void The_Marks_Are_The_Same_As_The_Desktop_Clients()
+    {
+        var day = TimelineSpan.Day(new DateOnly(2026, 10, 25), Copenhagen);
+        TimelineSpan[] spans =
+        [
+            day,
+            TimelineSpan.Last24Hours(Nine),
+            new(Nine, Nine.AddHours(4)),
+            new(day.From, day.From.AddDays(7)),
+            new(Nine, Nine),
+        ];
+
+        foreach (var span in spans)
+        {
+            foreach (var culture in new[] { CultureInfo.InvariantCulture, new CultureInfo("da-DK") })
+            {
+                TimelineTicks.For(span, Copenhagen, culture).Select(t => (t.Fraction, t.Label))
+                    .Should().Equal(AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks.For(span.From, span.To, Copenhagen, culture).Select(m => (m.Fraction, m.Label)));
+            }
+        }
+    }
+
+    [Fact]
     public void A_Click_Plays_The_Recording_That_Covers_It_From_That_Far_In()
     {
         // The recording started before the span: its coverage is cut, its start is not.
