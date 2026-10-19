@@ -36,8 +36,9 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 
 | Area | Plan | Status | Open |
 |---|---|:--:|---|
-| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`), the activity timeline under the player in all three clients. Built too: the server timeline API (`GET /timeline`). Open: the timeline extras (hover, play events only, zoom), the timeline view of every camera, masks and zones, grey frames from the engine, `sample/BoundingBoxWpfApp`, the feedback loop; ONNX detection deferred |
+| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`), the activity timeline under the player in all three clients. Built too: the server timeline API (`GET /timeline`). Open: the timeline extras (hover, play events only, zoom), the timeline view of every camera, masks and zones, grey frames from the engine, `sample/BoundingBoxWpfApp`, the feedback loop; AI detection is planned in [AI support](roadmap-AI-support.md) |
 | 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Everything is built on v3; waits for v3 on nuget.org, then the switch from the local package |
+| 🧠 AI support (object labels on motion tracks) | [roadmap-AI-support.md](roadmap-AI-support.md) | ⬜ | Planned: an `IObjectDetector` seam, in-process ONNX first (permissive model), a CodeProject.AI-compatible HTTP client second; labels on tracks, the activity index, the timeline, webhooks and `GET /events`; per-camera classes and minimum score. Takes over the bounding-box plan's phase 10 |
 | 🧪 24/7 soak | [`docs/soak-test.md`](../docs/soak-test.md) | ⬜ | The procedure has never been run |
 
 ---
@@ -97,8 +98,8 @@ From the market comparison of 2026-04; none is picked up yet.
 |---|---|
 | Mobile app (live view, push, timeline) | The HLS streams and `GET /events` are the backbone; needs remote access first |
 | Remote access without port forwarding (WebRTC or a relay) | Today only a VPN or a reverse proxy |
-| LPR and face recognition | After local AI detection (bounding-box plan, phase 10); face recognition needs consent and privacy UX first |
-| ONVIF Profile T metadata from cameras with their own AI | An alternative to running detection on the server |
+| LPR and face recognition | After local AI detection ([AI support](roadmap-AI-support.md), phase 9, deferred); both need consent and privacy UX first |
+| ONVIF Profile T metadata from cameras with their own AI | An alternative to running detection on the server ([AI support](roadmap-AI-support.md), phase 10, deferred) |
 | PTZ control; two-way audio | Neither exists |
 | Home Assistant integration (HACS) | After MQTT |
 | Cloud copy of recordings (S3, Azure Blob) | Local only today |

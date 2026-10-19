@@ -352,7 +352,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | ⬜ |
 | 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
-| 10 | Local AI detection (ONNX) on motion regions | L | ⏸️ |
+| 10 | Local AI detection (ONNX) on motion regions: moved to the [AI support plan](roadmap-AI-support.md) | L | ⏸️ |
 
 ### Phase 0 — Quick fixes ✅ (S)
 
@@ -523,13 +523,7 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 ### Phase 10 — Local AI detection ⏸️ (L)
 
-Covers the backlog row *AI detection (ONNX)*.
-
-- ONNX Runtime (`Microsoft.ML.OnnxRuntime`, DirectML on Windows) runs only on **crops around confirmed tracks**, a few times per track, not on every frame.
-- The label goes on the track (`label` and `score` in `MotionBox` and the activity index); the timeline colours and marks by class; recording and webhooks can require a class.
-- Model choice: Decision 8.
-
-**Test:** real recordings from the corpus (silhouettes will not do); label accuracy per class in the score.
+Moved to its own plan on 2026-10-19: [roadmap-AI-support.md](roadmap-AI-support.md).
 
 ---
 
@@ -615,7 +609,7 @@ Nothing of the OpenCV option is built now: only the seam is, in phase 4.
 | 5 | **Activity index: a sidecar per recording or a database on the server?** | **Sidecar.** It moves and is deleted with the file, works for CameraWall without a server, and follows the folder layouts. The server can cache it in memory |
 | 6 | **Run detection for every recording camera?** | **Yes, at 2–4/s, while the index is on** (default on). Without it a continuous recording has no timeline. The grey-frame path of phase 2 makes it cheap |
 | 7 | **What decides "motion is active"?** | **A confirmed track.** The global `MinimumChangePercent` is deprecated and kept readable |
-| 8 | **Which AI model, later?** | A permissively licensed one: **YOLOX (Apache-2.0)** or **RF-DETR (Apache-2.0)**. **Not Ultralytics YOLO (AGPL-3.0)** unless an enterprise licence is bought. RT-DETR, D-FINE and NanoDet are candidates; check each repository's LICENSE **and the weights' licence** before choosing |
+| 8 | **Which AI model, later?** | Moved to the [AI support plan](roadmap-AI-support.md#-decisions-needed) (its decision 2) |
 | 9 | **Where do the real recordings for the corpus live?** | Outside git, in a folder named by `ATCSOFT_BBOX_CORPUS`. The review files may be in git and name their recording by SHA-256 |
 | 10 | **Release the wire change (`trackId`) with the desktop client?** | Yes. It is optional, so older clients ignore it, and the server and the desktop client are released together anyway |
 | 11 | **Server timeline: day files or a database?** | ✅ **Decided 2026-10-19: neither, for now: summaries in memory** (`ActivitySummaryCache`), read from the activity files on first use. Nothing to keep in step, a deleted recording falls out by itself. Day files (in the data folder, rebuilt from the activity files) only if measurement says a cold span is too slow; SQLite only after that |
