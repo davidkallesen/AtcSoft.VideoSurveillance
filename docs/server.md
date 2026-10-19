@@ -65,6 +65,8 @@ A server without users writes a one-time code to `setup-code.txt` in its data fo
 
 Both clients keep the session across a restart: the web client in the browser's local storage, the desktop client in a file under `%LOCALAPPDATA%\AtcSoft\VideoSurveillance\sessions`, encrypted for the Windows user. They renew the access token a minute before it runs out, and once after a 401. Only a refused refresh token (400) makes a client forget its stored session; a 429, a server error or no server keeps it for the next try.
 
+**Known issue (2026-10-19): a renewal whose answer is lost signs the user out.** The server replaces the refresh token as soon as it handles `POST /auth/refresh`. When the client never gets the answer (the browser tab is reloaded or closed during the renewal, which takes up to half a second; the desktop client closes or times out), it keeps the old token, and its next renewal is refused (400): the web client shows the sign-in page, the desktop client asks to sign in at its next start. Seen once in the web walk: `POST /auth/refresh - 499` followed by `POST /auth/refresh - 400`. A fix would accept the token just replaced once more for a few seconds, answering with the same new session, which is a change to the refresh-token rules and waits for a decision.
+
 For an unattended desktop client (a wall screen), `Auth:UserName` and `Auth:Password` in its configuration sign it in without the dialog.
 
 ### Roles

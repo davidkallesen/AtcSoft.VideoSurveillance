@@ -7,13 +7,13 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 /// <param name="settingsService">The application settings.</param>
 /// <param name="cameraStorageService">The cameras.</param>
 /// <param name="durationProvider">Reads how long a finished recording is. Optional: without it the length is left out.</param>
-/// <param name="summaryCache">The summaries of the activity indexes, for each recording's sparkline. Optional: without it there is none.</param>
+/// <param name="sparklines">The recordings' sparklines already read. Optional: without it there are none.</param>
 public sealed class ListRecordingsHandler(
     IRecordingService recordingService,
     IApplicationSettingsService settingsService,
     ICameraStorageService cameraStorageService,
     IRecordingDurationProvider? durationProvider = null,
-    ActivitySummaryCache? summaryCache = null) : IListRecordingsHandler
+    ActivitySparklineCache? sparklines = null) : IListRecordingsHandler
 {
     public Task<ListRecordingsResult> ExecuteAsync(
         ListRecordingsParameters parameters,
@@ -26,18 +26,18 @@ public sealed class ListRecordingsHandler(
             .Find(recordingPath, cameraStorageService.GetAllCameras(), recordingService.GetActiveSessions(), parameters.CameraId, DateTimeOffset.UtcNow);
 
         // A cold listing reads many indexes: in parallel, as the timeline does.
-        var sparklines = new IReadOnlyList<int>?[files.Count];
-        if (summaryCache is not null)
+        var activity = new IReadOnlyList<int>?[files.Count];
+        if (sparklines is not null)
         {
             Parallel.For(
                 0,
                 files.Count,
                 new ParallelOptions { CancellationToken = cancellationToken },
-                i => sparklines[i] = ActivitySparkline.From(summaryCache.Get(RecordingPathHelper.BuildActivityPath(files[i].FullPath))));
+                i => activity[i] = sparklines.Get(RecordingPathHelper.BuildActivityPath(files[i].FullPath)));
         }
 
         var recordings = files
-            .Select((file, i) => ToRecording(file, recordingPath, sparklines[i]))
+            .Select((file, i) => ToRecording(file, recordingPath, activity[i]))
             .OrderByDescending(r => r.StartedAt)
             .ToList();
 

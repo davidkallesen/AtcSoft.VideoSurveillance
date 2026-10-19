@@ -269,6 +269,7 @@
     [JSInvokable]
     public async Task OnTimeAsync(double currentSeconds, double durationSeconds)
     {
+        var shownStretch = PlayheadStretch(playhead);
         playhead = durationSeconds > 0 ? currentSeconds / durationSeconds : -1;
         if (playEventsOnly && HasActivity && durationSeconds > 0)
         {
@@ -283,8 +284,15 @@
             }
         }
 
-        StateHasChanged();
+        // The whole timeline is drawn again only when the playhead moves into another stretch.
+        if (PlayheadStretch(playhead) != shownStretch)
+        {
+            StateHasChanged();
+        }
     }
+
+    private int PlayheadStretch(double position)
+        => position < 0 || buckets is null ? -1 : (int)(Math.Min(position, 1) * buckets.Count);
 
     // After the last event: the next recording, else the player stops where it is.
     private async Task FinishEventsOnlyAsync()

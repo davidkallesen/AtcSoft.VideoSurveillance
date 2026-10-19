@@ -218,6 +218,7 @@ try
 
     // An activity index beside every recording, for the timelines.
     builder.Services.AddSingleton(new ActivitySummaryCache());
+    builder.Services.AddSingleton(new ActivitySparklineCache());
     builder.Services.AddSingleton(new ActivityIndexServiceOptions());
     builder.Services.AddSingleton<ActivityIndexService>();
     builder.Services.AddHostedService(sp => sp.GetRequiredService<ActivityIndexService>());

@@ -30,6 +30,33 @@ public sealed class ActivitySparklineTests
     }
 
     [Fact]
+    public void The_Cache_Reads_An_Index_Again_When_It_Grew()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "atcsoft-sparkline-" + Guid.NewGuid().ToString("N") + ".activity.jsonl");
+        try
+        {
+            var start = DateTimeOffset.UnixEpoch;
+            var cache = new ActivitySparklineCache();
+            using (var index = ActivityLogWriter.Create(path, start))
+            {
+                index.Add(start, new MotionDetectorResult(false, MotionHoldChange.None, 3, []));
+                index.Add(start.AddSeconds(1), new MotionDetectorResult(false, MotionHoldChange.None, 3, []));
+                cache.Get(path)!.Max().Should().Be(3);
+
+                index.Add(start.AddSeconds(2), new MotionDetectorResult(true, MotionHoldChange.None, 70, []));
+            }
+
+            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(5));
+            cache.Get(path)!.Max().Should().Be(70, "the index grew while the recording went on");
+            cache.Count.Should().Be(1);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void Without_An_Index_There_Is_No_Sparkline()
         => ActivitySparkline.From(null).Should().BeNull();
 

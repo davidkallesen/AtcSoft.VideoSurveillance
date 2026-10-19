@@ -348,7 +348,7 @@ public class ListRecordingsHandlerTests
                 SettingsFor(root),
                 CamerasOf(camera),
                 durationProvider: null,
-                summaryCache: new ActivitySummaryCache());
+                sparklines: new ActivitySparklineCache());
 
             // Act
             var result = await handler.ExecuteAsync(
