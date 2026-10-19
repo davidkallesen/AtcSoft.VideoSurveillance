@@ -469,11 +469,71 @@ Covers the backlog row *AI detection (ONNX)*.
 
 ---
 
+## ⚖️ Pure C# or OpenCvSharp?
+
+The detector of phase 4 can be written in plain C# or built on [OpenCvSharp](https://github.com/shimat/opencvsharp), the .NET wrapper of OpenCV. This is the biggest technical choice in the plan, so here are both sides.
+
+### What the detector needs
+
+| Step | Size of the job in plain C# |
+|---|---|
+| Scale the grey picture, keep the aspect ratio | Done by FFmpeg's swscale in phase 2, so neither option is needed for it |
+| Light blur (3×3 or 5×5 box or Gaussian) | A separable pass over rows and columns |
+| Running mean and variance per pixel (the background) | One pass with `Vector<T>` |
+| Difference against the background, threshold | Same pass |
+| Morphology: open, close (3×3 or 5×5) | Separable min and max passes |
+| Connected components with their boxes | Two-pass union–find; one pass over the mask |
+| Merge, filters, tracker, scoring | Plain logic, the same in both options |
+
+At an analysis size of 640×360 a picture is 230 400 grey pixels, and each step is one or two passes over them. That is small work in either option. Later work that OpenCV would make easier: optical flow, CLAHE (contrast in the dark), several-mode background models (MOG2, KNN).
+
+### Pure C#
+
+| ✅ For | ❌ Against |
+|---|---|
+| **No native runtime in the published Core package.** Core ships to NuGet with five other packages in lockstep; every consumer would have to deploy OpenCV next to the FFmpeg they already deploy | **We write and keep the algorithms.** Bugs in edge cases (borders, odd sizes, rotation) are ours to find; the storybook scores are the safety net |
+| **One language, one debugger.** Step through a frame, inspect a mask as a `byte[]`, test any step alone | **Slower on heavy steps.** OpenCV's hand-tuned SIMD (and Intel IPP) beats a first C# version on big kernels; `Vector128`/`Vector256` closes much of the gap for the small kernels this plan needs |
+| **Deterministic everywhere.** The same bytes in give the same boxes on every CPU, which the scorer and the regression corpus depend on | **Nothing ready-made for later needs.** Optical flow, CLAHE or MOG2 would each be written by us, or bring OpenCV in after all |
+| **No interop:** no `Mat` lifetimes, no leaks of native memory, no native crash that takes down a 24/7 server or the desktop app | **No direct reuse of others' OpenCV code.** Frigate's parameters carry over, its code does not |
+| **Runs wherever .NET runs**, the web client's WebAssembly included, should the web ever analyse locally | |
+| **No clash with our FFmpeg 9.** OpenCV's video I/O can bring its own FFmpeg DLLs | |
+| **Small:** a few hundred lines in Core; nothing to add to the MSI installers or the server | |
+
+### OpenCvSharp
+
+| ✅ For | ❌ Against |
+|---|---|
+| **Mature and fast:** OpenCV's optimised code, OpenCL through `UMat` | **A native runtime per platform:** `OpenCvSharp4.runtime.win` alone is a 38 MB package; Linux and macOS need their own; Windows x86 is no longer built |
+| **Everything is there:** MOG2 and KNN background subtractors, morphology, `findContours`, `connectedComponentsWithStats`, optical flow, CLAHE | **It cannot go into Core** without forcing the runtime on every NuGet consumer. It would need a separate package, so the desktop and the server would no longer share one plain detector by default |
+| **Frigate's design maps one to one:** `accumulateWeighted`, `absdiff`, `threshold`, `dilate`, `findContours` | **Native failure modes:** `Mat` objects must be disposed; a leak or an access violation in native code ends the process, where a C# bug only throws |
+| **Fast to prototype**, especially in the sample app; a large community and many examples | **Version churn:** OpenCvSharp4 is in maintenance and OpenCvSharp5 (OpenCV 5) is the new line, so a move is ahead either way |
+| **Apache-2.0**, actively released (4.13.0.20260627, June 2026), x64 and ARM64 on Windows, Linux and macOS, also WebAssembly | **Possibly less deterministic:** optimised paths and threads can differ by CPU, which makes scores harder to compare across machines |
+| | **Deployment grows:** the MSIs, the server and the E2E machines all carry the runtime; the full Linux package needs GTK, the slim one drops contrib and video I/O |
+| | **No CUDA** in the packages; GPU help would come from OpenCL only |
+
+### The middle way
+
+- **Production: pure C#** in Core, behind an `IMotionDetector` interface, used by both services and the sample app.
+- **OpenCvSharp as a reference, never shipped.** The sample app and the storybook tests may run an OpenCvSharp detector (Frigate's chain, or MOG2) on the same scenes as an oracle. If it scores clearly better, we see by how much, and on which scenes, before deciding to bring OpenCV in.
+- **A way back in, if needed.** Because of the interface, an OpenCvSharp detector could later ship as a package of its own (for example `AtcSoft.VideoSurveillance.Detection.OpenCv`) that a host chooses. Core stays free of native code.
+
+### When to revisit
+
+| Tripwire | Measured where |
+|---|---|
+| The C# detector misses the phase 4 thresholds on the scenes, and the OpenCvSharp oracle meets them | Storybook scores (phase 1 baseline, phase 4) |
+| Detection costs more than a few milliseconds per picture per camera at 2–4 pictures a second, at the analysis size | The sample app's CPU panel; a benchmark test |
+| A later phase needs optical flow, CLAHE or a several-mode background model | Phases 6 and 10 |
+
+**Recommendation: pure C#**, with OpenCvSharp allowed in the sample app and the tests as an oracle. This keeps decision 1 below, now with the comparison above.
+
+---
+
 ## ❓ Decisions Needed
 
 | # | Question | Recommendation |
 |---|----------|----------------|
-| 1 | **Pure C# or OpenCvSharp for the detector?** | **Pure C#.** Core is a published package, and OpenCvSharp brings a large native runtime to every consumer. The steps needed (blur, running mean and variance, morphology, components) are small, and SIMD keeps them fast. Revisit only if the scores need something heavy (optical flow) |
+| 1 | **Pure C# or OpenCvSharp for the detector?** | **Pure C#**, with OpenCvSharp only as a reference in the sample app and the tests. See [Pure C# or OpenCvSharp?](#️-pure-c-or-opencvsharp) for both sides and the tripwires that reopen it |
 | 2 | **Storybook in JSON or YAML?** | **JSON**, read with System.Text.Json: no new dependency, and a JSON schema gives editor help |
 | 3 | **Draw frames in C# or with FFmpeg filters?** | **C#**: the truth comes from the same drawing. FFmpeg only encodes |
 | 4 | **Where do storybook, generator and scorer live?** | A new non-packable `AtcSoft.VideoSurveillance.Storybook` project, used by the sample and the tests. **Not in Core** (published) |
@@ -519,6 +579,8 @@ Covers the backlog row *AI detection (ONNX)*.
 
 ## 📚 Sources
 
+- OpenCvSharp repository (licence, packages, platforms, limitations): https://github.com/shimat/opencvsharp
+- OpenCvSharp4.runtime.win on NuGet (version, size): https://www.nuget.org/packages/OpenCvSharp4.runtime.win
 - Frigate's motion detector, `frigate/motion/improved_motion.py`: https://github.com/blakeblackshear/frigate/blob/dev/frigate/motion/improved_motion.py
 - Scrypted motion detection: https://docs.scrypted.app/detection/motion-detection.html and the HomeKit Secure Video setup: https://github.com/koush/scrypted/wiki/HomeKit-Secure-Video-Setup
 - Blue Iris help on its motion algorithms (quoted on IPCamTalk): https://ipcamtalk.com/threads/blue-iris-motion-detection.60238/post-616819
