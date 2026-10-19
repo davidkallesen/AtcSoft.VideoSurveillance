@@ -162,7 +162,7 @@ public partial class FullScreenCameraWindow : IDisposable
             containerSize = new Size(VideoPlayer.Overlay.ActualWidth, VideoPlayer.Overlay.ActualHeight);
         }
 
-        motionOverlay.UpdateBoundingBoxes(viewModel.CurrentBoundingBoxes, containerSize);
+        motionOverlay.UpdateMotionBoxes(viewModel.CurrentBoundingBoxes, containerSize);
     }
 
     private void CompleteSelectionZoom(MouseButtonEventArgs e)

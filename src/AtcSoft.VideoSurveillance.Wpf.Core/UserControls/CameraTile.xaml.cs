@@ -2833,7 +2833,7 @@ public partial class CameraTile : IDisposable
             containerSize = new Size(VideoPlayer.Overlay.ActualWidth, VideoPlayer.Overlay.ActualHeight);
         }
 
-        motionOverlay.UpdateBoundingBoxes(boundingBoxes, containerSize);
+        motionOverlay.UpdateMotionBoxes(boundingBoxes, containerSize);
     }
 
     /// <summary>

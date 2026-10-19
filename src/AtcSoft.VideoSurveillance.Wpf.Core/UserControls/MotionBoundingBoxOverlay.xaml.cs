@@ -54,7 +54,7 @@ public partial class MotionBoundingBoxOverlay
     /// </summary>
     /// <summary>
     /// The boxes to draw, for a host that binds them (the server client's tiles); a host that
-    /// drives the overlay from code calls <see cref="UpdateBoundingBoxes(IReadOnlyList{Rect}, Size)"/> instead.
+    /// drives the overlay from code calls <see cref="UpdateBoundingBoxes"/> instead.
     /// </summary>
     [DependencyProperty(PropertyChangedCallback = nameof(OnBoundingBoxesChanged))]
     private IReadOnlyList<Rect>? boundingBoxes;
@@ -103,7 +103,7 @@ public partial class MotionBoundingBoxOverlay
     {
         if (d is MotionBoundingBoxOverlay overlay)
         {
-            overlay.UpdateBoundingBoxes(
+            overlay.UpdateMotionBoxes(
                 e.NewValue as IReadOnlyList<BoundingBox>,
                 new Size(overlay.ActualWidth, overlay.ActualHeight));
         }
@@ -117,7 +117,7 @@ public partial class MotionBoundingBoxOverlay
     public void UpdateBoundingBoxes(
         IReadOnlyList<Rect>? boundingBoxes,
         Size containerSize)
-        => UpdateBoundingBoxes(
+        => UpdateMotionBoxes(
             boundingBoxes?.Select(b => new BoundingBox { X = b.X, Y = b.Y, Width = b.Width, Height = b.Height }).ToList(),
             containerSize);
 
@@ -127,7 +127,7 @@ public partial class MotionBoundingBoxOverlay
     /// </summary>
     /// <param name="boundingBoxes">The bounding boxes in analysis coordinates, or null/empty to hide all.</param>
     /// <param name="containerSize">The size of the container to map coordinates to.</param>
-    public void UpdateBoundingBoxes(
+    public void UpdateMotionBoxes(
         IReadOnlyList<BoundingBox>? boundingBoxes,
         Size containerSize)
     {
@@ -214,7 +214,7 @@ public partial class MotionBoundingBoxOverlay
         }
         else
         {
-            UpdateBoundingBoxes((IReadOnlyList<BoundingBox>?)null, containerSize);
+            UpdateBoundingBoxes(null, containerSize);
         }
     }
 
@@ -287,7 +287,7 @@ public partial class MotionBoundingBoxOverlay
         VideoWidth = lastVideoWidth;
         VideoHeight = lastVideoHeight;
 
-        UpdateBoundingBoxes(
+        UpdateMotionBoxes(
             lastBoundingBoxes,
             new Size(OverlayCanvas.ActualWidth, OverlayCanvas.ActualHeight));
 
