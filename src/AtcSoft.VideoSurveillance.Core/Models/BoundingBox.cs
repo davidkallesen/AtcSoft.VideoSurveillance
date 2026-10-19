@@ -31,6 +31,12 @@ public class BoundingBox
     /// </summary>
     public double Area => Width * Height;
 
+    /// <summary>
+    /// Gets or sets the id of the track the box belongs to, when the detector tracks objects:
+    /// the same thing keeps its id from picture to picture.
+    /// </summary>
+    public int? TrackId { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
         => $"BoundingBox {{ X={X.ToString(CultureInfo.InvariantCulture)}, Y={Y.ToString(CultureInfo.InvariantCulture)}, Width={Width.ToString(CultureInfo.InvariantCulture)}, Height={Height.ToString(CultureInfo.InvariantCulture)} }}";

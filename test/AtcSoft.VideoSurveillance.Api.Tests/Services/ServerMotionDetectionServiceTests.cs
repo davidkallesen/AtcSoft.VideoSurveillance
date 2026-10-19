@@ -1,9 +1,12 @@
 namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
-/// The server's motion detector, driven one picture at a time. The pictures
+/// The server's motion detection, driven one picture at a time. The pictures
 /// are a single byte each that the reader turns into a grayscale picture:
 /// level 50 is the empty scene, anything else has a bright block in it.
+/// These tests are about the service (events, the post-motion hold, failed
+/// captures, stopping), so they use the simple frame-difference detector; the
+/// detection itself is measured by the storybook tests.
 /// </summary>
 public sealed class ServerMotionDetectionServiceTests : IDisposable
 {
@@ -33,7 +36,8 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
             NullLogger<ServerMotionDetectionService>.Instance,
             new BlockReader(),
             clock,
-            runLoops: false);
+            runLoops: false,
+            createDetector: s => new FrameDifferenceMotionDetector(s));
         sut.MotionDetected += (_, e) => events.Add(e);
         sut.StartDetection(cameraId, pipeline, settings);
     }
@@ -175,6 +179,32 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
         events.Should().ContainSingle().Which.IsMotionActive.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task The_Default_Detector_Reports_Something_That_Travels_With_A_Track()
+    {
+        var walker = new WalkingBlockReader();
+        using var service = new ServerMotionDetectionService(
+            NullLogger<ServerMotionDetectionService>.Instance,
+            walker,
+            clock,
+            runLoops: false);
+        var seen = new List<MotionDetectedEventArgs>();
+        service.MotionDetected += (_, e) => seen.Add(e);
+        service.StartDetection(cameraId, pipeline, settings);
+
+        for (var step = 0; step < 12; step++)
+        {
+            walker.Step = step;
+            pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(new byte[] { 1 });
+            await service.AnalyzeOnceAsync(cameraId, TestContext.Current.CancellationToken);
+            clock.Advance(TimeSpan.FromMilliseconds(250));
+        }
+
+        seen.Should().Contain(e => e.IsMotionActive && e.BoundingBoxes.Count == 1);
+        seen.Where(e => e.IsMotionActive).SelectMany(e => e.BoundingBoxes).Select(b => b.TrackId).Distinct()
+            .Should().ContainSingle().Which.Should().NotBeNull();
+    }
+
     [Theory]
     [InlineData(0, 1000)]
     [InlineData(2, 500)]
@@ -214,6 +244,31 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
                 for (var row = 60; row < 140; row++)
                 {
                     Array.Fill(picture, encodedImage[0], (row * width) + 100, 100);
+                }
+            }
+
+            return picture;
+        }
+    }
+
+    // A block that walks right by 12 pixels a picture, from the second picture on.
+    private sealed class WalkingBlockReader : IMotionFrameReader
+    {
+        public int Step { get; set; }
+
+        public byte[]? ReadGrayscale(
+            byte[] encodedImage,
+            int width,
+            int height)
+        {
+            var picture = new byte[width * height];
+            Array.Fill(picture, EmptyScene);
+            if (Step > 0)
+            {
+                var left = 20 + (Step * 12);
+                for (var row = 80; row < 160; row++)
+                {
+                    Array.Fill(picture, SceneWithBlock, (row * width) + left, 30);
                 }
             }
 

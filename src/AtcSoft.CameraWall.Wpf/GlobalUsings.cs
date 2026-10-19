@@ -36,6 +36,7 @@ global using Microsoft.Extensions.Logging;
 
 global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHelper;
 global using BoundingBox = AtcSoft.VideoSurveillance.Models.BoundingBox;
+global using BuiltInMotionDetector = AtcSoft.VideoSurveillance.Helpers.MotionDetection.BuiltInMotionDetector;
 global using CameraConnectionTypeHelper = AtcSoft.VideoSurveillance.Helpers.CameraConnectionTypeHelper;
 global using CameraLayoutItem = AtcSoft.VideoSurveillance.Models.CameraLayoutItem;
 global using ConnectionState = Atc.Network.ConnectionState;
@@ -43,7 +44,6 @@ global using DiskSpaceGuard = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuard;
 global using DiskSpaceGuardLog = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuardLog;
 global using DiskSpaceGuardRequest = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuardRequest;
 global using DiskSpaceGuardResult = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuardResult;
-global using FrameDifferenceMotionDetector = AtcSoft.VideoSurveillance.Helpers.FrameDifferenceMotionDetector;
 global using FreeSpaceReader = AtcSoft.VideoSurveillance.Helpers.FreeSpaceReader;
 global using ICameraConnectionTypeDetector = AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector;
 global using IGitHubReleaseService = AtcSoft.VideoSurveillance.Services.IGitHubReleaseService;

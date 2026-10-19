@@ -14,7 +14,7 @@ internal sealed class MotionDetectionContext : IDisposable
         CameraId = cameraId;
         Pipeline = pipeline;
         Settings = settings;
-        Detector = new FrameDifferenceMotionDetector(settings);
+        Detector = new BuiltInMotionDetector(settings);
     }
 
     public Guid CameraId { get; }

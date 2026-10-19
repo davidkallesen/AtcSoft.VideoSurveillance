@@ -1,8 +1,8 @@
 namespace AtcSoft.VideoSurveillance.Storybook;
 
 /// <summary>
-/// Today's detector (<see cref="FrameDifferenceMotionDetector"/>, the one both apps run) on every
-/// scene, at the server's 4 pictures a second and CameraWall's 15. The scores are kept in
+/// Each detector on every scene, at the server's 4 pictures a second and CameraWall's 15: today's
+/// (<see cref="FrameDifferenceMotionDetector"/>) and the new one (<see cref="BuiltInMotionDetector"/>). The scores are kept in
 /// <c>baseline.json</c>; a test fails when a score gets worse, so every change to detection is
 /// measured. Set <c>ATCSOFT_BBOX_UPDATE_BASELINE=1</c> to write the current scores as the new
 /// baseline, on purpose, after an improvement.
@@ -11,16 +11,21 @@ public sealed class DetectorBaselineTests
 {
     private const string UpdateVariable = "ATCSOFT_BBOX_UPDATE_BASELINE";
     private const double Tolerance = 0.005;
+    private const string FrameDifference = "frameDifference";
+    private const string BuiltIn = "builtIn";
 
     private static readonly Lock FileLock = new();
 
-    public static TheoryData<string, int> Runs()
+    public static TheoryData<string, int, string> Runs()
     {
-        var data = new TheoryData<string, int>();
+        var data = new TheoryData<string, int, string>();
         foreach (var file in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "Scenes"), "*.storybook.json").Order(StringComparer.Ordinal))
         {
-            data.Add(Path.GetFileName(file), 4);
-            data.Add(Path.GetFileName(file), 15);
+            foreach (var detector in new[] { FrameDifference, BuiltIn })
+            {
+                data.Add(Path.GetFileName(file), 4, detector);
+                data.Add(Path.GetFileName(file), 15, detector);
+            }
         }
 
         return data;
@@ -28,16 +33,19 @@ public sealed class DetectorBaselineTests
 
     [Theory]
     [MemberData(nameof(Runs))]
-    public void Todays_Detector_Does_No_Worse_Than_Its_Baseline(
+    public void A_Detector_Does_No_Worse_Than_Its_Baseline(
         string sceneFile,
-        int analysesPerSecond)
+        int analysesPerSecond,
+        string detectorName)
     {
         var scene = StorybookReader.ReadFile(Path.Combine(AppContext.BaseDirectory, "Scenes", sceneFile));
-        var detector = new FrameDifferenceMotionDetector(new MotionDetectionSettings());
+        IMotionDetector detector = detectorName == BuiltIn
+            ? new BuiltInMotionDetector(new MotionDetectionSettings())
+            : new FrameDifferenceMotionDetector(new MotionDetectionSettings());
 
         var score = StorybookRunner.Run(scene, detector, new StorybookRunOptions(AnalysesPerSecond: analysesPerSecond)).Score;
 
-        var key = $"{Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(sceneFile))}@{analysesPerSecond}";
+        var key = $"{Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(sceneFile))}@{analysesPerSecond}" + (detectorName == BuiltIn ? "/builtIn" : string.Empty);
         TestContext.Current.TestOutputHelper?.WriteLine($"{key}: {score.Summary}");
         foreach (var item in score.Objects)
         {

@@ -48,7 +48,7 @@ public static class StorybookRunner
             var scaleX = frame.Width / (double)options.AnalysisWidth;
             var scaleY = frame.Height / (double)options.AnalysisHeight;
             var detected = shown
-                .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY)))
+                .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
                 .ToList();
 
             frames.Add(new ScoredFrame(frame.Time, frame.Truth, frame.IgnoreAll, detected));

@@ -344,8 +344,8 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and five scenes done |
 | 2 | Grey frames with their time from the engine | M | ⬜ |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
-| 4 | Detector v2 in Core (background model, morphology, merge) | L | ⬜ |
-| 5 | Tracker: persistence, travel, ids; smoothing by id | M | ⬜ |
+| 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
+| 5 | Tracker: persistence, travel, ids; smoothing by id | M | 🟨 tracker and ids built; ids on the wire and smoothing by id open |
 | 6 | Masks and zones | L | ⬜ |
 | 7 | Activity index (sidecar, API) | M | ⬜ |
 | 8 | Activity timeline in both WPF apps and the web client | L | ⬜ |
@@ -409,7 +409,21 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 
 **Test:** the FlaUI walk (`ATCSOFT_E2E=1`). To check early: whether FlaUI sees elements inside the `VideoHost` overlay window.
 
-### Phase 4 — Detector v2 ⬜ (L)
+### Phase 4 — Detector v2 🟨 (L)
+
+**Done 2026-10-19:** `BuiltInMotionDetector` (Core, behind `IMotionDetector`): a 3×3 blur, a background per pixel (running mean and variance, time-based learning rates), a lighting-change check, open and close on the mask, blobs with a smallest share of the picture, merging of near blobs, and the tracker of phase 5. CameraWall and the server use it; `FrameDifferenceMotionDetector` stays for comparison. `BoundingBox` carries an optional `TrackId`. Options come from the existing *Sensitivity*; no new settings yet.
+
+| Scene | Today 4/s: recall, false/frame | New 4/s | Today 15/s | New 15/s |
+|---|---|---|---|---|
+| S1 empty, noise | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 |
+| S2 tree in the wind | 1.000, **2.286** | 1.000, **0.000** | 1.000, **3.591** | 1.000, **0.011** |
+| S3 slow walker | **0.405**, 0.531 | **1.000**, 0.000 | **0.021**, 0.845 | **0.979**, 0.000 |
+| S5 car + human + cat | 0.955, **1.612** | 1.000, **0.000**, 3 tracks | 0.805, **3.199** | 0.996, **0.000**, 3 tracks |
+| S12 camera clock | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 | 1.000, 0.000 |
+
+Cost per picture at 800×600: about 10 ms (today's 2 ms), so about 4 % of one core per camera at the server's 4/s. Latency: about 0.7 s for a slow walker (it must travel 3 % of the width first), 0.2–0.3 s for the others; the plan's 0.5 s goal is met except for the slow walker.
+
+**Still open:** the new settings in plain words (smallest object, learning speed, ignore lighting changes) end to end; analysis size from the width only (keep the aspect ratio); SIMD; scenes S4, S6, S8–S11; checking with real cameras.
 
 - `IMotionDetector` (the seam) and `BuiltInMotionDetector` (stateful, in Core, pure C# with `Vector128` / `Vector<T>`): steps 2–9 of the pipeline above. An OpenCV detector can later plug into the same seam from a package of its own.
 - Both services and the sample app use it; `MotionFrameAnalyzer` remains only until the services have moved.
@@ -419,7 +433,9 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 
 **Test:** scenes S1, S2, S3, S4, S6, S8, S10, S11 and S12 pass their thresholds; S5 has at most one box per object per frame (the track count comes in phase 5).
 
-### Phase 5 — Tracker ⬜ (M)
+### Phase 5 — Tracker 🟨 (M)
+
+**Done 2026-10-19:** `MotionTracker` (constant-velocity guess, matching by overlap or nearness, confirmation after 0.4 s and 3 % travel, end after 1 s unseen); motion is on while a confirmed track exists. **Open:** `trackId` in the spec and both clients smoothing by id; webhooks and motion recordings starting on a confirmed track (they follow motion, which now means that already).
 
 - A SORT-style tracker written from the paper (the reference code is GPL): prediction, IoU or centre matching, confirmation after N hits **and** a minimum net travel, end after M misses.
 - Motion is active while a confirmed track exists. `MinimumChangePercent` stays readable in old files but no longer decides (deprecated, like the server's `language`).

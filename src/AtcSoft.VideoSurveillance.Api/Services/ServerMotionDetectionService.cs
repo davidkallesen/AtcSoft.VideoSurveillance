@@ -27,6 +27,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     private readonly IMotionFrameReader? frameReader;
     private readonly TimeProvider timeProvider;
     private readonly bool runLoops;
+    private readonly Func<MotionDetectionSettings, IMotionDetector> createDetector;
     private readonly ConcurrentDictionary<Guid, DetectionContext> contexts = new();
 
     /// <summary>
@@ -42,12 +43,15 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     /// Whether a started detection analyses pictures on its own. Tests turn
     /// it off and call <see cref="AnalyzeOnceAsync"/> themselves.
     /// </param>
+    /// <param name="createDetector">Makes a camera's detector; the built-in one when not given.</param>
     public ServerMotionDetectionService(
         ILogger<ServerMotionDetectionService> logger,
         IMotionFrameReader? frameReader = null,
         TimeProvider? timeProvider = null,
-        bool runLoops = true)
+        bool runLoops = true,
+        Func<MotionDetectionSettings, IMotionDetector>? createDetector = null)
     {
+        this.createDetector = createDetector ?? (s => new BuiltInMotionDetector(s));
         this.logger = logger;
         this.frameReader = frameReader;
         this.timeProvider = timeProvider ?? TimeProvider.System;
@@ -93,7 +97,8 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         try
         {
             cts = new CancellationTokenSource();
-            var context = new DetectionContext(pipeline, settings ?? new MotionDetectionSettings(), cts);
+            var cameraSettings = settings ?? new MotionDetectionSettings();
+            var context = new DetectionContext(pipeline, cameraSettings, createDetector(cameraSettings), cts);
 
             if (contexts.TryAdd(cameraId, context))
             {
@@ -338,6 +343,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     private sealed class DetectionContext(
         IMediaPipeline pipeline,
         MotionDetectionSettings settings,
+        IMotionDetector detector,
         CancellationTokenSource cts)
     {
         public Lock Sync { get; } = new();
@@ -351,7 +357,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         public bool IsMotionActive { get; set; }
 
         // The same detector as the desktop's, behind the shared seam.
-        public IMotionDetector Detector { get; } = new FrameDifferenceMotionDetector(settings);
+        public IMotionDetector Detector { get; } = detector;
 
         public DateTimeOffset LastMotionAt { get; set; }
 

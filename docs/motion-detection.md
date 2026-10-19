@@ -4,72 +4,43 @@ Setup and configuration guide for the motion detection system in AtcSoft.VideoSu
 
 ## 📖 Overview
 
-The motion detection system uses frame-based pixel differencing to detect movement in camera streams. It supports multiple simultaneous motion regions with bounding box visualization, motion-triggered recording, and real-time events over `GET /events`.
+Motion detection learns what each camera's scene looks like without anything moving, finds what differs from it, and follows it from picture to picture. A box is shown only for something that has been seen for a moment **and has travelled**: a person walking by gets one box, a tree swaying in the wind gets none. The same detector (`BuiltInMotionDetector` in Core, behind `IMotionDetector`) runs in CameraWall and on the server.
 
 ```mermaid
 graph LR
-    Stream["Camera Stream"] --> Capture["Frame Capture"]
-    Capture --> Grayscale["Grayscale Conversion"]
-    Grayscale --> Diff["Pixel Differencing"]
-    Diff --> Grid["Grid-Based Filtering"]
-    Grid --> Cluster["Connected Component Detection"]
-    Cluster --> BBox["Bounding Box Generation"]
-    BBox --> Event["Motion Event"]
-    Event --> Recording["Motion-Triggered Recording"]
-    Event --> UI["Bounding Box Overlay"]
+    Stream["Camera stream"] --> Capture["Picture, grey, analysis size"]
+    Capture --> Blur["Light blur"]
+    Blur --> Background["Learnt background<br/>mean and variance per pixel"]
+    Background --> Light{{"Most of the picture changed?"}}
+    Light -- "Yes: light, not an object" --> Relearn["Re-learn, hold boxes back"]
+    Light -- No --> Mask["Foreground mask<br/>open, close"]
+    Mask --> Blobs["Blobs, near ones merged"]
+    Blobs --> Tracker["Tracker<br/>seen long enough and travelled"]
+    Tracker --> Event["Motion event with boxes and track ids"]
+    Event --> Recording["Motion recording"]
+    Event --> UI["Box overlay"]
     Event --> Events["GET /events"]
 ```
 
 ## 🧮 Detection Algorithm
 
-### Step 1: Frame Capture
+| Step | What | Why |
+|---|---|---|
+| 1 | The picture is captured, made grey and scaled to the analysis size (`AnalysisWidth` × `AnalysisHeight`) | Fewer pixels, less work |
+| 2 | A 3×3 blur | Removes sensor noise and compression blocks |
+| 3 | A **background per pixel**: a running mean and variance. A pixel is foreground when it differs from the mean by more than a few standard deviations and by a minimum number of grey levels (both from *Sensitivity*) | A moving object differs from the background as a whole figure, not only at its edges, so a slow walker is found. A leaf that keeps moving raises its pixel's variance and stops counting |
+| 4 | The background learns: pixels that are background quickly (a few seconds), foreground pixels slowly (a minute) | A parked car becomes background after a while; a passing one does not |
+| 5 | **Lighting check**: when most of the picture changes at once, the background is learnt anew and boxes are held back for a moment | Exposure, a cloud or the IR switch at dusk is not an object |
+| 6 | **Morphology** on the mask: open (removes specks), close (fills holes) | One blob per object instead of speckle |
+| 7 | **Blobs**: connected groups of foreground pixels; blobs smaller than a share of the picture are dropped; blobs within a small gap are merged | One box per object |
+| 8 | **Tracker**: each blob is matched to the track it was a moment ago (overlap or nearness, with a guess of where it moved). A track **shows** once it has been seen for 0.4 s **and** has travelled 3 % of the picture's width; it ends after 1 s unseen | Persistence and travel: a swaying branch never travels, a person does. Each box keeps its **track id** |
+| 9 | **Motion is on** while a confirmed track exists, and stays on for `PostMotionDurationSeconds` after the last one (`MotionHold`) | Recordings and events do not flicker on and off |
 
-Frames are captured from the camera's media pipeline at the configured `AnalysisFrameRate`. The scheduler uses round-robin across all cameras to prevent CPU spikes.
+The previous detector (the difference of two pictures in 20×20 cells, motion when `MinimumChangePercent` of the picture changed) remains as `FrameDifferenceMotionDetector`, for comparison in the storybook tests. `MinimumChangePercent` no longer decides motion.
 
-### Step 2: Grayscale Conversion and Downscaling
+### How it is measured
 
-Each frame is converted to grayscale using the luminosity formula and downscaled to the configured analysis resolution (`AnalysisWidth` x `AnalysisHeight`):
-
-```
-Gray = (77 * R + 150 * G + 29 * B) >> 8
-```
-
-Lower analysis resolution reduces CPU usage at the cost of detection accuracy.
-
-### Step 3: Pixel Differencing
-
-Each pixel is compared with the corresponding pixel from the previous frame. The difference threshold is derived from the `Sensitivity` setting:
-
-```
-Threshold = 35 - (Sensitivity * 0.2)
-```
-
-| Sensitivity | Threshold | Behavior |
-|-------------|-----------|----------|
-| 0 | 35 | Requires large pixel changes |
-| 30 (default) | 29 | Balanced detection |
-| 50 | 25 | Moderately sensitive |
-| 100 | 15 | Detects subtle changes |
-
-Pixels with differences exceeding the threshold are marked as "changed".
-
-### Step 4: Grid-Based Noise Filtering
-
-The frame is divided into a grid of 20x20 pixel cells. Each cell counts its changed pixels. Only cells with at least 8% changed pixels (minimum 32 pixels per 400-pixel cell) are marked as "active". This filters out scattered sensor noise.
-
-### Step 5: Connected Component Detection
-
-A flood fill algorithm identifies connected clusters of active cells using 8-connectivity (including diagonals). Each cluster represents a distinct motion region.
-
-### Step 6: Bounding Box Generation
-
-Bounding boxes are created for clusters exceeding the `MinArea` threshold. The configured `Padding` is added around each box. Boxes are sorted by area (largest first) and limited to a maximum of 10 per frame.
-
-### Step 7: Motion Decision
-
-The total change percentage is compared against `MinimumChangePercent`:
-- If `changePercent >= MinimumChangePercent` → **Motion Active**
-- Otherwise → **Motion Inactive**
+`test/AtcSoft.VideoSurveillance.Storybook.Tests` draws scenes with known content (an empty scene, a tree in the wind, a slow walker, a car, a human and a cat together, a camera clock) and scores each detector against the truth: recall, false boxes per picture, latency and tracks. Every score is kept in `baseline.json`, and a test fails when one gets worse. See `plans/roadmap-boundingbox.md` for the numbers.
 
 ## ⚡ CPU Scheduling
 
@@ -94,7 +65,7 @@ The scheduler prevents CPU spikes when monitoring multiple cameras:
 | Setting | Type | Default | Range | Description |
 |---------|------|---------|-------|-------------|
 | `Sensitivity` | int | `30` | 0-100 | Detection threshold. Higher values detect more subtle motion. |
-| `MinimumChangePercent` | double | `0.5` | 0.0-100.0 | Minimum percentage of frame pixels that must change. |
+| `MinimumChangePercent` | double | `0.5` | 0.0-100.0 | No longer decides motion (a confirmed track does). Kept so older settings still read. |
 | `AnalysisFrameRate` | int | `15` | 1-30 | Target FPS for analysis (internally clamped to 2-15; the server analyses at most 4 a second). |
 | `AnalysisWidth` | int | `800` | - | Width of downscaled analysis frame. |
 | `AnalysisHeight` | int | `600` | - | Height of downscaled analysis frame. |
@@ -308,7 +279,6 @@ displayH = (box.Height / analysisHeight) * displayHeight
 | Lower frame rate | `AnalysisFrameRate: 2-4` | Major reduction, slight delay in detection |
 | Lower resolution | `AnalysisWidth/Height: 320x240` | Major reduction, may miss small motion |
 | Increase sensitivity threshold | `Sensitivity: 10-20` | Fewer false positives, less processing |
-| Increase minimum change | `MinimumChangePercent: 1.0-2.0` | Ignores minor motion |
 
 ### Memory Usage Per Camera
 
@@ -362,9 +332,8 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Causes**: Lighting changes, camera noise, wind-blown objects.
 - **Solutions**:
   - Decrease `Sensitivity` (try 15-20)
-  - Increase `MinimumChangePercent` (try 1.0-2.0)
-  - Increase `MinArea` bounding box setting (try 50-100)
-  - Lower `AnalysisFrameRate` (fewer comparisons = fewer false triggers)
+  - Something that only sways (a tree, a flag) gets no box: it never travels. If it does, report the scene, so it can become a storybook test
+  - Lighting changes are learnt away; a box right after the IR switch should vanish within a few seconds
 
 ### Missed Motion
 
@@ -372,9 +341,8 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Causes**: Sensitivity too low, resolution too low, objects too small.
 - **Solutions**:
   - Increase `Sensitivity` (try 50-70)
-  - Decrease `MinimumChangePercent` (try 0.2-0.3)
   - Increase analysis resolution
-  - Decrease `MinArea` bounding box setting
+  - A box shows only after something has moved 3 % of the picture's width, so the first half second of a slow walker has none
 
 ### High CPU Usage
 
