@@ -296,55 +296,40 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
                 return;
             }
 
-            // Compare with previous frame
-            if (context.PreviousFrame is not null)
+            // The detector is shared with the server: the comparison, the gate and the
+            // post-motion hold (ending motion on the first quiet picture made the boxes blink).
+            var result = context.Detector.Process(new MotionFrame(currentFrame, analysisWidth, analysisHeight, DateTimeOffset.UtcNow));
+            var changePercent = result.ChangePercent;
+            var boundingBoxes = result.Boxes;
+            switch (result.Change)
             {
-                // The comparison itself is shared with the server.
-                var analysis = AtcSoft.VideoSurveillance.Helpers.MotionFrameAnalyzer.Analyze(
-                    context.PreviousFrame,
-                    currentFrame,
-                    analysisWidth,
-                    analysisHeight,
-                    context.Settings);
-                var changePercent = analysis.ChangePercent;
-                var boundingBoxes = analysis.BoundingBoxes;
-                var moving = changePercent > 0 && changePercent >= context.Settings.MinimumChangePercent;
+                case MotionHoldChange.Started:
+                case MotionHoldChange.Continues:
+                    context.LastMotionTime = DateTime.UtcNow;
+                    context.LastBoundingBoxes = boundingBoxes;
 
-                // Motion stays on for the post-motion time after the last moving picture, as on
-                // the server; ending it on the first quiet picture made the boxes blink.
-                switch (context.Hold.Update(moving, DateTimeOffset.UtcNow))
-                {
-                    case MotionHoldChange.Started:
-                    case MotionHoldChange.Continues:
-                        context.LastMotionTime = DateTime.UtcNow;
-                        context.LastBoundingBoxes = boundingBoxes;
-
-                        // Marshal to UI thread since subscribers access DependencyProperties
-                        RaiseMotionDetected(new MotionDetectedEventArgs(
-                            cameraId,
-                            changePercent,
-                            isMotionActive: true,
-                            boundingBoxes,
-                            analysisWidth,
-                            analysisHeight));
-                        break;
-                    case MotionHoldChange.Ended:
-                        context.LastBoundingBoxes = [];
-                        RaiseMotionDetected(new MotionDetectedEventArgs(
-                            cameraId,
-                            changePercent,
-                            isMotionActive: false,
-                            boundingBoxes: null,
-                            analysisWidth,
-                            analysisHeight));
-                        break;
-                }
-
-                context.IsMotionDetected = context.Hold.IsActive;
+                    // Marshal to UI thread since subscribers access DependencyProperties
+                    RaiseMotionDetected(new MotionDetectedEventArgs(
+                        cameraId,
+                        changePercent,
+                        isMotionActive: true,
+                        boundingBoxes,
+                        analysisWidth,
+                        analysisHeight));
+                    break;
+                case MotionHoldChange.Ended:
+                    context.LastBoundingBoxes = [];
+                    RaiseMotionDetected(new MotionDetectedEventArgs(
+                        cameraId,
+                        changePercent,
+                        isMotionActive: false,
+                        boundingBoxes: null,
+                        analysisWidth,
+                        analysisHeight));
+                    break;
             }
 
-            // Store current frame for next comparison
-            context.PreviousFrame = currentFrame;
+            context.IsMotionDetected = result.IsActive;
         }
         catch (Exception ex)
         {

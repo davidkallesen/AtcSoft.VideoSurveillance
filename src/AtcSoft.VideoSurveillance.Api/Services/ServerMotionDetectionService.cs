@@ -245,37 +245,32 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
                 return;
             }
 
-            var analysis = current is not null && context.PreviousFrame is not null
-                ? MotionFrameAnalyzer.Analyze(context.PreviousFrame, current, width, height, context.Settings)
-                : MotionAnalysisResult.None;
+            // The detector is shared with the desktop: the comparison, the gate and the hold.
+            // Without a picture, time still passes, so motion can end.
+            var result = current is not null
+                ? context.Detector.Process(new MotionFrame(current, width, height, now))
+                : context.Detector.Idle(now);
 
-            if (current is not null)
-            {
-                context.PreviousFrame = current;
-            }
-
-            var moving = analysis.ChangePercent > 0 && analysis.ChangePercent >= context.Settings.MinimumChangePercent;
-            var change = context.Hold.Update(moving, now);
-            if (change is MotionHoldChange.Started or MotionHoldChange.Continues)
+            if (result.Change is MotionHoldChange.Started or MotionHoldChange.Continues)
             {
                 context.IsMotionActive = true;
                 context.LastMotionAt = now;
-                context.LastBoundingBoxes = analysis.BoundingBoxes;
+                context.LastBoundingBoxes = result.Boxes;
                 toRaise = new MotionDetectedEventArgs(
                     cameraId,
-                    analysis.ChangePercent,
+                    result.ChangePercent,
                     isMotionActive: true,
-                    analysis.BoundingBoxes,
+                    result.Boxes,
                     width,
                     height);
             }
-            else if (change == MotionHoldChange.Ended)
+            else if (result.Change == MotionHoldChange.Ended)
             {
                 context.IsMotionActive = false;
                 context.LastBoundingBoxes = [];
                 toRaise = new MotionDetectedEventArgs(
                     cameraId,
-                    analysis.ChangePercent,
+                    result.ChangePercent,
                     isMotionActive: false,
                     boundingBoxes: null,
                     width,
@@ -353,12 +348,10 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
 
         public CancellationTokenSource Cts { get; } = cts;
 
-        public byte[]? PreviousFrame { get; set; }
-
         public bool IsMotionActive { get; set; }
 
-        // The same post-motion rule as the desktop's.
-        public MotionHold Hold { get; } = new(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
+        // The same detector as the desktop's, behind the shared seam.
+        public IMotionDetector Detector { get; } = new FrameDifferenceMotionDetector(settings);
 
         public DateTimeOffset LastMotionAt { get; set; }
 
