@@ -60,13 +60,18 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
     /// <param name="width">The width of the pictures, as displayed.</param>
     /// <param name="height">The height of the pictures, as displayed.</param>
     /// <param name="rotation">The clockwise rotation the picture is displayed with.</param>
+    /// <param name="decoderThreads">
+    /// How many threads decode; 0 for one per processor. An app that records and shows live
+    /// cameras at the same time passes a few, so the analysis does not crowd them out.
+    /// </param>
     /// <returns>The reader.</returns>
     /// <exception cref="FFmpegException">The file cannot be opened or decoded.</exception>
     public static GreyFrameFileReader Open(
         string filePath,
         int width,
         int height,
-        VideoRotation rotation = VideoRotation.None)
+        VideoRotation rotation = VideoRotation.None,
+        int decoderThreads = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
@@ -75,7 +80,7 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         var reader = new GreyFrameFileReader(width, height, rotation);
         try
         {
-            reader.OpenFile(filePath);
+            reader.OpenFile(filePath, decoderThreads > 0 ? decoderThreads : Environment.ProcessorCount);
             return reader;
         }
         catch
@@ -102,7 +107,14 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         while (!cancellationToken.IsCancellationRequested && ReadNext(next) is { } frame)
         {
             yield return frame;
-            next = frame.Position + interval;
+
+            // On a fixed grid, so the rate does not drift below the one asked for; a gap in the
+            // recording moves the grid on.
+            next += interval;
+            if (next <= frame.Position)
+            {
+                next = frame.Position + interval;
+            }
         }
     }
 
@@ -189,7 +201,9 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         }
     }
 
-    private void OpenFile(string filePath)
+    private void OpenFile(
+        string filePath,
+        int decoderThreads)
     {
         AVDictionary* options = null;
         try
@@ -223,7 +237,7 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
             streamIndex = (int)i;
             timeBase = stream->time_base;
             startPts = stream->start_time == AV_NOPTS_VALUE ? 0 : stream->start_time;
-            decoder.Open(stream->codecpar, Environment.ProcessorCount);
+            decoder.Open(stream->codecpar, decoderThreads);
             break;
         }
 

@@ -14,6 +14,12 @@ public static class RecordingAnalysis
     public const double FramesPerSecond = 4;
 
     /// <summary>
+    /// How many threads decode a recording for its analysis: a few, so the recording and the live
+    /// view of the cameras go on as before.
+    /// </summary>
+    public const int DecoderThreads = 2;
+
+    /// <summary>
     /// Gets when a recording started: the time in its name, read in the zone it was written in,
     /// else when the file was made.
     /// </summary>

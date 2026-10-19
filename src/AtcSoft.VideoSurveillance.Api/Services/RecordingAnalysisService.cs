@@ -91,7 +91,8 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
             videoPath,
             width,
             height,
-            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath));
+            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath),
+            RecordingAnalysis.DecoderThreads);
 
         return RecordingAnalysis.Run(
             reader.ReadFrames(RecordingAnalysis.FramesPerSecond, cancellationToken).Select(f => (f.Position, f.Pixels)),

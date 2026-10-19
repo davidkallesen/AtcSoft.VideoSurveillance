@@ -221,13 +221,22 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             {
                 await Task.Delay(AnalysisPoll).ConfigureAwait(true);
                 waited += AnalysisPoll;
-                if (await gatewayService.GetRecordingActivityAsync(recording.FilePath, 1, 0).ConfigureAwait(true) is { HasIndex: true })
+                var activity = await gatewayService.GetRecordingActivityAsync(recording.FilePath, 1, 0).ConfigureAwait(true);
+                if (activity is { HasIndex: true })
                 {
                     await LoadAsync().ConfigureAwait(true);
                     StatusMessage = Translations.RecordingAnalysed;
                     return;
                 }
+
+                // Neither done nor going on: the analysis failed, or the server forgot it.
+                if (activity is { IsBeingAnalysed: false })
+                {
+                    break;
+                }
             }
+
+            StatusMessage = Translations.RecordingNotAnalysed;
         }
         catch (HttpRequestException ex)
         {

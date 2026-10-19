@@ -4,7 +4,7 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 /// ViewModel for the recordings browser dialog.
 /// </summary>
 [SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
-public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
+public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDisposable
 {
     private const string AllCamerasKey = "_ALL_";
 
@@ -370,7 +370,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     /// <param name="settings">The motion settings to analyse with.</param>
     /// <param name="cancellationToken">Stops the analysis; nothing is written then.</param>
     /// <returns>How many pictures were analysed.</returns>
-    public static int AnalyseFile(
+    internal static int AnalyseFile(
         string videoPath,
         MotionDetectionSettings settings,
         CancellationToken cancellationToken = default)
@@ -383,7 +383,8 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             videoPath,
             width,
             height,
-            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath));
+            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath),
+            RecordingAnalysis.DecoderThreads);
 
         // CameraWall names its recordings in local time.
         return RecordingAnalysis.Run(
@@ -409,10 +410,15 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         try
         {
             var settings = settingsService.MotionDetection;
-            await Task.Run(() => AnalyseFile(recording.FilePath, settings)).ConfigureAwait(true);
+            var stoppingToken = stopping.Token;
+            await Task.Run(() => AnalyseFile(recording.FilePath, settings, stoppingToken), stoppingToken).ConfigureAwait(true);
             LoadRecordings();
             SelectedRecording = Recordings.FirstOrDefault(r => string.Equals(r.FilePath, recording.FilePath, StringComparison.OrdinalIgnoreCase));
             StatusMessage = Translations.RecordingAnalysed;
+        }
+        catch (OperationCanceledException)
+        {
+            // The browser was closed: nothing was written.
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
         {
@@ -421,6 +427,28 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
         finally
         {
             IsAnalysing = false;
+        }
+    }
+
+    /// <summary>
+    /// Stops what the browser has running in the background (an analysis), as it closes.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Stops the analysis and lets go of what stops it.
+    /// </summary>
+    /// <param name="disposing">Whether managed resources are let go.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing && !stopping.IsCancellationRequested)
+        {
+            stopping.Cancel();
+            stopping.Dispose();
         }
     }
 
@@ -497,6 +525,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
     // The sparklines already read, kept while the app runs: the list is read again on every
     // refresh and every change of a recording.
     private static readonly ActivitySparklineCache Sparklines = new();
+
+    // Stops an analysis when the browser closes.
+    private readonly CancellationTokenSource stopping = new();
 
     private static RecordingEntry CreateEntry(
         string filePath,

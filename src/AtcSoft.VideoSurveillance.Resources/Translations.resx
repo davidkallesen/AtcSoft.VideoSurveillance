@@ -2748,4 +2748,7 @@ Thumbnail:
   <data name="RecordingAnalysed" xml:space="preserve">
     <value>The recording has its activity timeline now.</value>
   </data>
+  <data name="RecordingNotAnalysed" xml:space="preserve">
+    <value>The recording could not be analyzed.</value>
+  </data>
 </root>

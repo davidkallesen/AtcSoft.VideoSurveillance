@@ -57,7 +57,7 @@ timeline (an SVG named Activity), which shows whether or not the browser can pla
 WPF client walks also open the Timeline view and wait for the live camera's lane, then press *Play all
 from here*: the live camera's tile must leave "Loading..." (the web walk accepts a tile the browser cannot
 play, and saves `play-all.png`), and Pause must turn into Play. CameraWall's walk opens its Timeline
-window (ribbon View) over the seeded recordings and does the same with a tile per camera. The server
+window (ribbon View) over the seeded recordings and does the same with a tile per camera. It then selects the oldest recording, seeded without an activity index, presses *Analyze recording* and waits for the message that it has its timeline now: the engine decodes the file and the detector writes the index for real. The server
 fixture records one camera, so the API client walks never see two tiles kept in step.
 
 ## Where to look after a run

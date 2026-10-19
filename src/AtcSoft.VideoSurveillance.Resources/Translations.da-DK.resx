@@ -2748,4 +2748,7 @@ Miniature:
   <data name="RecordingAnalysed" xml:space="preserve">
     <value>Optagelsen har nu sin aktivitetstidslinje.</value>
   </data>
+  <data name="RecordingNotAnalysed" xml:space="preserve">
+    <value>Optagelsen kunne ikke analyseres.</value>
+  </data>
 </root>

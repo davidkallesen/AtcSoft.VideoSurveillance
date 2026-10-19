@@ -30,7 +30,7 @@ public sealed class RecordingsBrowserDialogViewModelStateTests : IDisposable
     public void A_Reopened_Browser_Has_The_Filters_And_The_Selection_It_Was_Left_With()
     {
         // Arrange
-        var first = CreateViewModel();
+        using var first = CreateViewModel();
         first.SelectedCameraFilter = "Garden";
         first.SelectedDayFilter = "_ALL_";
         first.SelectedTimeFilter = "18_24";
@@ -38,7 +38,7 @@ public sealed class RecordingsBrowserDialogViewModelStateTests : IDisposable
         var state = first.CaptureState();
 
         // Act
-        var reopened = CreateViewModel();
+        using var reopened = CreateViewModel();
         reopened.RestoreState(state);
 
         // Assert
@@ -55,7 +55,7 @@ public sealed class RecordingsBrowserDialogViewModelStateTests : IDisposable
     [Fact]
     public void A_Camera_That_Has_No_Recordings_Any_More_Falls_Back_To_All_Cameras()
     {
-        var first = CreateViewModel();
+        using var first = CreateViewModel();
         first.SelectedCameraFilter = "Front Door";
         first.SelectedDayFilter = "_ALL_";
         first.SelectedRecording = first.FilteredRecordings.Single();
@@ -63,7 +63,7 @@ public sealed class RecordingsBrowserDialogViewModelStateTests : IDisposable
 
         System.IO.Directory.Delete(System.IO.Path.Combine(root, "Front Door"), recursive: true);
 
-        var reopened = CreateViewModel();
+        using var reopened = CreateViewModel();
         reopened.RestoreState(state);
 
         reopened.SelectedCameraFilter.Should().Be("_ALL_");

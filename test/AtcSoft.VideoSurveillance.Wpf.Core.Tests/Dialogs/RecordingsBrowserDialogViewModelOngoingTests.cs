@@ -40,7 +40,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void A_File_That_Is_Still_Being_Recorded_Is_Listed_And_Says_So()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
 
         var entry = sut.Recordings.Single(r => r.FilePath == ongoing);
         entry.IsBeingRecorded.Should().BeTrue();
@@ -51,7 +51,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void It_Cannot_Be_Played()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
         var played = new List<AtcSoft.VideoSurveillance.Wpf.Core.Models.RecordingEntry>();
         sut.PlayRecordingRequested += (_, entry) => played.Add(entry);
         sut.SelectedRecording = sut.Recordings.Single(r => r.FilePath == ongoing);
@@ -66,7 +66,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void It_Cannot_Be_Deleted()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
         sut.SelectedRecording = sut.Recordings.Single(r => r.FilePath == ongoing);
 
         sut.CanDelete.Should().BeFalse();
@@ -80,7 +80,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void A_Finished_Recording_Next_To_It_Can_Be_Played_And_Deleted()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
         sut.SelectedRecording = sut.Recordings.Single(r => r.FilePath == finished);
 
         sut.CanPlay.Should().BeTrue();
@@ -90,7 +90,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void Once_The_Recording_Has_Ended_A_Refresh_Makes_It_An_Ordinary_Recording()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
 
         writer!.Dispose();
         writer = null;
@@ -110,7 +110,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
         // when it is about to be played.
         writer!.Dispose();
         writer = null;
-        var sut = CreateSut();
+        using var sut = CreateSut();
         var entry = sut.Recordings.Single(r => r.FilePath == ongoing);
         entry.IsBeingRecorded.Should().BeFalse();
 
@@ -125,7 +125,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     public void When_The_Recording_Ends_Its_Row_Becomes_An_Ordinary_Recording_By_Itself()
     {
         // The dialog asks every few seconds; nobody has to press Refresh.
-        var sut = CreateSut();
+        using var sut = CreateSut();
         var entry = sut.Recordings.Single(r => r.FilePath == ongoing);
         var other = sut.Recordings.Single(r => r.FilePath == finished);
         sut.SelectedRecording = other;
@@ -154,7 +154,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void While_Nothing_Changes_The_List_Is_Left_Alone()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
         var changed = new List<string?>();
         sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
@@ -167,7 +167,7 @@ public sealed class RecordingsBrowserDialogViewModelOngoingTests : IDisposable
     [Fact]
     public void A_Recording_That_Starts_While_The_Browser_Is_Open_Appears_In_The_List()
     {
-        var sut = CreateSut();
+        using var sut = CreateSut();
         var selected = sut.Recordings.Single(r => r.FilePath == finished);
         sut.SelectedRecording = selected;
         var started = System.IO.Path.Combine(root, "Garden", "2026-10-13", "Garden_20261013_100000_000.mkv");

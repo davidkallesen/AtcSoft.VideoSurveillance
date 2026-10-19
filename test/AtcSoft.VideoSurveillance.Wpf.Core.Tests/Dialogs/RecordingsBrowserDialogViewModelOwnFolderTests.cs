@@ -30,7 +30,7 @@ public sealed class RecordingsBrowserDialogViewModelOwnFolderTests : IDisposable
         Touch(Global, "Front Door", "Front Door_20261012_101500_000.mkv");
         Touch(Own, "Garden", "Garden_20261012_111500_000.mkv");
 
-        var viewModel = Create();
+        using var viewModel = Create();
 
         viewModel.FilteredRecordings.Select(r => r.CameraName).Should().BeEquivalentTo("Front Door", "Garden");
         viewModel.CameraFilters.Select(f => f.Key).Should().Contain("Garden");
@@ -40,7 +40,7 @@ public sealed class RecordingsBrowserDialogViewModelOwnFolderTests : IDisposable
     public void A_Recording_In_A_Cameras_Own_Folder_Is_Deleted_There()
     {
         var video = Touch(Own, "Garden", "Garden_20261012_111500_000.mkv");
-        var viewModel = Create();
+        using var viewModel = Create();
         viewModel.SelectedRecording = viewModel.FilteredRecordings.Single();
 
         viewModel.DeleteCommand.Execute(null);

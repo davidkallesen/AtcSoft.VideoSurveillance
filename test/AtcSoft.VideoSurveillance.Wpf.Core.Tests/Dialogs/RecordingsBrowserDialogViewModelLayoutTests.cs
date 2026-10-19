@@ -73,7 +73,7 @@ public sealed class RecordingsBrowserDialogViewModelLayoutTests : IDisposable
         var settingsService = Substitute.For<IWpfCoreSettingsService>();
         settingsService.Recording.Returns(new RecordingSettings { RecordingPath = root });
 
-        var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
+        using var viewModel = new RecordingsBrowserDialogViewModel(settingsService);
 
         return [.. viewModel.FilteredRecordings.Select(r =>
             string.Join(

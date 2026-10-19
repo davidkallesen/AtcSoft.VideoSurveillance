@@ -30,9 +30,9 @@ public sealed class GreyFrameFileReaderTests : IDisposable
         var frames = reader.ReadFrames(4, TestContext.Current.CancellationToken).ToList();
 
         reader.Duration.TotalSeconds.Should().BeApproximately(4, 0.2);
-        frames.Should().HaveCountGreaterThanOrEqualTo(15).And.HaveCountLessThanOrEqualTo(17, "four a second for four seconds");
+        frames.Should().HaveCount(16, "four a second for four seconds, on a fixed grid");
         frames.Select(f => f.Position).Should().BeInAscendingOrder();
-        frames.Zip(frames.Skip(1), (a, b) => (b.Position - a.Position).TotalSeconds).Should().OnlyContain(gap => gap >= 0.24 && gap <= 0.3);
+        frames.Zip(frames.Skip(1), (a, b) => (b.Position - a.Position).TotalSeconds).Should().OnlyContain(gap => gap >= 0.2 && gap <= 0.3, "a quarter of a second, to the nearest picture");
         frames.Should().OnlyContain(f => f.Width == 80 && f.Height == 60 && f.Pixels.Length == 80 * 60);
 
         // Dark on the left, white on the right.

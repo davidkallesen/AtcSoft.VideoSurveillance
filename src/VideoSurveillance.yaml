@@ -1265,7 +1265,7 @@ paths:
                 $ref: "#/components/schemas/ProblemDetails"
     post:
       summary: Analyse a recording for its activity
-      description: Gives a recording made without an activity index (before the index existed, or with it turned off) the index a recording analysed while it was made has, by decoding it and running the motion detector over its pictures, with its camera's own motion settings. The analysis runs in the background, one recording at a time, and an hour takes a few minutes; the recording has its index when getRecordingActivity says hasIndex.
+      description: Gives a recording made without an activity index (before the index existed, or with it turned off) the index a recording analysed while it was made has, by decoding it and running the motion detector over its pictures, with its camera's own motion settings. The analysis runs in the background, one recording at a time, decoding with two threads so recording and live viewing go on. Ten minutes of 1080p H.264 took about three minutes on an ordinary 16-thread machine, so an hour takes about a quarter of an hour. The recording has its index when getRecordingActivity says hasIndex; while it is waiting or being analysed it says isBeingAnalysed.
       operationId: startRecordingAnalysis
       x-authorize-roles:
         - operator
@@ -2652,12 +2652,16 @@ components:
       description: What moved when in one recording, in equal stretches from its start.
       required:
         - hasIndex
+        - isBeingAnalysed
         - durationSeconds
         - buckets
       properties:
         hasIndex:
           type: boolean
           description: Whether the recording has an activity index. Without one the buckets are empty.
+        isBeingAnalysed:
+          type: boolean
+          description: Whether the recording is queued or being analysed for its index (startRecordingAnalysis). Neither this nor hasIndex means an analysis asked for has failed, or the server restarted and forgot it.
         startedAt:
           type: string
           format: date-time

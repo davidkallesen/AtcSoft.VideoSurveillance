@@ -78,6 +78,22 @@ public sealed class GetRecordingActivityHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Recording_Being_Analysed_Says_So_And_One_Whose_Analysis_Ended_Without_An_Index_Does_Not()
+    {
+        var analyses = Substitute.For<IRecordingAnalyses>();
+        analyses.Contains(video).Returns(true);
+        var handler = new GetRecordingActivityHandler(settingsService, analyses);
+
+        var going = await handler.ExecuteAsync(new GetRecordingActivityParameters(FilePath: "Garden/Garden_20261019_101500_000.mp4", Buckets: null, DurationSeconds: null), TestContext.Current.CancellationToken);
+        analyses.Contains(video).Returns(false);
+        var ended = await handler.ExecuteAsync(new GetRecordingActivityParameters(FilePath: "Garden/Garden_20261019_101500_000.mp4", Buckets: null, DurationSeconds: null), TestContext.Current.CancellationToken);
+
+        going.Result.Should().BeOfType<Ok<RecordingActivity>>().Subject.Value!.IsBeingAnalysed.Should().BeTrue();
+        var failed = ended.Result.Should().BeOfType<Ok<RecordingActivity>>().Subject.Value!;
+        (failed.HasIndex || failed.IsBeingAnalysed).Should().BeFalse("a client waiting for it stops and says the analysis failed");
+    }
+
+    [Fact]
     public async Task A_Recording_That_Is_Not_There_Is_Not_Found()
     {
         var result = await ExecuteAsync("Garden/Garden_20261019_111500_000.mp4", buckets: null, durationSeconds: null);

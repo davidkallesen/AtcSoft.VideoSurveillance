@@ -5,8 +5,10 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 /// index, shrunk to the timeline's width by keeping the most of each stretch.
 /// </summary>
 /// <param name="settingsService">The application settings.</param>
+/// <param name="analyses">The recordings queued or being analysed, so a client waiting for one can tell a failure.</param>
 public sealed class GetRecordingActivityHandler(
-    IApplicationSettingsService settingsService) : IGetRecordingActivityHandler
+    IApplicationSettingsService settingsService,
+    IRecordingAnalyses? analyses = null) : IGetRecordingActivityHandler
 {
     /// <summary>
     /// How many stretches when the caller does not say: the spec's default.
@@ -33,7 +35,7 @@ public sealed class GetRecordingActivityHandler(
         if (ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(videoPath)) is not { } log)
         {
             return Task.FromResult(GetRecordingActivityResult.Ok(
-                new RecordingActivity(HasIndex: false, DurationSeconds: 0, Buckets: [], StartedAt: null)));
+                new RecordingActivity(HasIndex: false, IsBeingAnalysed: analyses?.Contains(videoPath) == true, DurationSeconds: 0, Buckets: [], StartedAt: null)));
         }
 
         var duration = parameters.DurationSeconds is { } given and > 0 ? given : log.DurationSeconds;
@@ -41,6 +43,7 @@ public sealed class GetRecordingActivityHandler(
 
         return Task.FromResult(GetRecordingActivityResult.Ok(new RecordingActivity(
             HasIndex: true,
+            IsBeingAnalysed: false,
             DurationSeconds: duration,
             Buckets: [.. buckets.Select(b => new RecordingActivityBucket(Level: b.Level, Tracks: b.Tracks, IsAnalysed: b.IsAnalysed))],
             StartedAt: log.Start)));

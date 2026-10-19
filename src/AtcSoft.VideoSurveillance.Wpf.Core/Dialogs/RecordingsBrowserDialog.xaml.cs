@@ -66,6 +66,7 @@ public partial class RecordingsBrowserDialog : IDisposable
 
         if (disposing)
         {
+            viewModel.Dispose();
             viewModel.CloseRequested -= OnCloseRequested;
             viewModel.PlayRecordingRequested -= OnPlayRecordingRequested;
             viewModel.ThumbnailPreviewRequested -= OnThumbnailPreviewRequested;

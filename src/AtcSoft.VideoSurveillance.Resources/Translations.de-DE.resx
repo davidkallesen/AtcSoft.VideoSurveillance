@@ -2748,4 +2748,7 @@ Vorschaubild:
   <data name="RecordingAnalysed" xml:space="preserve">
     <value>Die Aufnahme hat jetzt ihre Aktivitätszeitleiste.</value>
   </data>
+  <data name="RecordingNotAnalysed" xml:space="preserve">
+    <value>Die Aufnahme konnte nicht analysiert werden.</value>
+  </data>
 </root>

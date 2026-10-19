@@ -319,13 +319,22 @@
             for (var waited = TimeSpan.Zero; waited < AnalysisPatience; waited += AnalysisPoll)
             {
                 await Task.Delay(AnalysisPoll, leaving.Token);
-                if (await Gateway.GetRecordingActivityAsync(recording.FilePath, 1, 0, leaving.Token) is { HasIndex: true })
+                var activity = await Gateway.GetRecordingActivityAsync(recording.FilePath, 1, 0, leaving.Token);
+                if (activity is { HasIndex: true })
                 {
                     Snackbar.Add(Translations.RecordingAnalysed, Severity.Success);
                     await LoadRecordingsAsync();
                     return;
                 }
+
+                // Neither done nor going on: the analysis failed, or the server forgot it.
+                if (activity is { IsBeingAnalysed: false })
+                {
+                    break;
+                }
             }
+
+            Snackbar.Add(Translations.RecordingNotAnalysed, Severity.Warning);
         }
         catch (OperationCanceledException)
         {
