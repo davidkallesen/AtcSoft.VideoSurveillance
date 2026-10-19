@@ -94,6 +94,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
 
         await run("play a recording with its activity timeline", () => PlayWithTimelineAsync(page));
         await run("timeline lanes", () => TimelineLanesAsync(page));
+        await run("play all from here", () => PlayAllAsync(page, shots));
         await run("Add user", () => OpenAndCancelAsync(page, "/users", "Add user"));
         await run("Make API key", () => OpenAndCancelAsync(page, "/users", "Make API key", tab: "API keys"));
         await run("Add receiver", () => OpenAndCancelAsync(page, "/webhooks", "Add receiver"));
@@ -113,6 +114,30 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play", Exact = true }).First.ClickAsync();
         await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
+    }
+
+    // Play all from here: a tile for the live camera, which leaves "Loading..." within the pacer's
+    // give-up time whether or not the browser plays the recording's format; one pause for all.
+    private static async Task PlayAllAsync(
+        IPage page,
+        string shots)
+    {
+        await VisitAsync(page, "/timeline");
+        await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = TestCameras.LiveCameraName, Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play all from here", Exact = true }).ClickAsync();
+
+        var dialog = page.GetByRole(AriaRole.Dialog);
+        await dialog.GetByText(TestCameras.LiveCameraName, new LocatorGetByTextOptions { Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        await dialog.GetByText("Loading...", new LocatorGetByTextOptions { Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = 25_000 });
+        await page.ScreenshotAsync(new PageScreenshotOptions { Path = Path.Combine(shots, "play-all.png") });
+
+        await dialog.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Pause", Exact = true }).ClickAsync();
+        await dialog.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Play", Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
     }
 

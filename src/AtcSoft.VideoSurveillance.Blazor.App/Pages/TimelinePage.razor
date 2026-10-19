@@ -31,6 +31,9 @@
                        aria-label="@Translations.NextEvent"
                        OnClick="@(() => JumpAsync(forward: true))" />
     </MudTooltip>
+    <MudButton Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.GridView"
+               OnClick="PlayAllAsync">@Translations.PlayAllFromHere</MudButton>
     <MudTooltip Text="@Translations.Earlier">
         <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
                        aria-label="@Translations.Earlier"
@@ -315,6 +318,38 @@ else if (timeline is { } shown)
         };
 
         await DialogService.ShowAsync<RecordingPlaybackDialog>(Translations.RecordingPlayback, parameters, options);
+    }
+
+    // Every camera from the place last clicked or played, else from the first recording in the span.
+    private async Task PlayAllAsync()
+    {
+        var lanes = timeline?.Lanes ?? [];
+        var moment = PlayAllPlan.Moment(lanes, cursor, span);
+        var tiles = PlayAllPlan.Tiles(lanes, moment, path => RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, path, Session.MediaToken) ?? string.Empty);
+        if (tiles.Count == 0)
+        {
+            Snackbar.Add(Translations.NothingRecordedThen, Severity.Info);
+            return;
+        }
+
+        var title = string.Format(CultureInfo.CurrentCulture, Translations.PlayAllFrom1, moment.ToLocalTime().ToString("G", CultureInfo.CurrentCulture));
+        var parameters = new DialogParameters<PlayAllDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Moment, moment },
+            { x => x.Tiles, tiles },
+            { x => x.LimitText, PlayAllPlan.LimitText(lanes, moment) },
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+        };
+
+        await DialogService.ShowAsync<PlayAllDialog>(title, parameters, options);
     }
 
     private static string TitleOf(string? cameraName, DateTimeOffset moment)

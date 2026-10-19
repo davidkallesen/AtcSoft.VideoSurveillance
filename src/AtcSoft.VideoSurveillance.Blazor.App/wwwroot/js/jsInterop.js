@@ -163,3 +163,83 @@ window.timelineInterop = {
         }
     }
 };
+
+// Play all from here: several muted video elements the page keeps in step. Each element notes
+// what happened since the page last read it (opened, ended, failed), so the page reads every tile
+// in one call.
+window.playAllInterop = {
+    flags: {},
+
+    open: function (videoId, url, seconds) {
+        var video = document.getElementById(videoId);
+        if (!video) {
+            return;
+        }
+
+        var flags = this.flags[videoId] = { opened: false, ended: false, failed: false };
+        video.onloadedmetadata = function () {
+            video.currentTime = Math.min(seconds, isFinite(video.duration) ? video.duration : seconds);
+        };
+        video.onplaying = function () { flags.opened = true; };
+        video.onended = function () { flags.ended = true; };
+        video.onerror = function () { flags.failed = true; };
+        video.muted = true;
+        video.src = url;
+        var started = video.play();
+        if (started) {
+            started.catch(function () { });
+        }
+    },
+
+    play: function (videoId) {
+        var video = document.getElementById(videoId);
+        if (video) {
+            var started = video.play();
+            if (started) {
+                started.catch(function () { });
+            }
+        }
+    },
+
+    pause: function (videoId) {
+        var video = document.getElementById(videoId);
+        if (video) {
+            video.pause();
+        }
+    },
+
+    // Lets go of the recording, without the element reporting the empty source as an error.
+    close: function (videoId) {
+        var video = document.getElementById(videoId);
+        delete this.flags[videoId];
+        if (!video) {
+            return;
+        }
+
+        video.onloadedmetadata = null;
+        video.onplaying = null;
+        video.onended = null;
+        video.onerror = null;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+    },
+
+    read: function (videoIds) {
+        var all = this.flags;
+        return videoIds.map(function (videoId) {
+            var video = document.getElementById(videoId);
+            var flags = all[videoId] || {};
+            var reading = {
+                time: video ? video.currentTime : 0,
+                opened: !!flags.opened,
+                ended: !!flags.ended,
+                failed: !!flags.failed
+            };
+            flags.opened = false;
+            flags.ended = false;
+            flags.failed = false;
+            return reading;
+        });
+    }
+};
