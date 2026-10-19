@@ -14,6 +14,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     private readonly IMotionDetectionService motionDetectionService;
     private readonly Func<Guid, MotionDetectionSettings?> settingsFor;
     private readonly Func<bool> isEnabled;
+    private readonly Func<Guid, IReadOnlyList<MotionZone>> zonesFor;
     private readonly ConcurrentDictionary<Guid, IndexFile> files = new();
     private bool started;
 
@@ -31,12 +32,14 @@ public sealed partial class ActivityIndexRecorder : IDisposable
     /// Whether indexes are kept (the <c>EnableActivityIndex</c> setting), asked as each recording or
     /// segment starts; always when <see langword="null"/>.
     /// </param>
+    /// <param name="zonesFor">A camera's motion zones; none when <see langword="null"/>.</param>
     public ActivityIndexRecorder(
         ILogger logger,
         IActiveRecordings recordingService,
         IMotionDetectionService motionDetectionService,
         Func<Guid, MotionDetectionSettings?> settingsFor,
-        Func<bool>? isEnabled = null)
+        Func<bool>? isEnabled = null,
+        Func<Guid, IReadOnlyList<MotionZone>>? zonesFor = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(recordingService);
@@ -48,6 +51,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         this.motionDetectionService = motionDetectionService;
         this.settingsFor = settingsFor;
         this.isEnabled = isEnabled ?? (() => true);
+        this.zonesFor = zonesFor ?? (_ => []);
     }
 
     /// <summary>
@@ -230,7 +234,7 @@ public sealed partial class ActivityIndexRecorder : IDisposable
         if (settingsFor(cameraId) is { } settings &&
             recordingService.FindPipeline(cameraId) is { } pipeline)
         {
-            motionDetectionService.StartIndexing(cameraId, pipeline, settings);
+            motionDetectionService.StartIndexing(cameraId, pipeline, settings, zonesFor(cameraId));
         }
 
         LogIndexStarted(logger, cameraId, path);

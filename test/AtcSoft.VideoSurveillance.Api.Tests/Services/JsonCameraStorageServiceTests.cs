@@ -76,6 +76,22 @@ public sealed class JsonCameraStorageServiceTests : IDisposable
         CreateSut().GetCameraById(camera.Id)!.Authentication.Password.Should().BeNull();
     }
 
+    [Fact]
+    public void The_Motion_Zones_Are_Kept_In_The_File()
+    {
+        var camera = CreateCamera();
+        camera.MotionZones =
+        [
+            new() { Name = "Tree", Kind = CoreMotionZoneKind.Ignore, Points = [new(0.1, 0.2), new(0.4, 0.2), new(0.4, 0.9)], Color = "Green" },
+        ];
+        CreateSut().AddOrUpdateCamera(camera);
+
+        var read = CreateSut().GetCameraById(camera.Id)!;
+
+        read.MotionZones.Should().ContainSingle().Which.ValueEquals(camera.MotionZones[0]).Should().BeTrue();
+        File.ReadAllText(FilePath).Should().Contain("\"motionZones\"").And.Contain("\"Ignore\"");
+    }
+
     private static CameraConfiguration CreateCamera()
     {
         var camera = new CameraConfiguration();

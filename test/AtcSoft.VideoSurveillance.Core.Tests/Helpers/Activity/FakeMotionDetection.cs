@@ -14,10 +14,13 @@ public sealed class FakeMotionDetection : IMotionDetectionService
 
     public List<Guid> IndexingStopped { get; } = [];
 
+    public Dictionary<Guid, IReadOnlyList<MotionZone>?> Zones { get; } = [];
+
     public void StartDetection(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
         => throw new NotSupportedException();
 
     public void StopDetection(Guid cameraId)
@@ -29,8 +32,17 @@ public sealed class FakeMotionDetection : IMotionDetectionService
     public void StartIndexing(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
-        => Indexing[cameraId] = settings;
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
+    {
+        Indexing[cameraId] = settings;
+        Zones[cameraId] = zones;
+    }
+
+    public void UseZones(
+        Guid cameraId,
+        IReadOnlyList<MotionZone> zones)
+        => Zones[cameraId] = zones;
 
     public void StopIndexing(Guid cameraId)
     {

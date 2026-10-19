@@ -519,7 +519,8 @@ public sealed partial class CameraConnectionService : BackgroundServiceBase<Came
             motionDetectionService.StartDetection(
                 camera.Id,
                 pipeline,
-                MotionDetectionPolicy.Resolve(camera, settingsService.MotionDetection));
+                MotionDetectionPolicy.Resolve(camera, settingsService.MotionDetection),
+                camera.MotionZones);
         }
         catch (Exception ex)
         {

@@ -16,7 +16,8 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private readonly BackgroundModel background = new();
     private readonly MotionTracker tracker = new();
     private readonly DetectorBuffers buffers = new();
-    private readonly IReadOnlyList<MotionZone> zones;
+    private IReadOnlyList<MotionZone> zones;
+    private IReadOnlyList<MotionZone>? ignoredFor;
     private byte[]? ignored;
     private int ignoredWidth;
     private int ignoredHeight;
@@ -126,14 +127,25 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         lastHadBoxes = false;
     }
 
-    // The ignore zones at this size, filled in once until the size changes.
+    /// <inheritdoc />
+    public void UseZones(IReadOnlyList<MotionZone> zones)
+    {
+        ArgumentNullException.ThrowIfNull(zones);
+
+        // A copy, so a later edit of the camera's list is not half seen; the mask follows on the next picture.
+        Volatile.Write(ref this.zones, [.. zones.Select(z => z.Clone())]);
+    }
+
+    // The ignore zones at this size, filled in once until the size or the zones change.
     private byte[]? Ignored(
         int width,
         int height)
     {
-        if (ignoredWidth != width || ignoredHeight != height)
+        var current = Volatile.Read(ref zones);
+        if (ignoredWidth != width || ignoredHeight != height || !ReferenceEquals(ignoredFor, current))
         {
-            ignored = ZoneMask.Ignored(zones, width, height);
+            ignored = ZoneMask.Ignored(current, width, height);
+            ignoredFor = current;
             ignoredWidth = width;
             ignoredHeight = height;
         }

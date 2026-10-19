@@ -1,10 +1,12 @@
 namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Cameras;
 
 /// <summary>
-/// Handler business logic for the UpdateCamera operation.
+/// Handler business logic for the UpdateCamera operation. A camera being analysed takes its new
+/// motion zones at once (edited, or turned with the picture).
 /// </summary>
 public sealed class UpdateCameraHandler(
-    ICameraStorageService storage) : IUpdateCameraHandler
+    ICameraStorageService storage,
+    IMotionDetectionService? motionDetection = null) : IUpdateCameraHandler
 {
     public Task<UpdateCameraResult> ExecuteAsync(
         UpdateCameraParameters parameters,
@@ -30,6 +32,7 @@ public sealed class UpdateCameraHandler(
         camera.ApplyUpdate(parameters.Request);
         storage.AddOrUpdateCamera(camera);
         storage.Save();
+        motionDetection?.UseZones(camera.Id, camera.MotionZones);
 
         return Task.FromResult(UpdateCameraResult.Ok(camera.ToApiModel()));
     }

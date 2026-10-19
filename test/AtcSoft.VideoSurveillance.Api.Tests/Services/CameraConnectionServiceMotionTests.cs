@@ -56,7 +56,8 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
         motionDetection.Received(1).StartDetection(
             camera.Id,
             pipeline,
-            Arg.Is<MotionDetectionSettings>(s => s.Sensitivity == 42));
+            Arg.Is<MotionDetectionSettings>(s => s.Sensitivity == 42),
+            camera.MotionZones);
         recordingService.DidNotReceiveWithAnyArgs().StartRecording(default!, default!);
         connectionStates.Received(1).Report(camera.Id, ConnectionState.Connected);
     }
@@ -133,7 +134,7 @@ public sealed class CameraConnectionServiceMotionTests : IDisposable
         RaiseMotion(active: true);
 
         recordingService.Received(1).StartRecording(camera, pipeline);
-        motionDetection.Received(1).StartDetection(camera.Id, pipeline, Arg.Any<MotionDetectionSettings>());
+        motionDetection.Received(1).StartDetection(camera.Id, pipeline, Arg.Any<MotionDetectionSettings>(), camera.MotionZones);
         recordingService.DidNotReceiveWithAnyArgs().TriggerMotionRecording(default!, default!);
     }
 

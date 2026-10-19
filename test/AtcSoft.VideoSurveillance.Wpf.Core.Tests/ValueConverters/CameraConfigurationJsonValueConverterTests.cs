@@ -1,6 +1,8 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.ValueConverters;
 
 using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
+using MotionZoneKind = AtcSoft.VideoSurveillance.Enums.MotionZoneKind;
 
 public class CameraConfigurationJsonValueConverterTests
 {
@@ -278,6 +280,35 @@ public class CameraConfigurationJsonValueConverterTests
 
         camera!.Connection.ConnectionType.Should().Be(CameraConnectionType.None);
         camera.Overrides!.CameraDisplay.ShowOverlayConnectionTypeIcon.Should().BeNull();
+    }
+
+    [Fact]
+    public void The_Motion_Zones_Go_Both_Ways()
+    {
+        var original = new CameraConfiguration
+        {
+            MotionZones =
+            [
+                new MotionZone { Name = "Tree", Kind = MotionZoneKind.Ignore, Points = [new(0.1, 0.2), new(0.4, 0.2), new(0.4, 0.9)], Color = "Green" },
+                new MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Points = [new(0.5, 0.5), new(0.9, 0.5), new(0.9, 0.9)] },
+            ],
+        };
+
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+        var read = JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions)!;
+
+        json.Should().Contain("\"motionZones\"");
+        read.ValueEquals(original).Should().BeTrue();
+        read.MotionZones[1].Kind.Should().Be(MotionZoneKind.Watch);
+    }
+
+    [Fact]
+    public void A_Camera_Without_Zones_Writes_None_And_Reads_None()
+    {
+        var json = JsonSerializer.Serialize(new CameraConfiguration(), JsonOptions);
+
+        json.Should().NotContain("motionZones");
+        JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions)!.MotionZones.Should().BeEmpty();
     }
 
     [Fact]

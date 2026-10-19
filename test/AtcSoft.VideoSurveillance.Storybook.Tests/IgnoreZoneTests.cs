@@ -40,6 +40,24 @@ public sealed class IgnoreZoneTests
         after.Count(f => f.Detected.Count > 0).Should().BeGreaterThanOrEqualTo((int)(after.Count * 0.9), "out of the mask it is boxed again");
     }
 
+    [Fact]
+    public void Zones_Given_While_Running_Mask_From_Then_On()
+    {
+        var scene = Scene("s02-tree-in-the-wind.storybook.json");
+        var open = new LevelRecorder(new BuiltInMotionDetector(new MotionDetectionSettings()));
+        var masked = new ZonesAt(
+            new BuiltInMotionDetector(new MotionDetectionSettings()),
+            TimeSpan.FromSeconds(4),
+            [Zone(0, 0, 0.42, 0.82), Zone(0.58, 0.1, 0.92, 0.8)]);
+
+        StorybookRunner.Run(scene, open);
+        StorybookRunner.Run(scene, masked);
+
+        var openAfter = open.Levels.Skip(masked.Before.Count).Max();
+        masked.Before.Max().Should().BeGreaterThan(0.5, "the trees sway until the zones come");
+        masked.After.Max().Should().BeLessThan(openAfter / 10, "the trees are masked from the next picture on");
+    }
+
     private static StorybookScene Scene(string file)
         => StorybookReader.ReadFile(Path.Combine(AppContext.BaseDirectory, "Scenes", file));
 
@@ -53,6 +71,39 @@ public sealed class IgnoreZoneTests
             Kind = AtcSoft.VideoSurveillance.Enums.MotionZoneKind.Ignore,
             Points = [new(left, top), new(right, top), new(right, bottom), new(left, bottom)],
         };
+
+    // Gives the detector the zones once the scene reaches a time, and keeps the levels before and after.
+    private sealed class ZonesAt(
+        IMotionDetector inner,
+        TimeSpan at,
+        IReadOnlyList<MotionZone> zones) : IMotionDetector
+    {
+        private DateTimeOffset? start;
+
+        public List<double> Before { get; } = [];
+
+        public List<double> After { get; } = [];
+
+        public MotionDetectorResult Process(MotionFrame frame)
+        {
+            start ??= frame.Time;
+            var given = frame.Time - start.Value >= at;
+            if (given && After.Count == 0)
+            {
+                inner.UseZones(zones);
+            }
+
+            var result = inner.Process(frame);
+            (given ? After : Before).Add(result.ChangePercent);
+            return result;
+        }
+
+        public MotionDetectorResult Idle(DateTimeOffset now)
+            => inner.Idle(now);
+
+        public void Reset()
+            => inner.Reset();
+    }
 
     // Passes the pictures on and keeps the level of each, as the activity index would.
     private sealed class LevelRecorder(IMotionDetector inner) : IMotionDetector

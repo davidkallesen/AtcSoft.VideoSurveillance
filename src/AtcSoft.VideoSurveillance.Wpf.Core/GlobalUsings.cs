@@ -90,6 +90,7 @@ global using IMotionDetectionService = AtcSoft.VideoSurveillance.Services.IMotio
 global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunner;
 global using MotionBoxMapper = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
+global using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
 global using PlayAllPacer = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllPacer;
 global using PlayAllStart = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllStart;
 global using PlayAllTile = AtcSoft.VideoSurveillance.Models.PlayAllTile;

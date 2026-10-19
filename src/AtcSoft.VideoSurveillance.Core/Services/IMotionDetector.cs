@@ -27,4 +27,13 @@ public interface IMotionDetector
     /// Forgets everything learnt, as when the camera reconnects.
     /// </summary>
     void Reset();
+
+    /// <summary>
+    /// Takes the camera's zones as they are now (edited, or turned with the picture), keeping
+    /// what was learnt. A detector that knows no zones ignores them.
+    /// </summary>
+    /// <param name="zones">The camera's motion zones.</param>
+    void UseZones(IReadOnlyList<MotionZone> zones)
+    {
+    }
 }

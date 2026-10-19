@@ -24,5 +24,6 @@ internal static class TestCameras
             StreamMaxLatencyMs: 0,
             StreamRtspTransport: global::VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport.Tcp,
             StreamBufferDurationMs: 0,
-            IsRecording: false);
+            IsRecording: false,
+            MotionZones: []);
 }

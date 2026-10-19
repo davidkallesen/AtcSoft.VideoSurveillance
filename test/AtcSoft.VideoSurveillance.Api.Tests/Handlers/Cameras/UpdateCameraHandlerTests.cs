@@ -160,6 +160,27 @@ public class UpdateCameraHandlerTests
         camera.Connection.ConnectionType.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraConnectionType.Usb);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_Gives_The_Running_Analysis_The_Zones_Turned_With_The_Picture()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var motion = Substitute.For<IMotionDetectionService>();
+        var camera = new CameraConfiguration
+        {
+            MotionZones = [new() { Name = "Tree", Points = [new(0.1, 0.2), new(0.4, 0.2), new(0.4, 0.9)] }],
+        };
+        camera.Connection.IpAddress = "10.0.0.1";
+        storage.GetCameraById(camera.Id).Returns(camera);
+
+        await new UpdateCameraHandler(storage, motion).ExecuteAsync(
+            new UpdateCameraParameters(camera.Id, MinimalUpdate("Gate") with { Rotation = ApiCameraRotation.Rotate180 }),
+            CancellationToken.None);
+
+        motion.Received(1).UseZones(
+            camera.Id,
+            Arg.Is<IReadOnlyList<CoreMotionZone>>(z => z.Single().Points[0] == new CoreZonePoint(0.9, 0.8)));
+    }
+
     private static UpdateCameraRequest MinimalUpdate(string displayName)
         => new(
             DisplayName: displayName,

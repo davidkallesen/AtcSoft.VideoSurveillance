@@ -36,7 +36,7 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
         if (hasConnectionObject && connectionElement.ValueKind == JsonValueKind.Object)
         {
             // New nested format
-            ReadNestedFormat(root, config, connectionElement);
+            ReadNestedFormat(root, config, connectionElement, options);
         }
         else
         {
@@ -85,13 +85,21 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             WriteOverridesSettings(writer, value.Overrides);
         }
 
+        // Motion zones - only written when the camera has any
+        if (value.MotionZones.Count > 0)
+        {
+            writer.WritePropertyName("motionZones");
+            JsonSerializer.Serialize(writer, value.MotionZones, options);
+        }
+
         writer.WriteEndObject();
     }
 
     private static void ReadNestedFormat(
         JsonElement root,
         CameraConfiguration config,
-        JsonElement connectionElement)
+        JsonElement connectionElement,
+        JsonSerializerOptions options)
     {
         // Connection
         ReadConnectionSettings(connectionElement, config.Connection);
@@ -126,6 +134,14 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             overridesElement.ValueKind == JsonValueKind.Object)
         {
             config.Overrides = ReadOverridesSettings(overridesElement);
+        }
+
+        // Motion zones
+        if ((root.TryGetProperty("motionZones", out var zonesElement) ||
+             root.TryGetProperty("MotionZones", out zonesElement)) &&
+            zonesElement.ValueKind == JsonValueKind.Array)
+        {
+            config.MotionZones = zonesElement.Deserialize<List<MotionZone>>(options) ?? [];
         }
     }
 

@@ -2869,7 +2869,7 @@ public partial class CameraTile : IDisposable
             },
         };
 
-        motionDetectionService.StartDetection(Camera.Id, mediaPipeline, settings);
+        motionDetectionService.StartDetection(Camera.Id, mediaPipeline, settings, Camera.MotionZones);
 
         // Apply bounding box settings AFTER starting detection so the overlay gets the correct resolution
         ApplyBoundingBoxSettings();

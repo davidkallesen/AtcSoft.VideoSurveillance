@@ -5,10 +5,14 @@ using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
 using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
 using CoreCameraSource = AtcSoft.VideoSurveillance.Enums.CameraSource;
 using CoreConnectionState = AtcSoft.VideoSurveillance.Enums.ConnectionState;
+using CoreMotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
+using CoreMotionZoneKind = AtcSoft.VideoSurveillance.Enums.MotionZoneKind;
 using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
 using CoreRecordingState = AtcSoft.VideoSurveillance.Enums.RecordingState;
 using CoreUsbConnectionSettings = AtcSoft.VideoSurveillance.Models.Settings.UsbConnectionSettings;
 using CoreUsbStreamFormat = AtcSoft.VideoSurveillance.Models.UsbStreamFormat;
+using CoreZonePoint = AtcSoft.VideoSurveillance.Models.ZonePoint;
+using MotionZoneGeometry = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneGeometry;
 
 namespace AtcSoft.VideoSurveillance.Api.Domain.Mapping;
 
@@ -48,7 +52,8 @@ internal static class CameraMappingExtensions
             StreamRtspTransport: ToApiRtspTransport(core.Stream.RtspTransport),
             StreamBufferDurationMs: core.Stream.BufferDurationMs,
             ConnectionState: connectionState?.ToApiConnectionState(),
-            IsRecording: isRecording);
+            IsRecording: isRecording,
+            MotionZones: [.. core.MotionZones.Select(ToApiZone)]);
     }
 
     public static CoreCameraConfiguration ToCoreModel(
@@ -104,6 +109,11 @@ internal static class CameraMappingExtensions
         if (request.StreamBufferDurationMs > 0)
         {
             camera.Stream.BufferDurationMs = request.StreamBufferDurationMs.Value;
+        }
+
+        if (request.MotionZones is { } zones)
+        {
+            camera.MotionZones = [.. zones.Select(ToCoreZone)];
         }
 
         return camera;
@@ -175,7 +185,20 @@ internal static class CameraMappingExtensions
 
         if (request.Rotation is not null)
         {
-            core.Display.Rotation = request.Rotation.Value.ToCoreRotation();
+            var rotation = request.Rotation.Value.ToCoreRotation();
+
+            // Zones left out stay on the same part of the scene; zones sent are drawn on the new picture.
+            if (request.MotionZones is null && rotation != core.Display.Rotation)
+            {
+                core.MotionZones = [.. MotionZoneGeometry.Turn(core.MotionZones, core.Display.Rotation, rotation)];
+            }
+
+            core.Display.Rotation = rotation;
+        }
+
+        if (request.MotionZones is { } zones)
+        {
+            core.MotionZones = [.. zones.Select(ToCoreZone)];
         }
 
         if (request.StreamUseLowLatencyMode is { } useLowLatencyMode)
@@ -309,6 +332,22 @@ internal static class CameraMappingExtensions
             CameraOverlayPosition.BottomLeft => CoreOverlayPosition.BottomLeft,
             CameraOverlayPosition.BottomRight => CoreOverlayPosition.BottomRight,
             _ => CoreOverlayPosition.TopLeft,
+        };
+
+    private static MotionZone ToApiZone(CoreMotionZone zone)
+        => new(
+            Name: zone.Name,
+            Kind: zone.Kind == CoreMotionZoneKind.Watch ? MotionZoneKind.Watch : MotionZoneKind.Ignore,
+            Points: [.. zone.Points.Select(p => new ZonePoint(p.X, p.Y))],
+            Color: zone.Color);
+
+    private static CoreMotionZone ToCoreZone(MotionZone zone)
+        => new()
+        {
+            Name = zone.Name,
+            Kind = zone.Kind == MotionZoneKind.Watch ? CoreMotionZoneKind.Watch : CoreMotionZoneKind.Ignore,
+            Points = [.. zone.Points.Select(p => new CoreZonePoint(p.X, p.Y))],
+            Color = string.IsNullOrEmpty(zone.Color) ? null : zone.Color,
         };
 
     private static CameraStreamRtspTransport ToApiRtspTransport(

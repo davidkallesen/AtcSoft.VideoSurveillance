@@ -65,6 +65,7 @@ global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanup
 global using MediaCleanupRunResult = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunResult;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
 global using MotionFrame = AtcSoft.VideoSurveillance.Models.MotionFrame;
+global using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
 global using PictureAnalyzedEventArgs = AtcSoft.VideoSurveillance.Events.PictureAnalyzedEventArgs;
 global using RecordingLayoutOptions = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutOptions;
 global using RecordingLayoutReorganizer = AtcSoft.VideoSurveillance.Helpers.RecordingLayoutReorganizer;

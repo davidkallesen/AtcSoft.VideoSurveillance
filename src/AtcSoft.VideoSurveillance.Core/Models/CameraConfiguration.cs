@@ -36,6 +36,13 @@ public class CameraConfiguration
     public CameraOverrides Overrides { get; set; } = new();
 
     /// <summary>
+    /// Gets or sets the camera's motion zones, drawn on the picture as it is shown.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Required for JSON deserialization")]
+    [SuppressMessage("Design", "MA0016:Prefer using collection abstraction instead of implementation", Justification = "Required for JSON deserialization")]
+    public List<MotionZone> MotionZones { get; set; } = [];
+
+    /// <summary>
     /// Builds the camera stream URI based on the configuration. Only
     /// supported for network cameras; USB cameras have no URL and must
     /// be resolved through
@@ -86,6 +93,7 @@ public class CameraConfiguration
             Display = Display.Clone(),
             Stream = Stream.Clone(),
             Overrides = Overrides.Clone(),
+            MotionZones = [.. MotionZones.Select(z => z.Clone())],
         };
 
     /// <summary>
@@ -100,6 +108,7 @@ public class CameraConfiguration
         Display.CopyFrom(source.Display);
         Stream.CopyFrom(source.Stream);
         Overrides = source.Overrides.Clone();
+        MotionZones = [.. source.MotionZones.Select(z => z.Clone())];
     }
 
     /// <summary>
@@ -119,6 +128,8 @@ public class CameraConfiguration
                Authentication.ValueEquals(other.Authentication) &&
                Display.ValueEquals(other.Display) &&
                Stream.ValueEquals(other.Stream) &&
-               overridesEqual;
+               overridesEqual &&
+               MotionZones.Count == other.MotionZones.Count &&
+               MotionZones.Zip(other.MotionZones).All(p => p.First.ValueEquals(p.Second));
     }
 }

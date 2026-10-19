@@ -268,6 +268,31 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void The_Zones_Reach_The_Detector_At_The_Start_And_While_It_Runs()
+    {
+        var detector = Substitute.For<IMotionDetector>();
+        using var service = new ServerMotionDetectionService(
+            NullLogger<ServerMotionDetectionService>.Instance,
+            new BlockReader(),
+            clock,
+            runLoops: false,
+            createDetector: _ => detector);
+        IReadOnlyList<CoreMotionZone> first = [new() { Name = "Tree" }];
+        IReadOnlyList<CoreMotionZone> edited = [new() { Name = "Road" }];
+
+        service.StartDetection(cameraId, pipeline, settings, first);
+        service.UseZones(cameraId, edited);
+        service.UseZones(Guid.NewGuid(), edited);
+
+        Received.InOrder(() =>
+        {
+            detector.UseZones(first);
+            detector.UseZones(edited);
+        });
+        detector.ReceivedCalls().Should().HaveCount(2, "a camera that is not analysed has no detector to tell");
+    }
+
+    [Fact]
     public void A_Camera_Watched_For_Motion_Goes_On_When_Its_Index_Ends()
     {
         sut.StartIndexing(cameraId, pipeline, settings);

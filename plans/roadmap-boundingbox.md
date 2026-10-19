@@ -346,7 +346,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
-| 6 | Masks and zones | L | 🟨 in progress: ignore masks first |
+| 6 | Masks and zones | L | 🟨 in progress: ignore masks work and are stored; editors next |
 | 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
@@ -467,6 +467,15 @@ Covers the backlog row *Motion zones / exclusion masks*.
 - A zone's colour is reused on the timeline (the Google Home idea).
 
 **Test:** a storybook scene with a mask over the tree; dialog steps in the E2E walks.
+
+**Done so far (2026-10-19):**
+
+- The detector: a camera's ignore zones (`MotionZone`, `ZonePoint` in Core, kind `Ignore` or `Watch`, corners in fractions of the picture as shown) are filled in at the analysis size (`ZoneMask`, by pixel centres, even-odd, so a concave shape keeps its notch) and are never foreground; they do not count towards the changed share, so the activity level and the lighting check leave them out too. Storybook: the swaying trees of S2 masked leave no more activity than the empty scene's noise and no boxes; the walker of S3 is missed inside a mask and boxed once out of it.
+- Stored with the camera: `CameraConfiguration.MotionZones` in Core and in Wpf.Core (CameraWall's `cameras.json`, written only when there are any). In the spec, `motionZones` on `Camera` (always sent), `CreateCameraRequest` and `UpdateCameraRequest` (left out keeps them, `[]` removes them), with limits (16 zones, 3 to 32 corners, 0 to 1).
+- Rotation: a rotation changed without new zones turns the zones with the picture (`MotionZoneGeometry.Turn`), so they stay on the same part of the scene; zones sent with the rotation are taken as drawn.
+- To the detector: both apps start the analysis (watching and index-only) with the camera's zones, and a running analysis takes edited zones at once without forgetting its background (`IMotionDetector.UseZones`, `IMotionDetectionService.UseZones`); on the server the camera update hands them over.
+
+**Open in phase 6:** the editors (a polygon drawn on a snapshot in both camera dialogs and the web form, its logic in Core with a `Logic/` copy, walk steps, texts in four languages); CameraWall turning its zones when the rotation changes in the dialog; *Analyse recording* with the camera's zones (it uses the camera's settings on the server, the app's in CameraWall); watch zones with their own sensitivity and smallest object; the zone colour on the timeline.
 
 ### Phase 7 — Activity index ✅ (M)
 

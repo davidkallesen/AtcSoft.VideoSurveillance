@@ -16,7 +16,8 @@ public interface IMotionDetectionService
     void StartDetection(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null);
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null);
 
     void StopDetection(Guid cameraId);
 
@@ -31,10 +32,23 @@ public interface IMotionDetectionService
     /// <param name="cameraId">The camera.</param>
     /// <param name="pipeline">The camera's pipeline, to take pictures from.</param>
     /// <param name="settings">The camera's motion settings.</param>
+    /// <param name="zones">The camera's motion zones.</param>
     void StartIndexing(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null);
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null);
+
+    /// <summary>
+    /// Gives a camera that is analysed its zones as they are now, edited or turned with the
+    /// picture, without starting the analysis over. A camera that is not analysed takes its zones
+    /// when it starts.
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    /// <param name="zones">The camera's motion zones.</param>
+    void UseZones(
+        Guid cameraId,
+        IReadOnlyList<MotionZone> zones);
 
     /// <summary>
     /// Stops analysing a camera for its activity index. A camera watched for motion goes on.

@@ -9,12 +9,13 @@ internal sealed class MotionDetectionContext : IDisposable
     public MotionDetectionContext(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings settings)
+        MotionDetectionSettings settings,
+        IReadOnlyList<MotionZone>? zones = null)
     {
         CameraId = cameraId;
         Pipeline = pipeline;
         Settings = settings;
-        Detector = new BuiltInMotionDetector(settings);
+        Detector = new BuiltInMotionDetector(settings, zones: zones);
     }
 
     public Guid CameraId { get; }

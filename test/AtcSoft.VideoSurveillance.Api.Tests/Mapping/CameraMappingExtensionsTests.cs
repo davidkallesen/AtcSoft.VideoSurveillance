@@ -477,6 +477,59 @@ public class CameraMappingExtensionsTests
     }
 
     [Fact]
+    public void The_Motion_Zones_Go_Both_Ways()
+    {
+        List<ApiMotionZone> zones =
+        [
+            new("Tree", ApiMotionZoneKind.Ignore, [new ApiZonePoint(0.1, 0.2), new ApiZonePoint(0.4, 0.2), new ApiZonePoint(0.4, 0.9)], "Green"),
+            new("Gate", ApiMotionZoneKind.Watch, [new ApiZonePoint(0.5, 0.5), new ApiZonePoint(0.9, 0.5), new ApiZonePoint(0.9, 0.9)], null),
+        ];
+
+        var core = (NetworkCreateRequest("Cam", ipAddress: "10.0.0.1") with { MotionZones = zones }).ToCoreModel();
+        var api = core.ToApiModel();
+
+        core.MotionZones.Select(z => (z.Name, z.Kind, z.Color)).Should().Equal(("Tree", CoreMotionZoneKind.Ignore, "Green"), ("Gate", CoreMotionZoneKind.Watch, (string?)null));
+        core.MotionZones[0].Points.Should().Equal(new CoreZonePoint(0.1, 0.2), new CoreZonePoint(0.4, 0.2), new CoreZonePoint(0.4, 0.9));
+        api.MotionZones.Should().BeEquivalentTo(zones);
+    }
+
+    [Fact]
+    public void ApplyUpdate_Keeps_The_Zones_When_Left_Out_And_Clears_Them_When_Empty()
+    {
+        var core = new CameraConfiguration { MotionZones = [Triangle()] };
+
+        core.ApplyUpdate(NetworkUpdateRequest());
+        core.MotionZones.Should().HaveCount(1);
+
+        core.ApplyUpdate(NetworkUpdateRequest() with { MotionZones = [] });
+        core.MotionZones.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ApplyUpdate_Turns_The_Zones_With_The_Picture()
+    {
+        var core = new CameraConfiguration { MotionZones = [Triangle()] };
+
+        core.ApplyUpdate(NetworkUpdateRequest() with { Rotation = ApiCameraRotation.Rotate90 });
+
+        core.MotionZones[0].Points[0].Should().Be(new CoreZonePoint(0.8, 0.1), "(0.1, 0.2) turned a quarter clockwise");
+    }
+
+    [Fact]
+    public void ApplyUpdate_Takes_Zones_Sent_With_A_Rotation_As_Drawn()
+    {
+        var core = new CameraConfiguration { MotionZones = [Triangle()] };
+
+        core.ApplyUpdate(NetworkUpdateRequest() with
+        {
+            Rotation = ApiCameraRotation.Rotate90,
+            MotionZones = [new("Tree", ApiMotionZoneKind.Ignore, [new ApiZonePoint(0.1, 0.2), new ApiZonePoint(0.4, 0.2), new ApiZonePoint(0.4, 0.9)], null)],
+        });
+
+        core.MotionZones[0].Points[0].Should().Be(new CoreZonePoint(0.1, 0.2));
+    }
+
+    [Fact]
     public void ApplyUpdate_Sets_ConnectionType_When_Provided()
     {
         var core = new CameraConfiguration();
@@ -536,6 +589,14 @@ public class CameraMappingExtensionsTests
     // Mirrors the original "minimal update" shape from before USB
     // landed: every nullable field is null so ApplyUpdate's "only
     // overwrite when non-null" semantics keep existing values.
+    private static CoreMotionZone Triangle()
+        => new()
+        {
+            Name = "Tree",
+            Kind = CoreMotionZoneKind.Ignore,
+            Points = [new(0.1, 0.2), new(0.4, 0.2), new(0.4, 0.9)],
+        };
+
     private static UpdateCameraRequest NetworkUpdateRequest(
         string displayName = "")
         => new(

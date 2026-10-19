@@ -54,14 +54,15 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     public void StartDetection(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
     {
         ArgumentNullException.ThrowIfNull(pipeline);
 
         // Started again with new settings: begin anew, still feeding the index if it did.
         var indexes = contexts.TryGetValue(cameraId, out var running) && running.Indexes;
         Remove(cameraId);
-        Add(cameraId, pipeline, settings, reportsMotion: true, indexes);
+        Add(cameraId, pipeline, settings, zones, reportsMotion: true, indexes);
     }
 
     /// <inheritdoc/>
@@ -83,7 +84,8 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     public void StartIndexing(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
     {
         ArgumentNullException.ThrowIfNull(pipeline);
 
@@ -93,7 +95,20 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
             return;
         }
 
-        Add(cameraId, pipeline, settings, reportsMotion: false, indexes: true);
+        Add(cameraId, pipeline, settings, zones, reportsMotion: false, indexes: true);
+    }
+
+    /// <inheritdoc/>
+    public void UseZones(
+        Guid cameraId,
+        IReadOnlyList<MotionZone> zones)
+    {
+        ArgumentNullException.ThrowIfNull(zones);
+
+        if (contexts.TryGetValue(cameraId, out var context))
+        {
+            context.Detector.UseZones(zones);
+        }
     }
 
     /// <inheritdoc/>
@@ -188,10 +203,11 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
         Guid cameraId,
         IMediaPipeline pipeline,
         MotionDetectionSettings? settings,
+        IReadOnlyList<MotionZone>? zones,
         bool reportsMotion,
         bool indexes)
     {
-        var context = new MotionDetectionContext(cameraId, pipeline, settings ?? new MotionDetectionSettings())
+        var context = new MotionDetectionContext(cameraId, pipeline, settings ?? new MotionDetectionSettings(), zones)
         {
             ReportsMotion = reportsMotion,
             Indexes = indexes,

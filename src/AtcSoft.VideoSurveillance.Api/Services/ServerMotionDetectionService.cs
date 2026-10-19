@@ -86,15 +86,33 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     public void StartDetection(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
-        => Start(cameraId, pipeline, settings, reportsMotion: true);
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
+        => Start(cameraId, pipeline, settings, zones, reportsMotion: true);
 
     /// <inheritdoc/>
     public void StartIndexing(
         Guid cameraId,
         IMediaPipeline pipeline,
-        MotionDetectionSettings? settings = null)
-        => Start(cameraId, pipeline, settings, reportsMotion: false);
+        MotionDetectionSettings? settings = null,
+        IReadOnlyList<MotionZone>? zones = null)
+        => Start(cameraId, pipeline, settings, zones, reportsMotion: false);
+
+    /// <inheritdoc/>
+    public void UseZones(
+        Guid cameraId,
+        IReadOnlyList<MotionZone> zones)
+    {
+        ArgumentNullException.ThrowIfNull(zones);
+
+        if (contexts.TryGetValue(cameraId, out var context))
+        {
+            lock (context.Sync)
+            {
+                context.Detector.UseZones(zones);
+            }
+        }
+    }
 
     /// <inheritdoc/>
     public void StopIndexing(Guid cameraId)
@@ -246,6 +264,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         Guid cameraId,
         IMediaPipeline pipeline,
         MotionDetectionSettings? settings,
+        IReadOnlyList<MotionZone>? zones,
         bool reportsMotion)
     {
         ArgumentNullException.ThrowIfNull(pipeline);
@@ -272,7 +291,13 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         {
             cts = new CancellationTokenSource();
             var cameraSettings = settings ?? new MotionDetectionSettings();
-            var context = new DetectionContext(pipeline, cameraSettings, createDetector(cameraSettings), cts)
+            var detector = createDetector(cameraSettings);
+            if (zones is { Count: > 0 })
+            {
+                detector.UseZones(zones);
+            }
+
+            var context = new DetectionContext(pipeline, cameraSettings, detector, cts)
             {
                 ReportsMotion = reportsMotion,
                 Indexes = !reportsMotion,

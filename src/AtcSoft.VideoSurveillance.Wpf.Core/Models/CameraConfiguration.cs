@@ -174,6 +174,27 @@ public partial class CameraConfiguration : ObservableObject
     }
 
     /// <summary>
+    /// Gets or sets the camera's motion zones, drawn on the picture as it is shown. Replace the
+    /// list to change them, so the change is announced.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Replaced as a whole, which raises PropertyChanged")]
+    [SuppressMessage("Design", "MA0016:Prefer using collection abstraction instead of implementation", Justification = "The Core model's list")]
+    public List<MotionZone> MotionZones
+    {
+        get => Core.MotionZones;
+        set
+        {
+            if (ReferenceEquals(Core.MotionZones, value))
+            {
+                return;
+            }
+
+            Core.MotionZones = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
     /// Builds the camera stream URI based on the configuration.
     /// Throws on USB cameras — use
     /// <see cref="BuildSourceLocator"/> instead.
@@ -228,6 +249,7 @@ public partial class CameraConfiguration : ObservableObject
         // Replace Overrides object to trigger PropertyChanged notification
         // (CameraOverrides doesn't implement INotifyPropertyChanged)
         Overrides = source.Overrides.Clone();
+        MotionZones = [.. source.MotionZones.Select(z => z.Clone())];
     }
 
     /// <summary>

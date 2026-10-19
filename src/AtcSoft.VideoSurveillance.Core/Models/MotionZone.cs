@@ -28,4 +28,26 @@ public sealed class MotionZone
     /// Gets or sets the zone's colour by name, for the editor and the timeline.
     /// </summary>
     public string? Color { get; set; }
+
+    /// <summary>
+    /// Creates a copy of the zone with its own list of corners.
+    /// </summary>
+    public MotionZone Clone()
+        => new()
+        {
+            Name = Name,
+            Kind = Kind,
+            Points = [.. Points],
+            Color = Color,
+        };
+
+    /// <summary>
+    /// Determines whether the specified zone has the same values.
+    /// </summary>
+    public bool ValueEquals(MotionZone? other)
+        => other is not null &&
+           string.Equals(Name, other.Name, StringComparison.Ordinal) &&
+           Kind == other.Kind &&
+           Points.SequenceEqual(other.Points) &&
+           string.Equals(Color, other.Color, StringComparison.Ordinal);
 }

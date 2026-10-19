@@ -1267,6 +1267,9 @@ paths:
       summary: Analyse a recording for its activity
       description: Gives a recording made without an activity index (before the index existed, or with it turned off) the index a recording analysed while it was made has, by decoding it and running the motion detector over its pictures, with its camera's own motion settings. The analysis runs in the background, one recording at a time, decoding with two threads so recording and live viewing go on. Ten minutes of 1080p H.264 took about three minutes on an ordinary 16-thread machine, so an hour takes about a quarter of an hour. The recording has its index when getRecordingActivity says hasIndex; while it is waiting or being analysed it says isBeingAnalysed.
       operationId: startRecordingAnalysis
+      x-atc-suppress: ATC_API_OPR023
+      # The POST starts work on a recording named in the query, which may not
+      # exist: 404 is the answer for a path that names no file.
       x-authorize-roles:
         - operator
         - admin
@@ -2014,6 +2017,7 @@ components:
         - streamRtspTransport
         - streamBufferDurationMs
         - isRecording
+        - motionZones
       properties:
         id:
           type: string
@@ -2085,6 +2089,12 @@ components:
           $ref: "#/components/schemas/CameraConnectionState"
         isRecording:
           type: boolean
+        motionZones:
+          type: array
+          maxItems: 16
+          description: Areas of the picture motion detection ignores or watches on their own, drawn on the picture as it is shown (rotated).
+          items:
+            $ref: "#/components/schemas/MotionZone"
 
     ConnectionTypeDetection:
       title: ConnectionTypeDetection
@@ -2227,6 +2237,12 @@ components:
         streamBufferDurationMs:
           type: integer
           format: int32
+        motionZones:
+          type: array
+          maxItems: 16
+          description: Areas of the picture motion detection ignores or watches on their own, drawn on the picture as it is shown (rotated).
+          items:
+            $ref: "#/components/schemas/MotionZone"
 
     UpdateCameraRequest:
       title: UpdateCameraRequest
@@ -2305,6 +2321,57 @@ components:
         streamBufferDurationMs:
           type: integer
           format: int32
+        motionZones:
+          type: array
+          maxItems: 16
+          description: Replaces the camera's zones; an empty list removes them. Left out, the zones are kept, turned with the picture when the rotation changes.
+          items:
+            $ref: "#/components/schemas/MotionZone"
+
+    MotionZone:
+      title: MotionZone
+      type: object
+      description: An area of a camera's picture that motion detection ignores or watches on its own. A polygon in fractions of the picture as it is shown, 0 to 1 from the top left.
+      required:
+        - name
+        - kind
+        - points
+      properties:
+        name:
+          type: string
+          maxLength: 64
+        kind:
+          type: string
+          enum: [ignore, watch]
+        points:
+          type: array
+          minItems: 3
+          maxItems: 32
+          items:
+            $ref: "#/components/schemas/ZonePoint"
+        color:
+          type: string
+          maxLength: 32
+          description: The zone's colour by name, for the editor and the timeline.
+
+    ZonePoint:
+      title: ZonePoint
+      type: object
+      description: A corner of a motion zone, in fractions of the picture as it is shown.
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
 
     StreamLease:
       title: StreamLease
