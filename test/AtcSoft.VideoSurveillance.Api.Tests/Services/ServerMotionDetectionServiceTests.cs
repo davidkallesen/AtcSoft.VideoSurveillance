@@ -75,6 +75,22 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Grey_Picture_From_The_Pipeline_Is_Analysed_Without_A_Png()
+    {
+        // No PNG at all: asking for one would fail the analysis.
+        pipeline.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns<byte[]?>(_ => throw new InvalidOperationException("no PNG wanted"));
+        var reader = new BlockReader();
+        foreach (var scene in new[] { EmptyScene, SceneWithBlock })
+        {
+            pipeline.CaptureGreyAsync(Width, Height, Arg.Any<CancellationToken>()).Returns(reader.ReadGrayscale([scene], Width, Height));
+            await sut.AnalyzeOnceAsync(cameraId, TestContext.Current.CancellationToken);
+        }
+
+        events.Should().ContainSingle().Which.IsMotionActive.Should().BeTrue();
+        await pipeline.DidNotReceive().CaptureFrameAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Motion_Is_Over_Only_After_The_Scene_Has_Been_Quiet_For_The_Post_Motion_Time()
     {
         // Something that moves stops and starts; an end reported at every

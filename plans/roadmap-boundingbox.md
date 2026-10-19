@@ -342,7 +342,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 |---|-------|:--:|:--:|
 | 0 | Quick fixes in today's pipeline | S | ✅ |
 | 1 | Storybook, generator, truth and scorer; today's baseline | L | 🟨 fast path, scorer and ten scenes done; S10, S11, the encoder pipe and render time open |
-| 2 | Grey frames with their time from the engine | M | 🟨 the offline file reader done; the live grey frames open |
+| 2 | Grey frames with their time from the engine | M | ✅ the offline file reader and the live grey pictures; both apps analyse without PNG |
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
@@ -393,9 +393,9 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 
 **Test:** the parsing, truth and scorer tests; the detector-against-scenes test.
 
-### Phase 2 — Grey frames with their time 🟨 (M)
+### Phase 2 — Grey frames with their time ✅ (M)
 
-**Done 2026-10-19:** the offline reader, `GreyFrameFileReader` (engine): opens a recording, decodes every frame as fast as it can, and scales the ones asked for straight to grey at the analysis size with swscale (area filter), turned the way the picture is displayed, with their place in the file; no PNG, no player. Engine tests on a recording the FFmpeg tool makes (rate, order, size, which side is bright, a quarter turn). It serves *Analyse recording*. **Open:** the live `TryCaptureAnalysisFrame` and the services switching to it.
+**Done 2026-10-19:** the offline reader, `GreyFrameFileReader` (engine): opens a recording, decodes every frame as fast as it can, and scales the ones asked for straight to grey at the analysis size with swscale (area filter), turned the way the picture is displayed, with their place in the file; no PNG, no player. Engine tests on a recording the FFmpeg tool makes (rate, order, size, which side is bright, a quarter turn). It serves *Analyse recording*. The live half (done 2026-10-19): `VideoPlayer.CaptureGreyAsync(width, height)` scales the latest decoded picture straight to grey with the same `GreyScaler` (a hardware frame is copied to memory first), turned the way the picture is displayed, with its place in the stream, under the same lock as the PNG capture. `IMediaPipeline.CaptureGreyAsync` passes it on, and both motion services use it, keeping the PNG read back as grey (`IMotionFrameReader`) only for a pipeline that cannot make one. Measured on a 720p stream: 0.4 ms a grey picture against 2.8 ms for the PNG alone, before it was read back. An engine test on a live stream checks size, rotation, order and that it is cheaper. Both interfaces got the method with a default body, so other implementations keep compiling.
 
 - Engine: `TryCaptureAnalysisFrame(width, height)` returns the latest decoded frame's **Y plane**, scaled by swscale and rotated, with its pts. No PNG.
 - Engine: an offline reader that decodes a file frame by frame (as fast as it can) to the same grey frames, for the sample app, the scorer and *Analyse recording*.

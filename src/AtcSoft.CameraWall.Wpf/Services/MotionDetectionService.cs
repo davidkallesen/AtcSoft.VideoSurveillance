@@ -340,13 +340,22 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     {
         try
         {
-            var frameBytes = await context.Pipeline.CaptureFrameAsync().ConfigureAwait(false);
-            if (frameBytes is null || frameBytes.Length == 0)
+            // Grey straight from the decoded picture; a PNG read back as grey where the pipeline
+            // cannot make one.
+            var (width, height) = AnalysisSize(context.Settings);
+            var grey = await context.Pipeline.CaptureGreyAsync(width, height).ConfigureAwait(false);
+            if (grey?.Length != width * height)
+            {
+                grey = null;
+            }
+
+            var frameBytes = grey is null ? await context.Pipeline.CaptureFrameAsync().ConfigureAwait(false) : null;
+            if (grey is null && (frameBytes is null || frameBytes.Length == 0))
             {
                 return;
             }
 
-            ProcessCapturedFrame(cameraId, frameBytes);
+            ProcessCapturedFrame(cameraId, frameBytes, grey);
             context.ConsecutiveFails = 0;
         }
         catch (Exception ex)
@@ -363,9 +372,15 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
         }
     }
 
+    private static (int Width, int Height) AnalysisSize(
+        MotionDetectionSettings settings)
+        => (settings.AnalysisWidth > 0 ? settings.AnalysisWidth : DefaultAnalysisWidth,
+            settings.AnalysisHeight > 0 ? settings.AnalysisHeight : DefaultAnalysisHeight);
+
     private void ProcessCapturedFrame(
         Guid cameraId,
-        byte[] frameBytes)
+        byte[]? frameBytes,
+        byte[]? grey)
     {
         if (!contexts.TryGetValue(cameraId, out var context))
         {
@@ -374,12 +389,10 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
         try
         {
-            // Get analysis resolution from settings (or use defaults)
-            var analysisWidth = context.Settings.AnalysisWidth > 0 ? context.Settings.AnalysisWidth : DefaultAnalysisWidth;
-            var analysisHeight = context.Settings.AnalysisHeight > 0 ? context.Settings.AnalysisHeight : DefaultAnalysisHeight;
+            var (analysisWidth, analysisHeight) = AnalysisSize(context.Settings);
 
-            // Grey and downscaled by the same reader the server uses.
-            var currentFrame = frameReader.ReadGrayscale(frameBytes, analysisWidth, analysisHeight);
+            // Grey from the pipeline, or a PNG made grey and downscaled by the same reader the server uses.
+            var currentFrame = grey ?? (frameBytes is null ? null : frameReader.ReadGrayscale(frameBytes, analysisWidth, analysisHeight));
             if (currentFrame is null)
             {
                 return;

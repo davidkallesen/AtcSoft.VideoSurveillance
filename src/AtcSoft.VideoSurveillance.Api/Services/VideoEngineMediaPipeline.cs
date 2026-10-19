@@ -127,6 +127,13 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
         => player.CaptureFrameAsync(ct);
 
     /// <inheritdoc />
+    public async Task<byte[]?> CaptureGreyAsync(
+        int width,
+        int height,
+        CancellationToken ct = default)
+        => (await player.CaptureGreyAsync(width, height, ct).ConfigureAwait(false))?.Pixels;
+
+    /// <inheritdoc />
     public void SetRotation(CameraRotation rotation)
         => player.SetRotation(MapRotation(rotation));
 

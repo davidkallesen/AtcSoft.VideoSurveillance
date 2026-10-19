@@ -10,15 +10,12 @@ namespace AtcSoft.VideoEngine.Capture;
 public sealed unsafe class GreyFrameFileReader : IDisposable
 {
     private readonly VideoDecoder decoder = new();
+    private readonly GreyScaler scaler = new();
     private AVFormatContext* formatContext;
     private AVPacket* packet;
-    private SwsContext* scaler;
     private int streamIndex = -1;
     private AVRational timeBase;
     private long startPts;
-    private int scalerWidth;
-    private int scalerHeight;
-    private AVPixelFormat scalerFormat = AVPixelFormat.None;
     private bool draining;
     private bool finished;
     private bool disposed;
@@ -133,9 +130,9 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
             {
                 var frame = decoder.CurrentFrame;
                 var position = PositionOf(frame->pts);
-                if (position >= notBefore)
+                if (position >= notBefore && scaler.ToGrey(frame, Width, Height, Rotation) is { } pixels)
                 {
-                    return new GreyFrame(position, Width, Height, ToGrey(frame));
+                    return new GreyFrame(position, Width, Height, pixels);
                 }
 
                 continue;
@@ -182,11 +179,7 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         disposed = true;
         decoder.Dispose();
 
-        if (scaler is not null)
-        {
-            sws_freeContext(scaler);
-            scaler = null;
-        }
+        scaler.Dispose();
 
         if (packet is not null)
         {
@@ -263,55 +256,5 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
 
         var seconds = (pts - startPts) * (double)timeBase.Num / timeBase.Den;
         return seconds > 0 ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero;
-    }
-
-    // Scales straight to grey at the size the picture has before it is turned, then turns it.
-    private byte[] ToGrey(AVFrame* frame)
-    {
-        var (scaledWidth, scaledHeight) = PixelRotator.GetRotatedSize(Width, Height, Rotation);
-        var format = (AVPixelFormat)frame->format;
-        if (scaler is null || scalerWidth != frame->width || scalerHeight != frame->height || scalerFormat != format)
-        {
-            if (scaler is not null)
-            {
-                sws_freeContext(scaler);
-            }
-
-            scaler = sws_getContext(frame->width, frame->height, format, scaledWidth, scaledHeight, AVPixelFormat.Gray8, SwsFlags.Area, null, null, null);
-            if (scaler is null)
-            {
-                throw new InvalidOperationException("Failed to create SwsContext.");
-            }
-
-            scalerWidth = frame->width;
-            scalerHeight = frame->height;
-            scalerFormat = format;
-        }
-
-        var scaled = new byte[scaledWidth * scaledHeight];
-        fixed (byte* target = scaled)
-        {
-            byte** sourceData = stackalloc byte*[] { (byte*)frame->data[0], (byte*)frame->data[1], (byte*)frame->data[2], (byte*)frame->data[3] };
-            int* sourceStride = stackalloc int[] { frame->linesize[0], frame->linesize[1], frame->linesize[2], frame->linesize[3] };
-            byte** targetData = stackalloc byte*[] { target, null, null, null };
-            int* targetStride = stackalloc int[] { scaledWidth, 0, 0, 0 };
-            sws_scale(scaler, sourceData, sourceStride, 0, frame->height, targetData, targetStride);
-        }
-
-        if (Rotation == VideoRotation.None)
-        {
-            return scaled;
-        }
-
-        var turned = new byte[Width * Height];
-        fixed (byte* source = scaled)
-        {
-            fixed (byte* target = turned)
-            {
-                PixelRotator.Rotate(source, scaledWidth, scaledWidth, scaledHeight, bytesPerPixel: 1, Rotation, target, Width);
-            }
-        }
-
-        return turned;
     }
 }

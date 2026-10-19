@@ -102,6 +102,21 @@ public interface IMediaPipeline : IDisposable
     Task<byte[]?> CaptureFrameAsync(CancellationToken ct = default);
 
     /// <summary>
+    /// Captures the latest picture as a grey picture for motion detection: one byte per pixel, row
+    /// by row, at the size asked for, turned the way the picture is displayed. Much cheaper than a
+    /// PNG from <see cref="CaptureFrameAsync"/> read back as grey.
+    /// </summary>
+    /// <param name="width">The width, as displayed.</param>
+    /// <param name="height">The height, as displayed.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The pixels, or <see langword="null"/> when there is no picture or the pipeline cannot make one (then use the PNG).</returns>
+    Task<byte[]?> CaptureGreyAsync(
+        int width,
+        int height,
+        CancellationToken ct = default)
+        => Task.FromResult<byte[]?>(null);
+
+    /// <summary>
     /// Sets the clockwise rotation applied to live display, snapshots, and
     /// (via container metadata) any active or future recording.
     /// </summary>

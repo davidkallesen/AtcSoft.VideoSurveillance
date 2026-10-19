@@ -192,10 +192,17 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         var (width, height) = GetAnalysisSize(context.Settings);
         try
         {
-            var picture = await context.Pipeline.CaptureFrameAsync(cancellationToken).ConfigureAwait(false);
-            current = picture is { Length: > 0 }
-                ? frameReader.ReadGrayscale(picture, width, height)
-                : null;
+            // Grey straight from the decoded picture; a PNG read back as grey where the pipeline
+            // cannot make one.
+            current = await context.Pipeline.CaptureGreyAsync(width, height, cancellationToken).ConfigureAwait(false);
+            if (current?.Length != width * height)
+            {
+                var picture = await context.Pipeline.CaptureFrameAsync(cancellationToken).ConfigureAwait(false);
+                current = picture is { Length: > 0 }
+                    ? frameReader.ReadGrayscale(picture, width, height)
+                    : null;
+            }
+
             context.ConsecutiveFailures = 0;
         }
         catch (OperationCanceledException)

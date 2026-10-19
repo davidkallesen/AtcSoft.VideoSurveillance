@@ -53,6 +53,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     // A picture decoded on the graphics card, copied back to memory for the encoder.
     private AVFrame* memoryFrame;
     private FrameCapture? frameCapture;
+    private GreyScaler? greyScaler;
 
     private AVFrame* latestFrame;
     private Thread? demuxThread;
@@ -611,6 +612,66 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
             ct);
     }
 
+    public Task<GreyFrame?> CaptureGreyAsync(
+        int width,
+        int height,
+        CancellationToken ct = default)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        if (state != PlayerState.Playing)
+        {
+            return Task.FromResult<GreyFrame?>(null);
+        }
+
+        var timeBase = demuxer?.VideoTimeBase ?? default;
+        return Task.Run(
+            () =>
+            {
+                AVFrame* clone;
+                lock (frameLock)
+                {
+                    if (latestFrame is null || latestFrame->width <= 0)
+                    {
+                        return null;
+                    }
+
+                    clone = av_frame_clone(latestFrame);
+                }
+
+                if (clone is null)
+                {
+                    return null;
+                }
+
+                try
+                {
+                    // The same lock as the PNG capture: one capture at a time, never after Dispose.
+                    lock (captureLock)
+                    {
+                        if (disposed)
+                        {
+                            return null;
+                        }
+
+                        greyScaler ??= new GreyScaler();
+                        var pixels = greyScaler.ToGrey(clone, width, height, rotation);
+                        var position = clone->pts != AV_NOPTS_VALUE && timeBase.Den != 0
+                            ? TimeSpan.FromSeconds(Math.Max(clone->pts * (double)timeBase.Num / timeBase.Den, 0))
+                            : TimeSpan.Zero;
+                        return pixels is null ? null : new GreyFrame(position, width, height, pixels);
+                    }
+                }
+                finally
+                {
+                    av_frame_free(ref clone);
+                }
+            },
+            ct);
+    }
+
     public void Dispose()
     {
         if (disposed)
@@ -629,6 +690,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
         {
             frameCapture?.Dispose();
             frameCapture = null;
+            greyScaler?.Dispose();
+            greyScaler = null;
         }
     }
 

@@ -119,6 +119,21 @@ public interface IVideoPlayer : IDisposable
     Task<byte[]?> CaptureFrameAsync(CancellationToken ct = default);
 
     /// <summary>
+    /// Captures the latest picture as a grey picture for analysis: scaled straight to grey at the
+    /// size asked for and turned the way the picture is displayed, with no PNG between. Much cheaper
+    /// than <see cref="CaptureFrameAsync"/> for motion detection.
+    /// </summary>
+    /// <param name="width">The width of the grey picture, as displayed.</param>
+    /// <param name="height">The height of the grey picture, as displayed.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The picture, or <see langword="null"/> when there is none or this player cannot make one.</returns>
+    Task<Capture.GreyFrame?> CaptureGreyAsync(
+        int width,
+        int height,
+        CancellationToken ct = default)
+        => Task.FromResult<Capture.GreyFrame?>(null);
+
+    /// <summary>
     /// Sets the clockwise rotation applied to the live video, snapshots, and
     /// (via container metadata) any active or future recording.
     /// Safe to call before <see cref="Open"/> or while playing; the next
