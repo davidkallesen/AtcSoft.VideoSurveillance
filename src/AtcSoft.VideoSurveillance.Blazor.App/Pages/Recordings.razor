@@ -65,6 +65,7 @@
         <MudTh><MudTableSortLabel SortBy="@(new Func<Recording, object?>(r => r.CameraName))">@Translations.Camera</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="@(new Func<Recording, object?>(r => r.StartedAt))">@Translations.Started</MudTableSortLabel></MudTh>
         <MudTh>@Translations.Length</MudTh>
+        <MudTh>@Translations.ActivityTimeline</MudTh>
         <MudTh><MudTableSortLabel SortBy="@(new Func<Recording, object?>(r => r.FileSizeBytes))">@Translations.RecordingSize</MudTableSortLabel></MudTh>
         <MudTh>@Translations.File</MudTh>
         <MudTh Style="width: 150px;"></MudTh>
@@ -94,6 +95,21 @@
         </MudTd>
         <MudTd DataLabel="@Translations.Started">@context.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</MudTd>
         <MudTd DataLabel="@Translations.Length">@RecordingDisplay.FormatDuration(context.Duration)</MudTd>
+        <MudTd DataLabel="@Translations.ActivityTimeline">
+            @if (context.Activity is { } levels)
+            {
+                <svg role="img"
+                     aria-label="@Translations.ActivityTimeline"
+                     viewBox="0 0 @levels.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
+                     preserveAspectRatio="none"
+                     style="width: 72px; height: 18px; display: block;">
+                    @foreach (var bar in ActivitySparklineShapes.Bars(levels))
+                    {
+                        <rect x="@SvgNumber.Format(bar.Rect.X)" y="@SvgNumber.Format(bar.Rect.Y)" width="@SvgNumber.Format(bar.Rect.Width)" height="@SvgNumber.Format(bar.Rect.Height)" fill="@bar.Fill" />
+                    }
+                </svg>
+            }
+        </MudTd>
         <MudTd DataLabel="@Translations.RecordingSize">@RecordingDisplay.FormatSize(context.FileSizeBytes)</MudTd>
         <MudTd DataLabel="@Translations.File">
             <MudText Typo="Typo.body2" Style="max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@context.FilePath">

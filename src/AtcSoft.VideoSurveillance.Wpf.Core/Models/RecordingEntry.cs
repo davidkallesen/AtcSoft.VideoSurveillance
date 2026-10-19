@@ -39,6 +39,12 @@ public class RecordingEntry : INotifyPropertyChanged
     public TimeSpan Duration { get; set; }
 
     /// <summary>
+    /// Gets the recording's activity for the sparkline in the list, or <see langword="null"/> for a
+    /// recording without an activity index.
+    /// </summary>
+    public IReadOnlyList<int>? Activity { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether the file is still being recorded,
     /// as far as the list knows. Such a file has no finished index: it has
     /// no length to show and plays as a black picture.
@@ -95,6 +101,24 @@ public class RecordingEntry : INotifyPropertyChanged
             RecordingTime = recordingTime,
             FileSizeBytes = fileSizeBytes,
             Duration = duration,
+        };
+
+    /// <summary>
+    /// Gets the entry with the recording's activity for the sparkline.
+    /// </summary>
+    /// <param name="activity">The sparkline, or <see langword="null"/> without an index.</param>
+    /// <returns>A copy of the entry with it.</returns>
+    public RecordingEntry WithActivity(IReadOnlyList<int>? activity)
+        => new()
+        {
+            FilePath = FilePath,
+            CameraName = CameraName,
+            RecordingRoot = RecordingRoot,
+            RecordingTime = RecordingTime,
+            FileSizeBytes = FileSizeBytes,
+            Duration = Duration,
+            IsBeingRecorded = IsBeingRecorded,
+            Activity = activity,
         };
 
     /// <summary>

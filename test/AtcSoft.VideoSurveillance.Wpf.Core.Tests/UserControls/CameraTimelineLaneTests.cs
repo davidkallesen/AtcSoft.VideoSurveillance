@@ -56,6 +56,24 @@ public sealed class CameraTimelineLaneTests
         pixels.Should().Contain(b => b != 0, "the labels are drawn");
     }
 
+    [Fact]
+    public void A_Sparkline_Draws_A_Bar_Per_Stretch_Orange_Where_Something_Moved()
+    {
+        byte[] pixels = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            // Ten stretches of 10 px: a flicker in the second, something moving in the eighth.
+            pixels = Render(new ActivitySparklineBars { Levels = [0, 5, 0, 0, 0, 0, 0, 60, 0, 0] });
+        });
+
+        error.Should().BeNull();
+        Pixel(pixels, 74, Height - 2).Should().Be((0xFF, 0xFF, 0x8C, 0x00));
+        Pixel(pixels, 14, Height - 2).A.Should().BeGreaterThan(0, "a flicker is a small grey bar");
+        Pixel(pixels, 14, Height - 2).R.Should().NotBe(0xFF);
+        Pixel(pixels, 34, Height - 2).A.Should().Be(0, "nothing moved there");
+    }
+
     private static byte[] Render(System.Windows.FrameworkElement element)
     {
         element.Measure(new System.Windows.Size(Width, Height));

@@ -49,6 +49,12 @@ public sealed class RecordingEntryViewModel
 
     public bool HasThumbnail => recording.HasThumbnail;
 
+    /// <summary>
+    /// Gets the recording's activity for the sparkline in the list, or <see langword="null"/> for a
+    /// recording without an activity index.
+    /// </summary>
+    public IReadOnlyList<int>? Activity => recording.Activity;
+
     public Uri PlaybackUrl
         => BuildFileUrl(recording.FilePath);
 

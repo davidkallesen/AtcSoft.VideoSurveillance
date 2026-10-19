@@ -111,10 +111,18 @@ public sealed class WebClientSmokeTests(ServerFixture server)
     private static async Task PlayWithTimelineAsync(IPage page)
     {
         await VisitAsync(page, "/recordings");
+
+        // The list shows the recording's activity as a sparkline.
+        await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true }).First
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play", Exact = true }).First.ClickAsync();
-        await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true })
+        await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Img, new LocatorGetByRoleOptions { Name = "Activity", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play events only", Exact = true }).ClickAsync();
+
+        // Its tooltip stays while the pointer rests on it, over the dialog's buttons.
+        await page.Mouse.MoveAsync(0, 0);
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
     }
 

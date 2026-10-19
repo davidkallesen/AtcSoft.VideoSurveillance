@@ -7,11 +7,13 @@ namespace AtcSoft.VideoSurveillance.Api.Domain.ApiHandlers.Recordings;
 /// <param name="settingsService">The application settings.</param>
 /// <param name="cameraStorageService">The cameras.</param>
 /// <param name="durationProvider">Reads how long a finished recording is. Optional: without it the length is left out.</param>
+/// <param name="summaryCache">The summaries of the activity indexes, for each recording's sparkline. Optional: without it there is none.</param>
 public sealed class ListRecordingsHandler(
     IRecordingService recordingService,
     IApplicationSettingsService settingsService,
     ICameraStorageService cameraStorageService,
-    IRecordingDurationProvider? durationProvider = null) : IListRecordingsHandler
+    IRecordingDurationProvider? durationProvider = null,
+    ActivitySummaryCache? summaryCache = null) : IListRecordingsHandler
 {
     public Task<ListRecordingsResult> ExecuteAsync(
         ListRecordingsParameters parameters,
@@ -20,9 +22,22 @@ public sealed class ListRecordingsHandler(
         ArgumentNullException.ThrowIfNull(parameters);
 
         var recordingPath = settingsService.Recording.RecordingPath;
-        var recordings = RecordingCatalog
-            .Find(recordingPath, cameraStorageService.GetAllCameras(), recordingService.GetActiveSessions(), parameters.CameraId, DateTimeOffset.UtcNow)
-            .Select(file => ToRecording(file, recordingPath))
+        var files = RecordingCatalog
+            .Find(recordingPath, cameraStorageService.GetAllCameras(), recordingService.GetActiveSessions(), parameters.CameraId, DateTimeOffset.UtcNow);
+
+        // A cold listing reads many indexes: in parallel, as the timeline does.
+        var sparklines = new IReadOnlyList<int>?[files.Count];
+        if (summaryCache is not null)
+        {
+            Parallel.For(
+                0,
+                files.Count,
+                new ParallelOptions { CancellationToken = cancellationToken },
+                i => sparklines[i] = ActivitySparkline.From(summaryCache.Get(RecordingPathHelper.BuildActivityPath(files[i].FullPath))));
+        }
+
+        var recordings = files
+            .Select((file, i) => ToRecording(file, recordingPath, sparklines[i]))
             .OrderByDescending(r => r.StartedAt)
             .ToList();
 
@@ -31,7 +46,8 @@ public sealed class ListRecordingsHandler(
 
     private Recording ToRecording(
         RecordingFile file,
-        string recordingPath)
+        string recordingPath,
+        IReadOnlyList<int>? sparkline)
     {
         var thumbnail = FindRelativeThumbnail(file.FullPath, recordingPath);
         string length;
@@ -56,7 +72,8 @@ public sealed class ListRecordingsHandler(
             FileSizeBytes: file.Length,
             HasThumbnail: thumbnail is not null,
             InProgress: file.InProgress,
-            ThumbnailPath: thumbnail);
+            ThumbnailPath: thumbnail,
+            Activity: sparkline is null ? null : [.. sparkline]);
     }
 
     private static string? FindRelativeThumbnail(

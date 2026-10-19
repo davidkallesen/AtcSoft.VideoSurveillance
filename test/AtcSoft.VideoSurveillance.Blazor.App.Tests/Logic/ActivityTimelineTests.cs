@@ -127,4 +127,16 @@ public sealed class ActivityTimelineTests
         ActivityTimelineShapes.Playhead(0.5, 400)!.X.Should().Be(199);
         ActivityTimelineShapes.Playhead(1, 400)!.X.Should().Be(398, "the line stays inside the box");
     }
+
+    [Fact]
+    public void A_Sparkline_Has_A_Bar_Per_Busy_Stretch_Coloured_As_On_The_Desktop()
+    {
+        var bars = ActivitySparklineShapes.Bars([0, 5, 0, 60]);
+
+        bars.Select(b => b.Rect.X).Should().Equal(1.1, 3.1);
+        bars[0].Fill.Should().NotBe("#FF8C00", "a flicker stays grey");
+        bars[1].Fill.Should().Be("#FF8C00");
+        bars[1].Rect.Height.Should().BeGreaterThan(bars[0].Rect.Height);
+        ActivitySparklineShapes.BusyLevel.Should().Be(AtcSoft.VideoSurveillance.Helpers.Activity.ActivitySparkline.BusyLevel);
+    }
 }

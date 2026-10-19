@@ -5,6 +5,7 @@
     xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:coreControls="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.UserControls"
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding Path=DialogTitle}"
@@ -169,6 +170,17 @@
                         Binding="{Binding Path=FormattedDuration}"
                         Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=RecordingDuration}" />
+                    <DataGridTemplateColumn Width="84" Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ActivityTimeline}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <coreControls:ActivitySparklineBars
+                                    Height="18"
+                                    Margin="4,2"
+                                    AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ActivityTimeline}"
+                                    Levels="{Binding Path=Activity}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn
                         Width="100"
                         Binding="{Binding Path=FormattedFileSize}"

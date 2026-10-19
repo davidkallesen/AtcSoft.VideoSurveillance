@@ -418,6 +418,10 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
 
     // A recording that is still being made has no length yet, and probing
     // it only makes FFmpeg report a broken file.
+    // The summaries of the activity indexes already read, kept while the app runs: the list is
+    // read again on every refresh and every change of a recording.
+    private static readonly ActivitySummaryCache ActivitySummaries = new();
+
     private static RecordingEntry CreateEntry(
         string filePath,
         string cameraName,
@@ -428,9 +432,10 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase
             ? timestamp
             : info.CreationTime;
 
-        return RecordingPathHelper.IsBeingWritten(filePath)
+        var entry = RecordingPathHelper.IsBeingWritten(filePath)
             ? RecordingEntry.Ongoing(filePath, cameraName, basePath, recordingTime, info.Length)
             : RecordingEntry.Finished(filePath, cameraName, basePath, recordingTime, info.Length, MediaProbe.GetDuration(filePath));
+        return entry.WithActivity(ActivitySparkline.From(ActivitySummaries.Get(RecordingPathHelper.BuildActivityPath(filePath))));
     }
 
     // The global folder and each camera's own folder, each once, that exist.

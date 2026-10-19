@@ -2430,6 +2430,15 @@ components:
         thumbnailPath:
           type: string
           description: Path of the thumbnail relative to the recordings root, with forward slashes; fetch it from /recordings-files/{thumbnailPath}. Null when the recording has no thumbnail.
+        activity:
+          type: array
+          description: The recording's activity for a sparkline in a list - 24 equal stretches from its start, each the most that changed in it (0 to 100), never the average. Left out for a recording without an activity index.
+          maxItems: 24
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 100
 
     Timeline:
       title: Timeline

@@ -324,6 +324,51 @@ public class ListRecordingsHandlerTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ARecordingWithAnIndexHasItsSparkline()
+    {
+        // Arrange
+        var root = Path.Combine(Path.GetTempPath(), "test-recordings-" + Guid.NewGuid());
+        try
+        {
+            var camera = new CameraConfiguration { Id = Guid.NewGuid() };
+            camera.Display.DisplayName = "Gate";
+            var indexed = Touch(Path.Combine(root, "Gate", "Gate_20261012_101500_000.mkv"));
+            Touch(Path.Combine(root, "Gate", "Gate_20261012_111500_000.mkv"));
+            var start = new DateTimeOffset(2026, 10, 12, 10, 15, 0, TimeSpan.Zero);
+            using (var index = ActivityLogWriter.Create(RecordingPathHelper.BuildActivityPath(indexed), start))
+            {
+                for (var second = 0; second < 240; second++)
+                {
+                    index.Add(start.AddSeconds(second), new MotionDetectorResult(second == 120, MotionHoldChange.None, second == 120 ? 50 : 0, []));
+                }
+            }
+
+            var handler = new ListRecordingsHandler(
+                Substitute.For<IRecordingService>(),
+                SettingsFor(root),
+                CamerasOf(camera),
+                durationProvider: null,
+                summaryCache: new ActivitySummaryCache());
+
+            // Act
+            var result = await handler.ExecuteAsync(
+                new ListRecordingsParameters(CameraId: null),
+                CancellationToken.None);
+
+            // Assert — the busy second shows in its stretch; no index, no sparkline
+            var recordings = result.Result.Should().BeOfType<Ok<List<Recording>>>().Subject.Value!;
+            var sparkline = recordings.Single(r => r.FilePath.Contains("101500", StringComparison.Ordinal)).Activity!;
+            sparkline.Should().HaveCount(ActivitySparkline.Points);
+            sparkline.Max().Should().Be(50);
+            recordings.Single(r => r.FilePath.Contains("111500", StringComparison.Ordinal)).Activity.Should().BeNull();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ExecuteAsync_TwoCamerasWithTheSameName_DoesNotFail()
     {
         // Arrange
@@ -373,6 +418,21 @@ public class ListRecordingsHandlerTests
         cameraStorageService.GetAllCameras().Returns([.. cameras]);
 
         return new ListRecordingsHandler(recordingService, settingsService, cameraStorageService, durationProvider);
+    }
+
+    private static IApplicationSettingsService SettingsFor(string recordingPath)
+    {
+        var settingsService = Substitute.For<IApplicationSettingsService>();
+        settingsService.Recording.Returns(new RecordingSettings { RecordingPath = recordingPath });
+        return settingsService;
+    }
+
+    private static ICameraStorageService CamerasOf(
+        params CameraConfiguration[] cameras)
+    {
+        var cameraStorageService = Substitute.For<ICameraStorageService>();
+        cameraStorageService.GetAllCameras().Returns([.. cameras]);
+        return cameraStorageService;
     }
 
     private static string Touch(string path)
