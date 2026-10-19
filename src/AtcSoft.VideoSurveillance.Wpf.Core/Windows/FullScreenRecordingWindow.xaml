@@ -251,6 +251,22 @@
                                 Fill="#FF8C00"
                                 Stretch="Uniform" />
                         </Button>
+                        <ToggleButton
+                            Width="36"
+                            Height="40"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=PlayEventsOnly}"
+                            IsChecked="{Binding Path=PlayEventsOnly, Mode=TwoWay}"
+                            Style="{StaticResource FullScreenToggleIconButtonStyle}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=PlayEventsOnly}">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M1,6 L4,6 L4,10 L1,10 Z M6,3 L10,3 L10,13 L6,13 Z M12,6 L15,6 L15,10 L12,10 Z"
+                                Fill="#FF8C00"
+                                Stretch="Uniform" />
+                        </ToggleButton>
                     </StackPanel>
 
                     <!--  Position Text  -->

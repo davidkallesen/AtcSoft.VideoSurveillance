@@ -19,6 +19,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private static readonly TimeSpan EventLeadIn = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan PreviousEventSlack = TimeSpan.FromSeconds(2);
 
+    // Play events only shows this much after each event.
+    private static readonly TimeSpan EventLeadOut = TimeSpan.FromSeconds(2);
+
     private readonly PlaybackOverlaySettings overlaySettings;
     private readonly Func<RecordingSegment?>? nextSegment;
     private readonly CancellationTokenSource activityCancellation = new();
@@ -418,6 +421,56 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private bool CanJumpToEvent()
         => CanSeek && activityEvents.Count > 0;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether only the events are played: the quiet stretches
+    /// between them are skipped, and after the last one the player moves on.
+    /// </summary>
+    [ObservableProperty]
+    private bool playEventsOnly;
+
+    // After the last event: the next recording, else the player stops where it is.
+    private void FinishEventsOnly()
+    {
+        if (mediaElement is not null && nextSegment?.Invoke() is { } next)
+        {
+            PlayNext(mediaElement, next);
+            return;
+        }
+
+        mediaElement?.Pause();
+        IsPlaying = false;
+    }
+
+    // On every position tick: skip to the next event, or to the end after the last one.
+    private void FollowEventsOnly()
+    {
+        // Without an index (or before it is read) the recording plays as it is.
+        if (!PlayEventsOnly || isSeeking || !IsPlaying || mediaElement is null || !HasActivity || SeekMaximum <= 0)
+        {
+            return;
+        }
+
+        // Analysed, and nothing happened: on to the next recording.
+        if (activityEvents.Count == 0)
+        {
+            FinishEventsOnly();
+            return;
+        }
+
+        if (ActivityTimelineLayout.EventsOnlyTarget(activityEvents, CurrentFraction(), Fraction(EventLeadIn), Fraction(EventLeadOut)) is not { } target)
+        {
+            return;
+        }
+
+        if (target >= 1)
+        {
+            FinishEventsOnly();
+            return;
+        }
+
+        SeekTo(target);
+    }
+
     private double CurrentFraction()
         => mediaElement is not null && SeekMaximum > 0
             ? mediaElement.Position.Ticks / SeekMaximum
@@ -548,6 +601,8 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
                     {
                         isUpdatingPositionFromPlayer = false;
                     }
+
+                    FollowEventsOnly();
                 }
             }
         };

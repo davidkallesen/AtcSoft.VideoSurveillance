@@ -113,6 +113,25 @@ window.recordingTimeline = {
         }
     },
 
+    pause: function (videoId) {
+        var video = document.getElementById(videoId);
+        if (video) {
+            video.pause();
+        }
+    },
+
+    // Tells the dialog where the player is as it plays, for the playhead and *play events only*.
+    onTime: function (videoId, dotNetRef) {
+        var video = document.getElementById(videoId);
+        if (video) {
+            video.addEventListener('timeupdate', function () {
+                // The dialog may be closed already: its reference is gone, and the call is let go.
+                dotNetRef.invokeMethodAsync('OnTimeAsync', video.currentTime, isFinite(video.duration) ? video.duration : 0)
+                    .catch(function () { });
+            });
+        }
+    },
+
     // A click on the timeline jumps to the same place in the recording.
     seekAt: function (videoId, element, clientX) {
         var video = document.getElementById(videoId);
@@ -144,7 +163,7 @@ window.timelineInterop = {
     onEnded: function (videoId, dotNetRef) {
         var video = document.getElementById(videoId);
         if (video) {
-            video.addEventListener('ended', function () { dotNetRef.invokeMethodAsync('OnEndedAsync'); });
+            video.addEventListener('ended', function () { dotNetRef.invokeMethodAsync('OnEndedAsync').catch(function () { }); });
         }
     },
 

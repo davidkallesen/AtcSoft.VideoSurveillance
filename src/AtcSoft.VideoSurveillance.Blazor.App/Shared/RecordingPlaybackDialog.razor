@@ -65,6 +65,10 @@
                     {
                         <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="#FF8C00" />
                     }
+                    @if (ActivityTimelineShapes.Playhead(playhead, buckets.Count) is { } line)
+                    {
+                        <rect x="@SvgNumber.Format(line.X)" y="@SvgNumber.Format(line.Y)" width="@SvgNumber.Format(line.Width)" height="@SvgNumber.Format(line.Height)" fill="#1E88E5" />
+                    }
                 </svg>
                 <MudTooltip Text="@Translations.NextEvent">
                     <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
@@ -72,6 +76,14 @@
                                    Size="Size.Small"
                                    Disabled="@(events.Count == 0)"
                                    OnClick="NextEventAsync" />
+                </MudTooltip>
+                <MudTooltip Text="@Translations.PlayEventsOnly">
+                    <MudToggleIconButton @bind-Toggled="playEventsOnly"
+                                         Icon="@Icons.Material.Filled.FilterAlt"
+                                         ToggledIcon="@Icons.Material.Filled.FilterAlt"
+                                         ToggledColor="Color.Warning"
+                                         aria-label="@Translations.PlayEventsOnly"
+                                         Size="Size.Small" />
                 </MudTooltip>
             </div>
         }
@@ -102,6 +114,10 @@
         => buckets is { Count: > 0 };
     private DotNetObjectReference<RecordingPlaybackDialog>? self;
     private int nextSegment;
+
+    // Where the player is, 0 to 1, for the playhead; below 0 before it plays.
+    private double playhead = -1;
+    private bool playEventsOnly;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -163,9 +179,10 @@
             await JS.InvokeVoidAsync("timelineInterop.startAt", videoId, StartSeconds);
         }
 
+        self = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("recordingTimeline.onTime", videoId, self);
         if (FollowingSegments.Count > 0)
         {
-            self = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("timelineInterop.onEnded", videoId, self);
         }
     }
@@ -242,6 +259,43 @@
         {
             await JS.InvokeVoidAsync("recordingTimeline.seekTo", videoId, seconds);
         }
+    }
+
+    /// <summary>
+    /// The player moved on: the playhead follows, and *play events only* skips what is quiet.
+    /// </summary>
+    /// <param name="currentSeconds">Where the player is.</param>
+    /// <param name="durationSeconds">How long the recording is; 0 while not known.</param>
+    [JSInvokable]
+    public async Task OnTimeAsync(double currentSeconds, double durationSeconds)
+    {
+        playhead = durationSeconds > 0 ? currentSeconds / durationSeconds : -1;
+        if (playEventsOnly && HasActivity && durationSeconds > 0)
+        {
+            var target = events.Count == 0 ? durationSeconds : ActivityEventJumps.EventsOnly(events, currentSeconds, durationSeconds);
+            if (target >= durationSeconds)
+            {
+                await FinishEventsOnlyAsync();
+            }
+            else if (target is { } seconds)
+            {
+                await JS.InvokeVoidAsync("recordingTimeline.seekTo", videoId, seconds);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    // After the last event: the next recording, else the player stops where it is.
+    private async Task FinishEventsOnlyAsync()
+    {
+        if (nextSegment < FollowingSegments.Count)
+        {
+            await OnEndedAsync();
+            return;
+        }
+
+        await JS.InvokeVoidAsync("recordingTimeline.pause", videoId);
     }
 
     private void OnVideoError()

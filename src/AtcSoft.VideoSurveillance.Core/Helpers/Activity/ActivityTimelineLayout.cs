@@ -132,4 +132,46 @@ public static class ActivityTimelineLayout
 
         return previous;
     }
+
+    /// <summary>
+    /// Gets where a player that plays the events only should be: inside an event, with a lead-in
+    /// before and a lead-out after it, it plays on; before an event it jumps to that event's
+    /// lead-in; after the last one it goes to the end.
+    /// </summary>
+    /// <param name="events">The events, from the start.</param>
+    /// <param name="position">Where the player is, 0 to 1.</param>
+    /// <param name="leadIn">How much before an event is shown, 0 to 1.</param>
+    /// <param name="leadOut">How much after an event is shown, 0 to 1.</param>
+    /// <returns>
+    /// Where to go, 0 to 1 (1 is the end), or <see langword="null"/> to play on: inside an event,
+    /// or for a recording without events, which plays as it is.
+    /// </returns>
+    public static double? EventsOnlyTarget(
+        IReadOnlyList<ActivityEvent> events,
+        double position,
+        double leadIn,
+        double leadOut)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+
+        if (events.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var activityEvent in events)
+        {
+            if (position >= activityEvent.Start - leadIn && position <= activityEvent.End + leadOut)
+            {
+                return null;
+            }
+
+            if (activityEvent.Start - leadIn > position)
+            {
+                return Math.Max(activityEvent.Start - leadIn, 0);
+            }
+        }
+
+        return 1;
+    }
 }

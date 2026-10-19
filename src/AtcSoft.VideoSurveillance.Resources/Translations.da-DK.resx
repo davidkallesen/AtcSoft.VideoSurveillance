@@ -2736,4 +2736,7 @@ Miniature:
   <data name="EnableActivityIndex" xml:space="preserve">
     <value>Gem en aktivitetstidslinje for hver optagelse</value>
   </data>
+  <data name="PlayEventsOnly" xml:space="preserve">
+    <value>Afspil kun hændelser</value>
+  </data>
 </root>

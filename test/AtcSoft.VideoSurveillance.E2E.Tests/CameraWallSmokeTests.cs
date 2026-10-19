@@ -93,6 +93,7 @@ public sealed class CameraWallSmokeTests
         app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
         DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));
+        DesktopApp.Press(app.Find(player, "Play events only"));
 
         app.CloseWindow(player);
         app.CloseWindow(browser);

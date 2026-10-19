@@ -69,4 +69,25 @@ public static class ActivityTimelineShapes
             .Select(e => ActivityTimelineLayout.ToPixels(e, buckets.Count))
             .Select(b => new TimelineRect(b.X, BoxHeight - BandHeight, b.Width, BandHeight))];
     }
+
+    /// <summary>
+    /// Gets the playhead: a line the full height of the box where the player is, at least one
+    /// stretch wide and kept inside the box.
+    /// </summary>
+    /// <param name="position">Where the player is, 0 to 1; below 0 before it plays.</param>
+    /// <param name="stretches">How many stretches the box is wide.</param>
+    /// <returns>The line, or <see langword="null"/> while there is no position.</returns>
+    public static TimelineRect? Playhead(
+        double position,
+        int stretches)
+    {
+        if (position < 0 || stretches <= 0)
+        {
+            return null;
+        }
+
+        var width = Math.Max(stretches / 200.0, 1);
+        var x = Math.Clamp((Math.Min(position, 1) * stretches) - (width / 2), 0, stretches - width);
+        return new TimelineRect(x, 0, width, BoxHeight);
+    }
 }

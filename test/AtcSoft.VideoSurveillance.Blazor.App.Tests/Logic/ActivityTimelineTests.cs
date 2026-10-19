@@ -37,6 +37,7 @@ public sealed class ActivityTimelineTests
             {
                 ActivityTimelineLayout.NextEventStart(web, position).Should().Be(CoreLayout.NextEventStart(core, position));
                 ActivityTimelineLayout.PreviousEventStart(web, position, 0.01).Should().Be(CoreLayout.PreviousEventStart(core, position, 0.01));
+                ActivityTimelineLayout.EventsOnlyTarget(web, position, 0.01, 0.02).Should().Be(CoreLayout.EventsOnlyTarget(core, position, 0.01, 0.02));
             }
         }
 
@@ -110,4 +111,20 @@ public sealed class ActivityTimelineTests
         double level,
         int tracks)
         => new(Level: level, Tracks: tracks, IsAnalysed: true);
+
+    [Fact]
+    public void Play_Events_Only_Skips_The_Quiet_Stretches_In_Seconds_And_The_Playhead_Stays_In_The_Box()
+    {
+        // A 100 s recording with something moving from 20 to 30 s.
+        ActivityTimelineEvent[] events = [new(0.2, 0.3)];
+
+        ActivityEventJumps.EventsOnly(events, 5, 100).Should().BeApproximately(19, 1e-9, "a second before the event");
+        ActivityEventJumps.EventsOnly(events, 31, 100).Should().BeNull("two seconds after it are shown");
+        ActivityEventJumps.EventsOnly(events, 33, 100).Should().Be(100, "after the last event: the end");
+        ActivityEventJumps.EventsOnly(events, 33, 0).Should().BeNull("the length is not known yet");
+
+        ActivityTimelineShapes.Playhead(-1, 400).Should().BeNull();
+        ActivityTimelineShapes.Playhead(0.5, 400)!.X.Should().Be(199);
+        ActivityTimelineShapes.Playhead(1, 400)!.X.Should().Be(398, "the line stays inside the box");
+    }
 }

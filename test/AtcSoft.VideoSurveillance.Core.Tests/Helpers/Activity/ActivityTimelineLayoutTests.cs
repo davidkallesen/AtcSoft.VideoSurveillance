@@ -71,4 +71,17 @@ public sealed class ActivityTimelineLayoutTests
 
     private static List<ActivityBucket> Buckets(params int[] tracks)
         => [.. tracks.Select(t => new ActivityBucket(t * 5, t, IsAnalysed: true))];
+
+    [Fact]
+    public void Play_Events_Only_Plays_On_In_An_Event_Jumps_To_The_Next_And_Ends_After_The_Last()
+    {
+        ActivityEvent[] events = [new(0.2, 0.3), new(0.6, 0.7)];
+
+        ActivityTimelineLayout.EventsOnlyTarget(events, 0, 0.01, 0.02).Should().BeApproximately(0.19, 1e-9, "before the first event: to its lead-in");
+        ActivityTimelineLayout.EventsOnlyTarget(events, 0.25, 0.01, 0.02).Should().BeNull("inside an event it plays on");
+        ActivityTimelineLayout.EventsOnlyTarget(events, 0.315, 0.01, 0.02).Should().BeNull("the lead-out is shown too");
+        ActivityTimelineLayout.EventsOnlyTarget(events, 0.4, 0.01, 0.02).Should().BeApproximately(0.59, 1e-9);
+        ActivityTimelineLayout.EventsOnlyTarget(events, 0.8, 0.01, 0.02).Should().Be(1, "after the last event: the end");
+        ActivityTimelineLayout.EventsOnlyTarget([], 0.5, 0.01, 0.02).Should().BeNull("without events the recording plays as it is");
+    }
 }

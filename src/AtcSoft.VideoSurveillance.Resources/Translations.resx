@@ -2736,4 +2736,7 @@ Thumbnail:
   <data name="EnableActivityIndex" xml:space="preserve">
     <value>Keep an activity timeline of every recording</value>
   </data>
+  <data name="PlayEventsOnly" xml:space="preserve">
+    <value>Play events only</value>
+  </data>
 </root>

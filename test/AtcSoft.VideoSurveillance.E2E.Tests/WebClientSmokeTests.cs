@@ -114,6 +114,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play", Exact = true }).First.ClickAsync();
         await page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Activity", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play events only", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
     }
 
