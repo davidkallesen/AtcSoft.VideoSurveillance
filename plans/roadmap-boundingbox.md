@@ -389,7 +389,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 
 ### Phase 4 — Detector v2 ⬜ (L)
 
-- `MotionDetector` (stateful, in Core, pure C# with `Vector128` / `Vector<T>`): steps 2–9 of the pipeline above.
+- `IMotionDetector` (the seam) and `BuiltInMotionDetector` (stateful, in Core, pure C# with `Vector128` / `Vector<T>`): steps 2–9 of the pipeline above. An OpenCV detector can later plug into the same seam from a package of its own.
 - Both services and the sample app use it; `MotionFrameAnalyzer` remains only until the services have moved.
 - New settings in plain words: *smallest object* (% of the picture), *learning speed*, *ignore lighting changes*. End to end: Core, `MotionDetectionPolicy.Resolve`, the overrides, both settings dialogs, the API contract, `SettingsRoundTripTests`, four languages, the web copy in `Logic/` with its equality test.
 - `MinArea` (px²) is replaced by the relative minimum; an old value is read and converted.
@@ -525,7 +525,18 @@ At an analysis size of 640×360 a picture is 230 400 grey pixels, and each step 
 | Detection costs more than a few milliseconds per picture per camera at 2–4 pictures a second, at the analysis size | The sample app's CPU panel; a benchmark test |
 | A later phase needs optical flow, CLAHE or a several-mode background model | Phases 6 and 10 |
 
-**Recommendation: pure C#**, with OpenCvSharp allowed in the sample app and the tests as an oracle. This keeps decision 1 below, now with the comparison above.
+### Decided (2026-10-19)
+
+**Our own implementation in pure C#, for as long as it does as well.** OpenCV stays an option we control, not a dependency:
+
+| Part | How |
+|---|---|
+| The seam | `IMotionDetector` in Core: a picture (grey, with its time) in, boxes and track ids out. Both services, the sample app and the scorer use only the interface |
+| The default | `BuiltInMotionDetector` in Core, pure C# |
+| OpenCV, if ever needed | A separate, optional package (for example `AtcSoft.VideoSurveillance.Detection.OpenCv`) with an `OpenCvMotionDetector`, chosen per camera or per app by a setting (`MotionDetectorEngine`: `builtIn` or `openCv`). Core and the default installers stay free of native code; only a host that picks it carries the runtime. Since OpenCV 4 has no C API, "natively" in practice means through OpenCvSharp's thin native layer, or a small native shim of our own if we ever need to own that too |
+| Deciding by numbers | The sample app and the storybook tests can run both detectors on the same scenes. The tripwires above say when OpenCV earns its place |
+
+Nothing of the OpenCV option is built now: only the seam is, in phase 4.
 
 ---
 
@@ -533,7 +544,7 @@ At an analysis size of 640×360 a picture is 230 400 grey pixels, and each step 
 
 | # | Question | Recommendation |
 |---|----------|----------------|
-| 1 | **Pure C# or OpenCvSharp for the detector?** | **Pure C#**, with OpenCvSharp only as a reference in the sample app and the tests. See [Pure C# or OpenCvSharp?](#️-pure-c-or-opencvsharp) for both sides and the tripwires that reopen it |
+| 1 | **Pure C# or OpenCvSharp for the detector?** | ✅ **Decided 2026-10-19: our own pure C# detector** behind `IMotionDetector`, as long as it does as well; an optional OpenCV detector in a separate package stays possible, chosen by a setting. See [Pure C# or OpenCvSharp?](#️-pure-c-or-opencvsharp) |
 | 2 | **Storybook in JSON or YAML?** | **JSON**, read with System.Text.Json: no new dependency, and a JSON schema gives editor help |
 | 3 | **Draw frames in C# or with FFmpeg filters?** | **C#**: the truth comes from the same drawing. FFmpeg only encodes |
 | 4 | **Where do storybook, generator and scorer live?** | A new non-packable `AtcSoft.VideoSurveillance.Storybook` project, used by the sample and the tests. **Not in Core** (published) |
