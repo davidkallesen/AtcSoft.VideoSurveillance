@@ -65,6 +65,7 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 
 | Item | Where it stands | Test |
 |---|---|---|
+| A pre-record buffer for motion recordings (keep the last few seconds of packets, write them first) | A motion recording starts at the first keyframe after motion begins; since 2026-10-19 motion begins 0.2–1 s later (a track must confirm), so the start of an event is not in the file | Engine test with the live test stream |
 | TLS verification as a per-camera setting | Off for every camera (`StreamOptions.VerifyTlsCertificate`); no setting in the dialogs or the API; must pass `SettingsRoundTripTests` | Unit and E2E dialog walk |
 | Record into each folder layout end to end without a camera | The host tests record with the FFmpeg test stream, but not into each layout | Host |
 | The audit log keeps the value before a change | `AuditRecord` has none | Unit |
