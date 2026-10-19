@@ -34,7 +34,7 @@
                    @onerror="OnVideoError"></video>
         }
 
-        @if (buckets is { Count: > 0 } stretches)
+        @if (HasActivity)
         {
             @* What moved when: bars for how much changed, orange where something went somewhere. *@
             <div class="d-flex align-center mt-1">
@@ -48,7 +48,7 @@
                 <svg @ref="timeline"
                      role="img"
                      aria-label="@Translations.ActivityTimeline"
-                     viewBox="0 0 @stretches.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
+                     viewBox="0 0 @buckets!.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
                      preserveAspectRatio="none"
                      style="flex: 1; height: 32px; cursor: pointer;"
                      @onclick="SeekAtAsync">
@@ -96,6 +96,10 @@
     private IReadOnlyList<TimelineRect> bars = [];
     private IReadOnlyList<TimelineRect> notAnalysed = [];
     private IReadOnlyList<TimelineRect> bands = [];
+
+    // Written as a property: a pattern with ">" in the markup reads as text to the literal-text check.
+    private bool HasActivity
+        => buckets is { Count: > 0 };
     private DotNetObjectReference<RecordingPlaybackDialog>? self;
     private int nextSegment;
 

@@ -23,6 +23,9 @@ public sealed partial class TimelineViewModel : ViewModelBase
     private DateTimeOffset from;
     private DateTimeOffset to;
     private DateTimeOffset lastLoad;
+
+    // A span zoomed or moved by the viewer stays as it is; the last 24 hours and a day reset it.
+    private bool zoomed;
     private int reloadPending;
 
     // Where previous and next count from: the last place played, else an end of the span.
@@ -102,7 +105,11 @@ public sealed partial class TimelineViewModel : ViewModelBase
     {
         var now = DateTimeOffset.UtcNow;
         lastLoad = now;
-        (from, to) = SpanOf(SelectedDay, now, TimeZoneInfo.Local);
+        if (!zoomed)
+        {
+            (from, to) = SpanOf(SelectedDay, now, TimeZoneInfo.Local);
+        }
+
         IsLoading = true;
         StatusMessage = string.Empty;
         try
@@ -122,8 +129,42 @@ public sealed partial class TimelineViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void ZoomIn()
+        => Zoom(zoomIn: true);
+
+    [RelayCommand]
+    private void ZoomOut()
+        => Zoom(zoomIn: false);
+
+    [RelayCommand]
+    private void Earlier()
+        => Move(later: false);
+
+    [RelayCommand]
+    private void Later()
+        => Move(later: true);
+
+    // Around the place last played, or the middle; the span stays put until the next zoom or move.
+    private void Zoom(bool zoomIn)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var focus = cursor ?? from + ((to - from) / 2);
+        (from, to) = zoomIn ? TimelineZoom.In(from, to, focus, now) : TimelineZoom.Out(from, to, focus, now);
+        zoomed = true;
+        LoadCommand.Execute(parameter: null);
+    }
+
+    private void Move(bool later)
+    {
+        (from, to) = TimelineZoom.Move(from, to, later, DateTimeOffset.UtcNow);
+        zoomed = true;
+        LoadCommand.Execute(parameter: null);
+    }
+
+    [RelayCommand]
     private void ShowLast24Hours()
     {
+        zoomed = false;
         if (SelectedDay is null)
         {
             LoadCommand.Execute(parameter: null);
@@ -145,7 +186,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
     // after the last load, while the view shows a span up to now.
     private void ReloadLive()
     {
-        if (!IsShown || SelectedDay is not null || Interlocked.Exchange(ref reloadPending, 1) == 1)
+        if (!IsShown || SelectedDay is not null || zoomed || Interlocked.Exchange(ref reloadPending, 1) == 1)
         {
             return;
         }
@@ -174,6 +215,7 @@ public sealed partial class TimelineViewModel : ViewModelBase
 
     private void OnSelectedDayChanged()
     {
+        zoomed = false;
         cursor = null;
         LoadCommand.Execute(parameter: null);
     }

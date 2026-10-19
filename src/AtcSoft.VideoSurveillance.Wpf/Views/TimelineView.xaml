@@ -55,6 +55,26 @@
                     Command="{Binding Path=NextEventCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=NextEvent}" />
                 <Button
+                    Margin="0,0,8,0"
+                    Padding="12,6"
+                    Command="{Binding Path=EarlierCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Earlier}" />
+                <Button
+                    Margin="0,0,8,0"
+                    Padding="12,6"
+                    Command="{Binding Path=ZoomOutCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ZoomOut}" />
+                <Button
+                    Margin="0,0,8,0"
+                    Padding="12,6"
+                    Command="{Binding Path=ZoomInCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ZoomIn}" />
+                <Button
+                    Margin="0,0,16,0"
+                    Padding="12,6"
+                    Command="{Binding Path=LaterCommand}"
+                    Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Later}" />
+                <Button
                     Padding="16,6"
                     Command="{Binding Path=LoadCommand}"
                     Content="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Refresh}" />

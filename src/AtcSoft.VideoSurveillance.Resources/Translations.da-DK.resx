@@ -2688,4 +2688,16 @@ Miniature:
   <data name="NoEventWithinAWeek" xml:space="preserve">
     <value>Ingen hændelse inden for en uge derfra.</value>
   </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>Zoom ind</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>Zoom ud</value>
+  </data>
+  <data name="Earlier" xml:space="preserve">
+    <value>Tidligere</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Senere</value>
+  </data>
 </root>

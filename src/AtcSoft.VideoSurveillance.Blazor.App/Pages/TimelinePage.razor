@@ -31,6 +31,26 @@
                        aria-label="@Translations.NextEvent"
                        OnClick="@(() => JumpAsync(forward: true))" />
     </MudTooltip>
+    <MudTooltip Text="@Translations.Earlier">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                       aria-label="@Translations.Earlier"
+                       OnClick="@(() => MoveAsync(later: false))" />
+    </MudTooltip>
+    <MudTooltip Text="@Translations.ZoomOut">
+        <MudIconButton Icon="@Icons.Material.Filled.ZoomOut"
+                       aria-label="@Translations.ZoomOut"
+                       OnClick="@(() => ZoomAsync(zoomIn: false))" />
+    </MudTooltip>
+    <MudTooltip Text="@Translations.ZoomIn">
+        <MudIconButton Icon="@Icons.Material.Filled.ZoomIn"
+                       aria-label="@Translations.ZoomIn"
+                       OnClick="@(() => ZoomAsync(zoomIn: true))" />
+    </MudTooltip>
+    <MudTooltip Text="@Translations.Later">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       aria-label="@Translations.Later"
+                       OnClick="@(() => MoveAsync(later: true))" />
+    </MudTooltip>
     <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">@Translations.Refresh</MudButton>
 </MudStack>
 
@@ -92,6 +112,9 @@ else if (timeline is { } shown)
 
     private TimelineSpan span = TimelineSpan.Last24Hours(DateTimeOffset.UtcNow);
     private DateOnly? day;
+
+    // A span zoomed or moved by the viewer stays as it is; the last 24 hours and a day reset it.
+    private bool zoomed;
     private Timeline? timeline;
     private bool loading = true;
 
@@ -117,7 +140,7 @@ else if (timeline is { } shown)
 
     private async Task OnEventAsync(SurveillanceEvent surveillanceEvent)
     {
-        if (reloadPending || !TimelineRefresh.ShouldReload(surveillanceEvent, showsNow: day is null))
+        if (reloadPending || !TimelineRefresh.ShouldReload(surveillanceEvent, showsNow: day is null && !zoomed))
         {
             return;
         }
@@ -149,7 +172,7 @@ else if (timeline is { } shown)
     {
         lastLoad = DateTimeOffset.UtcNow;
         loading = timeline is null;
-        if (day is null)
+        if (day is null && !zoomed)
         {
             span = TimelineSpan.Last24Hours(DateTimeOffset.UtcNow);
         }
@@ -171,6 +194,7 @@ else if (timeline is { } shown)
     private Task ShowLast24HoursAsync()
     {
         day = null;
+        zoomed = false;
         cursor = null;
         return LoadAsync();
     }
@@ -183,8 +207,26 @@ else if (timeline is { } shown)
         }
 
         day = DateOnly.FromDateTime(chosen);
+        zoomed = false;
         span = TimelineSpan.Day(day.Value, TimeZoneInfo.Local);
         cursor = null;
+        return LoadAsync();
+    }
+
+    // Around the place last played, or the middle; the span stays put until the next zoom or move.
+    private Task ZoomAsync(bool zoomIn)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var focus = cursor ?? span.At(0.5);
+        span = zoomIn ? TimelineZoom.In(span, focus, now) : TimelineZoom.Out(span, focus, now);
+        zoomed = true;
+        return LoadAsync();
+    }
+
+    private Task MoveAsync(bool later)
+    {
+        span = TimelineZoom.Move(span, later, DateTimeOffset.UtcNow);
+        zoomed = true;
         return LoadAsync();
     }
 

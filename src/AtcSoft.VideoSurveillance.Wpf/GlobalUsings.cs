@@ -87,3 +87,4 @@ global using ActivityEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
 global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
 global using TimelineMarks = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks;
 global using TimelineStretch = AtcSoft.VideoSurveillance.Models.TimelineStretch;
+global using TimelineZoom = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineZoom;

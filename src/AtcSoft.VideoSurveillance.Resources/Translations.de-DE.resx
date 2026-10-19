@@ -2688,4 +2688,16 @@ Vorschaubild:
   <data name="NoEventWithinAWeek" xml:space="preserve">
     <value>Kein Ereignis innerhalb einer Woche davon.</value>
   </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>Vergrößern</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>Verkleinern</value>
+  </data>
+  <data name="Earlier" xml:space="preserve">
+    <value>Früher</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Später</value>
+  </data>
 </root>
