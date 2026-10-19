@@ -141,6 +141,33 @@ public sealed class MediaCleanupRunnerOrphanThumbnailTests : IDisposable
         result.Errors.Should().BeEmpty();
     }
 
+    [Fact]
+    public void Removes_An_Activity_Index_Whose_Recording_Is_Gone_And_Keeps_One_Whose_Recording_Is_There()
+    {
+        var orphan = Touch(Path.Combine("Cam", "2026-01-01", "Cam_20260101_101500_000.activity.jsonl"));
+        Touch(Path.Combine("Cam", "2026-01-01", "Cam_20260101_111500_000.mkv"));
+        var kept = Touch(Path.Combine("Cam", "2026-01-01", "Cam_20260101_111500_000.activity.jsonl"));
+
+        var result = MediaCleanupRunner.RemoveOrphanThumbnails(root, RecordingExtensions, EmptySkipSet);
+
+        File.Exists(orphan).Should().BeFalse();
+        File.Exists(kept).Should().BeTrue();
+        result.DeletedThumbnails.Should().Equal(orphan);
+    }
+
+    [Fact]
+    public void Leaves_A_Young_Activity_Index_And_One_Directly_In_The_Root_Alone()
+    {
+        var young = Touch(Path.Combine("Cam", "Cam_20260101_101500_000.activity.jsonl"), TimeSpan.FromSeconds(5));
+        var inRoot = Touch("notes.activity.jsonl");
+
+        var result = MediaCleanupRunner.RemoveOrphanThumbnails(root, RecordingExtensions, EmptySkipSet, minimumAge: TimeSpan.FromMinutes(10));
+
+        File.Exists(young).Should().BeTrue("its recording may just have started");
+        File.Exists(inRoot).Should().BeTrue();
+        result.DeletedThumbnails.Should().BeEmpty();
+    }
+
     private string Touch(
         string relativePath,
         TimeSpan? age = null)

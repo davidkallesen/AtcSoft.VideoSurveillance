@@ -43,6 +43,8 @@ internal sealed class MotionDetectionContext : IDisposable
 
     public int ConsecutiveFails { get; set; }
 
+    public DateTime LastAnalysisStartedUtc { get; set; }
+
     public void Dispose()
     {
         Detector.Reset();

@@ -281,6 +281,15 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
 
                 LogMotionDetectionStarted(cameraId);
             }
+            else if (contexts.TryGetValue(cameraId, out var existing))
+            {
+                // Someone else started the camera in between: what this start wanted is added to it.
+                lock (existing.Sync)
+                {
+                    existing.ReportsMotion |= reportsMotion;
+                    existing.Indexes |= !reportsMotion;
+                }
+            }
         }
         finally
         {

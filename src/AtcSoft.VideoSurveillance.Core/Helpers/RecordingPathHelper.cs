@@ -22,9 +22,13 @@ public static partial class RecordingPathHelper
     /// </summary>
     public const string DayFolderFormat = "yyyy-MM-dd";
 
+    /// <summary>
+    /// The ending of a recording's activity index, in place of the video's extension.
+    /// </summary>
+    public const string ActivityExtension = ".activity.jsonl";
+
     private const string TimestampFormat = "yyyyMMdd_HHmmss_fff";
     private const string ThumbnailExtension = ".png";
-    private const string ActivityExtension = ".activity.jsonl";
 
     private static readonly string[] RecordingVideoExtensions = [".mp4", ".mkv", ".avi"];
 

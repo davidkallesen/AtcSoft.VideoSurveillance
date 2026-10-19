@@ -367,10 +367,12 @@ public static class MediaCleanupRunner
     }
 
     /// <summary>
-    /// Deletes recording thumbnails whose recording no longer exists, for
-    /// example because the video was deleted by hand. Looks in the camera
-    /// folders (thumbnail next to the video) and in the separate thumbnails
-    /// folder. Files directly in <paramref name="rootPath"/> are left alone.
+    /// Deletes recording thumbnails and activity indexes whose recording no
+    /// longer exists, for example because the video was deleted by hand.
+    /// Looks in the camera folders (thumbnail and index next to the video)
+    /// and in the separate thumbnails folder. Files directly in
+    /// <paramref name="rootPath"/> are left alone. Both kinds are reported in
+    /// <see cref="MediaCleanupRunResult.DeletedThumbnails"/>.
     /// Failures are returned in the result; never thrown.
     /// </summary>
     /// <param name="rootPath">The recording root.</param>
@@ -458,16 +460,7 @@ public static class MediaCleanupRunner
                     continue;
                 }
 
-                var info = new FileInfo(thumbnail);
-                if (info.LastWriteTimeUtc > newestAllowedUtc)
-                {
-                    continue;
-                }
-
-                var size = info.Length;
-                info.Delete();
-                deletedThumbnails.Add(thumbnail);
-                bytesFreed += size;
+                bytesFreed += DeleteIfOlder(thumbnail, newestAllowedUtc, deletedThumbnails);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -475,7 +468,81 @@ public static class MediaCleanupRunner
             }
         }
 
+        bytesFreed += RemoveOrphanActivityIndexes(fullRoot, videoExtensions, skipPaths, newestAllowedUtc, excluded, deletedThumbnails, errors);
+
         return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
+    }
+
+    // An activity index always sits beside its video, in every layout.
+    private static long RemoveOrphanActivityIndexes(
+        string fullRoot,
+        IReadOnlyCollection<string> videoExtensions,
+        IReadOnlySet<string> skipPaths,
+        DateTime newestAllowedUtc,
+        List<string> excluded,
+        List<string> deleted,
+        List<MediaCleanupRunError> errors)
+    {
+        List<string> indexes;
+        try
+        {
+            indexes = Directory
+                .EnumerateFiles(fullRoot, "*" + RecordingPathHelper.ActivityExtension, SearchOption.AllDirectories)
+                .ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            errors.Add(new MediaCleanupRunError(fullRoot, ex));
+            return 0;
+        }
+
+        long bytesFreed = 0;
+        foreach (var index in indexes)
+        {
+            try
+            {
+                var folder = Path.GetDirectoryName(index);
+                if (folder is null ||
+                    folder.Equals(fullRoot, StringComparison.OrdinalIgnoreCase) ||
+                    skipPaths.Contains(index) ||
+                    excluded.Exists(e => index.StartsWith(e, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                var name = Path.GetFileName(index);
+                var stem = name[..^RecordingPathHelper.ActivityExtension.Length];
+                if (videoExtensions.Any(extension => File.Exists(Path.Combine(folder, stem + extension))))
+                {
+                    continue;
+                }
+
+                bytesFreed += DeleteIfOlder(index, newestAllowedUtc, deleted);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                errors.Add(new MediaCleanupRunError(index, ex));
+            }
+        }
+
+        return bytesFreed;
+    }
+
+    private static long DeleteIfOlder(
+        string path,
+        DateTime newestAllowedUtc,
+        List<string> deleted)
+    {
+        var info = new FileInfo(path);
+        if (info.LastWriteTimeUtc > newestAllowedUtc)
+        {
+            return 0;
+        }
+
+        var size = info.Length;
+        info.Delete();
+        deleted.Add(path);
+        return size;
     }
 
     /// <summary>

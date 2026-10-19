@@ -17,6 +17,10 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
     private const int MinSchedulerIntervalMs = 16; // ~60 Hz ceiling for scheduler ticks
     private const int MaxSchedulerIntervalMs = 500; // Maximum 500ms between analyses
 
+    // A camera analysed only for its activity index needs no more than four pictures a second,
+    // whatever the motion settings ask for: it runs for every camera that records.
+    private static readonly TimeSpan IndexOnlyInterval = TimeSpan.FromMilliseconds(250);
+
     private readonly ConcurrentDictionary<Guid, MotionDetectionContext> contexts = new();
     private readonly List<Guid> scheduledCameras = [];
     private readonly Lock schedulerLock = new();
@@ -209,6 +213,13 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
         if (!added)
         {
+            // Someone else started the camera in between: what this start wanted is added to it.
+            if (contexts.TryGetValue(cameraId, out var existing))
+            {
+                existing.ReportsMotion |= reportsMotion;
+                existing.Indexes |= indexes;
+            }
+
             context.Dispose();
         }
     }
@@ -262,7 +273,9 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
         if (schedulerTimer is null)
         {
-            schedulerTimer = new DispatcherTimer
+            // On the service's own dispatcher: a recording can start the index from another thread,
+            // and a timer bound to that thread would never tick.
+            schedulerTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher)
             {
                 Interval = TimeSpan.FromMilliseconds(intervalMs),
             };
@@ -310,6 +323,13 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
             return;
         }
 
+        var now = DateTime.UtcNow;
+        if (!context.ReportsMotion && now - context.LastAnalysisStartedUtc < IndexOnlyInterval)
+        {
+            return;
+        }
+
+        context.LastAnalysisStartedUtc = now;
         context.IsAnalyzing = true;
         _ = CaptureAndProcessAsync(cameraId, context);
     }

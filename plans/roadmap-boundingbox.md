@@ -480,7 +480,8 @@ Covers the backlog row *Motion zones / exclusion masks*.
 - A setting to turn the index off (always on today). It has to pass `SettingsRoundTripTests`, with texts in four languages and both clients.
 - *Analyse recording* for older recordings.
 - The time base is the session's start, not the first keyframe the recorder waited for, so the index may run up to a GOP ahead of the video. Phase 8b, which joins segments, should measure that against a real camera.
-- Analysis costs a PNG capture per picture (2–4 a second) for every recorded camera; phase 2's grey frames would make it cheap.
+- Analysis costs a PNG capture per picture for every recorded camera; a camera analysed only for the index is held to 4 a second in both apps. Phase 2's grey frames would make it cheap.
+- The `MaxRecordingStorageGb` cap counts the videos only, not their thumbnails and indexes (an index is about 2 MB per camera per day). The clean-up's orphan pass removes an index whose video is gone.
 
 ### Phase 8 — Activity timeline ⬜ (L)
 

@@ -36,7 +36,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 
 | Area | Plan | Status | Open |
 |---|---|:--:|---|
-| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | ⬜ | Storybook test harness and `sample/BoundingBoxWpfApp`, detector v2 with tracking, masks and zones, an activity timeline per recording, a server timeline of every camera; ONNX detection deferred |
+| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`). Open: the timelines (per recording, server, every camera), masks and zones, grey frames from the engine, `sample/BoundingBoxWpfApp`, the feedback loop; ONNX detection deferred |
 | 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Everything is built on v3; waits for v3 on nuget.org, then the switch from the local package |
 | 🧪 24/7 soak | [`docs/soak-test.md`](../docs/soak-test.md) | ⬜ | The procedure has never been run |
 
@@ -121,6 +121,7 @@ Built and tested, but not closed without hands, eyes or hardware.
 | USB: unplug and replug in CameraWall (recording resumes within 5 s); recording with sound | Two USB cameras |
 | "Show in Full Screen" on a CameraWall tile: through UI Automation it stayed disabled on a connected HTTP camera ([E2E notes](../docs/e2e-smoke-tests.md#left-out-on-purpose)) | The app and a camera |
 | The client's live grid draws motion boxes | The server client and a camera that moves |
+| The new motion detector and the activity index on real cameras: a person, a car, a tree in the wind, a change of light; a `.activity.jsonl` beside each recording in both apps, with motion where something moved; the CPU cost of analysing every recorded camera | Cameras and some recording time |
 | The grid sizes, filters, disk indicators and unplugged text in both desktop apps; the keyboard shortcuts; the camera dialog's drop-downs | A look at the apps |
 | The Users dialog (WPF) and the Users page (web) | A look at the clients |
 | The web client against real cameras: H.264 and H.265 live view, rotated cameras, playback of real recordings | A browser, the server and cameras |
