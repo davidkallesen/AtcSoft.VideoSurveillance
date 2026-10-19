@@ -23,6 +23,7 @@ public sealed class PlayAllWindowTests
         tile.State.Should().Be(PlayAllTileState.Loading);
 
         media.RaiseOpened();
+        tile.Report();
         tile.State.Should().Be(PlayAllTileState.Playing);
         tile.StatusText.Should().BeEmpty();
 
@@ -69,6 +70,7 @@ public sealed class PlayAllWindowTests
         var window = new PlayAllWindowViewModel(Nine, [tile]);
         window.Step(TimeSpan.Zero);
         media.RaiseOpened();
+        tile.Report();
 
         window.PlayPauseCommand.Execute(parameter: null);
         media.IsPlaying.Should().BeFalse();
@@ -93,6 +95,41 @@ public sealed class PlayAllWindowTests
 
         tile.State.Should().Be(PlayAllTileState.Failed);
         tile.StatusText.Should().Be("Could not be played");
+    }
+
+    [Fact]
+    public void A_Recording_That_Opens_Far_From_Where_It_Was_Asked_Does_Not_Count_As_Playing()
+    {
+        var media = new FakeMedia();
+        var tile = Tile(media, new PlayAllSegment(new Uri("http://server/a.mkv"), Nine.AddMinutes(-10), Nine.AddMinutes(-10)));
+        using var window = new PlayAllWindowViewModel(Nine, [tile]);
+        window.Step(TimeSpan.Zero);
+
+        // Asked for 10 minutes in, it starts at the beginning: it cannot seek.
+        media.Position = TimeSpan.Zero;
+        media.RaiseOpened();
+
+        tile.Report().State.Should().Be(PlayAllTileState.Loading, "it would pull every other tile ten minutes back");
+        media.Position = TimeSpan.FromMinutes(10);
+        tile.Report().State.Should().Be(PlayAllTileState.Playing);
+    }
+
+    [Fact]
+    public void After_A_Recording_That_Cannot_Be_Played_The_Tile_Moves_On_To_The_Next()
+    {
+        var media = new FakeMedia();
+        var tile = Tile(
+            media,
+            new PlayAllSegment(new Uri("http://server/a.mkv"), Nine, Nine),
+            new PlayAllSegment(new Uri("http://server/b.mkv"), Nine.AddMinutes(5), Nine.AddMinutes(5)));
+        using var window = new PlayAllWindowViewModel(Nine, [tile]);
+        window.Step(TimeSpan.Zero);
+
+        media.RaiseFailed();
+
+        tile.State.Should().Be(PlayAllTileState.Waiting);
+        tile.StatusText.Should().Be("Could not be played");
+        tile.Report().NextStart.Should().Be(Nine.AddMinutes(5));
     }
 
     [Fact]

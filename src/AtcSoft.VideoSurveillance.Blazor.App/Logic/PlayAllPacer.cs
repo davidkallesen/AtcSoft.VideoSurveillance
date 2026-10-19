@@ -5,8 +5,8 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 /// kept equal by a test that runs the same ticks through both. The clock is the moment of the
 /// slowest tile playing; a tile more than <see cref="HoldAhead"/> ahead is held until it is within
 /// <see cref="ResumeWithin"/>; a tile between recordings starts its next one when the clock gets
-/// there; one that loads longer than <see cref="GiveUpAfter"/> is given up; with no tile playing,
-/// loading or held, the clock jumps to the next recording of any tile.
+/// there; one that loads, or plays without moving, longer than <see cref="GiveUpAfter"/> is given
+/// up; with no tile playing, loading or held, the clock jumps to the next recording of any tile.
 /// </summary>
 public sealed class PlayAllPacer
 {
@@ -20,6 +20,7 @@ public sealed class PlayAllPacer
     public static readonly TimeSpan GiveUpAfter = TimeSpan.FromSeconds(15);
 
     private readonly Dictionary<int, TimeSpan> loading = [];
+    private readonly Dictionary<int, (DateTimeOffset At, TimeSpan Still)> playing = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlayAllPacer"/> class.
@@ -56,11 +57,11 @@ public sealed class PlayAllPacer
             return actions;
         }
 
-        var playing = tiles
+        var playingAt = tiles
             .Where(t => t.State == PlayAllTileState.Playing && t.At is not null)
             .Select(t => t.At!.Value)
             .ToList();
-        Clock = playing.Count > 0 ? playing.Min() : Clock + elapsed;
+        Clock = playingAt.Count > 0 ? playingAt.Min() : Clock + elapsed;
         var busy = tiles.Any(t => t.State is PlayAllTileState.Playing or PlayAllTileState.Loading or PlayAllTileState.Held);
         var nextStart = tiles
             .Where(t => t.State == PlayAllTileState.Waiting && t.NextStart is not null)
@@ -77,6 +78,7 @@ public sealed class PlayAllPacer
             var tile = tiles[i];
             actions[i] = tile.State switch
             {
+                PlayAllTileState.Playing when StoodStillTooLong(i, tile.At, elapsed) => PlayAllAction.GiveUp,
                 PlayAllTileState.Playing when tile.At - Clock > HoldAhead => PlayAllAction.Hold,
                 PlayAllTileState.Held when tile.At is null || tile.At - Clock <= ResumeWithin => PlayAllAction.Resume,
                 PlayAllTileState.Waiting when tile.NextStart is null || tile.NextStart <= Clock => PlayAllAction.Start,
@@ -88,9 +90,32 @@ public sealed class PlayAllPacer
             {
                 loading.Remove(i);
             }
+
+            if (tile.State != PlayAllTileState.Playing)
+            {
+                playing.Remove(i);
+            }
         }
 
         return actions;
+    }
+
+    // A tile playing whose picture does not move: a dropped connection that never says so.
+    private bool StoodStillTooLong(
+        int tile,
+        DateTimeOffset? at,
+        TimeSpan elapsed)
+    {
+        if (at is not { } moment)
+        {
+            return false;
+        }
+
+        var still = playing.TryGetValue(tile, out var last) && last.At == moment
+            ? last.Still + elapsed
+            : TimeSpan.Zero;
+        playing[tile] = (moment, still);
+        return still > GiveUpAfter;
     }
 
     private bool LoadedTooLong(

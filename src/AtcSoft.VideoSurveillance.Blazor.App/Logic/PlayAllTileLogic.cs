@@ -3,13 +3,17 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 /// <summary>
 /// One camera of *play all from here* on the web: its recordings from the chosen moment, played
 /// one after another as the pacer's clock reaches each, and what the tile says when it shows no
-/// picture. It does not touch the browser: it answers with the commands for the video element.
+/// picture. A recording counts as playing only once its picture is near where it was asked to
+/// start, and one that fails is skipped. It does not touch the browser: it answers with the commands
+/// for the video element.
 /// </summary>
 public sealed class PlayAllTileLogic
 {
     private readonly IReadOnlyList<PlayAllSegment> segments;
     private int index;
     private bool isPaused;
+    private bool isOpened;
+    private double requestedSeconds;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlayAllTileLogic"/> class.
@@ -45,7 +49,14 @@ public sealed class PlayAllTileLogic
     /// <param name="currentSeconds">How far into the recording the video element is.</param>
     /// <returns>The tile as the pacer reads it.</returns>
     public PlayAllTile Report(double currentSeconds)
-        => State switch
+    {
+        if (State == PlayAllTileState.Loading && isOpened && PlayAllStart.IsNear(TimeSpan.FromSeconds(currentSeconds), TimeSpan.FromSeconds(requestedSeconds)))
+        {
+            State = PlayAllTileState.Playing;
+            StatusText = string.Empty;
+        }
+
+        return State switch
         {
             PlayAllTileState.Playing or PlayAllTileState.Held when Current is { } segment
                 => new PlayAllTile(State, At: segment.RecordingStart + TimeSpan.FromSeconds(currentSeconds)),
@@ -53,6 +64,7 @@ public sealed class PlayAllTileLogic
                 => new PlayAllTile(State, NextStart: segment.Start),
             _ => new PlayAllTile(State),
         };
+    }
 
     /// <summary>
     /// Does what the pacer asks.
@@ -67,16 +79,18 @@ public sealed class PlayAllTileLogic
         switch (action)
         {
             case PlayAllAction.Start when Current is { } segment:
+                requestedSeconds = Math.Max((clock - segment.RecordingStart).TotalSeconds, 0);
+                isOpened = false;
                 State = PlayAllTileState.Loading;
                 StatusText = Translations.Loading;
-                return new PlayAllCommand(PlayAllCommandKind.Open, segment.Source, Math.Max((clock - segment.RecordingStart).TotalSeconds, 0));
+                return new PlayAllCommand(PlayAllCommandKind.Open, segment.Source, requestedSeconds);
             case PlayAllAction.Hold when State == PlayAllTileState.Playing:
                 State = PlayAllTileState.Held;
                 return new PlayAllCommand(PlayAllCommandKind.Pause);
             case PlayAllAction.Resume when State == PlayAllTileState.Held:
                 State = PlayAllTileState.Playing;
                 return isPaused ? null : new PlayAllCommand(PlayAllCommandKind.Play);
-            case PlayAllAction.GiveUp when State == PlayAllTileState.Loading:
+            case PlayAllAction.GiveUp when State is PlayAllTileState.Loading or PlayAllTileState.Playing:
                 Fail();
                 return new PlayAllCommand(PlayAllCommandKind.Close);
             default:
@@ -85,7 +99,8 @@ public sealed class PlayAllTileLogic
     }
 
     /// <summary>
-    /// The video element shows the opened recording.
+    /// The video element began to play the opened recording. It counts as playing once it is near
+    /// where it was asked to start.
     /// </summary>
     /// <returns>A pause when everything is paused, else <see langword="null"/>.</returns>
     public PlayAllCommand? Opened()
@@ -95,8 +110,7 @@ public sealed class PlayAllTileLogic
             return null;
         }
 
-        State = PlayAllTileState.Playing;
-        StatusText = string.Empty;
+        isOpened = true;
         return isPaused ? new PlayAllCommand(PlayAllCommandKind.Pause) : null;
     }
 
@@ -107,10 +121,14 @@ public sealed class PlayAllTileLogic
         => MoveTo(index + 1);
 
     /// <summary>
-    /// The video element cannot play the recording.
+    /// The video element cannot play the recording: on to the camera's next one.
     /// </summary>
-    public void Failed()
-        => Fail();
+    /// <returns>The command that lets go of the recording.</returns>
+    public PlayAllCommand Failed()
+    {
+        Fail();
+        return new PlayAllCommand(PlayAllCommandKind.Close);
+    }
 
     /// <summary>
     /// Pauses or plays the tile with the others, as the viewer asks.
@@ -130,7 +148,12 @@ public sealed class PlayAllTileLogic
 
     private void Fail()
     {
-        State = PlayAllTileState.Failed;
+        MoveTo(index + 1);
+        if (State == PlayAllTileState.Finished)
+        {
+            State = PlayAllTileState.Failed;
+        }
+
         StatusText = Translations.CouldNotBePlayed;
     }
 

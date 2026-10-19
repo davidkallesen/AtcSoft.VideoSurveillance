@@ -79,6 +79,32 @@ public sealed class PlayAllPacerTests
     }
 
     [Fact]
+    public void A_Tile_Playing_Whose_Picture_Stops_Moving_Is_Given_Up_And_The_Others_Go_On()
+    {
+        var pacer = new PlayAllPacer(Nine);
+        var actions = new List<PlayAllAction>();
+        for (var second = 1; second <= 17; second++)
+        {
+            actions.Add(pacer.Tick(TimeSpan.FromSeconds(1), [Held(Nine.AddSeconds(5)), Playing(Nine.AddSeconds(3))])[1]);
+        }
+
+        // Still from the first tick it was seen at 9:00:03: fifteen seconds later, and then some.
+        actions[..16].Should().OnlyContain(a => a == PlayAllAction.None);
+        actions[16].Should().Be(PlayAllAction.GiveUp);
+    }
+
+    [Fact]
+    public void A_Picture_Counts_As_Opened_Near_Where_It_Was_Asked()
+    {
+        var asked = TimeSpan.FromMinutes(10);
+
+        PlayAllStart.IsNear(asked, asked).Should().BeTrue();
+        PlayAllStart.IsNear(asked + TimeSpan.FromSeconds(5), asked).Should().BeTrue("it plays on while it opens");
+        PlayAllStart.IsNear(asked - TimeSpan.FromSeconds(2), asked).Should().BeTrue("a seek lands on the key frame before");
+        PlayAllStart.IsNear(TimeSpan.Zero, asked).Should().BeFalse("it could not seek");
+    }
+
+    [Fact]
     public void Loading_Time_Counts_From_Each_New_Load()
     {
         var pacer = new PlayAllPacer(Nine);

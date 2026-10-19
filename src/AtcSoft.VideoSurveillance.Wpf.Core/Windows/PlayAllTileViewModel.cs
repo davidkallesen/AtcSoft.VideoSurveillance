@@ -2,7 +2,9 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 
 /// <summary>
 /// One camera of *play all from here*: its recordings from the chosen moment, played one after
-/// another as the pacer's clock reaches each, and what the tile says when it shows no picture.
+/// another as the pacer's clock reaches each, and what the tile says when it shows no picture. A
+/// recording counts as playing only once its picture is near where it was asked to start: one that
+/// cannot seek would otherwise pull every tile back. A recording that fails is skipped.
 /// </summary>
 public sealed partial class PlayAllTileViewModel : ViewModelBase
 {
@@ -10,6 +12,8 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
     private IPlayAllMedia? media;
     private int index;
     private bool isPaused;
+    private bool isOpened;
+    private TimeSpan requested;
 
     [ObservableProperty]
     private string statusText = string.Empty;
@@ -56,7 +60,14 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
     /// </summary>
     /// <returns>The tile as the pacer reads it.</returns>
     public PlayAllTile Report()
-        => State switch
+    {
+        if (State == PlayAllTileState.Loading && isOpened && media is not null && PlayAllStart.IsNear(media.Position, requested))
+        {
+            State = PlayAllTileState.Playing;
+            StatusText = string.Empty;
+        }
+
+        return State switch
         {
             PlayAllTileState.Playing or PlayAllTileState.Held when media is not null && Current is { } segment
                 => new PlayAllTile(State, At: segment.RecordingStart + media.Position),
@@ -65,6 +76,7 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
             PlayAllTileState.Waiting => new PlayAllTile(PlayAllTileState.Loading),
             _ => new PlayAllTile(State),
         };
+    }
 
     /// <summary>
     /// Does what the pacer asks.
@@ -79,9 +91,11 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
         {
             case PlayAllAction.Start when media is not null && Current is { } segment:
                 var position = clock - segment.RecordingStart;
+                requested = position > TimeSpan.Zero ? position : TimeSpan.Zero;
+                isOpened = false;
                 State = PlayAllTileState.Loading;
                 StatusText = Translations.Loading;
-                media.Open(segment.Address, position > TimeSpan.Zero ? position : TimeSpan.Zero);
+                media.Open(segment.Address, requested);
                 break;
             case PlayAllAction.Hold when State == PlayAllTileState.Playing:
                 media?.Pause();
@@ -95,10 +109,8 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
 
                 State = PlayAllTileState.Playing;
                 break;
-            case PlayAllAction.GiveUp when State == PlayAllTileState.Loading:
-                media?.Close();
-                State = PlayAllTileState.Failed;
-                StatusText = Translations.CouldNotBePlayed;
+            case PlayAllAction.GiveUp when State is PlayAllTileState.Loading or PlayAllTileState.Playing:
+                Fail();
                 break;
         }
     }
@@ -169,12 +181,24 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
             return;
         }
 
-        State = PlayAllTileState.Playing;
-        StatusText = string.Empty;
+        isOpened = true;
         if (isPaused)
         {
             media?.Pause();
         }
+    }
+
+    // The recording cannot be played: on to the camera's next one, saying why this one is not shown.
+    private void Fail()
+    {
+        media?.Close();
+        MoveTo(index + 1);
+        if (State == PlayAllTileState.Finished)
+        {
+            State = PlayAllTileState.Failed;
+        }
+
+        StatusText = Translations.CouldNotBePlayed;
     }
 
     private void OnEnded(
@@ -185,8 +209,5 @@ public sealed partial class PlayAllTileViewModel : ViewModelBase
     private void OnFailed(
         object? sender,
         EventArgs e)
-    {
-        State = PlayAllTileState.Failed;
-        StatusText = Translations.CouldNotBePlayed;
-    }
+        => Fail();
 }

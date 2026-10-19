@@ -142,7 +142,7 @@
         {
             if (readings[i].Failed)
             {
-                Tiles[i].Failed();
+                await SendAsync(i, Tiles[i].Failed());
             }
             else if (readings[i].Ended)
             {

@@ -89,6 +89,7 @@ global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanup
 global using MotionBoxMapper = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
 global using PlayAllPacer = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllPacer;
+global using PlayAllStart = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllStart;
 global using PlayAllTile = AtcSoft.VideoSurveillance.Models.PlayAllTile;
 global using ReconnectBackoff = AtcSoft.VideoSurveillance.Helpers.ReconnectBackoff;
 global using RecordingPathHelper = AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper;

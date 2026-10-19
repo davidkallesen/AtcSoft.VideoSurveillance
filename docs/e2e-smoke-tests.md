@@ -54,7 +54,10 @@ beside it that has one event), the client the one the server recorded from the l
 must show its activity timeline; the event buttons are pressed (in the client only when the detector
 found a track in the test pattern). The web walk plays the server's recording too and waits for the
 timeline (an SVG named Activity), which shows whether or not the browser can play the file. The web and
-WPF client walks also open the Timeline view and wait for the live camera's lane.
+WPF client walks also open the Timeline view and wait for the live camera's lane, then press *Play all
+from here*: the live camera's tile must leave "Loading..." (the web walk accepts a tile the browser cannot
+play, and saves `play-all.png`), and Pause must turn into Play. The fixture records one camera, so the
+walks never see two tiles kept in step.
 
 ## Where to look after a run
 

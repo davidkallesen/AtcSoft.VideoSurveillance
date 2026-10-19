@@ -2,6 +2,7 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 
 using CoreAction = AtcSoft.VideoSurveillance.Enums.PlayAllAction;
 using CorePacer = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllPacer;
+using CoreStart = AtcSoft.VideoSurveillance.Helpers.Activity.PlayAllStart;
 using CoreState = AtcSoft.VideoSurveillance.Enums.PlayAllTileState;
 using CoreTile = AtcSoft.VideoSurveillance.Models.PlayAllTile;
 
@@ -28,6 +29,8 @@ public sealed class PlayAllTests
             (1, [Waiting(Nine.AddHours(1)), Waiting(Nine.AddHours(2))], false),
             (10, [Loading(), Finished()], false),
             (10, [Loading(), Failed()], false),
+            (8, [Playing(Nine.AddHours(1)), Failed()], false),
+            (8, [Playing(Nine.AddHours(1)), Failed()], false),
         ];
 
         var web = new PlayAllPacer(Nine);
@@ -49,6 +52,8 @@ public sealed class PlayAllTests
         PlayAllPacer.HoldAhead.Should().Be(CorePacer.HoldAhead);
         PlayAllPacer.ResumeWithin.Should().Be(CorePacer.ResumeWithin);
         PlayAllPacer.GiveUpAfter.Should().Be(CorePacer.GiveUpAfter);
+        PlayAllStart.Behind.Should().Be(CoreStart.Behind);
+        PlayAllStart.Ahead.Should().Be(CoreStart.Ahead);
     }
 
     [Fact]
@@ -82,6 +87,7 @@ public sealed class PlayAllTests
 
         tile.SetPaused(true).Should().BeNull("a tile loading has nothing to pause yet");
         tile.Opened().Should().Be(new PlayAllCommand(PlayAllCommandKind.Pause));
+        tile.Report(0).State.Should().Be(PlayAllTileState.Playing);
         tile.Apply(PlayAllAction.Hold, Nine);
         tile.Apply(PlayAllAction.Resume, Nine).Should().BeNull();
         tile.SetPaused(false).Should().Be(new PlayAllCommand(PlayAllCommandKind.Play));
@@ -90,6 +96,21 @@ public sealed class PlayAllTests
         stuck.Apply(PlayAllAction.Start, Nine);
         stuck.Apply(PlayAllAction.GiveUp, Nine).Should().Be(new PlayAllCommand(PlayAllCommandKind.Close));
         stuck.StatusText.Should().Be("Could not be played");
+    }
+
+    [Fact]
+    public void A_Recording_That_Opens_Far_From_Where_It_Was_Asked_Does_Not_Count_As_Playing_And_One_That_Fails_Is_Skipped()
+    {
+        var tile = new PlayAllTileLogic(
+            "Garden",
+            [new PlayAllSegment("a.mp4", Nine.AddMinutes(-10), Nine.AddMinutes(-10)), new PlayAllSegment("b.mp4", Nine.AddMinutes(5), Nine.AddMinutes(5))]);
+        tile.Apply(PlayAllAction.Start, Nine);
+        tile.Opened();
+
+        tile.Report(0).State.Should().Be(PlayAllTileState.Loading, "asked for 600 s, it started at 0");
+        tile.Failed().Should().Be(new PlayAllCommand(PlayAllCommandKind.Close));
+        tile.Report(0).Should().Be(new PlayAllTile(PlayAllTileState.Waiting, NextStart: Nine.AddMinutes(5)));
+        tile.StatusText.Should().Be("Could not be played");
     }
 
     [Fact]
