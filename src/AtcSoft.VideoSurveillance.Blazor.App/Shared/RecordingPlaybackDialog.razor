@@ -366,7 +366,7 @@
             if (await Gateway.GetRecordingActivityAsync(FilePath, ActivityTimelineZoom.BucketsFor(durationSeconds), durationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
             {
                 buckets = activity.Buckets;
-                events = ActivityTimelineLayout.FindEvents(activity.Buckets);
+                events = ActivityTimelineLayout.FindEvents(activity.Buckets, durationSeconds);
                 return true;
             }
         }

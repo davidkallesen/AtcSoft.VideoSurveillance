@@ -36,8 +36,8 @@ public sealed partial class ActivityTimeline : FrameworkElement
     [DependencyProperty]
     private DateTime? recordingStart;
 
-    // How long the recording is, in seconds, for the time under the mouse.
-    [DependencyProperty]
+    // How long the recording is, in seconds, for the time under the mouse and to join events close together.
+    [DependencyProperty(PropertyChangedCallback = nameof(OnBucketsChanged))]
     private double durationSeconds;
 
     // The recording's preview pictures, shown under the mouse; none while null.
@@ -149,7 +149,7 @@ public sealed partial class ActivityTimeline : FrameworkElement
             }
         }
 
-        events ??= ActivityTimelineLayout.FindEvents(stretches);
+        events ??= ActivityTimelineLayout.FindEvents(stretches, DurationSeconds);
         foreach (var activityEvent in ActivityTimelineZoom.Visible(events, start, end))
         {
             var (x, bandWidth) = ActivityTimelineLayout.ToPixels(activityEvent, width);
@@ -246,7 +246,7 @@ public sealed partial class ActivityTimeline : FrameworkElement
         var half = ActivityTimelineLayout.MinimumEventWidth / 2;
         var from = ActivityTimelineZoom.ToRecording(start, end, (x - half) / ActualWidth);
         var to = ActivityTimelineZoom.ToRecording(start, end, (x + half) / ActualWidth);
-        events ??= ActivityTimelineLayout.FindEvents(stretches);
+        events ??= ActivityTimelineLayout.FindEvents(stretches, DurationSeconds);
         var hover = ActivityTimelineHover.At(stretches, events, from, to);
         var place = hover?.Position ?? (from + to) / 2;
 

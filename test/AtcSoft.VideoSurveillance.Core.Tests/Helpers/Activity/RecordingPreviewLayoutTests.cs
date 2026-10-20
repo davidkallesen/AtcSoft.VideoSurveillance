@@ -64,12 +64,12 @@ public sealed class RecordingPreviewLayoutTests : IDisposable
             new(10, 1, IsAnalysed: true),
             new(30, 2, IsAnalysed: true),
             new(50, 1, IsAnalysed: true),
-            new(1, 0, IsAnalysed: true),
+            .. Enumerable.Repeat(new ActivityBucket(1, 0, IsAnalysed: true), 6),
             new(10, 1, IsAnalysed: true),
             new(20, 1, IsAnalysed: true),
         ];
 
-        RecordingPreviewLayout.PeakSeconds(buckets, 7).Should().Equal(2.5, 6.5);
+        RecordingPreviewLayout.PeakSeconds(buckets, 12).Should().Equal(2.5, 11.5);
         RecordingPreviewLayout.PeakSeconds([], 7).Should().BeEmpty();
     }
 

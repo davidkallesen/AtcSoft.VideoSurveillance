@@ -452,7 +452,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
                 return;
             }
 
-            activityEvents = ActivityTimelineLayout.FindEvents(buckets);
+            activityEvents = ActivityTimelineLayout.FindEvents(buckets, durationSeconds);
             ActivityDurationSeconds = durationSeconds;
             ActivityRecordingStart = recordingStartTime;
             ActivityStart = 0;

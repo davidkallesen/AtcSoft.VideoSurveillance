@@ -14,6 +14,15 @@ public static class ActivityTimelineLayout
     public const double MinimumEventWidth = 3;
 
     /// <summary>
+    /// Moving stretches this close together are one event, in seconds (Core's
+    /// <c>ActivitySummarizer.MergeGapSeconds</c>, kept equal by a test).
+    /// </summary>
+    public const int MergeGapSeconds = 5;
+
+    // Rounding of the recording's length over its stretches, so a gap of exactly the most is joined.
+    private const double JoinSlack = 1e-6;
+
+    /// <summary>
     /// Gets the height of a bar, 0 to 1: the square root lifts small changes.
     /// </summary>
     /// <param name="level">The level of the stretch, 0 to 100.</param>
@@ -21,30 +30,45 @@ public static class ActivityTimelineLayout
         => Math.Sqrt(Math.Clamp(level, 0, 100) / 100);
 
     /// <summary>
-    /// Finds the events: the runs of stretches in which something moved.
+    /// Finds the events: the runs of stretches in which something moved, those
+    /// <see cref="MergeGapSeconds"/> or less apart joined: someone stopping for a moment is one visit.
     /// </summary>
     /// <param name="buckets">The stretches of the recording, from its start.</param>
+    /// <param name="durationSeconds">How long the recording is, in seconds; 0 or less joins nothing.</param>
     /// <returns>The events, from the start.</returns>
     public static IReadOnlyList<ActivityTimelineEvent> FindEvents(
-        IReadOnlyList<RecordingActivityBucket> buckets)
+        IReadOnlyList<RecordingActivityBucket> buckets,
+        double durationSeconds)
     {
         ArgumentNullException.ThrowIfNull(buckets);
 
         var events = new List<ActivityTimelineEvent>();
         var count = buckets.Count;
+        var joined = count > 0 && durationSeconds > 0
+            ? MergeGapSeconds * count / durationSeconds
+            : 0;
         int? start = null;
-        for (var i = 0; i <= count; i++)
+        var end = 0;
+        for (var i = 0; i < count; i++)
         {
-            var moving = i < count && buckets[i].Tracks > 0;
-            if (moving && start is null)
+            if (buckets[i].Tracks <= 0)
             {
-                start = i;
+                continue;
             }
-            else if (!moving && start is { } first)
+
+            if (start is { } first && i - end > joined + JoinSlack)
             {
-                events.Add(new ActivityTimelineEvent((double)first / count, (double)i / count, MainZone(buckets, first, i)));
+                events.Add(new ActivityTimelineEvent((double)first / count, (double)end / count, MainZone(buckets, first, end)));
                 start = null;
             }
+
+            start ??= i;
+            end = i + 1;
+        }
+
+        if (start is { } last)
+        {
+            events.Add(new ActivityTimelineEvent((double)last / count, (double)end / count, MainZone(buckets, last, end)));
         }
 
         return events;

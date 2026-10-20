@@ -112,7 +112,7 @@ public static class RecordingPreviewLayout
 
         var stretch = durationSeconds / count;
         var peaks = new List<double>();
-        foreach (var activityEvent in ActivityTimelineLayout.FindEvents(buckets))
+        foreach (var activityEvent in ActivityTimelineLayout.FindEvents(buckets, durationSeconds))
         {
             var from = (int)Math.Round(activityEvent.Start * count);
             var to = Math.Min((int)Math.Round(activityEvent.End * count), count);

@@ -30,6 +30,44 @@ public sealed class ActivityTimelineLayoutTests
     }
 
     [Fact]
+    public void Moving_Seconds_Five_Seconds_Or_Less_Apart_Are_One_Event()
+    {
+        // A stretch a second: five quiet seconds join, six part.
+        var buckets = Buckets(1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+
+        ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 16).Should().Equal(
+            new ActivityEvent(0, 7.0 / 16),
+            new ActivityEvent(13.0 / 16, 14.0 / 16));
+    }
+
+    [Fact]
+    public void The_Gap_Is_Measured_In_Seconds_Whatever_The_Stretches()
+    {
+        // Two seconds a stretch: two quiet stretches (4 s) join, three (6 s) part.
+        var buckets = Buckets(1, 0, 0, 1, 0, 0, 0, 1, 0, 0);
+
+        ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 20).Should().Equal(
+            new ActivityEvent(0, 0.4),
+            new ActivityEvent(0.7, 0.8));
+        ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 0).Should().HaveCount(3, "without the length nothing is joined");
+    }
+
+    [Fact]
+    public void A_Recordings_Events_Are_Those_Of_The_Timeline_Of_Every_Camera()
+    {
+        var random = new Random(7);
+        var seconds = Enumerable.Range(0, 600)
+            .Select(i => new ActivitySecond(i, 10, random.Next(9) == 0 ? 1 : 0, []))
+            .ToList();
+        var log = new ActivityLog(DateTimeOffset.UnixEpoch, seconds);
+
+        var events = ActivityTimelineLayout.FindEvents(ActivityDownsampler.ByMax(log, 600, 600), 600);
+
+        events.Select(e => ((int)Math.Round(e.Start * 600), (int)Math.Round(e.End * 600)))
+            .Should().Equal(ActivitySummarizer.Summarize(log).Events.Select(e => (e.StartOffset, e.EndOffset)));
+    }
+
+    [Fact]
     public void An_Event_Is_In_The_Zone_Of_Most_Of_Its_Stretches_The_Earlier_On_A_Tie()
     {
         ActivityBucket Moving(params string[] zones)

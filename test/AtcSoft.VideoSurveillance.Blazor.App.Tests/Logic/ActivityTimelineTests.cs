@@ -26,7 +26,13 @@ public sealed class ActivityTimelineTests
     {
         foreach (var tracks in Recordings)
         {
-            var web = ActivityTimelineLayout.FindEvents([.. tracks.Select(t => Bucket(t * 7, t))]);
+            foreach (var duration in new[] { 0, 5, 10, 60, 3600 })
+            {
+                ActivityTimelineLayout.FindEvents([.. tracks.Select(t => Bucket(t * 7, t))], duration).Select(e => (e.Start, e.End))
+                    .Should().Equal(CoreLayout.FindEvents([.. tracks.Select(t => new CoreBucket(t * 7, t, IsAnalysed: true))], duration).Select(e => (e.Start, e.End)));
+            }
+
+            var web = ActivityTimelineLayout.FindEvents([.. tracks.Select(t => Bucket(t * 7, t))], durationSeconds: 0);
             var core = CoreLayout.FindEvents([.. tracks.Select(t => new CoreBucket(t * 7, t, IsAnalysed: true))]);
 
             web.Select(e => (e.Start, e.End)).Should().Equal(core.Select(e => (e.Start, e.End)));
@@ -50,6 +56,7 @@ public sealed class ActivityTimelineTests
         }
 
         ActivityTimelineLayout.MinimumEventWidth.Should().Be(CoreLayout.MinimumEventWidth);
+        ActivityTimelineLayout.MergeGapSeconds.Should().Be(AtcSoft.VideoSurveillance.Helpers.Activity.ActivitySummarizer.MergeGapSeconds);
     }
 
     [Fact]
@@ -68,7 +75,7 @@ public sealed class ActivityTimelineTests
             new("Path", new MotionZoneKind(MotionZoneKind.Names.Ignore), [], "Blue"),
         ];
 
-        var fills = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets), MotionZoneColors.ByZone(zones)).Select(b => b.Fill);
+        var fills = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 0), MotionZoneColors.ByZone(zones)).Select(b => b.Fill);
 
         fills.Should().Equal("#00FF00", MotionZoneColors.Event, MotionZoneColors.Event);
     }
@@ -79,7 +86,7 @@ public sealed class ActivityTimelineTests
         string[][] zones = [["Path"], ["Gate", "Path"], ["Gate"], ["Gate"], [], ["Path"], ["Gate"], [], [], []];
         int[] tracks = [1, 1, 1, 1, 0, 1, 1, 0, 1, 0];
 
-        var web = ActivityTimelineLayout.FindEvents([.. tracks.Select((t, i) => Bucket(t, t) with { Zones = zones[i].Length > 0 ? [.. zones[i]] : null })]);
+        var web = ActivityTimelineLayout.FindEvents([.. tracks.Select((t, i) => Bucket(t, t) with { Zones = zones[i].Length > 0 ? [.. zones[i]] : null })], durationSeconds: 0);
         var core = CoreLayout.FindEvents([.. tracks.Select((t, i) => new CoreBucket(t, t, IsAnalysed: true) { Zones = zones[i] })]);
 
         web.Select(e => e.Zone).Should().Equal(core.Select(e => e.Zone)).And.Equal("Gate", "Path", null);
@@ -92,7 +99,7 @@ public sealed class ActivityTimelineTests
 
         var bars = ActivityTimelineShapes.Bars(buckets);
         var notAnalysed = ActivityTimelineShapes.NotAnalysed(buckets);
-        var bands = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets), zoneColours: null);
+        var bands = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 0), zoneColours: null);
 
         var area = ActivityTimelineShapes.BoxHeight - ActivityTimelineShapes.BandHeight;
         bars.Should().Equal(new TimelineRect(0, area / 2, 100, area / 2), new TimelineRect(200, 0, 100, area));
@@ -104,7 +111,7 @@ public sealed class ActivityTimelineTests
     public void Zoomed_In_The_Part_Shown_Fills_The_Box()
     {
         RecordingActivityBucket[] buckets = [Bucket(100, 1), Bucket(0, 0), Bucket(100, 1), Bucket(0, 0)];
-        var events = ActivityTimelineLayout.FindEvents(buckets);
+        var events = ActivityTimelineLayout.FindEvents(buckets, durationSeconds: 0);
 
         var area = ActivityTimelineShapes.BoxHeight - ActivityTimelineShapes.BandHeight;
         ActivityTimelineShapes.Bars(buckets, 0.5, 1).Should().Equal(new TimelineRect(0, 0, 200, area));
@@ -123,7 +130,7 @@ public sealed class ActivityTimelineTests
         RecordingActivityBucket[] web = [.. tracks.Select((t, i) => Bucket(t * 10, t) with { Zones = zones[i] })];
         CoreBucket[] core = [.. tracks.Select((t, i) => new CoreBucket(t * 10, t, IsAnalysed: i != 5) { Zones = zones[i] ?? [] })];
         web[5] = web[5] with { IsAnalysed = false };
-        var webEvents = ActivityTimelineLayout.FindEvents(web);
+        var webEvents = ActivityTimelineLayout.FindEvents(web, durationSeconds: 0);
         var coreEvents = CoreLayout.FindEvents(core);
 
         foreach (var (from, to) in new[] { (0d, 0.1), (0.2, 0.3), (0.45, 0.55), (0.9, 1), (1.2, -1) })
