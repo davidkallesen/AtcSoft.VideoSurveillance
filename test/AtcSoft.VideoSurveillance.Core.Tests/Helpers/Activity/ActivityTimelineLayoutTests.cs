@@ -55,9 +55,15 @@ public sealed class ActivityTimelineLayoutTests
     [Fact]
     public void A_Recordings_Events_Are_Those_Of_The_Timeline_Of_Every_Camera()
     {
-        var random = new Random(7);
+        // Moving seconds with every gap from none to eight quiet seconds, over and over.
+        var moving = new HashSet<int>();
+        for (var (second, gap) = (0, 0); second < 600; second += gap + 1, gap = (gap + 1) % 9)
+        {
+            moving.Add(second);
+        }
+
         var seconds = Enumerable.Range(0, 600)
-            .Select(i => new ActivitySecond(i, 10, random.Next(9) == 0 ? 1 : 0, []))
+            .Select(i => new ActivitySecond(i, 10, moving.Contains(i) ? 1 : 0, []))
             .ToList();
         var log = new ActivityLog(DateTimeOffset.UnixEpoch, seconds);
 

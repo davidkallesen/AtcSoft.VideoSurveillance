@@ -12,7 +12,7 @@ public static class ActivityTimelineHover
     /// usually as wide as the narrowest event band, so a widened band tells its event.
     /// </summary>
     /// <param name="buckets">The stretches of the whole recording.</param>
-    /// <param name="events">The events of the whole recording (<see cref="ActivityTimelineLayout.FindEvents"/>).</param>
+    /// <param name="events">The events of the whole recording (<see cref="ActivityTimelineLayout.FindEvents(IReadOnlyList{ActivityBucket}, double)"/>).</param>
     /// <param name="from">Where the part under the mouse starts, 0 to 1.</param>
     /// <param name="to">Where it ends, 0 to 1.</param>
     /// <returns>What happened there, or <see langword="null"/> without stretches.</returns>
