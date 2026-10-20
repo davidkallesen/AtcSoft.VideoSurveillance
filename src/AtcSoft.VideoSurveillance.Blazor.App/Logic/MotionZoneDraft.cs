@@ -100,7 +100,9 @@ public sealed class MotionZoneDraft
         return string.Equals(first.Name, second.Name, StringComparison.Ordinal) &&
                first.Kind.Equals(second.Kind) &&
                first.Points.SequenceEqual(second.Points) &&
-               string.Equals(first.Color, second.Color, StringComparison.Ordinal);
+               string.Equals(first.Color, second.Color, StringComparison.Ordinal) &&
+               first.Sensitivity == second.Sensitivity &&
+               EqualityComparer<double?>.Default.Equals(first.SmallestObjectPercent, second.SmallestObjectPercent);
     }
 
     /// <summary>

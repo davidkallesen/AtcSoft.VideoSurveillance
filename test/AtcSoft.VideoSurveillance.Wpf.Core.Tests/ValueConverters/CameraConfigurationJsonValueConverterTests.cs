@@ -290,7 +290,7 @@ public class CameraConfigurationJsonValueConverterTests
             MotionZones =
             [
                 new MotionZone { Name = "Tree", Kind = MotionZoneKind.Ignore, Points = [new(0.1, 0.2), new(0.4, 0.2), new(0.4, 0.9)], Color = "Green" },
-                new MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Points = [new(0.5, 0.5), new(0.9, 0.5), new(0.9, 0.9)] },
+                new MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Points = [new(0.5, 0.5), new(0.9, 0.5), new(0.9, 0.9)], Sensitivity = 80, SmallestObjectPercent = 0.1 },
             ],
         };
 
@@ -300,6 +300,7 @@ public class CameraConfigurationJsonValueConverterTests
         json.Should().Contain("\"motionZones\"");
         read.ValueEquals(original).Should().BeTrue();
         read.MotionZones[1].Kind.Should().Be(MotionZoneKind.Watch);
+        (read.MotionZones[1].Sensitivity, read.MotionZones[1].SmallestObjectPercent).Should().Be((80, 0.1));
     }
 
     [Fact]

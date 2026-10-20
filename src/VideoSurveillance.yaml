@@ -2353,6 +2353,18 @@ components:
           type: string
           maxLength: 32
           description: The zone's colour by name, for the editor and the timeline.
+        sensitivity:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          description: A watch zone's sensitivity, 0 to 100 as the camera's. Left out, the zone takes the camera's own (not "keep what is stored", as in an update).
+        smallestObjectPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          description: The smallest object that counts in a watch zone, in percent of the picture's area. Left out, the zone takes the detector's default (0.02).
 
     ZonePoint:
       title: ZonePoint

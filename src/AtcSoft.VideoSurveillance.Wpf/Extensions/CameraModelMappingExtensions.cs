@@ -180,6 +180,8 @@ public static class CameraModelMappingExtensions
             Kind = zone.Kind.Value == ApiMotionZoneKind.Names.Watch ? CoreMotionZoneKind.Watch : CoreMotionZoneKind.Ignore,
             Points = [.. (zone.Points ?? []).Select(p => new CoreZonePoint(p.X, p.Y))],
             Color = zone.Color,
+            Sensitivity = zone.Sensitivity,
+            SmallestObjectPercent = zone.SmallestObjectPercent,
         };
     }
 
@@ -194,7 +196,9 @@ public static class CameraModelMappingExtensions
             Name: zone.Name,
             Kind: zone.Kind == CoreMotionZoneKind.Watch ? ApiMotionZoneKind.Watch : ApiMotionZoneKind.Ignore,
             Points: [.. zone.Points.Select(p => new ApiZonePoint(p.X, p.Y))],
-            Color: string.IsNullOrEmpty(zone.Color) ? null : zone.Color);
+            Color: string.IsNullOrEmpty(zone.Color) ? null : zone.Color,
+            Sensitivity: zone.Sensitivity,
+            SmallestObjectPercent: zone.SmallestObjectPercent);
     }
 
     /// <summary>

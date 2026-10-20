@@ -58,6 +58,8 @@ public sealed class ApiHostValidationTests(ApiHostFixture host)
     [InlineData("two corners")]
     [InlineData("a corner outside the picture")]
     [InlineData("seventeen zones")]
+    [InlineData("a sensitivity above 100")]
+    [InlineData("a smallest object below nothing")]
     public async Task Zones_Outside_Their_Limits_Are_Refused(string what)
     {
         using var client = host.CreateClient();
@@ -65,6 +67,8 @@ public sealed class ApiHostValidationTests(ApiHostFixture host)
         {
             "two corners" => [Zone(0.1, corners: 2)],
             "a corner outside the picture" => [Zone(1.5)],
+            "a sensitivity above 100" => [WatchZone(sensitivity: 101, smallestObjectPercent: 0.1)],
+            "a smallest object below nothing" => [WatchZone(sensitivity: 50, smallestObjectPercent: -1)],
             _ => [.. Enumerable.Repeat(Zone(0.1), 17)],
         };
 
@@ -84,12 +88,16 @@ public sealed class ApiHostValidationTests(ApiHostFixture host)
 
         using var created = await client.PostAsJsonAsync(
             "/cameras",
-            new { displayName = "Zones", ipAddress = "192.0.2.22", motionZones = new[] { Zone(0.1) } },
+            new { displayName = "Zones", ipAddress = "192.0.2.22", motionZones = new[] { Zone(0.1), WatchZone(sensitivity: 80, smallestObjectPercent: 0.1) } },
             TestContext.Current.CancellationToken);
 
         created.StatusCode.Should().Be(HttpStatusCode.Created);
         var camera = await created.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         camera.GetProperty("motionZones")[0].GetProperty("points").GetArrayLength().Should().Be(3);
+        var watch = camera.GetProperty("motionZones")[1];
+        watch.GetProperty("kind").GetString().Should().Be("watch");
+        watch.GetProperty("sensitivity").GetInt32().Should().Be(80);
+        watch.GetProperty("smallestObjectPercent").GetDouble().Should().Be(0.1);
         using var deleted = await client.DeleteAsync(new Uri($"/cameras/{camera.GetProperty("id").GetGuid()}", UriKind.Relative), TestContext.Current.CancellationToken);
     }
 
@@ -101,6 +109,18 @@ public sealed class ApiHostValidationTests(ApiHostFixture host)
             name = "Tree",
             kind = "ignore",
             points = new object[] { new { x, y = 0.1 }, new { x = 0.5, y = 0.1 }, new { x = 0.5, y = 0.5 } }.Take(corners).ToArray(),
+        };
+
+    private static object WatchZone(
+        int sensitivity,
+        double smallestObjectPercent)
+        => new
+        {
+            name = "Gate",
+            kind = "watch",
+            points = new object[] { new { x = 0.1, y = 0.1 }, new { x = 0.5, y = 0.1 }, new { x = 0.5, y = 0.5 } },
+            sensitivity,
+            smallestObjectPercent,
         };
 
     private static async Task<JsonElement> ReadErrorsAsync(

@@ -12,7 +12,7 @@ public sealed class CameraModelMappingExtensionsTests
     [Fact]
     public void A_Motion_Zone_Goes_To_Core_And_Back_Unchanged()
     {
-        var zone = new ApiMotionZone("Gate", ApiMotionZoneKind.Watch, [new ApiZonePoint(0.1, 0.2), new ApiZonePoint(0.4, 0.2), new ApiZonePoint(0.4, 0.6)], "Green");
+        var zone = new ApiMotionZone("Gate", ApiMotionZoneKind.Watch, [new ApiZonePoint(0.1, 0.2), new ApiZonePoint(0.4, 0.2), new ApiZonePoint(0.4, 0.6)], "Green", Sensitivity: 80, SmallestObjectPercent: 0.1);
 
         var core = zone.ToCoreZone();
         var back = core.ToApiZone();
@@ -23,6 +23,8 @@ public sealed class CameraModelMappingExtensionsTests
         back.Kind.Should().Be(ApiMotionZoneKind.Watch);
         back.Points.Should().Equal(zone.Points);
         back.Color.Should().Be("Green");
+        (core.Sensitivity, core.SmallestObjectPercent).Should().Be((80, 0.1));
+        (back.Sensitivity, back.SmallestObjectPercent).Should().Be((80, 0.1));
         (TestCameras.Network() with { MotionZones = [zone] }).ToCameraConfiguration().MotionZones
             .Should().ContainSingle().Which.Name.Should().Be("Gate", "the tile's camera keeps the zones");
     }

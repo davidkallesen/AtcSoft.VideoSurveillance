@@ -339,7 +339,9 @@ internal static class CameraMappingExtensions
             Name: zone.Name,
             Kind: zone.Kind == CoreMotionZoneKind.Watch ? MotionZoneKind.Watch : MotionZoneKind.Ignore,
             Points: [.. zone.Points.Select(p => new ZonePoint(p.X, p.Y))],
-            Color: zone.Color);
+            Color: zone.Color,
+            Sensitivity: zone.Sensitivity,
+            SmallestObjectPercent: zone.SmallestObjectPercent);
 
     private static CoreMotionZone ToCoreZone(MotionZone zone)
         => new()
@@ -348,6 +350,8 @@ internal static class CameraMappingExtensions
             Kind = zone.Kind == MotionZoneKind.Watch ? CoreMotionZoneKind.Watch : CoreMotionZoneKind.Ignore,
             Points = [.. zone.Points.Select(p => new CoreZonePoint(p.X, p.Y))],
             Color = string.IsNullOrEmpty(zone.Color) ? null : zone.Color,
+            Sensitivity = zone.Sensitivity,
+            SmallestObjectPercent = zone.SmallestObjectPercent,
         };
 
     private static CameraStreamRtspTransport ToApiRtspTransport(

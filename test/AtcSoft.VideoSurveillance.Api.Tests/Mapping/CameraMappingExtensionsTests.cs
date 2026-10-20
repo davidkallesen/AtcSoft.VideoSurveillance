@@ -482,7 +482,7 @@ public class CameraMappingExtensionsTests
         List<ApiMotionZone> zones =
         [
             new("Tree", ApiMotionZoneKind.Ignore, [new ApiZonePoint(0.1, 0.2), new ApiZonePoint(0.4, 0.2), new ApiZonePoint(0.4, 0.9)], "Green"),
-            new("Gate", ApiMotionZoneKind.Watch, [new ApiZonePoint(0.5, 0.5), new ApiZonePoint(0.9, 0.5), new ApiZonePoint(0.9, 0.9)], null),
+            new("Gate", ApiMotionZoneKind.Watch, [new ApiZonePoint(0.5, 0.5), new ApiZonePoint(0.9, 0.5), new ApiZonePoint(0.9, 0.9)], null, Sensitivity: 80, SmallestObjectPercent: 0.1),
         ];
 
         var core = (NetworkCreateRequest("Cam", ipAddress: "10.0.0.1") with { MotionZones = zones }).ToCoreModel();
@@ -490,6 +490,7 @@ public class CameraMappingExtensionsTests
 
         core.MotionZones.Select(z => (z.Name, z.Kind, z.Color)).Should().Equal(("Tree", CoreMotionZoneKind.Ignore, "Green"), ("Gate", CoreMotionZoneKind.Watch, (string?)null));
         core.MotionZones[0].Points.Should().Equal(new CoreZonePoint(0.1, 0.2), new CoreZonePoint(0.4, 0.2), new CoreZonePoint(0.4, 0.9));
+        core.MotionZones.Select(z => (z.Sensitivity, z.SmallestObjectPercent)).Should().Equal(((int?)null, (double?)null), (80, 0.1));
         api.MotionZones.Should().BeEquivalentTo(zones);
     }
 
