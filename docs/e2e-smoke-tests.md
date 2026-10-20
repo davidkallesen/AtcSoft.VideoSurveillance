@@ -53,8 +53,8 @@ All three walks draw a motion zone in a camera form without saving it: *Add zone
 (CameraWall also adds a corner, and the web walk drags the zone with the mouse). The API client walks
 press *Take Snapshot* first and wait for the answer, a picture or "Failed to capture snapshot.": the
 live test camera serves one client, which the live view's stream usually holds, so the server has
-no picture to give. The web walk draws on the camera form the walk has open already, since a page
-load renews the session.
+no picture to give. The web walk loads the camera form again before it draws: a page load renews the
+session, so this step also checks that a renewal racing a page load does not sign the walk out.
 
 Both WPF walks also play a recording: CameraWall the one the fixture writes (with an activity index
 beside it that has one event), the client the one the server recorded from the live camera. The player

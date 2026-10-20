@@ -165,17 +165,14 @@ public sealed class WebClientSmokeTests(ServerFixture server)
 
     // The form asks the server for a snapshot and shows the answer (the live test camera serves one
     // client, so there is often none to be had); a zone added is picked and can be dragged.
-    // The form is left without saving. The last camera's form is open from the step before, and is
-    // used as it is: one page load fewer.
+    // The form is left without saving. The form is loaded again although the step before has it
+    // open: a page load renews the session, which once lost the race with a renewal in flight.
     private static async Task DrawMotionZoneAsync(
         IPage page,
         Guid cameraId,
         string shots)
     {
-        if (!page.Url.EndsWith($"/cameras/{cameraId}/edit", StringComparison.OrdinalIgnoreCase))
-        {
-            await VisitAsync(page, $"/cameras/{cameraId}/edit");
-        }
+        await VisitAsync(page, $"/cameras/{cameraId}/edit");
 
         await page.GetByText("Motion zones", new PageGetByTextOptions { Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Take Snapshot", Exact = true }).ClickAsync();
