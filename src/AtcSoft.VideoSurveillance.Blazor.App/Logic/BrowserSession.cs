@@ -11,11 +11,18 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
 
     private readonly SemaphoreSlim renewing = new(1, 1);
     private DateTimeOffset expiresAt;
+    private DateTimeOffset? retryAfter;
 
     /// <summary>
     /// Raised when the user signs in, the session is renewed, or it ends.
     /// </summary>
     public event Action? Changed;
+
+    /// <summary>
+    /// Gets how long no renewal is tried after the server was busy or away, so
+    /// the calls in between do not run into the renewal's rate limit.
+    /// </summary>
+    public static TimeSpan UnavailableBackOff { get; } = TimeSpan.FromSeconds(15);
 
     public string? AccessToken { get; private set; }
 
@@ -45,12 +52,13 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
     /// <summary>
     /// Gets or sets how the session is renewed (the auth service sets it).
     /// </summary>
-    public Func<CancellationToken, Task<bool>>? Renew { get; set; }
+    public Func<CancellationToken, Task<SessionRenewalOutcome>>? Renew { get; set; }
 
     public void Apply(Session session)
     {
         ArgumentNullException.ThrowIfNull(session);
 
+        retryAfter = null;
         AccessToken = session.AccessToken;
         RefreshToken = session.RefreshToken;
         MediaToken = session.MediaToken;
@@ -74,6 +82,7 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
 
     public void Clear()
     {
+        retryAfter = null;
         AccessToken = null;
         RefreshToken = null;
         MediaToken = null;
@@ -86,8 +95,9 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
         => renewing.Dispose();
 
     /// <summary>
-    /// Renews the session once, however many calls ask at the same time; a
-    /// session that cannot be renewed ends.
+    /// Renews the session once, however many calls ask at the same time. A
+    /// refused refresh token ends the session; a busy or absent server keeps it,
+    /// and no renewal is tried for <see cref="UnavailableBackOff"/>.
     /// </summary>
     /// <param name="cancellationToken">Ends the wait.</param>
     /// <param name="staleToken">The token a call was refused with; already renewed past it, nothing is done.</param>
@@ -111,13 +121,30 @@ public sealed class BrowserSession(TimeProvider time) : IDisposable
                 return IsSignedIn;
             }
 
-            if (Renew is null || RefreshToken is null || !await Renew(cancellationToken).ConfigureAwait(false))
+            if (Renew is null || RefreshToken is null)
             {
                 Clear();
                 return false;
             }
 
-            return true;
+            if (retryAfter is { } waitUntil && time.GetUtcNow() < waitUntil)
+            {
+                return false;
+            }
+
+            switch (await Renew(cancellationToken).ConfigureAwait(false))
+            {
+                case SessionRenewalOutcome.Renewed:
+                    retryAfter = null;
+                    return true;
+                case SessionRenewalOutcome.Unavailable:
+                    // The call fails, but the user stays signed in.
+                    retryAfter = time.GetUtcNow() + UnavailableBackOff;
+                    return false;
+                default:
+                    Clear();
+                    return false;
+            }
         }
         finally
         {

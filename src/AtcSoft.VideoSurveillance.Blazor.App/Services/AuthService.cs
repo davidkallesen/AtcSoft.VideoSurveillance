@@ -4,22 +4,28 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Services;
 /// Signs this browser in and out, and keeps the session across a page reload:
 /// the refresh token is in the browser's storage, the access token only in memory.
 /// </summary>
-public sealed class AuthService
+public sealed class AuthService : IDisposable
 {
     private readonly GatewayService gateway;
     private readonly BrowserSession session;
     private readonly IJSRuntime js;
+    private readonly BrowserSessionStorage storage;
+    private readonly SessionRefresher refresher;
+    private DotNetObjectReference<AuthService>? watcher;
 
     public AuthService(
         GatewayService gateway,
         BrowserSession session,
         IJSRuntime js)
     {
+        ArgumentNullException.ThrowIfNull(gateway);
         ArgumentNullException.ThrowIfNull(session);
 
         this.gateway = gateway;
         this.session = session;
         this.js = js;
+        storage = new BrowserSessionStorage(js);
+        refresher = new SessionRefresher(storage, gateway.RefreshSessionAsync);
         session.Renew = RenewAsync;
     }
 
@@ -28,12 +34,18 @@ public sealed class AuthService
     /// </summary>
     public async Task InitializeAsync()
     {
+        if (watcher is null)
+        {
+            watcher = DotNetObjectReference.Create(this);
+            await js.InvokeVoidAsync("atcSession.watch", watcher).ConfigureAwait(true);
+        }
+
         if (session.IsSignedIn)
         {
             return;
         }
 
-        var stored = await js.InvokeAsync<string?>("atcSession.get").ConfigureAwait(true);
+        var stored = await storage.ReadAsync(CancellationToken.None).ConfigureAwait(true);
         if (StoredSession.Read(stored) is { } earlier)
         {
             session.Restore(earlier.RefreshToken, earlier.UserName);
@@ -75,6 +87,21 @@ public sealed class AuthService
         await js.InvokeVoidAsync("atcSession.clear").ConfigureAwait(true);
     }
 
+    /// <summary>
+    /// Another tab forgot the session (signed out): this one is signed out too.
+    /// </summary>
+    [JSInvokable]
+    public void OnSignedOutElsewhere()
+    {
+        if (session.RefreshToken is not null)
+        {
+            session.Clear();
+        }
+    }
+
+    public void Dispose()
+        => watcher?.Dispose();
+
     private async Task<string?> TakeAsync(GatewayResult<Session> result)
     {
         if (result.Value is not { } signedIn)
@@ -83,34 +110,25 @@ public sealed class AuthService
         }
 
         session.Apply(signedIn);
-        await SaveAsync(signedIn).ConfigureAwait(true);
+        await storage.WriteAsync(StoredSession.Write(signedIn.RefreshToken, signedIn.UserName), CancellationToken.None).ConfigureAwait(true);
         return null;
     }
 
-    private async Task<bool> RenewAsync(CancellationToken cancellationToken)
+    private async Task<SessionRenewalOutcome> RenewAsync(
+        CancellationToken cancellationToken)
     {
         if (session.RefreshToken is not { } refreshToken)
         {
-            return false;
+            return SessionRenewalOutcome.Refused;
         }
 
-        var (renewed, outcome) = await gateway.RefreshSessionAsync(refreshToken, cancellationToken).ConfigureAwait(true);
-        if (renewed is null)
+        // The refresher keeps the new session, and forgets a refused one only while it is still kept.
+        var (renewed, outcome) = await refresher.RefreshAsync(refreshToken, cancellationToken).ConfigureAwait(true);
+        if (renewed is not null)
         {
-            // Only a refused refresh token ends the stored session; a busy or absent server keeps it.
-            if (SessionRenewal.ForgetsTheStoredSession(outcome))
-            {
-                await js.InvokeVoidAsync("atcSession.clear", cancellationToken).ConfigureAwait(true);
-            }
-
-            return false;
+            session.Apply(renewed);
         }
 
-        session.Apply(renewed);
-        await SaveAsync(renewed).ConfigureAwait(true);
-        return true;
+        return outcome;
     }
-
-    private ValueTask SaveAsync(Session saved)
-        => js.InvokeVoidAsync("atcSession.set", StoredSession.Write(saved.RefreshToken, saved.UserName));
 }

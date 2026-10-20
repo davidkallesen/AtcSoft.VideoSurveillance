@@ -41,7 +41,7 @@ public sealed class BearerTokenHandlerTests : IDisposable
         session.Renew = _ =>
         {
             session.Apply(Session("new", expiresIn: 3600));
-            return Task.FromResult(true);
+            return Task.FromResult(SessionRenewalOutcome.Renewed);
         };
         time.Advance(TimeSpan.FromMinutes(59.5));
         var sent = new List<string?>();
@@ -63,7 +63,7 @@ public sealed class BearerTokenHandlerTests : IDisposable
         session.Renew = _ =>
         {
             session.Apply(Session("fresh", expiresIn: 3600));
-            return Task.FromResult(true);
+            return Task.FromResult(SessionRenewalOutcome.Renewed);
         };
         var sent = new List<string?>();
         using var invoker = CreateInvoker(request =>
@@ -82,7 +82,7 @@ public sealed class BearerTokenHandlerTests : IDisposable
     public async Task A_Session_That_Cannot_Be_Renewed_Ends()
     {
         session.Apply(Session("stale", expiresIn: 3600));
-        session.Renew = _ => Task.FromResult(false);
+        session.Renew = _ => Task.FromResult(SessionRenewalOutcome.Refused);
         using var invoker = CreateInvoker(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized));
 
         var response = await CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras");
