@@ -166,6 +166,16 @@ public partial class SettingsDialogViewModel : ViewModelBase
     [ObservableProperty]
     private int motionSensitivity = DropDownItemsFactory.DefaultMotionSensitivity;
 
+    // Decimal, as the decimal box takes it.
+    [ObservableProperty]
+    private decimal smallestObjectPercent = (decimal)MotionDetectorOptions.DefaultSmallestObjectPercent;
+
+    [ObservableProperty]
+    private int stoppedObjectSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds;
+
+    [ObservableProperty]
+    private bool ignoreLightingChanges = true;
+
     [ObservableProperty]
     private int postMotionDurationSeconds = DropDownItemsFactory.DefaultPostMotionDuration;
 
@@ -195,12 +205,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
     public IDictionary<string, string> BoundingBoxThicknessItems
         => DropDownItemsFactory.BoundingBoxThicknessItems;
-
-    [ObservableProperty]
-    private string selectedBoundingBoxMinArea = DropDownItemsFactory.DefaultBoundingBoxMinArea.ToString(CultureInfo.InvariantCulture);
-
-    public IDictionary<string, string> BoundingBoxMinAreaItems
-        => DropDownItemsFactory.BoundingBoxMinAreaItems;
 
     #endregion
 
@@ -443,6 +447,9 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
             // Motion Detection
             MotionSensitivity = settings.MotionSensitivity;
+            SmallestObjectPercent = (decimal)settings.SmallestObjectPercent;
+            StoppedObjectSeconds = settings.StoppedObjectSeconds;
+            IgnoreLightingChanges = settings.IgnoreLightingChanges;
             PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
             AnalysisFrameRate = settings.AnalysisFrameRate;
             SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(settings.AnalysisWidth, settings.AnalysisHeight);
@@ -451,7 +458,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
             ShowBoundingBoxInFullScreen = settings.BoundingBoxShowInFullScreen;
             SelectedBoundingBoxColor = settings.BoundingBoxColor ?? DropDownItemsFactory.DefaultBoundingBoxColor;
             SelectedBoundingBoxThickness = settings.BoundingBoxThickness.ToString(CultureInfo.InvariantCulture);
-            SelectedBoundingBoxMinArea = settings.BoundingBoxMinArea.ToString(CultureInfo.InvariantCulture);
 
             // Capture
             RecordingPath = !string.IsNullOrEmpty(settings.RecordingPath) ? new DirectoryInfo(settings.RecordingPath) : null;
@@ -585,6 +591,9 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
         // Motion Detection Tab
         MotionSensitivity = DropDownItemsFactory.DefaultMotionSensitivity;
+        SmallestObjectPercent = (decimal)MotionDetectorOptions.DefaultSmallestObjectPercent;
+        StoppedObjectSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds;
+        IgnoreLightingChanges = true;
         PostMotionDurationSeconds = DropDownItemsFactory.DefaultPostMotionDuration;
         AnalysisFrameRate = 15;
         SelectedAnalysisResolution = DropDownItemsFactory.DefaultMotionAnalysisResolution;
@@ -593,7 +602,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
         ShowBoundingBoxInFullScreen = false;
         SelectedBoundingBoxColor = DropDownItemsFactory.DefaultBoundingBoxColor;
         SelectedBoundingBoxThickness = DropDownItemsFactory.DefaultBoundingBoxThickness.ToString(CultureInfo.InvariantCulture);
-        SelectedBoundingBoxMinArea = DropDownItemsFactory.DefaultBoundingBoxMinArea.ToString(CultureInfo.InvariantCulture);
 
         // Capture Tab
         RecordingPath = new DirectoryInfo(ApplicationPaths.DefaultRecordingsPath);
@@ -706,7 +714,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
         _ = int.TryParse(SelectedMaxRecordingStorage, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxRecordingStorage);
 
         _ = int.TryParse(SelectedBoundingBoxThickness, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxThickness);
-        _ = int.TryParse(SelectedBoundingBoxMinArea, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxMinArea);
 
         var (analysisWidth, analysisHeight) = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
 
@@ -742,7 +749,9 @@ public partial class SettingsDialogViewModel : ViewModelBase
             RtspTransport: rtspTransport,
             MaxLatencyMs: MaxLatencyMs,
             MotionSensitivity: MotionSensitivity,
-            MinimumChangePercent: originalApiSettings?.MinimumChangePercent ?? 0.5,
+            SmallestObjectPercent: (double)SmallestObjectPercent,
+            StoppedObjectSeconds: StoppedObjectSeconds,
+            IgnoreLightingChanges: IgnoreLightingChanges,
             AnalysisFrameRate: AnalysisFrameRate,
             AnalysisWidth: analysisWidth,
             AnalysisHeight: analysisHeight,
@@ -752,9 +761,8 @@ public partial class SettingsDialogViewModel : ViewModelBase
             BoundingBoxShowInFullScreen: ShowBoundingBoxInFullScreen,
             BoundingBoxColor: SelectedBoundingBoxColor,
             BoundingBoxThickness: boundingBoxThickness,
-            BoundingBoxMinArea: boundingBoxMinArea,
-            BoundingBoxPadding: originalApiSettings?.BoundingBoxPadding ?? 10,
-            BoundingBoxSmoothing: originalApiSettings?.BoundingBoxSmoothing ?? 0.3,
+            BoundingBoxPadding: originalApiSettings?.BoundingBoxPadding,
+            BoundingBoxSmoothing: originalApiSettings?.BoundingBoxSmoothing,
             RecordingPath: RecordingPath?.FullName ?? string.Empty,
             RecordingFormat: recordingFormat,
             RecordAsH264: string.Equals(SelectedTranscodeVideoCodec, "H264", StringComparison.OrdinalIgnoreCase),

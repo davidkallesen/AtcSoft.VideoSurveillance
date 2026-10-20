@@ -25,6 +25,35 @@
                 Orientation="Vertical"
                 Value="{Binding Path=MotionSensitivity, Mode=TwoWay}" />
 
+            <atc:LabelDecimalBox
+                DecimalPlaces="3"
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                      Key=SmallestObjectInfo}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=SmallestObjectPercent}"
+                Maximum="100"
+                Minimum="0"
+                Orientation="Vertical"
+                Value="{Binding Path=SmallestObjectPercent, Mode=TwoWay}" />
+
+            <atc:LabelIntegerBox
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                      Key=StoppedObjectSecondsInfo}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=StoppedObjectSeconds}"
+                Maximum="600"
+                Minimum="10"
+                Orientation="Vertical"
+                Value="{Binding Path=StoppedObjectSeconds, Mode=TwoWay}" />
+
+            <atc:LabelToggleSwitch
+                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                      Key=IgnoreLightingChangesInfo}"
+                IsOn="{Binding Path=IgnoreLightingChanges, Mode=TwoWay}"
+                LabelPosition="Right"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=IgnoreLightingChanges}" />
+
             <atc:LabelIntegerBox
                 InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                       Key=PostMotionDurationInfo}"

@@ -23,6 +23,9 @@ public sealed class SettingsStateTests
         sut.ShowNotificationOnReconnect.Should().Be(connection.ShowNotificationOnReconnect);
         sut.VideoQuality.Should().Be(performance.VideoQuality);
         sut.MaxLatencyMs.Should().Be(performance.MaxLatencyMs);
+        sut.SmallestObjectPercent.Should().Be(motion.SmallestObjectPercent);
+        sut.StoppedObjectSeconds.Should().Be(motion.StoppedObjectSeconds);
+        sut.IgnoreLightingChanges.Should().Be(motion.IgnoreLightingChanges);
         sut.AnalysisFrameRate.Should().Be(motion.AnalysisFrameRate);
         sut.AnalysisWidth.Should().Be(motion.AnalysisWidth);
         sut.AnalysisHeight.Should().Be(motion.AnalysisHeight);
@@ -30,7 +33,6 @@ public sealed class SettingsStateTests
         sut.CooldownSeconds.Should().Be(motion.CooldownSeconds);
         sut.BoundingBoxShowInFullScreen.Should().Be(motion.BoundingBox.ShowInFullScreen);
         sut.BoundingBoxColor.Should().Be(motion.BoundingBox.Color);
-        sut.BoundingBoxMinArea.Should().Be(motion.BoundingBox.MinArea);
         sut.BoundingBoxPadding.Should().Be(motion.BoundingBox.Padding);
         sut.RecordingFormat.ToString().Should().BeEquivalentTo(recording.RecordingFormat);
         sut.EnableHourlySegmentation.Should().Be(recording.EnableHourlySegmentation);
@@ -57,8 +59,13 @@ public sealed class SettingsStateTests
         sut.LoadFrom(loaded);
 
         // The language is each client's own, not the server's.
-#pragma warning disable CS0618 // the web client leaves the deprecated language out
-        sut.ToApiModel().Should().BeEquivalentTo(loaded, options => options.Excluding(settings => settings.Language));
+#pragma warning disable CS0618 // the web client leaves the deprecated language and detector settings out
+        sut.ToApiModel().Should().BeEquivalentTo(
+            loaded,
+            options => options
+                .Excluding(settings => settings.Language)
+                .Excluding(settings => settings.MinimumChangePercent)
+                .Excluding(settings => settings.BoundingBoxMinArea));
 #pragma warning restore CS0618
     }
 
@@ -71,6 +78,19 @@ public sealed class SettingsStateTests
         // Absent = unchanged; the web client's language is the browser's.
 #pragma warning disable CS0618 // the web client leaves the deprecated language out
         sut.ToApiModel().Language.Should().BeNull();
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void The_Web_Client_Leaves_The_Old_Detectors_Settings_Alone()
+    {
+        var sut = new SettingsState();
+        sut.LoadFrom(CreateSettings());
+
+        // Absent = unchanged: only the comparison detector reads them.
+#pragma warning disable CS0618 // deprecated in the spec
+        sut.ToApiModel().MinimumChangePercent.Should().BeNull();
+        sut.ToApiModel().BoundingBoxMinArea.Should().BeNull();
 #pragma warning restore CS0618
     }
 
@@ -196,6 +216,9 @@ public sealed class SettingsStateTests
             RtspTransport: AppSettingsRtspTransport.Udp,
             MaxLatencyMs: 750,
             MotionSensitivity: 50,
+            SmallestObjectPercent: 0.1,
+            StoppedObjectSeconds: 120,
+            IgnoreLightingChanges: false,
             MinimumChangePercent: 1.5,
             AnalysisFrameRate: 10,
             AnalysisWidth: 640,

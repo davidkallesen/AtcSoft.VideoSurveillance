@@ -149,6 +149,15 @@ public partial class CameraGrid
     [DependencyProperty(DefaultValue = 2.0)]
     private double motionMinimumChangePercent;
 
+    [DependencyProperty(DefaultValue = MotionDetectorOptions.DefaultSmallestObjectPercent)]
+    private double motionSmallestObjectPercent;
+
+    [DependencyProperty(DefaultValue = MotionDetectorOptions.DefaultStoppedObjectSeconds)]
+    private int motionStoppedObjectSeconds;
+
+    [DependencyProperty(DefaultValue = true)]
+    private bool motionIgnoreLightingChanges;
+
     [DependencyProperty(DefaultValue = 2)]
     private int motionAnalysisFrameRate;
 

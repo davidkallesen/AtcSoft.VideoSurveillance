@@ -7,6 +7,12 @@ public class MotionDetectionOverrides
 {
     public int? Sensitivity { get; set; }
 
+    public double? SmallestObjectPercent { get; set; }
+
+    public int? StoppedObjectSeconds { get; set; }
+
+    public bool? IgnoreLightingChanges { get; set; }
+
     public double? MinimumChangePercent { get; set; }
 
     public int? AnalysisFrameRate { get; set; }
@@ -23,6 +29,9 @@ public class MotionDetectionOverrides
 
     public bool HasAnyOverride()
         => Sensitivity.HasValue ||
+           SmallestObjectPercent.HasValue ||
+           StoppedObjectSeconds.HasValue ||
+           IgnoreLightingChanges.HasValue ||
            MinimumChangePercent.HasValue ||
            AnalysisFrameRate.HasValue ||
            AnalysisWidth.HasValue ||
@@ -34,7 +43,7 @@ public class MotionDetectionOverrides
     /// <inheritdoc />
     public override string ToString()
     {
-        var count = new[] { Sensitivity.HasValue, MinimumChangePercent.HasValue, AnalysisFrameRate.HasValue, AnalysisWidth.HasValue, AnalysisHeight.HasValue, PostMotionDurationSeconds.HasValue, CooldownSeconds.HasValue, BoundingBox.HasAnyOverride() }.Count(v => v);
+        var count = new[] { Sensitivity.HasValue, SmallestObjectPercent.HasValue, StoppedObjectSeconds.HasValue, IgnoreLightingChanges.HasValue, MinimumChangePercent.HasValue, AnalysisFrameRate.HasValue, AnalysisWidth.HasValue, AnalysisHeight.HasValue, PostMotionDurationSeconds.HasValue, CooldownSeconds.HasValue, BoundingBox.HasAnyOverride() }.Count(v => v);
         return $"MotionDetectionOverrides {{ NonNullOverrides={count.ToString(CultureInfo.InvariantCulture)} }}";
     }
 
@@ -42,6 +51,9 @@ public class MotionDetectionOverrides
         => new()
         {
             Sensitivity = Sensitivity,
+            SmallestObjectPercent = SmallestObjectPercent,
+            StoppedObjectSeconds = StoppedObjectSeconds,
+            IgnoreLightingChanges = IgnoreLightingChanges,
             MinimumChangePercent = MinimumChangePercent,
             AnalysisFrameRate = AnalysisFrameRate,
             AnalysisWidth = AnalysisWidth,
@@ -54,6 +66,9 @@ public class MotionDetectionOverrides
     public void CopyFrom(MotionDetectionOverrides? source)
     {
         Sensitivity = source?.Sensitivity;
+        SmallestObjectPercent = source?.SmallestObjectPercent;
+        StoppedObjectSeconds = source?.StoppedObjectSeconds;
+        IgnoreLightingChanges = source?.IgnoreLightingChanges;
         MinimumChangePercent = source?.MinimumChangePercent;
         AnalysisFrameRate = source?.AnalysisFrameRate;
         AnalysisWidth = source?.AnalysisWidth;
@@ -71,6 +86,9 @@ public class MotionDetectionOverrides
         }
 
         return Sensitivity == other.Sensitivity &&
+               SmallestObjectPercent.IsEqual(other.SmallestObjectPercent) &&
+               StoppedObjectSeconds == other.StoppedObjectSeconds &&
+               IgnoreLightingChanges == other.IgnoreLightingChanges &&
                MinimumChangePercent.IsEqual(other.MinimumChangePercent) &&
                AnalysisFrameRate == other.AnalysisFrameRate &&
                AnalysisWidth == other.AnalysisWidth &&

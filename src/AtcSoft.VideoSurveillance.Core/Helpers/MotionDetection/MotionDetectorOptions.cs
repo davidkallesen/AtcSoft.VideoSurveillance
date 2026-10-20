@@ -19,7 +19,7 @@ public sealed record MotionDetectorOptions(
     double ThresholdSigmas = 3.0,
     double MinThreshold = 16,
     double BackgroundSeconds = 4,
-    double ForegroundSeconds = 60,
+    double ForegroundSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds,
     double SmallestObjectShare = MotionDetectorOptions.DefaultSmallestObjectShare,
     double MergeGapShare = 0.01,
     double LightingChangeShare = 0.5,
@@ -29,8 +29,46 @@ public sealed record MotionDetectorOptions(
     double TrackLostSeconds = 1.0)
 {
     /// <summary>
+    /// The smallest blob that counts by default, as a share of the picture's area.
+    /// </summary>
+    public const double DefaultSmallestObjectShare = 0.0002;
+
+    /// <summary>
+    /// How long something that stops moving is still seen by default, in seconds
+    /// (<see cref="ForegroundSeconds"/>).
+    /// </summary>
+    public const int DefaultStoppedObjectSeconds = 60;
+
+    /// <summary>
+    /// The lowest <see cref="MotionDetectionSettings.StoppedObjectSeconds"/>: below ten seconds
+    /// someone standing still for a moment would vanish.
+    /// </summary>
+    public const int MinStoppedObjectSeconds = 10;
+
+    /// <summary>
+    /// The highest <see cref="MotionDetectionSettings.StoppedObjectSeconds"/>.
+    /// </summary>
+    public const int MaxStoppedObjectSeconds = 600;
+
+    /// <summary>
+    /// The highest <see cref="MotionDetectionSettings.SmallestObjectPercent"/>, in percent: the
+    /// whole picture, as for a watch zone.
+    /// </summary>
+    public const double MaxSmallestObjectPercent = 100;
+
+    // The share of changed picture above which a change is never light: lighting changes not ignored.
+    private const double NeverLight = 1.0;
+
+    /// <summary>
+    /// The smallest object that counts by default, in percent of the picture's area: what a watch
+    /// zone without its own takes, and what an editor shows for it.
+    /// </summary>
+    public const double DefaultSmallestObjectPercent = DefaultSmallestObjectShare * 100;
+
+    /// <summary>
     /// Gets the options for a camera's settings: <see cref="MotionDetectionSettings.Sensitivity"/>
-    /// (0 to 100) lowers the threshold as it rises.
+    /// (0 to 100) lowers the threshold as it rises; the smallest object, how long something that
+    /// stops is still seen, and whether lighting changes are ignored are taken as they are.
     /// </summary>
     /// <param name="settings">The camera's motion settings.</param>
     /// <returns>The options.</returns>
@@ -38,22 +76,17 @@ public sealed record MotionDetectorOptions(
     {
         ArgumentNullException.ThrowIfNull(settings);
 
+        var defaults = new MotionDetectorOptions();
         var (sigmas, minThreshold) = Thresholds(settings.Sensitivity);
-        return new MotionDetectorOptions(
-            ThresholdSigmas: sigmas,
-            MinThreshold: minThreshold);
+        return defaults with
+        {
+            ThresholdSigmas = sigmas,
+            MinThreshold = minThreshold,
+            SmallestObjectShare = Math.Clamp(settings.SmallestObjectPercent, 0, MaxSmallestObjectPercent) / 100,
+            ForegroundSeconds = Math.Clamp(settings.StoppedObjectSeconds, MinStoppedObjectSeconds, MaxStoppedObjectSeconds),
+            LightingChangeShare = settings.IgnoreLightingChanges ? defaults.LightingChangeShare : NeverLight,
+        };
     }
-
-    /// <summary>
-    /// The smallest blob that counts by default, as a share of the picture's area.
-    /// </summary>
-    public const double DefaultSmallestObjectShare = 0.0002;
-
-    /// <summary>
-    /// The smallest object that counts by default, in percent of the picture's area: what a watch
-    /// zone without its own takes, and what an editor shows for it.
-    /// </summary>
-    public const double DefaultSmallestObjectPercent = DefaultSmallestObjectShare * 100;
 
     /// <summary>
     /// Gets the thresholds for a sensitivity, 0 to 100: the camera's and a watch zone's alike.

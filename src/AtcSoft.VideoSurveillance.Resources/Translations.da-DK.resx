@@ -2802,4 +2802,19 @@ Miniature:
   <data name="ActivityHoverZone1" xml:space="preserve">
     <value>Zone: {0}</value>
   </data>
+  <data name="SmallestObjectInfo" xml:space="preserve">
+    <value>Alt mindre end denne del af billedet ignoreres: hæv den for at ignorere fugle og blade, sænk den for at se en kat langt væk. En overvåget zone kan have sin egen.</value>
+  </data>
+  <data name="StoppedObjectSeconds" xml:space="preserve">
+    <value>Noget, der står stille, bliver baggrund efter (sekunder)</value>
+  </data>
+  <data name="StoppedObjectSecondsInfo" xml:space="preserve">
+    <value>Hvor længe noget, der holder op med at bevæge sig, fx en parkeret bil, stadig ses, før det bliver en del af billedet.</value>
+  </data>
+  <data name="IgnoreLightingChanges" xml:space="preserve">
+    <value>Ignorer lysændringer</value>
+  </data>
+  <data name="IgnoreLightingChangesInfo" xml:space="preserve">
+    <value>En ændring af det meste af billedet på én gang, fx en sky eller en lampe, der tændes, er ikke bevægelse. Slå det fra for et kamera ved en dør, hvor en person kan fylde det meste af billedet.</value>
+  </data>
 </root>

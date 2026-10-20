@@ -171,6 +171,15 @@
                         <local:CameraTile.MotionMinimumChangePercent>
                             <Binding Path="MotionMinimumChangePercent" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                         </local:CameraTile.MotionMinimumChangePercent>
+                        <local:CameraTile.MotionSmallestObjectPercent>
+                            <Binding Path="MotionSmallestObjectPercent" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                        </local:CameraTile.MotionSmallestObjectPercent>
+                        <local:CameraTile.MotionStoppedObjectSeconds>
+                            <Binding Path="MotionStoppedObjectSeconds" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                        </local:CameraTile.MotionStoppedObjectSeconds>
+                        <local:CameraTile.MotionIgnoreLightingChanges>
+                            <Binding Path="MotionIgnoreLightingChanges" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                        </local:CameraTile.MotionIgnoreLightingChanges>
                         <local:CameraTile.MotionAnalysisFrameRate>
                             <Binding Path="MotionAnalysisFrameRate" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                         </local:CameraTile.MotionAnalysisFrameRate>

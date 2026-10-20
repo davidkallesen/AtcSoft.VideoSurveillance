@@ -167,6 +167,16 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     [ObservableProperty]
     private int motionSensitivity = DropDownItemsFactory.DefaultMotionSensitivity;
 
+    // Decimal, as the decimal box takes it.
+    [ObservableProperty]
+    private decimal smallestObjectPercent = (decimal)MotionDetectorOptions.DefaultSmallestObjectPercent;
+
+    [ObservableProperty]
+    private int stoppedObjectSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds;
+
+    [ObservableProperty]
+    private bool ignoreLightingChanges = true;
+
     [ObservableProperty]
     private int postMotionDurationSeconds = DropDownItemsFactory.DefaultPostMotionDuration;
 
@@ -500,6 +510,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
         // Motion Detection Tab
         MotionSensitivity = DropDownItemsFactory.DefaultMotionSensitivity;
+        SmallestObjectPercent = (decimal)MotionDetectorOptions.DefaultSmallestObjectPercent;
+        StoppedObjectSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds;
+        IgnoreLightingChanges = true;
         PostMotionDurationSeconds = DropDownItemsFactory.DefaultPostMotionDuration;
         AnalysisFrameRate = 15;
         SelectedAnalysisResolution = DropDownItemsFactory.DefaultMotionAnalysisResolution;
@@ -614,6 +627,9 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         // Load Motion Detection Tab settings
         var motionDetection = settingsService.MotionDetection;
         MotionSensitivity = motionDetection.Sensitivity;
+        SmallestObjectPercent = (decimal)motionDetection.SmallestObjectPercent;
+        StoppedObjectSeconds = motionDetection.StoppedObjectSeconds;
+        IgnoreLightingChanges = motionDetection.IgnoreLightingChanges;
         PostMotionDurationSeconds = motionDetection.PostMotionDurationSeconds;
         AnalysisFrameRate = motionDetection.AnalysisFrameRate;
         SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(motionDetection.AnalysisWidth, motionDetection.AnalysisHeight);
@@ -764,9 +780,16 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     private void SaveMotionDetectionSettings()
     {
         var (analysisWidth, analysisHeight) = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
+
+        // What the dialog does not show is kept as it was.
+        var current = settingsService.MotionDetection;
         var settings = new MotionDetectionSettings
         {
             Sensitivity = MotionSensitivity,
+            SmallestObjectPercent = (double)SmallestObjectPercent,
+            StoppedObjectSeconds = StoppedObjectSeconds,
+            IgnoreLightingChanges = IgnoreLightingChanges,
+            MinimumChangePercent = current.MinimumChangePercent,
             PostMotionDurationSeconds = PostMotionDurationSeconds,
             AnalysisFrameRate = AnalysisFrameRate,
             AnalysisWidth = analysisWidth,
@@ -779,6 +802,8 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
                 Color = SelectedBoundingBoxColor,
                 Thickness = int.TryParse(SelectedBoundingBoxThickness, NumberStyles.Integer, CultureInfo.InvariantCulture, out var thickness) ? thickness : DropDownItemsFactory.DefaultBoundingBoxThickness,
                 MinArea = int.TryParse(SelectedBoundingBoxMinArea, NumberStyles.Integer, CultureInfo.InvariantCulture, out var minArea) ? minArea : DropDownItemsFactory.DefaultBoundingBoxMinArea,
+                Padding = current.BoundingBox.Padding,
+                Smoothing = current.BoundingBox.Smoothing,
             },
         };
 

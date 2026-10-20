@@ -619,6 +619,21 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
             target.Sensitivity = sensitivity;
         }
 
+        if (TryGetNullableDoubleProperty(element, "smallestObjectPercent", "SmallestObjectPercent", out var smallestObject))
+        {
+            target.SmallestObjectPercent = smallestObject;
+        }
+
+        if (TryGetNullableInt32Property(element, "stoppedObjectSeconds", "StoppedObjectSeconds", out var stoppedSeconds))
+        {
+            target.StoppedObjectSeconds = stoppedSeconds;
+        }
+
+        if (TryGetNullableBoolProperty(element, "ignoreLightingChanges", "IgnoreLightingChanges", out var ignoreLighting))
+        {
+            target.IgnoreLightingChanges = ignoreLighting;
+        }
+
         if (TryGetNullableDoubleProperty(element, "minimumChangePercent", "MinimumChangePercent", out var minChange))
         {
             target.MinimumChangePercent = minChange;
@@ -1233,6 +1248,21 @@ public sealed class CameraConfigurationJsonValueConverter : JsonConverter<Camera
         if (motion.Sensitivity.HasValue)
         {
             writer.WriteNumber("sensitivity", motion.Sensitivity.Value);
+        }
+
+        if (motion.SmallestObjectPercent.HasValue)
+        {
+            writer.WriteNumber("smallestObjectPercent", motion.SmallestObjectPercent.Value);
+        }
+
+        if (motion.StoppedObjectSeconds.HasValue)
+        {
+            writer.WriteNumber("stoppedObjectSeconds", motion.StoppedObjectSeconds.Value);
+        }
+
+        if (motion.IgnoreLightingChanges.HasValue)
+        {
+            writer.WriteBoolean("ignoreLightingChanges", motion.IgnoreLightingChanges.Value);
         }
 
         if (motion.MinimumChangePercent.HasValue)

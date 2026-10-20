@@ -13,6 +13,10 @@ public class BoundingBoxSettings
 
     public int Thickness { get; set; } = 2;
 
+    /// <summary>
+    /// Gets or sets the smallest box, in pixels of the analysed picture. Only the comparison
+    /// detector reads it; the built-in detector uses <see cref="MotionDetectionSettings.SmallestObjectPercent"/>.
+    /// </summary>
     public int MinArea { get; set; } = 10;
 
     public int Padding { get; set; } = 4;

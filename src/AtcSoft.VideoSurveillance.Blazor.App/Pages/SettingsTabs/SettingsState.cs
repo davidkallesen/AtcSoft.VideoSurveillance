@@ -71,7 +71,11 @@ public sealed class SettingsState
 
     public int MotionSensitivity { get; set; } = 30;
 
-    public double MinimumChangePercent { get; set; } = 0.5;
+    public double SmallestObjectPercent { get; set; } = 0.02;
+
+    public int StoppedObjectSeconds { get; set; } = 60;
+
+    public bool IgnoreLightingChanges { get; set; } = true;
 
     public int AnalysisFrameRate { get; set; } = 15;
 
@@ -111,8 +115,6 @@ public sealed class SettingsState
     public string BoundingBoxColor { get; set; } = "Red";
 
     public int BoundingBoxThickness { get; set; } = 2;
-
-    public int BoundingBoxMinArea { get; set; } = 10;
 
     public int BoundingBoxPadding { get; set; } = 4;
 
@@ -245,7 +247,9 @@ public sealed class SettingsState
         MaxLatencyMs = settings.MaxLatencyMs;
 
         MotionSensitivity = settings.MotionSensitivity;
-        MinimumChangePercent = settings.MinimumChangePercent;
+        SmallestObjectPercent = settings.SmallestObjectPercent;
+        StoppedObjectSeconds = settings.StoppedObjectSeconds;
+        IgnoreLightingChanges = settings.IgnoreLightingChanges;
         AnalysisFrameRate = settings.AnalysisFrameRate;
         AnalysisWidth = settings.AnalysisWidth;
         AnalysisHeight = settings.AnalysisHeight;
@@ -255,7 +259,6 @@ public sealed class SettingsState
         BoundingBoxShowInFullScreen = settings.BoundingBoxShowInFullScreen;
         BoundingBoxColor = ColorChoices.Normalize(settings.BoundingBoxColor, "Red");
         BoundingBoxThickness = settings.BoundingBoxThickness;
-        BoundingBoxMinArea = settings.BoundingBoxMinArea;
         BoundingBoxPadding = settings.BoundingBoxPadding;
         BoundingBoxSmoothing = settings.BoundingBoxSmoothing;
 
@@ -325,7 +328,9 @@ public sealed class SettingsState
             RtspTransport: RtspTransport,
             MaxLatencyMs: MaxLatencyMs,
             MotionSensitivity: MotionSensitivity,
-            MinimumChangePercent: MinimumChangePercent,
+            SmallestObjectPercent: SmallestObjectPercent,
+            StoppedObjectSeconds: StoppedObjectSeconds,
+            IgnoreLightingChanges: IgnoreLightingChanges,
             AnalysisFrameRate: AnalysisFrameRate,
             AnalysisWidth: AnalysisWidth,
             AnalysisHeight: AnalysisHeight,
@@ -335,7 +340,6 @@ public sealed class SettingsState
             BoundingBoxShowInFullScreen: BoundingBoxShowInFullScreen,
             BoundingBoxColor: BoundingBoxColor,
             BoundingBoxThickness: BoundingBoxThickness,
-            BoundingBoxMinArea: BoundingBoxMinArea,
             BoundingBoxPadding: BoundingBoxPadding,
             BoundingBoxSmoothing: BoundingBoxSmoothing,
             RecordingPath: RecordingPath,

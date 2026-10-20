@@ -32,7 +32,6 @@ public sealed class SettingsOptionsTests
         SettingsOptions.AnalysisResolutions.Should().Contain(o => o.Value == state.AnalysisResolution);
         SettingsOptions.PostMotionDurations.Should().Contain(o => o.Value == state.PostMotionDurationSeconds);
         SettingsOptions.BoundingBoxThicknesses.Should().Contain(o => o.Value == state.BoundingBoxThickness);
-        SettingsOptions.BoundingBoxMinAreas.Should().Contain(o => o.Value == state.BoundingBoxMinArea);
         SettingsOptions.ThumbnailTiles.Should().Contain(o => o.Value == state.ThumbnailTileCount);
         SettingsOptions.MaxRecordingDurations.Should().Contain(o => o.Value == state.MaxRecordingDurationMinutes);
         SettingsOptions.RetentionPeriods.Should().Contain(o => o.Value == state.RecordingRetentionDays);

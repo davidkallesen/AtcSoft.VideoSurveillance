@@ -145,7 +145,10 @@ Frame-based motion analysis configuration. See [motion-detection.md](motion-dete
 | Setting | Type | Default | Override | Description |
 |---------|------|---------|----------|-------------|
 | `Sensitivity` | int | `30` | Yes | Detection threshold (0-100, higher = more sensitive) |
-| `MinimumChangePercent` | double | `0.5` | Yes | Minimum % of frame change to trigger detection |
+| `SmallestObjectPercent` | double | `0.02` | Yes | The smallest object that counts, in % of the picture's area (0-100). A watch zone without its own takes this one |
+| `StoppedObjectSeconds` | int | `60` | Yes | How long something that stops moving (a parked car) is still seen before it becomes background (10-600) |
+| `IgnoreLightingChanges` | bool | `true` | Yes | A change over most of the picture at once is light (a cloud, a lamp), not motion. Turn off for a camera at a door, where a person can fill most of the picture: it is then seen sooner |
+| `MinimumChangePercent` | double | `0.5` | Yes | Read only by the comparison detector (`FrameDifferenceMotionDetector`); not shown in the dialogs, deprecated in the API |
 | `AnalysisFrameRate` | int | `30` | Yes | Frames per second for motion analysis (clamped 2-15) |
 | `AnalysisWidth` | int | `800` | Yes | Width of analysis frame in pixels |
 | `AnalysisHeight` | int | `600` | Yes | Height of analysis frame in pixels |
@@ -161,7 +164,7 @@ Frame-based motion analysis configuration. See [motion-detection.md](motion-dete
 | `ShowInFullScreen` | bool | `false` | Yes | Display bounding boxes in full-screen view |
 | `Color` | string | `"Red"` | Yes | Box color (named color: Red, Green, Blue, Cyan, Yellow, etc.) |
 | `Thickness` | int | `2` | Yes | Line thickness in pixels (1-10) |
-| `MinArea` | int | `10` | Yes | Minimum area in pixels to display a box (filters noise) |
+| `MinArea` | int | `10` | Yes | Read only by the comparison detector; the built-in detector uses `SmallestObjectPercent`. Not shown in the dialogs, deprecated in the API |
 | `Padding` | int | `4` | No | Padding around detected motion regions in pixels |
 | `Smoothing` | double | `0.3` | Yes | Smoothing factor for box transitions (0.0-1.0) |
 
@@ -479,6 +482,9 @@ CameraOverrides
 │   └── TimelapseInterval?
 └── MotionDetection (MotionDetectionOverrides)
     ├── Sensitivity?
+    ├── SmallestObjectPercent?
+    ├── StoppedObjectSeconds?
+    ├── IgnoreLightingChanges?
     ├── MinimumChangePercent?
     ├── AnalysisFrameRate?
     ├── AnalysisWidth?
@@ -584,6 +590,9 @@ The standalone CameraWall app keeps its files in `%ProgramData%\AtcSoft\CameraWa
   },
   "motionDetection": {
     "sensitivity": 30,
+    "smallestObjectPercent": 0.02,
+    "stoppedObjectSeconds": 60,
+    "ignoreLightingChanges": true,
     "minimumChangePercent": 0.5,
     "analysisFrameRate": 30,
     "analysisWidth": 800,

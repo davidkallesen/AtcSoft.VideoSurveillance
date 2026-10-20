@@ -2802,4 +2802,19 @@ Vorschaubild:
   <data name="ActivityHoverZone1" xml:space="preserve">
     <value>Zone: {0}</value>
   </data>
+  <data name="SmallestObjectInfo" xml:space="preserve">
+    <value>Alles, was kleiner als dieser Anteil des Bildes ist, wird ignoriert: erhöhen, um Vögel und Blätter zu ignorieren, senken, um eine Katze in der Ferne zu sehen. Eine überwachte Zone kann einen eigenen Wert haben.</value>
+  </data>
+  <data name="StoppedObjectSeconds" xml:space="preserve">
+    <value>Etwas, das stehen bleibt, wird Hintergrund nach (Sekunden)</value>
+  </data>
+  <data name="StoppedObjectSecondsInfo" xml:space="preserve">
+    <value>Wie lange etwas, das sich nicht mehr bewegt, etwa ein geparktes Auto, noch erkannt wird, bevor es Teil des Bildes wird.</value>
+  </data>
+  <data name="IgnoreLightingChanges" xml:space="preserve">
+    <value>Lichtänderungen ignorieren</value>
+  </data>
+  <data name="IgnoreLightingChangesInfo" xml:space="preserve">
+    <value>Eine Änderung fast des ganzen Bildes auf einmal, etwa eine Wolke oder eine eingeschaltete Lampe, ist keine Bewegung. Für eine Kamera an einer Tür ausschalten, wo eine Person den Großteil des Bildes füllen kann.</value>
+  </data>
 </root>

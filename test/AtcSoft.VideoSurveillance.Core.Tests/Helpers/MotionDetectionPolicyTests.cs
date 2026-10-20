@@ -60,4 +60,23 @@ public sealed class MotionDetectionPolicyTests
         effective.BoundingBox.MinArea.Should().Be(500);
         effective.BoundingBox.Padding.Should().Be(4);
     }
+
+    [Fact]
+    public void A_Camera_Can_Have_Its_Own_Smallest_Object_Stopped_Time_And_Lighting_Choice()
+    {
+        var application = new MotionDetectionSettings { SmallestObjectPercent = 0.05, StoppedObjectSeconds = 90, IgnoreLightingChanges = true };
+        var camera = new CameraConfiguration { Overrides = new CameraOverrides() };
+
+        var inherited = MotionDetectionPolicy.Resolve(camera, application);
+        camera.Overrides.MotionDetection.SmallestObjectPercent = 1;
+        camera.Overrides.MotionDetection.StoppedObjectSeconds = 300;
+        camera.Overrides.MotionDetection.IgnoreLightingChanges = false;
+        var own = MotionDetectionPolicy.Resolve(camera, application);
+
+        (inherited.SmallestObjectPercent, inherited.StoppedObjectSeconds, inherited.IgnoreLightingChanges).Should().Be((0.05, 90, true));
+        (own.SmallestObjectPercent, own.StoppedObjectSeconds, own.IgnoreLightingChanges).Should().Be((1d, 300, false));
+        camera.Overrides.MotionDetection.HasAnyOverride().Should().BeTrue();
+        camera.Overrides.MotionDetection.Clone().ValueEquals(camera.Overrides.MotionDetection).Should().BeTrue();
+        new MotionDetectionOverrides { IgnoreLightingChanges = true }.ValueEquals(camera.Overrides.MotionDetection).Should().BeFalse();
+    }
 }

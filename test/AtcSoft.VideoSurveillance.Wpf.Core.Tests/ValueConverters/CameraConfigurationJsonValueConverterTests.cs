@@ -283,6 +283,22 @@ public class CameraConfigurationJsonValueConverterTests
     }
 
     [Fact]
+    public void A_Cameras_Own_Detector_Settings_Go_Both_Ways()
+    {
+        var original = new CameraConfiguration();
+        original.Overrides!.MotionDetection.SmallestObjectPercent = 0.5;
+        original.Overrides.MotionDetection.StoppedObjectSeconds = 300;
+        original.Overrides.MotionDetection.IgnoreLightingChanges = false;
+
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+        var read = JsonSerializer.Deserialize<CameraConfiguration>(json, JsonOptions)!;
+
+        read.Overrides!.MotionDetection.ValueEquals(original.Overrides.MotionDetection).Should().BeTrue();
+        (read.Overrides.MotionDetection.SmallestObjectPercent, read.Overrides.MotionDetection.StoppedObjectSeconds, read.Overrides.MotionDetection.IgnoreLightingChanges)
+            .Should().Be((0.5, 300, false));
+    }
+
+    [Fact]
     public void The_Motion_Zones_Go_Both_Ways()
     {
         var original = new CameraConfiguration

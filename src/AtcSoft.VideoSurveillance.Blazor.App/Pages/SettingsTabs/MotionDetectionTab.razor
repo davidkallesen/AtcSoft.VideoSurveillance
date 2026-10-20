@@ -5,11 +5,18 @@
         <MudSelectItem Value="@value">@label</MudSelectItem>
     }
 </MudSelect>
-<MudNumericField @bind-Value="State.MinimumChangePercent"
-                 Label="@Translations.MinimumChangePercent"
-                 HelperText="@Translations.MotionSensitivityHelp"
-                 Min="0.1" Max="100.0" Step="0.1"
+<MudNumericField @bind-Value="State.SmallestObjectPercent"
+                 Label="@Translations.SmallestObjectPercent"
+                 HelperText="@Translations.SmallestObjectInfo"
+                 Min="0.0" Max="100.0" Step="0.01"
                  Class="mt-2" />
+<MudNumericField @bind-Value="State.StoppedObjectSeconds"
+                 Label="@Translations.StoppedObjectSeconds"
+                 HelperText="@Translations.StoppedObjectSecondsInfo"
+                 Min="10" Max="600" Step="10"
+                 Class="mt-2" />
+<SettingSwitch @bind-Value="State.IgnoreLightingChanges" Label="@Translations.IgnoreLightingChanges" />
+<MudText Typo="Typo.caption" Class="mb-2">@Translations.IgnoreLightingChangesInfo</MudText>
 <MudSelect @bind-Value="State.AnalysisResolution" Label="@Translations.AnalysisResolution" Class="mt-2">
     @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.AnalysisResolutions, State.AnalysisResolution, v => v.Replace("x", " x ", StringComparison.Ordinal)))
     {
@@ -46,12 +53,6 @@
 </MudSelect>
 <MudSelect @bind-Value="State.BoundingBoxThickness" Label="@Translations.Thickness" Class="mt-2">
     @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.BoundingBoxThicknesses, State.BoundingBoxThickness, v => $"{v} px"))
-    {
-        <MudSelectItem Value="@value">@label</MudSelectItem>
-    }
-</MudSelect>
-<MudSelect @bind-Value="State.BoundingBoxMinArea" Label="@Translations.SmallestBoxArea" Class="mt-2">
-    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.BoundingBoxMinAreas, State.BoundingBoxMinArea, v => string.Format(CultureInfo.CurrentCulture, Translations.Pixels1, v)))
     {
         <MudSelectItem Value="@value">@label</MudSelectItem>
     }

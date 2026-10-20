@@ -94,6 +94,7 @@ global using IRecordingPreviews = AtcSoft.VideoSurveillance.Services.IRecordingP
 global using MediaCleanupRunner = AtcSoft.VideoSurveillance.Helpers.MediaCleanupRunner;
 global using MotionBoxMapper = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper;
 global using MotionDetectedEventArgs = AtcSoft.VideoSurveillance.Events.MotionDetectedEventArgs;
+global using MotionDetectorOptions = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionDetectorOptions;
 global using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
 global using MotionZoneDraft = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneDraft;
 global using MotionZoneEditing = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneEditing;

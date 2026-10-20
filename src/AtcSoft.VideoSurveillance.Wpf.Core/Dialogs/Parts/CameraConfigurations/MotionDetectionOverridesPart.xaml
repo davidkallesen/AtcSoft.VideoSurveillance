@@ -62,18 +62,56 @@
 
             <StackPanel Orientation="Horizontal">
                 <atc:ToggleSwitch
-                    IsOn="{Binding Path=UseDefaultMinimumChangePercent, Mode=TwoWay}"
+                    IsOn="{Binding Path=UseDefaultSmallestObjectPercent, Mode=TwoWay}"
                     OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                      Key=OverrideToggleLocal}"
                     OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=OverrideToggleMaster}" />
                 <atc:LabelDecimalBox
-                    IsEnabled="{Binding Path=UseDefaultMinimumChangePercent, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    DecimalPlaces="3"
+                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=SmallestObjectInfo}"
+                    IsEnabled="{Binding Path=UseDefaultSmallestObjectPercent, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                    Key=MinimumChangePercent}"
+                                                    Key=SmallestObjectPercent}"
                     Maximum="100"
-                    Minimum="0.1"
-                    Value="{Binding Path=OverrideMinimumChangePercent, Mode=TwoWay}" />
+                    Minimum="0"
+                    Value="{Binding Path=OverrideSmallestObjectPercent, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <atc:ToggleSwitch
+                    IsOn="{Binding Path=UseDefaultStoppedObjectSeconds, Mode=TwoWay}"
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                     Key=OverrideToggleLocal}"
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                    Key=OverrideToggleMaster}" />
+                <atc:LabelIntegerBox
+                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=StoppedObjectSecondsInfo}"
+                    IsEnabled="{Binding Path=UseDefaultStoppedObjectSeconds, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                    Key=StoppedObjectSeconds}"
+                    Maximum="600"
+                    Minimum="10"
+                    Value="{Binding Path=OverrideStoppedObjectSeconds, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <atc:ToggleSwitch
+                    IsOn="{Binding Path=UseDefaultIgnoreLightingChanges, Mode=TwoWay}"
+                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                     Key=OverrideToggleLocal}"
+                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                    Key=OverrideToggleMaster}" />
+                <atc:LabelToggleSwitch
+                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=IgnoreLightingChangesInfo}"
+                    IsEnabled="{Binding Path=UseDefaultIgnoreLightingChanges, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
+                    IsOn="{Binding Path=OverrideIgnoreLightingChanges, Mode=TwoWay}"
+                    LabelPosition="Right"
+                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                    Key=IgnoreLightingChanges}" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal">
@@ -184,23 +222,6 @@
                     LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                     Key=BoundingBoxThickness}"
                     SelectedKey="{Binding Path=OverrideBoundingBoxThickness, Mode=TwoWay}" />
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal">
-                <atc:ToggleSwitch
-                    IsOn="{Binding Path=UseDefaultBoundingBoxMinArea, Mode=TwoWay}"
-                    OffContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                     Key=OverrideToggleLocal}"
-                    OnContent="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                    Key=OverrideToggleMaster}" />
-                <atc:LabelComboBox
-                    InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                          Key=BoundingBoxMinAreaInfo}"
-                    IsEnabled="{Binding Path=UseDefaultBoundingBoxMinArea, Converter={x:Static valueConverters:BoolToInverseBoolValueConverter.Instance}}"
-                    Items="{Binding Path=BoundingBoxMinAreaItems}"
-                    LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                    Key=BoundingBoxMinArea}"
-                    SelectedKey="{Binding Path=OverrideBoundingBoxMinArea, Mode=TwoWay}" />
             </StackPanel>
 
         </atc:UniformSpacingPanel>

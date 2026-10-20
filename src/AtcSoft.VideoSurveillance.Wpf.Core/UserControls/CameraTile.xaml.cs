@@ -182,6 +182,15 @@ public partial class CameraTile : IDisposable
     [DependencyProperty(DefaultValue = 2.0)]
     private double motionMinimumChangePercent;
 
+    [DependencyProperty(DefaultValue = MotionDetectorOptions.DefaultSmallestObjectPercent)]
+    private double motionSmallestObjectPercent;
+
+    [DependencyProperty(DefaultValue = MotionDetectorOptions.DefaultStoppedObjectSeconds)]
+    private int motionStoppedObjectSeconds;
+
+    [DependencyProperty(DefaultValue = true)]
+    private bool motionIgnoreLightingChanges;
+
     [DependencyProperty(DefaultValue = 2)]
     private int motionAnalysisFrameRate;
 
@@ -261,6 +270,7 @@ public partial class CameraTile : IDisposable
     private int? previousOverrideMotionAnalysisHeight;
     private int? previousOverrideMotionCooldownSeconds;
     private int? previousOverridePostMotionDurationSeconds;
+    private (double? SmallestObjectPercent, int? StoppedObjectSeconds, bool? IgnoreLightingChanges) previousOverrideDetector;
 
     // Tracks whether the mouse is currently hovering the bottom-right
     // corner of the tile. Drives the fullscreen quick-action button's
@@ -337,6 +347,32 @@ public partial class CameraTile : IDisposable
     /// </summary>
     private double GetEffectiveMotionMinimumChangePercent()
         => Camera?.Overrides?.MotionDetection.MinimumChangePercent ?? MotionMinimumChangePercent;
+
+    /// <summary>
+    /// Gets the effective smallest object, in percent of the picture, considering camera override.
+    /// </summary>
+    private double GetEffectiveMotionSmallestObjectPercent()
+        => Camera?.Overrides?.MotionDetection.SmallestObjectPercent ?? MotionSmallestObjectPercent;
+
+    /// <summary>
+    /// Gets how long something that stops is still seen, considering camera override.
+    /// </summary>
+    private int GetEffectiveMotionStoppedObjectSeconds()
+        => Camera?.Overrides?.MotionDetection.StoppedObjectSeconds ?? MotionStoppedObjectSeconds;
+
+    /// <summary>
+    /// Gets whether lighting changes are ignored, considering camera override.
+    /// </summary>
+    private bool GetEffectiveMotionIgnoreLightingChanges()
+        => Camera?.Overrides?.MotionDetection.IgnoreLightingChanges ?? MotionIgnoreLightingChanges;
+
+    // The camera's own detector settings, to tell when one changed.
+    private static (double? SmallestObjectPercent, int? StoppedObjectSeconds, bool? IgnoreLightingChanges) DetectorOverrides(
+        CameraConfiguration? camera)
+    {
+        var motion = camera?.Overrides?.MotionDetection;
+        return (motion?.SmallestObjectPercent, motion?.StoppedObjectSeconds, motion?.IgnoreLightingChanges);
+    }
 
     /// <summary>
     /// Gets the effective MotionAnalysisFrameRate value, considering camera override.
@@ -1306,6 +1342,7 @@ public partial class CameraTile : IDisposable
         previousOverrideMotionAnalysisHeight = cameraConfig.Overrides?.MotionDetection.AnalysisHeight;
         previousOverrideMotionCooldownSeconds = cameraConfig.Overrides?.MotionDetection.CooldownSeconds;
         previousOverridePostMotionDurationSeconds = cameraConfig.Overrides?.MotionDetection.PostMotionDurationSeconds;
+        previousOverrideDetector = DetectorOverrides(cameraConfig);
     }
 
     private void HandleOverridesChanged()
@@ -1341,6 +1378,7 @@ public partial class CameraTile : IDisposable
         var currentMotionAnalysisHeight = Camera?.Overrides?.MotionDetection.AnalysisHeight;
         var currentMotionCooldownSeconds = Camera?.Overrides?.MotionDetection.CooldownSeconds;
         var currentPostMotionDurationSeconds = Camera?.Overrides?.MotionDetection.PostMotionDurationSeconds;
+        var currentDetector = DetectorOverrides(Camera);
 
         var motionDetectionChanged =
             currentEnableRecordingOnMotion != previousOverrideEnableRecordingOnMotion ||
@@ -1355,7 +1393,8 @@ public partial class CameraTile : IDisposable
             currentMotionAnalysisWidth != previousOverrideMotionAnalysisWidth ||
             currentMotionAnalysisHeight != previousOverrideMotionAnalysisHeight ||
             currentMotionCooldownSeconds != previousOverrideMotionCooldownSeconds ||
-            currentPostMotionDurationSeconds != previousOverridePostMotionDurationSeconds;
+            currentPostMotionDurationSeconds != previousOverridePostMotionDurationSeconds ||
+            currentDetector != previousOverrideDetector;
 
         // Update tracked values
         previousOverrideEnableRecordingOnMotion = currentEnableRecordingOnMotion;
@@ -1370,6 +1409,7 @@ public partial class CameraTile : IDisposable
         previousOverrideMotionAnalysisWidth = currentMotionAnalysisWidth;
         previousOverrideMotionAnalysisHeight = currentMotionAnalysisHeight;
         previousOverrideMotionCooldownSeconds = currentMotionCooldownSeconds;
+        previousOverrideDetector = currentDetector;
         previousOverridePostMotionDurationSeconds = currentPostMotionDurationSeconds;
 
         if (motionDetectionChanged)
@@ -1503,6 +1543,7 @@ public partial class CameraTile : IDisposable
             previousOverrideMotionAnalysisHeight = null;
             previousOverrideMotionCooldownSeconds = null;
             previousOverridePostMotionDurationSeconds = null;
+            previousOverrideDetector = default;
             return;
         }
 
@@ -2862,6 +2903,9 @@ public partial class CameraTile : IDisposable
         var settings = new MotionDetectionSettings
         {
             Sensitivity = GetEffectiveMotionSensitivity(),
+            SmallestObjectPercent = GetEffectiveMotionSmallestObjectPercent(),
+            StoppedObjectSeconds = GetEffectiveMotionStoppedObjectSeconds(),
+            IgnoreLightingChanges = GetEffectiveMotionIgnoreLightingChanges(),
             MinimumChangePercent = GetEffectiveMotionMinimumChangePercent(),
             AnalysisFrameRate = GetEffectiveMotionAnalysisFrameRate(),
             AnalysisWidth = analysisWidth,

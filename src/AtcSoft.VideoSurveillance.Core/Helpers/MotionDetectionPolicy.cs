@@ -39,6 +39,9 @@ public static class MotionDetectionPolicy
         return new MotionDetectionSettings
         {
             Sensitivity = overrides?.Sensitivity ?? appDefaults.Sensitivity,
+            SmallestObjectPercent = overrides?.SmallestObjectPercent ?? appDefaults.SmallestObjectPercent,
+            StoppedObjectSeconds = overrides?.StoppedObjectSeconds ?? appDefaults.StoppedObjectSeconds,
+            IgnoreLightingChanges = overrides?.IgnoreLightingChanges ?? appDefaults.IgnoreLightingChanges,
             MinimumChangePercent = overrides?.MinimumChangePercent ?? appDefaults.MinimumChangePercent,
             AnalysisFrameRate = overrides?.AnalysisFrameRate ?? appDefaults.AnalysisFrameRate,
             AnalysisWidth = overrides?.AnalysisWidth ?? appDefaults.AnalysisWidth,

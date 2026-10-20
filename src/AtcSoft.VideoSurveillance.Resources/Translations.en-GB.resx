@@ -2799,4 +2799,19 @@
   <data name="ActivityHoverZone1" xml:space="preserve">
     <value>Zone: {0}</value>
   </data>
+  <data name="SmallestObjectInfo" xml:space="preserve">
+    <value>Anything smaller than this share of the picture is left out: raise it to ignore birds and leaves, lower it to see a cat far away. A watch zone can have its own.</value>
+  </data>
+  <data name="StoppedObjectSeconds" xml:space="preserve">
+    <value>Something that stops becomes background after (seconds)</value>
+  </data>
+  <data name="StoppedObjectSecondsInfo" xml:space="preserve">
+    <value>How long something that stops moving, such as a parked car, is still seen before it becomes part of the picture.</value>
+  </data>
+  <data name="IgnoreLightingChanges" xml:space="preserve">
+    <value>Ignore lighting changes</value>
+  </data>
+  <data name="IgnoreLightingChangesInfo" xml:space="preserve">
+    <value>A change over most of the picture at once, such as a cloud or a lamp switched on, is not motion. Turn it off for a camera at a door, where a person can fill most of the picture.</value>
+  </data>
 </root>

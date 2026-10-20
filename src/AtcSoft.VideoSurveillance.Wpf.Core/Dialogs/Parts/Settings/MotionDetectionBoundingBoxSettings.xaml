@@ -40,15 +40,6 @@
                 Orientation="Vertical"
                 SelectedKey="{Binding Path=SelectedBoundingBoxThickness, Mode=TwoWay}" />
 
-            <atc:LabelComboBox
-                InformationText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                      Key=BoundingBoxMinAreaInfo}"
-                Items="{Binding Path=BoundingBoxMinAreaItems}"
-                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                Key=BoundingBoxMinArea}"
-                Orientation="Vertical"
-                SelectedKey="{Binding Path=SelectedBoundingBoxMinArea, Mode=TwoWay}" />
-
         </StackPanel>
     </GroupBox>
 </UserControl>

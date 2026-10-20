@@ -51,6 +51,9 @@ internal static class SettingsMappingExtensions
             RtspTransport: ParseRtspTransport(performance.RtspTransport),
             MaxLatencyMs: performance.MaxLatencyMs,
             MotionSensitivity: motionDetection.Sensitivity,
+            SmallestObjectPercent: motionDetection.SmallestObjectPercent,
+            StoppedObjectSeconds: motionDetection.StoppedObjectSeconds,
+            IgnoreLightingChanges: motionDetection.IgnoreLightingChanges,
             MinimumChangePercent: motionDetection.MinimumChangePercent,
             AnalysisFrameRate: motionDetection.AnalysisFrameRate,
             AnalysisWidth: motionDetection.AnalysisWidth,
@@ -270,11 +273,28 @@ internal static class SettingsMappingExtensions
             motionDetection.Sensitivity = motionSensitivity;
         }
 
+        if (api.SmallestObjectPercent is { } smallestObjectPercent)
+        {
+            motionDetection.SmallestObjectPercent = smallestObjectPercent;
+        }
+
+        if (api.StoppedObjectSeconds is { } stoppedObjectSeconds)
+        {
+            motionDetection.StoppedObjectSeconds = stoppedObjectSeconds;
+        }
+
+        if (api.IgnoreLightingChanges is { } ignoreLightingChanges)
+        {
+            motionDetection.IgnoreLightingChanges = ignoreLightingChanges;
+        }
+
+        // Deprecated in the spec (only the comparison detector reads it) but still stored for older clients.
+#pragma warning disable CS0618
         if (api.MinimumChangePercent is { } minimumChangePercent)
         {
             motionDetection.MinimumChangePercent = minimumChangePercent;
         }
-
+#pragma warning restore CS0618
         if (api.AnalysisFrameRate is { } analysisFrameRate)
         {
             motionDetection.AnalysisFrameRate = analysisFrameRate;
@@ -320,11 +340,13 @@ internal static class SettingsMappingExtensions
             motionDetection.BoundingBox.Thickness = boundingBoxThickness;
         }
 
+        // Deprecated in the spec (only the comparison detector reads it) but still stored for older clients.
+#pragma warning disable CS0618
         if (api.BoundingBoxMinArea is { } boundingBoxMinArea)
         {
             motionDetection.BoundingBox.MinArea = boundingBoxMinArea;
         }
-
+#pragma warning restore CS0618
         if (api.BoundingBoxPadding is { } boundingBoxPadding)
         {
             motionDetection.BoundingBox.Padding = boundingBoxPadding;

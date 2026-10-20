@@ -2400,7 +2400,7 @@ components:
           format: double
           minimum: 0
           maximum: 100
-          description: The smallest object that counts in a watch zone, in percent of the picture's area. Left out, the zone takes the detector's default (0.02).
+          description: The smallest object that counts in a watch zone, in percent of the picture's area. Left out, the zone takes the camera's (the smallestObjectPercent setting).
 
     ZonePoint:
       title: ZonePoint
@@ -2922,6 +2922,9 @@ components:
         - rtspTransport
         - maxLatencyMs
         - motionSensitivity
+        - smallestObjectPercent
+        - stoppedObjectSeconds
+        - ignoreLightingChanges
         - minimumChangePercent
         - analysisFrameRate
         - analysisWidth
@@ -3054,11 +3057,28 @@ components:
           format: int32
           minimum: 1
           maximum: 100
+        smallestObjectPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          description: The smallest object that counts, in percent of the picture's area (0.02 by default). A watch zone without its own takes this one.
+        stoppedObjectSeconds:
+          type: integer
+          format: int32
+          minimum: 10
+          maximum: 600
+          description: How long something that stops moving (a parked car) is still seen before it becomes part of the background, in seconds (60 by default).
+        ignoreLightingChanges:
+          type: boolean
+          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). Off, someone filling most of the picture (a camera at a door) is seen sooner.
         minimumChangePercent:
           type: number
           format: double
           minimum: 0
           maximum: 100
+          deprecated: true
+          description: Read only by the comparison detector; the built-in detector uses smallestObjectPercent. Kept so an older client is not refused.
         analysisFrameRate:
           type: integer
           format: int32
@@ -3095,6 +3115,8 @@ components:
           type: integer
           format: int32
           minimum: 1
+          deprecated: true
+          description: Read only by the comparison detector; the built-in detector uses smallestObjectPercent. Kept so an older client is not refused.
         boundingBoxPadding:
           type: integer
           format: int32
@@ -3274,11 +3296,28 @@ components:
           format: int32
           minimum: 1
           maximum: 100
+        smallestObjectPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          description: The smallest object that counts, in percent of the picture's area (0.02 by default). A watch zone without its own takes this one.
+        stoppedObjectSeconds:
+          type: integer
+          format: int32
+          minimum: 10
+          maximum: 600
+          description: How long something that stops moving (a parked car) is still seen before it becomes part of the background, in seconds (60 by default).
+        ignoreLightingChanges:
+          type: boolean
+          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). Off, someone filling most of the picture (a camera at a door) is seen sooner.
         minimumChangePercent:
           type: number
           format: double
           minimum: 0
           maximum: 100
+          deprecated: true
+          description: Read only by the comparison detector; the built-in detector uses smallestObjectPercent. Kept so an older client is not refused.
         analysisFrameRate:
           type: integer
           format: int32
@@ -3315,6 +3354,8 @@ components:
           type: integer
           format: int32
           minimum: 1
+          deprecated: true
+          description: Read only by the comparison detector; the built-in detector uses smallestObjectPercent. Kept so an older client is not refused.
         boundingBoxPadding:
           type: integer
           format: int32

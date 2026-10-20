@@ -49,15 +49,6 @@ public static class SettingsOptions
     public static IReadOnlyList<(int Value, string Label)> BoundingBoxThicknesses { get; } =
         [.. Enumerable.Range(1, 5).Select(i => (i, $"{i} px"))];
 
-    public static IReadOnlyList<(int Value, string Label)> BoundingBoxMinAreas { get; } =
-    [
-        (10, Translations.AreaTiny),
-        (25, Translations.AreaSmall),
-        (50, Translations.AreaMedium),
-        (100, Translations.AreaLarge),
-        (200, Translations.AreaVeryLarge),
-    ];
-
     public static IReadOnlyList<(int Value, string Label)> ThumbnailTiles { get; } =
     [
         (1, Translations.ThumbnailTileOne),

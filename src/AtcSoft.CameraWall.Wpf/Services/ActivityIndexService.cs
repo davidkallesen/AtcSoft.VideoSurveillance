@@ -76,6 +76,9 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
         return new MotionDetectionSettings
         {
             Sensitivity = overrides?.Sensitivity ?? defaults.Sensitivity,
+            SmallestObjectPercent = overrides?.SmallestObjectPercent ?? defaults.SmallestObjectPercent,
+            StoppedObjectSeconds = overrides?.StoppedObjectSeconds ?? defaults.StoppedObjectSeconds,
+            IgnoreLightingChanges = overrides?.IgnoreLightingChanges ?? defaults.IgnoreLightingChanges,
             MinimumChangePercent = overrides?.MinimumChangePercent ?? defaults.MinimumChangePercent,
             AnalysisFrameRate = overrides?.AnalysisFrameRate ?? defaults.AnalysisFrameRate,
             AnalysisWidth = hasOwnSize ? overrides!.AnalysisWidth!.Value : defaults.AnalysisWidth,

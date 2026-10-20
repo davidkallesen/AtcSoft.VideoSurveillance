@@ -1132,36 +1132,104 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     }
 
     // Motion Detection Overrides
-    public bool UseDefaultMinimumChangePercent
+    public bool UseDefaultSmallestObjectPercent
     {
-        get => Camera.Overrides?.MotionDetection.MinimumChangePercent is null;
+        get => Camera.Overrides?.MotionDetection.SmallestObjectPercent is null;
         set
         {
             if (value)
             {
                 if (Camera.Overrides is not null)
                 {
-                    Camera.Overrides.MotionDetection.MinimumChangePercent = null;
+                    Camera.Overrides.MotionDetection.SmallestObjectPercent = null;
                 }
             }
             else
             {
                 EnsureOverrides();
-                Camera.Overrides!.MotionDetection.MinimumChangePercent = settingsService.MotionDetection.MinimumChangePercent;
+                Camera.Overrides!.MotionDetection.SmallestObjectPercent = settingsService.MotionDetection.SmallestObjectPercent;
             }
 
             RaisePropertyChanged();
-            RaisePropertyChanged(nameof(OverrideMinimumChangePercent));
+            RaisePropertyChanged(nameof(OverrideSmallestObjectPercent));
         }
     }
 
-    public double OverrideMinimumChangePercent
+    public decimal OverrideSmallestObjectPercent
     {
-        get => Camera.Overrides?.MotionDetection.MinimumChangePercent ?? settingsService.MotionDetection.MinimumChangePercent;
+        get => (decimal)(Camera.Overrides?.MotionDetection.SmallestObjectPercent ?? settingsService.MotionDetection.SmallestObjectPercent);
         set
         {
             EnsureOverrides();
-            Camera.Overrides!.MotionDetection.MinimumChangePercent = value;
+            Camera.Overrides!.MotionDetection.SmallestObjectPercent = (double)value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool UseDefaultStoppedObjectSeconds
+    {
+        get => Camera.Overrides?.MotionDetection.StoppedObjectSeconds is null;
+        set
+        {
+            if (value)
+            {
+                if (Camera.Overrides is not null)
+                {
+                    Camera.Overrides.MotionDetection.StoppedObjectSeconds = null;
+                }
+            }
+            else
+            {
+                EnsureOverrides();
+                Camera.Overrides!.MotionDetection.StoppedObjectSeconds = settingsService.MotionDetection.StoppedObjectSeconds;
+            }
+
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(OverrideStoppedObjectSeconds));
+        }
+    }
+
+    public int OverrideStoppedObjectSeconds
+    {
+        get => Camera.Overrides?.MotionDetection.StoppedObjectSeconds ?? settingsService.MotionDetection.StoppedObjectSeconds;
+        set
+        {
+            EnsureOverrides();
+            Camera.Overrides!.MotionDetection.StoppedObjectSeconds = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool UseDefaultIgnoreLightingChanges
+    {
+        get => Camera.Overrides?.MotionDetection.IgnoreLightingChanges is null;
+        set
+        {
+            if (value)
+            {
+                if (Camera.Overrides is not null)
+                {
+                    Camera.Overrides.MotionDetection.IgnoreLightingChanges = null;
+                }
+            }
+            else
+            {
+                EnsureOverrides();
+                Camera.Overrides!.MotionDetection.IgnoreLightingChanges = settingsService.MotionDetection.IgnoreLightingChanges;
+            }
+
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(OverrideIgnoreLightingChanges));
+        }
+    }
+
+    public bool OverrideIgnoreLightingChanges
+    {
+        get => Camera.Overrides?.MotionDetection.IgnoreLightingChanges ?? settingsService.MotionDetection.IgnoreLightingChanges;
+        set
+        {
+            EnsureOverrides();
+            Camera.Overrides!.MotionDetection.IgnoreLightingChanges = value;
             RaisePropertyChanged();
         }
     }
@@ -1376,46 +1444,6 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
     public IDictionary<string, string> BoundingBoxThicknessItems
         => DropDownItemsFactory.BoundingBoxThicknessItems;
-
-    public bool UseDefaultBoundingBoxMinArea
-    {
-        get => Camera.Overrides?.MotionDetection.BoundingBox.MinArea is null;
-        set
-        {
-            if (value)
-            {
-                if (Camera.Overrides is not null)
-                {
-                    Camera.Overrides.MotionDetection.BoundingBox.MinArea = null;
-                }
-            }
-            else
-            {
-                EnsureOverrides();
-                Camera.Overrides!.MotionDetection.BoundingBox.MinArea = settingsService.MotionDetection.BoundingBox.MinArea;
-            }
-
-            RaisePropertyChanged();
-            RaisePropertyChanged(nameof(OverrideBoundingBoxMinArea));
-        }
-    }
-
-    public string OverrideBoundingBoxMinArea
-    {
-        get => (Camera.Overrides?.MotionDetection.BoundingBox.MinArea ?? settingsService.MotionDetection.BoundingBox.MinArea).ToString(CultureInfo.InvariantCulture);
-        set
-        {
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var minArea))
-            {
-                EnsureOverrides();
-                Camera.Overrides!.MotionDetection.BoundingBox.MinArea = minArea;
-                RaisePropertyChanged();
-            }
-        }
-    }
-
-    public IDictionary<string, string> BoundingBoxMinAreaItems
-        => DropDownItemsFactory.BoundingBoxMinAreaItems;
 
     public IDictionary<string, string> AnalysisResolutionItems
         => DropDownItemsFactory.MotionAnalysisResolutionItems;
