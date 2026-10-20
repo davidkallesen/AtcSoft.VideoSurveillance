@@ -20,8 +20,7 @@ public static class MotionZoneGeometry
     {
         ArgumentNullException.ThrowIfNull(zones);
 
-        // Quarter turns clockwise, from the old picture to the new one.
-        var quarters = (((((int)to - (int)from) / 90) % 4) + 4) % 4;
+        var quarters = QuarterTurns(from, to);
         return
         [
             .. zones.Select(zone =>
@@ -32,6 +31,17 @@ public static class MotionZoneGeometry
             }),
         ];
     }
+
+    /// <summary>
+    /// Gets the quarter turns clockwise, 0 to 3, from a picture shown at one rotation to the same
+    /// picture shown at another.
+    /// </summary>
+    /// <param name="from">The rotation the picture has.</param>
+    /// <param name="to">The rotation to show it at.</param>
+    public static int QuarterTurns(
+        CameraRotation from,
+        CameraRotation to)
+        => (((((int)to - (int)from) / 90) % 4) + 4) % 4;
 
     private static ZonePoint Turn(
         ZonePoint point,
