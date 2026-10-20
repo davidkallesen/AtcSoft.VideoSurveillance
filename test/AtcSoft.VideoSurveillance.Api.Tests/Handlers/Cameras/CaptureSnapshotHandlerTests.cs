@@ -23,6 +23,64 @@ public class CaptureSnapshotHandlerTests
     }
 
     [Fact]
+    public async Task A_Camera_Being_Recorded_Gives_The_Recordings_Picture_Without_Being_Opened_Again()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var pipelineFactory = Substitute.For<IMediaPipelineFactory>();
+        var settingsService = Substitute.For<IApplicationSettingsService>();
+        var folder = Path.Combine(Path.GetTempPath(), "snapshot-" + Guid.NewGuid().ToString("N"));
+        settingsService.CameraDisplay.Returns(new CameraDisplayAppSettings { SnapshotPath = folder });
+        var recordings = Substitute.For<IRecordingService>();
+        var recording = Substitute.For<IMediaPipeline>();
+        var camera = new CameraConfiguration();
+        storage.GetCameraById(camera.Id).Returns(camera);
+        recordings.FindPipeline(camera.Id).Returns(recording);
+        recording.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(new byte[] { 1, 2, 3 });
+        var handler = new CaptureSnapshotHandler(storage, pipelineFactory, settingsService, recordings: recordings);
+
+        try
+        {
+            var result = await handler.ExecuteAsync(new CaptureSnapshotParameters(camera.Id), CancellationToken.None);
+
+            (await result.Result.ExecuteAsync()).StatusCode.Should().Be(StatusCodes.Status200OK);
+            pipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
+            recording.DidNotReceive().Dispose();
+            Directory.GetFiles(folder).Should().ContainSingle("the snapshot is saved as before");
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task A_Recording_That_Gives_No_Picture_Leaves_The_Camera_To_Be_Opened()
+    {
+        var storage = Substitute.For<ICameraStorageService>();
+        var pipelineFactory = Substitute.For<IMediaPipelineFactory>();
+        var settingsService = Substitute.For<IApplicationSettingsService>();
+        var recordings = Substitute.For<IRecordingService>();
+        var recording = Substitute.For<IMediaPipeline>();
+        var pipeline = Substitute.For<IMediaPipeline>();
+        var camera = new CameraConfiguration();
+        storage.GetCameraById(camera.Id).Returns(camera);
+        recordings.FindPipeline(camera.Id).Returns(recording);
+        recording.CaptureFrameAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException<byte[]?>(new ObjectDisposedException("recording")));
+        pipelineFactory.Create(camera).Returns(pipeline);
+        var handler = new CaptureSnapshotHandler(storage, pipelineFactory, settingsService, recordings: recordings);
+
+        var executeTask = handler.ExecuteAsync(new CaptureSnapshotParameters(camera.Id), CancellationToken.None);
+        pipeline.ConnectionStateChanged += Raise.EventWith(
+            new AtcSoft.VideoSurveillance.Events.ConnectionStateChangedEventArgs(
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Connecting,
+                AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
+        var result = await executeTask;
+
+        pipelineFactory.Received(1).Create(camera);
+        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_CaptureReturnsNull_IsServiceUnavailable()
     {
         // Arrange
