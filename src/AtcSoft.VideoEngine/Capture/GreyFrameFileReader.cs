@@ -6,18 +6,10 @@ namespace AtcSoft.VideoEngine.Capture;
 /// to grey at the analysis size by swscale and turned the way the picture is displayed. No PNG, no
 /// player. For *Analyse recording*, the storybook scorer and the sample app.
 /// </summary>
-[SuppressMessage("", "CA1806:calls av_*", Justification = "OK")]
 public sealed unsafe class GreyFrameFileReader : IDisposable
 {
-    private readonly VideoDecoder decoder = new();
-    private readonly GreyScaler scaler = new();
-    private AVFormatContext* formatContext;
-    private AVPacket* packet;
-    private int streamIndex = -1;
-    private AVRational timeBase;
-    private long startPts;
-    private bool draining;
-    private bool finished;
+    private readonly FrameScaler scaler = new();
+    private RecordingFileDecoder? decoder;
     private bool disposed;
 
     private GreyFrameFileReader(
@@ -48,7 +40,8 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
     /// <summary>
     /// Gets how long the recording is, or <see cref="TimeSpan.Zero"/> when the file does not say.
     /// </summary>
-    public TimeSpan Duration { get; private set; }
+    public TimeSpan Duration
+        => decoder?.Duration ?? TimeSpan.Zero;
 
     /// <summary>
     /// Opens a recording file.
@@ -77,7 +70,7 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         var reader = new GreyFrameFileReader(width, height, rotation);
         try
         {
-            reader.OpenFile(filePath, decoderThreads > 0 ? decoderThreads : Environment.ProcessorCount);
+            reader.decoder = RecordingFileDecoder.Open(filePath, decoderThreads);
             return reader;
         }
         catch
@@ -124,48 +117,11 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        while (!finished)
-        {
-            if (decoder.ReceiveFrame())
-            {
-                var frame = decoder.CurrentFrame;
-                var position = PositionOf(frame->pts);
-                if (position >= notBefore && scaler.ToGrey(frame, Width, Height, Rotation) is { } pixels)
-                {
-                    return new GreyFrame(position, Width, Height, pixels);
-                }
-
-                continue;
-            }
-
-            if (draining)
-            {
-                finished = true;
-                break;
-            }
-
-            if (av_read_frame(formatContext, packet) < 0)
-            {
-                // The end: what the decoder still holds comes out after an empty packet.
-                decoder.SendPacket(null);
-                draining = true;
-                continue;
-            }
-
-            try
-            {
-                if (packet->stream_index == streamIndex)
-                {
-                    decoder.SendPacket(packet);
-                }
-            }
-            finally
-            {
-                av_packet_unref(packet);
-            }
-        }
-
-        return null;
+        return decoder!.ReadNext(
+            notBefore,
+            (frame, position) => scaler.ToPixels((AVFrame*)frame, Width, Height, Rotation) is { } pixels
+                ? new GreyFrame(position, Width, Height, pixels)
+                : null);
     }
 
     /// <inheritdoc />
@@ -177,84 +133,7 @@ public sealed unsafe class GreyFrameFileReader : IDisposable
         }
 
         disposed = true;
-        decoder.Dispose();
-
+        decoder?.Dispose();
         scaler.Dispose();
-
-        if (packet is not null)
-        {
-            var p = packet;
-            av_packet_free(ref p);
-            packet = null;
-        }
-
-        if (formatContext is not null)
-        {
-            avformat_close_input(ref formatContext);
-        }
-    }
-
-    private void OpenFile(
-        string filePath,
-        int decoderThreads)
-    {
-        AVDictionary* options = null;
-        try
-        {
-            var ret = avformat_open_input(ref formatContext, filePath, null, ref options);
-            if (ret < 0)
-            {
-                throw new FFmpegException(ret, "Failed to open the recording");
-            }
-
-            // Not "ref options": this argument is one dictionary per stream.
-            ret = avformat_find_stream_info(formatContext, (AVDictionary**)null);
-            if (ret < 0)
-            {
-                throw new FFmpegException(ret, "Failed to read the recording's streams");
-            }
-        }
-        finally
-        {
-            av_dict_free(ref options);
-        }
-
-        for (uint i = 0; i < formatContext->nb_streams; i++)
-        {
-            var stream = formatContext->streams[i];
-            if (stream->codecpar->codec_type != AVMediaType.Video)
-            {
-                continue;
-            }
-
-            streamIndex = (int)i;
-            timeBase = stream->time_base;
-            startPts = stream->start_time == AV_NOPTS_VALUE ? 0 : stream->start_time;
-            decoder.Open(stream->codecpar, decoderThreads);
-            break;
-        }
-
-        if (streamIndex < 0)
-        {
-            throw new InvalidOperationException("The recording has no video.");
-        }
-
-        Duration = formatContext->duration > 0 ? TimeSpan.FromTicks(formatContext->duration * 10) : TimeSpan.Zero;
-        packet = av_packet_alloc();
-        if (packet is null)
-        {
-            throw new InvalidOperationException("Failed to allocate AVPacket.");
-        }
-    }
-
-    private TimeSpan PositionOf(long pts)
-    {
-        if (pts == AV_NOPTS_VALUE || timeBase.Den == 0)
-        {
-            return TimeSpan.Zero;
-        }
-
-        var seconds = (pts - startPts) * (double)timeBase.Num / timeBase.Den;
-        return seconds > 0 ? TimeSpan.FromSeconds(seconds) : TimeSpan.Zero;
     }
 }

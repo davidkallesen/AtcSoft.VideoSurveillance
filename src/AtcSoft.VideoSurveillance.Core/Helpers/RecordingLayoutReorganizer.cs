@@ -80,11 +80,15 @@ public static class RecordingLayoutReorganizer
                 {
                     movedRecordings++;
 
-                    // The activity index sits next to the video in every layout.
-                    var activity = RecordingPathHelper.BuildActivityPath(video);
-                    if (File.Exists(activity))
+                    // The activity index and the previews sit next to the video in every layout.
+                    var sidecars = RecordingPathHelper.GetSidecarPaths(video);
+                    var targets = RecordingPathHelper.GetSidecarPaths(targetVideo);
+                    for (var i = 0; i < sidecars.Count; i++)
                     {
-                        Move(activity, RecordingPathHelper.BuildActivityPath(targetVideo), emptiedFolders, errors);
+                        if (File.Exists(sidecars[i]))
+                        {
+                            Move(sidecars[i], targets[i], emptiedFolders, errors);
+                        }
                     }
                 }
 

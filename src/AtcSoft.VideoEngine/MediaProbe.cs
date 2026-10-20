@@ -98,4 +98,52 @@ public static class MediaProbe
             }
         }
     }
+
+    /// <summary>
+    /// Gets the size of a media file's picture as it is displayed: its rotation flag applied, so a
+    /// camera turned on its side gives a tall picture.
+    /// </summary>
+    /// <param name="filePath">The path to the media file.</param>
+    /// <returns>The width and height; (0, 0) when the file has no video or cannot be read.</returns>
+    public static unsafe (int Width, int Height) GetDisplaySize(string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
+        AVFormatContext* fmtCtx = null;
+        AVDictionary* dict = null;
+        try
+        {
+            // The size may only be known once the streams are probed.
+            if (avformat_open_input(ref fmtCtx, filePath, null, ref dict) < 0 ||
+                avformat_find_stream_info(fmtCtx, (AVDictionary**)null) < 0)
+            {
+                return (0, 0);
+            }
+
+            for (var i = 0; i < fmtCtx->nb_streams; i++)
+            {
+                var codecpar = fmtCtx->streams[i]->codecpar;
+                if (codecpar->codec_type == AVMediaType.Video)
+                {
+                    var degrees = Recording.DisplayMatrix.ReadClockwiseDegrees(codecpar);
+                    return degrees is 90 or 270
+                        ? (codecpar->height, codecpar->width)
+                        : (codecpar->width, codecpar->height);
+                }
+            }
+
+            return (0, 0);
+        }
+        catch
+        {
+            return (0, 0);
+        }
+        finally
+        {
+            if (fmtCtx is not null)
+            {
+                avformat_close_input(ref fmtCtx);
+            }
+        }
+    }
 }

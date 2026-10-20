@@ -4,7 +4,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Description>Windows-only parts shared by the standalone app and the server — USB camera enumeration (Media Foundation), hot-plug watching (WMI) and recording thumbnails (GDI+).</Description>
+    <Description>Windows-only parts shared by the standalone app and the server — USB camera enumeration (Media Foundation), hot-plug watching (WMI) and recording thumbnails and previews (GDI+).</Description>
     <PackageTags>video;engine;mediafoundation;dshow;usb;webcam;windows</PackageTags>
   </PropertyGroup>
 
@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AtcSoft.VideoEngine\AtcSoft.VideoEngine.csproj" />
     <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
   </ItemGroup>
 

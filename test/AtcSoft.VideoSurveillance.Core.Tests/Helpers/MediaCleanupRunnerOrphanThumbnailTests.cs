@@ -156,6 +156,20 @@ public sealed class MediaCleanupRunnerOrphanThumbnailTests : IDisposable
     }
 
     [Fact]
+    public void Removes_Previews_Whose_Recording_Is_Gone_And_Keeps_Those_Whose_Recording_Is_There()
+    {
+        var orphans = new[] { ".previews.jpg", ".previews.json" }.Select(e => Touch(Path.Combine("Cam", "Cam_20260101_101500_000" + e))).ToList();
+        Touch(Path.Combine("Cam", "Cam_20260101_111500_000.mp4"));
+        var kept = Touch(Path.Combine("Cam", "Cam_20260101_111500_000.previews.jpg"));
+
+        var result = MediaCleanupRunner.RemoveOrphanThumbnails(root, RecordingExtensions, EmptySkipSet);
+
+        orphans.Should().OnlyContain(o => !File.Exists(o));
+        File.Exists(kept).Should().BeTrue();
+        result.DeletedThumbnails.Should().BeEquivalentTo(orphans);
+    }
+
+    [Fact]
     public void Leaves_A_Young_Activity_Index_And_One_Directly_In_The_Root_Alone()
     {
         var young = Touch(Path.Combine("Cam", "Cam_20260101_101500_000.activity.jsonl"), TimeSpan.FromSeconds(5));

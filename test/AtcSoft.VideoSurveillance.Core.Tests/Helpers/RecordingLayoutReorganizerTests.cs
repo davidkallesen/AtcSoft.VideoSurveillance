@@ -45,12 +45,16 @@ public sealed class RecordingLayoutReorganizerTests : IDisposable
     {
         Touch("Cam", "Cam_20261012_101500_000.mkv");
         Touch("Cam", "Cam_20261012_101500_000.activity.jsonl");
+        Touch("Cam", "Cam_20261012_101500_000.previews.jpg");
+        Touch("Cam", "Cam_20261012_101500_000.previews.json");
 
         var result = RecordingLayoutReorganizer.Reorganize(root, DailyAndSeparate, Extensions);
 
         Files().Should().BeEquivalentTo(
             @"Cam\2026-10-12\Cam_20261012_101500_000.mkv",
-            @"Cam\2026-10-12\Cam_20261012_101500_000.activity.jsonl");
+            @"Cam\2026-10-12\Cam_20261012_101500_000.activity.jsonl",
+            @"Cam\2026-10-12\Cam_20261012_101500_000.previews.jpg",
+            @"Cam\2026-10-12\Cam_20261012_101500_000.previews.json");
         result.MovedRecordings.Should().Be(1, "the index is not a recording of its own");
         result.Errors.Should().BeEmpty();
     }

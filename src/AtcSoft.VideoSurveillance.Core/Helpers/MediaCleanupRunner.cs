@@ -468,14 +468,18 @@ public static class MediaCleanupRunner
             }
         }
 
-        bytesFreed += RemoveOrphanActivityIndexes(fullRoot, videoExtensions, skipPaths, newestAllowedUtc, excluded, deletedThumbnails, errors);
+        foreach (var ending in new[] { RecordingPathHelper.ActivityExtension, RecordingPathHelper.PreviewImageExtension, RecordingPathHelper.PreviewIndexExtension })
+        {
+            bytesFreed += RemoveOrphanSidecars(fullRoot, ending, videoExtensions, skipPaths, newestAllowedUtc, excluded, deletedThumbnails, errors);
+        }
 
         return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
     }
 
-    // An activity index always sits beside its video, in every layout.
-    private static long RemoveOrphanActivityIndexes(
+    // An activity index and the previews always sit beside their video, in every layout.
+    private static long RemoveOrphanSidecars(
         string fullRoot,
+        string ending,
         IReadOnlyCollection<string> videoExtensions,
         IReadOnlySet<string> skipPaths,
         DateTime newestAllowedUtc,
@@ -487,7 +491,7 @@ public static class MediaCleanupRunner
         try
         {
             indexes = Directory
-                .EnumerateFiles(fullRoot, "*" + RecordingPathHelper.ActivityExtension, SearchOption.AllDirectories)
+                .EnumerateFiles(fullRoot, "*" + ending, SearchOption.AllDirectories)
                 .ToList();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -511,7 +515,7 @@ public static class MediaCleanupRunner
                 }
 
                 var name = Path.GetFileName(index);
-                var stem = name[..^RecordingPathHelper.ActivityExtension.Length];
+                var stem = name[..^ending.Length];
                 if (videoExtensions.Any(extension => File.Exists(Path.Combine(folder, stem + extension))))
                 {
                     continue;

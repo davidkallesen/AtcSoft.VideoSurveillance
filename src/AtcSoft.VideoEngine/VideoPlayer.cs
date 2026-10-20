@@ -53,7 +53,7 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
     // A picture decoded on the graphics card, copied back to memory for the encoder.
     private AVFrame* memoryFrame;
     private FrameCapture? frameCapture;
-    private GreyScaler? greyScaler;
+    private FrameScaler? greyScaler;
 
     private AVFrame* latestFrame;
     private Thread? demuxThread;
@@ -656,8 +656,8 @@ public sealed unsafe partial class VideoPlayer : IVideoPlayer
                             return null;
                         }
 
-                        greyScaler ??= new GreyScaler();
-                        var pixels = greyScaler.ToGrey(clone, width, height, rotation);
+                        greyScaler ??= new FrameScaler();
+                        var pixels = greyScaler.ToPixels(clone, width, height, rotation);
                         var position = clone->pts != AV_NOPTS_VALUE && timeBase.Den != 0
                             ? TimeSpan.FromSeconds(Math.Max(clone->pts * (double)timeBase.Num / timeBase.Den, 0))
                             : TimeSpan.Zero;

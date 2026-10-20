@@ -27,6 +27,16 @@ public static partial class RecordingPathHelper
     /// </summary>
     public const string ActivityExtension = ".activity.jsonl";
 
+    /// <summary>
+    /// The ending of a recording's preview pictures (one JPEG of small tiles), in place of the video's extension.
+    /// </summary>
+    public const string PreviewImageExtension = ".previews.jpg";
+
+    /// <summary>
+    /// The ending of the index of a recording's preview pictures, in place of the video's extension.
+    /// </summary>
+    public const string PreviewIndexExtension = ".previews.json";
+
     private const string TimestampFormat = "yyyyMMdd_HHmmss_fff";
     private const string ThumbnailExtension = ".png";
 
@@ -183,15 +193,48 @@ public static partial class RecordingPathHelper
     }
 
     /// <summary>
+    /// Builds the path of a recording's preview pictures: the small tiles a timeline shows under
+    /// the mouse, in one JPEG. It always sits next to the video, in every layout.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    public static string BuildPreviewImagePath(string videoPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(videoPath);
+
+        return Path.ChangeExtension(videoPath, PreviewImageExtension);
+    }
+
+    /// <summary>
+    /// Builds the path of the index of a recording's preview pictures (where each tile is, and of
+    /// which moment). It is written last, so the pictures are complete when it is there.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    public static string BuildPreviewIndexPath(string videoPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(videoPath);
+
+        return Path.ChangeExtension(videoPath, PreviewIndexExtension);
+    }
+
+    /// <summary>
+    /// Gets the files that always sit next to a recording's video, in every layout: its activity
+    /// index and its preview pictures with their index.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    public static IReadOnlyList<string> GetSidecarPaths(string videoPath)
+        => [BuildActivityPath(videoPath), BuildPreviewImagePath(videoPath), BuildPreviewIndexPath(videoPath)];
+
+    /// <summary>
     /// Gets every file that belongs to a recording besides the video: the places its thumbnail
-    /// may be, and its activity index. Use it to delete or protect a recording with all it has.
+    /// may be, its activity index and its preview pictures. Use it to delete or protect a
+    /// recording with all it has.
     /// </summary>
     /// <param name="videoPath">The recording path.</param>
     /// <param name="recordingRoot">The recording root the video lives under.</param>
     public static IReadOnlyList<string> GetCompanionPaths(
         string videoPath,
         string? recordingRoot)
-        => [.. GetThumbnailCandidates(videoPath, recordingRoot), BuildActivityPath(videoPath)];
+        => [.. GetThumbnailCandidates(videoPath, recordingRoot), .. GetSidecarPaths(videoPath)];
 
     /// <summary>
     /// Finds the existing thumbnail of a recording, whichever layout it was made under.
