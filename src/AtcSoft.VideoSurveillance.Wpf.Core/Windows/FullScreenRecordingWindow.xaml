@@ -325,6 +325,7 @@
                             Buckets="{Binding Path=ActivityBuckets}"
                             DurationSeconds="{Binding Path=ActivityDurationSeconds}"
                             Position="{Binding Path=ActivityPosition}"
+                            Previews="{Binding Path=ActivityPreviews}"
                             RecordingStart="{Binding Path=ActivityRecordingStart}"
                             SeekCommand="{Binding Path=SeekActivityCommand}"
                             VisibleEnd="{Binding Path=ActivityEnd}"

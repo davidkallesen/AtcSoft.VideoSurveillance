@@ -65,6 +65,25 @@ public sealed partial class GatewayService
         }
     }
 
+    /// <summary>
+    /// Gets where a recording's preview pictures are; a recording without them is queued for them.
+    /// </summary>
+    /// <param name="filePath">The recording's path as the listing gives it.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The previews, or <see langword="null"/> when the server did not give them.</returns>
+    public async Task<RecordingPreviewSheet?> GetRecordingPreviewsAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await getRecordingPreviewsEndpoint
+            .ExecuteAsync(new GetRecordingPreviewsParameters(FilePath: filePath), cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsOk
+            ? result.OkContent
+            : null;
+    }
+
     public string GetRecordingFileUrl(string filePath)
         => $"{ApiBaseUrl}/recordings-files/{AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.EscapePathSegments(filePath)}";
 }

@@ -8,8 +8,10 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 /// <param name="FileName">What the window shows as its name.</param>
 /// <param name="RecordingStartTime">When the recording started, in local time, for the clock on the picture.</param>
 /// <param name="ActivityLoader">Gets its activity for the timeline under the player, or <see langword="null"/>.</param>
+/// <param name="PreviewLoader">Gets its preview pictures for the timeline, or <see langword="null"/>.</param>
 public sealed record RecordingSegment(
     string FilePath,
     string FileName,
     DateTime? RecordingStartTime,
-    RecordingActivityLoader? ActivityLoader);
+    RecordingActivityLoader? ActivityLoader,
+    RecordingPreviewLoader? PreviewLoader = null);

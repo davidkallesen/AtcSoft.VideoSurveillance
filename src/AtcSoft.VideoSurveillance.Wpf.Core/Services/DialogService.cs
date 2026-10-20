@@ -14,6 +14,7 @@ public class DialogService : IDialogService
     private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
     private readonly ICameraStorageService? cameraStorage;
     private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
+    private readonly IRecordingPreviews? recordingPreviews;
     private RecordingsBrowserState? lastRecordingsBrowserState;
 
     /// <summary>
@@ -42,7 +43,8 @@ public class DialogService : IDialogService
         AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbCameraEnumerator,
         AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null,
         IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null,
-        ICameraStorageService? cameraStorage = null)
+        ICameraStorageService? cameraStorage = null,
+        IRecordingPreviews? recordingPreviews = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));
@@ -51,6 +53,7 @@ public class DialogService : IDialogService
         this.connectionTypeDetector = connectionTypeDetector;
         this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
         this.cameraStorage = cameraStorage;
+        this.recordingPreviews = recordingPreviews;
     }
 
     /// <inheritdoc />
@@ -345,7 +348,10 @@ public class DialogService : IDialogService
                     AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.GetCameraFolderName(c.Display.DisplayName, c.Id),
                     folder,
                     StringComparison.OrdinalIgnoreCase))
-                ?.Core);
+                ?.Core)
+        {
+            Previews = recordingPreviews,
+        };
         if (settingsService.Recording.RememberRecordingsBrowserState &&
             lastRecordingsBrowserState is not null)
         {

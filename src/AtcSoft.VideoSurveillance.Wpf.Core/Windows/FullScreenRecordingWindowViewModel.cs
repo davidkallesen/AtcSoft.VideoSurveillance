@@ -13,6 +13,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// </summary>
     public const int ActivityBucketCount = ActivityTimelineZoom.LeastBuckets;
 
+    // How many times previews being made are asked for again: two minutes.
+    private const int PreviewRetries = 24;
+
     private static readonly double[] SpeedOptions = [1.0, 2.0, 4.0, 8.0, 16.0];
 
     // A jump to an event lands this much before it, so its start is seen; and "previous" right
@@ -23,6 +26,9 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     // Play events only shows this much after each event.
     private static readonly TimeSpan EventLeadOut = TimeSpan.FromSeconds(2);
 
+    // Previews being made are asked for again this often while the window is open.
+    private static readonly TimeSpan PreviewRetryInterval = TimeSpan.FromSeconds(5);
+
     private readonly PlaybackOverlaySettings overlaySettings;
     private readonly Func<RecordingSegment?>? nextSegment;
     private readonly CancellationTokenSource activityCancellation = new();
@@ -30,6 +36,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private string filePath;
     private DateTime? recordingStartTime;
     private RecordingActivityLoader? activityLoader;
+    private RecordingPreviewLoader? previewLoader;
     private TimeSpan startPosition;
 
     // Counts the recordings played in this window: an activity that arrives for an earlier one is dropped.
@@ -128,6 +135,12 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private DateTime? activityRecordingStart;
 
     /// <summary>
+    /// The recording's preview pictures, shown under the mouse on the timeline; none while null.
+    /// </summary>
+    [ObservableProperty]
+    private RecordingPreviewTiles? activityPreviews;
+
+    /// <summary>
     /// Where the part of the recording the timeline shows starts, as a fraction of the recording.
     /// </summary>
     [ObservableProperty]
@@ -164,6 +177,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// Gets the camera's motion zones now, so the timeline draws an event in its watch zone's
     /// colour; without one, every event is orange.
     /// </param>
+    /// <param name="previewLoader">
+    /// Gets the recording's preview pictures, shown under the mouse on the timeline; asked again a
+    /// while when they are being made. Without one, the timeline shows words only.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
@@ -172,13 +189,15 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         RecordingActivityLoader? activityLoader = null,
         TimeSpan? startPosition = null,
         Func<RecordingSegment?>? nextSegment = null,
-        Func<CancellationToken, Task<IReadOnlyList<MotionZone>>>? zonesLoader = null)
+        Func<CancellationToken, Task<IReadOnlyList<MotionZone>>>? zonesLoader = null,
+        RecordingPreviewLoader? previewLoader = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
 
         this.filePath = filePath;
         this.activityLoader = activityLoader;
+        this.previewLoader = previewLoader;
         this.zonesLoader = zonesLoader;
         this.startPosition = startPosition ?? TimeSpan.Zero;
         this.nextSegment = nextSegment;
@@ -395,6 +414,11 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
                 {
                     _ = LoadZonesAsync(zonesLoader, Dispatcher.CurrentDispatcher);
                 }
+
+                if (previewLoader is not null)
+                {
+                    _ = LoadPreviewsAsync(previewLoader, segment, Dispatcher.CurrentDispatcher);
+                }
             }
         }
     }
@@ -437,6 +461,46 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             HasActivity = true;
             CommandManager.InvalidateRequerySuggested();
         });
+    }
+
+    // Previews still being made (a recording from before them) are asked for again a while.
+    private async Task LoadPreviewsAsync(
+        RecordingPreviewLoader loader,
+        int forSegment,
+        Dispatcher dispatcher)
+    {
+        try
+        {
+            for (var attempt = 0; attempt <= PreviewRetries && !disposed && forSegment == segment; attempt++)
+            {
+                if (attempt > 0)
+                {
+                    await Task.Delay(PreviewRetryInterval, activityCancellation.Token).ConfigureAwait(false);
+                }
+
+                var load = await loader(activityCancellation.Token).ConfigureAwait(false);
+                if (load.Sheet is { } sheet)
+                {
+                    _ = dispatcher.BeginInvoke(() =>
+                    {
+                        if (!disposed && forSegment == segment)
+                        {
+                            ActivityPreviews = sheet;
+                        }
+                    });
+                    return;
+                }
+
+                if (!load.IsBeingMade)
+                {
+                    return;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // No previews are the same as unreadable ones: the timeline tells in words only.
+        }
     }
 
     // The camera's zones are the same for every segment: loaded once.
@@ -648,9 +712,11 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         FileName = next.FileName;
         recordingStartTime = next.RecordingStartTime ?? ParseRecordingStartTime(next.FileName);
         activityLoader = next.ActivityLoader;
+        previewLoader = next.PreviewLoader;
         startPosition = TimeSpan.Zero;
 
         activityEvents = [];
+        ActivityPreviews = null;
         ActivityBuckets = null;
         HasActivity = false;
         ActivityPosition = 0;

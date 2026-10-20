@@ -50,6 +50,7 @@ global using ApplicationHelper = AtcSoft.VideoSurveillance.Helpers.ApplicationHe
 global using DiskSpaceGuard = AtcSoft.VideoSurveillance.Helpers.DiskSpaceGuard;
 global using FreeSpaceReader = AtcSoft.VideoSurveillance.Helpers.FreeSpaceReader;
 global using IMediaCleanupService = AtcSoft.VideoSurveillance.Services.IMediaCleanupService;
+global using IRecordingPreviews = AtcSoft.VideoSurveillance.Services.IRecordingPreviews;
 global using IRecordingSegmentationService = AtcSoft.VideoSurveillance.Services.IRecordingSegmentationService;
 global using IUsbCameraEnumerator = AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator;
 global using IUsbCameraWatcher = AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher;

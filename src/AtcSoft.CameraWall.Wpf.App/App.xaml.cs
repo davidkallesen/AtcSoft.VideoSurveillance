@@ -87,6 +87,11 @@ public partial class CameraWallApp
                 // An activity index beside every recording, for the timelines (shared with the server).
                 services.AddHostedService<ActivityIndexService>();
 
+                // The preview pictures of each recording that ends, shown under the mouse on its timeline.
+                services.AddSingleton<AtcSoft.CameraWall.Wpf.Services.RecordingPreviewService>();
+                services.AddSingleton<IRecordingPreviews>(sp => sp.GetRequiredService<AtcSoft.CameraWall.Wpf.Services.RecordingPreviewService>());
+                services.AddHostedService(sp => sp.GetRequiredService<AtcSoft.CameraWall.Wpf.Services.RecordingPreviewService>());
+
                 // Toast notification service (used by library and app)
                 services.AddSingleton<IToastNotificationService, ToastNotificationService>();
 

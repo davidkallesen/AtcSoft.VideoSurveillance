@@ -19,6 +19,7 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly IUsbCameraWatcher usbCameraWatcher;
     private readonly ICameraConnectionTypeDetector? connectionTypeDetector;
+    private readonly IRecordingPreviews? recordingPreviews;
     private readonly ConcurrentDictionary<Guid, byte> connectionTypeProbedCameras = new();
 
     // The summaries of the activity indexes already read, kept while the app runs.
@@ -82,7 +83,8 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         IToastNotificationService toastNotificationService,
         IVideoPlayerFactory videoPlayerFactory,
         IUsbCameraWatcher usbCameraWatcher,
-        ICameraConnectionTypeDetector? connectionTypeDetector = null)
+        ICameraConnectionTypeDetector? connectionTypeDetector = null,
+        IRecordingPreviews? recordingPreviews = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(storageService);
@@ -108,6 +110,7 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         this.videoPlayerFactory = videoPlayerFactory;
         this.usbCameraWatcher = usbCameraWatcher;
         this.connectionTypeDetector = connectionTypeDetector;
+        this.recordingPreviews = recordingPreviews;
 
         Layouts = new ObservableCollection<CameraLayout>(storageService.GetAllLayouts());
 
@@ -973,7 +976,8 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
             () => [.. storageService.GetAllCameras().Select(c => new AtcSoft.VideoSurveillance.Models.TimelineCamera(c.Id, c.Display.DisplayName))],
             () => [GlobalRecordingPath(), .. storageService.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath)],
             recordingService,
-            activitySummaries);
+            activitySummaries,
+            previews: recordingPreviews);
         new AtcSoft.CameraWall.Wpf.Timeline.LocalTimelineWindow(viewModel)
         {
             Owner = Application.Current.MainWindow,

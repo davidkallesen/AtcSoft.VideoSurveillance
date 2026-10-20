@@ -149,6 +149,50 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void Resting_The_Mouse_Shows_The_Nearest_Picture_And_On_An_Event_Its_Busiest_Moment()
+    {
+        var colours = new List<uint>();
+        var eventWords = string.Empty;
+
+        var error = WpfTestThread.Run(() =>
+        {
+            // Three grid tiles, five seconds apart, and the event's tile at 6.5 s: each one colour.
+            uint[] tileColours = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFFFF00];
+            var layout = new AtcSoft.VideoSurveillance.Models.RecordingPreviews(5, 4, 2, 4, 3, [new(6.5, 3)]);
+            var pixels = new uint[16 * 2];
+            for (var i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = tileColours[(i % 16) / 4];
+            }
+
+            var image = System.Windows.Media.Imaging.BitmapSource.Create(16, 2, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, 16 * 4);
+            image.Freeze();
+            var timeline = new ActivityTimeline
+            {
+                Buckets = [.. Enumerable.Range(0, 10).Select(i => new ActivityBucket(i == 6 ? 30 : 1, i == 6 ? 1 : 0, IsAnalysed: true))],
+                RecordingStart = new DateTime(2026, 10, 20, 9, 0, 0, DateTimeKind.Local),
+                DurationSeconds = 10,
+                Previews = new AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingPreviewTiles(layout, image),
+            };
+            Render(timeline);
+
+            foreach (var x in new[] { 15d, 45, 65 })
+            {
+                var tile = timeline.PreviewAt(x)!;
+                var first = new uint[1];
+                tile.CopyPixels(new System.Windows.Int32Rect(0, 0, 1, 1), first, 4, 0);
+                colours.Add(first[0]);
+            }
+
+            eventWords = timeline.DescribeAt(65);
+        });
+
+        error.Should().BeNull();
+        colours.Should().Equal(0xFFFF0000, 0xFF00FF00, 0xFFFFFF00);
+        eventWords.Split(Environment.NewLine)[0].Should().Be("09:00:06", "the time of the event's picture, 6.5 s in");
+    }
+
+    [Fact]
     public void Without_Activity_Nothing_Is_Drawn_But_The_Strip_Still_Takes_Clicks()
     {
         byte[] pixels = [];

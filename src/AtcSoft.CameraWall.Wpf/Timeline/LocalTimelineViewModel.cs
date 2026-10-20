@@ -41,6 +41,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     private readonly IActiveRecordings recordings;
     private readonly ActivitySummaryCache cache;
     private readonly TimeZoneInfo zone;
+    private readonly IRecordingPreviews? previews;
     private DateTimeOffset from;
     private DateTimeOffset to;
     private DateTimeOffset lastLoad;
@@ -77,7 +78,8 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         Func<IReadOnlyList<string?>> folders,
         IActiveRecordings recordings,
         ActivitySummaryCache cache,
-        TimeZoneInfo? zone = null)
+        TimeZoneInfo? zone = null,
+        IRecordingPreviews? previews = null)
     {
         ArgumentNullException.ThrowIfNull(cameras);
         ArgumentNullException.ThrowIfNull(folders);
@@ -87,6 +89,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         this.cameras = cameras;
         this.folders = folders;
         this.recordings = recordings;
+        this.previews = previews;
         this.cache = cache;
         this.zone = zone ?? TimeZoneInfo.Local;
         recordings.RecordingStateChanged += OnRecordingStateChanged;
@@ -154,10 +157,12 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     /// </summary>
     /// <param name="lane">The camera's lane.</param>
     /// <param name="videoPath">The recording that plays first.</param>
+    /// <param name="previews">The app's previews in the making, for each recording's preview pictures.</param>
     /// <returns>A function that gives the next recording each time, then <see langword="null"/>.</returns>
     public static Func<RecordingSegment?> NextSegments(
         LocalTimelineLaneViewModel lane,
-        string videoPath)
+        string videoPath,
+        IRecordingPreviews? previews = null)
     {
         ArgumentNullException.ThrowIfNull(lane);
 
@@ -179,7 +184,8 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
                 coverage.VideoPath,
                 Title(lane.CameraName, coverage.RecordingStart),
                 coverage.RecordingStart.LocalDateTime,
-                RecordingActivityLoaders.FromFile(coverage.VideoPath));
+                RecordingActivityLoaders.FromFile(coverage.VideoPath),
+                RecordingPreviewLoaders.FromFile(coverage.VideoPath, previews));
         };
     }
 
@@ -347,7 +353,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         "Reliability",
         "CA2000:Dispose objects before losing scope",
         Justification = "Window self-disposes on close via the Closed event handler.")]
-    private static void Play(
+    private void Play(
         LocalTimelineLaneViewModel? lane,
         string cameraName,
         string videoPath,
@@ -360,7 +366,8 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
             recordingStartTime: (moment - offset).LocalDateTime,
             activityLoader: RecordingActivityLoaders.FromFile(videoPath),
             startPosition: offset,
-            nextSegment: lane is null ? null : NextSegments(lane, videoPath));
+            nextSegment: lane is null ? null : NextSegments(lane, videoPath, previews),
+            previewLoader: RecordingPreviewLoaders.FromFile(videoPath, previews));
 
         new FullScreenRecordingWindow(viewModel).Show();
     }

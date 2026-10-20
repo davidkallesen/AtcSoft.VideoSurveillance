@@ -8,8 +8,10 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 /// <see cref="SeekCommand"/> with the place as a fraction of the recording, 0 to 1.
 /// It shows the part of the recording from <see cref="VisibleStart"/> to <see cref="VisibleEnd"/>
 /// (the whole of it by default); the mouse wheel asks to zoom through <see cref="ZoomCommand"/>.
-/// Resting the mouse on it tells the time there, how many things moved and in which watch zone
-/// (<see cref="DescribeAt"/>), the time from <see cref="RecordingStart"/> and <see cref="DurationSeconds"/>.
+/// Resting the mouse on it shows a picture of that moment from <see cref="Previews"/> (on an event, the
+/// moment most moved in it; <see cref="PreviewAt"/>) above the time there, how many things moved and
+/// in which watch zone (<see cref="DescribeAt"/>), the time from <see cref="RecordingStart"/> and
+/// <see cref="DurationSeconds"/>.
 /// </summary>
 public sealed partial class ActivityTimeline : FrameworkElement
 {
@@ -20,8 +22,10 @@ public sealed partial class ActivityTimeline : FrameworkElement
     private static readonly Brush DefaultEventBrush = Frozen(Color.FromRgb(0xFF, 0x8C, 0x00));
     private static readonly Brush DefaultNotAnalysedBrush = Frozen(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
 
-    // The tooltip follows the mouse along the strip, its words changing with the place.
+    // The tooltip follows the mouse along the strip, its picture and words changing with the place.
     private readonly ToolTip hoverTip = new() { Placement = System.Windows.Controls.Primitives.PlacementMode.Top };
+    private readonly Image hoverPicture = new() { Stretch = Stretch.None, Margin = new Thickness(0, 0, 0, 4), Visibility = Visibility.Collapsed };
+    private readonly TextBlock hoverWords = new();
 
     private IReadOnlyList<ActivityEvent>? events;
 
@@ -35,6 +39,10 @@ public sealed partial class ActivityTimeline : FrameworkElement
     // How long the recording is, in seconds, for the time under the mouse.
     [DependencyProperty]
     private double durationSeconds;
+
+    // The recording's preview pictures, shown under the mouse; none while null.
+    [DependencyProperty]
+    private RecordingPreviewTiles? previews;
 
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private double position;
@@ -76,36 +84,35 @@ public sealed partial class ActivityTimeline : FrameworkElement
         Cursor = Cursors.Hand;
         ClipToBounds = true;
         hoverTip.PlacementTarget = this;
-        hoverTip.Content = Translations.ActivityTimelineHint;
+        hoverWords.Text = Translations.ActivityTimelineHint;
+        var content = new StackPanel();
+        content.Children.Add(hoverPicture);
+        content.Children.Add(hoverWords);
+        hoverTip.Content = content;
         ToolTip = hoverTip;
     }
 
     /// <summary>
+    /// Gets the picture the tooltip shows for a point of the strip: on an event, the moment most
+    /// moved in it; elsewhere, the nearest one of the grid.
+    /// </summary>
+    /// <param name="x">The point, in pixels from the left.</param>
+    /// <returns>The picture, or <see langword="null"/> without previews.</returns>
+    public BitmapSource? PreviewAt(double x)
+        => Look(x) is { Tile: { } tile } && Previews is { } sheet
+            ? sheet.Tile(tile)
+            : null;
+
+    /// <summary>
     /// Gets the words the tooltip shows for a point of the strip: the time there, how many things
-    /// moved and in which watch zone, then how to use the timeline.
+    /// moved and in which watch zone, then how to use the timeline. With a picture, the time is the
+    /// picture's.
     /// </summary>
     /// <param name="x">The point, in pixels from the left.</param>
     public string DescribeAt(double x)
-    {
-        if (Buckets is not { Count: > 0 } stretches || ActualWidth <= 0)
-        {
-            return Translations.ActivityTimelineHint;
-        }
-
-        // As wide as the narrowest band, so a widened band tells its event.
-        var (start, end) = Window();
-        var half = ActivityTimelineLayout.MinimumEventWidth / 2;
-        events ??= ActivityTimelineLayout.FindEvents(stretches);
-        var hover = ActivityTimelineHover.At(
-            stretches,
-            events,
-            ActivityTimelineZoom.ToRecording(start, end, (x - half) / ActualWidth),
-            ActivityTimelineZoom.ToRecording(start, end, (x + half) / ActualWidth));
-
-        return hover is null
-            ? Translations.ActivityTimelineHint
-            : string.Join(Environment.NewLine, [.. ActivityHoverText.Lines(hover, RecordingStart, DurationSeconds), Translations.ActivityTimelineHint]);
-    }
+        => Look(x) is { Hover: { } hover } look
+            ? string.Join(Environment.NewLine, [.. ActivityHoverText.Lines(hover with { Position = look.Position }, RecordingStart, DurationSeconds), Translations.ActivityTimelineHint])
+            : Translations.ActivityTimelineHint;
 
     /// <inheritdoc />
     protected override void OnRender(DrawingContext drawingContext)
@@ -193,7 +200,9 @@ public sealed partial class ActivityTimeline : FrameworkElement
         base.OnMouseMove(e);
 
         var x = e.GetPosition(this).X;
-        hoverTip.Content = DescribeAt(x);
+        hoverWords.Text = DescribeAt(x);
+        hoverPicture.Source = PreviewAt(x);
+        hoverPicture.Visibility = hoverPicture.Source is null ? Visibility.Collapsed : Visibility.Visible;
         hoverTip.HorizontalOffset = x;
     }
 
@@ -222,6 +231,39 @@ public sealed partial class ActivityTimeline : FrameworkElement
         var start = Math.Clamp(VisibleStart, 0, 1);
         var end = Math.Clamp(VisibleEnd, 0, 1);
         return end > start ? (start, end) : (0, 1);
+    }
+
+    // What happened under a point of the strip, the stretches as wide as the narrowest band so a
+    // widened band tells its event; and the preview tile of it, with the moment the tile shows.
+    private (ActivityHover? Hover, int? Tile, double Position)? Look(double x)
+    {
+        if (Buckets is not { Count: > 0 } stretches || ActualWidth <= 0)
+        {
+            return null;
+        }
+
+        var (start, end) = Window();
+        var half = ActivityTimelineLayout.MinimumEventWidth / 2;
+        var from = ActivityTimelineZoom.ToRecording(start, end, (x - half) / ActualWidth);
+        var to = ActivityTimelineZoom.ToRecording(start, end, (x + half) / ActualWidth);
+        events ??= ActivityTimelineLayout.FindEvents(stretches);
+        var hover = ActivityTimelineHover.At(stretches, events, from, to);
+        var place = hover?.Position ?? (from + to) / 2;
+
+        if (Previews?.Layout is not { } layout || DurationSeconds <= 0)
+        {
+            return (hover, null, place);
+        }
+
+        var seconds = DurationSeconds;
+        if (events.FirstOrDefault(e => e.End > from && e.Start < to) is { } activityEvent &&
+            RecordingPreviewLayout.EventTile(layout, activityEvent.Start * seconds, activityEvent.End * seconds) is { } eventTile)
+        {
+            return (hover, eventTile, layout.Events.First(e => e.Tile == eventTile).Seconds / seconds);
+        }
+
+        var gridTile = RecordingPreviewLayout.GridTile(layout, place * seconds);
+        return (hover, gridTile, Math.Min(gridTile * layout.IntervalSeconds / seconds, 1));
     }
 
     // The place in the recording under a point of the strip, 0 to 1.

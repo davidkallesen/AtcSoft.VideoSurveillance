@@ -58,6 +58,12 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
     }
 
     /// <summary>
+    /// Gets or sets the app's previews in the making: a recording played without preview pictures
+    /// is queued for them, and so is one analysed. <see langword="null"/> where none are made.
+    /// </summary>
+    public IRecordingPreviews? Previews { get; set; }
+
+    /// <summary>
     /// Occurs when the dialog requests to be closed.
     /// </summary>
     public event EventHandler<DialogClosedEventArgs>? CloseRequested;
@@ -437,6 +443,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
             var camera = cameraByFolder?.Invoke(recording.CameraName);
             var stoppingToken = stopping.Token;
             await Task.Run(() => AnalyseFile(recording.FilePath, settings, camera, stoppingToken), stoppingToken).ConfigureAwait(true);
+
+            // Its events get preview tiles of their own now.
+            Previews?.TryEnqueue(recording.FilePath);
             LoadRecordings();
             SelectedRecording = Recordings.FirstOrDefault(r => string.Equals(r.FilePath, recording.FilePath, StringComparison.OrdinalIgnoreCase));
             StatusMessage = Translations.RecordingAnalysed;
