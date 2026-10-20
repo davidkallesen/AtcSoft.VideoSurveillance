@@ -40,6 +40,8 @@ Marking another project packable means it joins the lockstep, and its package id
 
 A consumer must call `CameraTile.InitializeServices(..., videoPlayerFactory: ...)` before the tile plays anything — without a factory it stays `Disconnected`. The packages do not include the FFmpeg 9 native DLLs (`avutil-61.dll` etc.); the consuming app deploys them itself or calls `FFmpegSetup.EnsureReady()`.
 
+**Versions and commits** (as atc-wpf): release-please makes the version and `CHANGELOG.md` from Conventional Commits (`feat(scope): …`, `fix(scope): …`, `docs`, `perf`, `refactor`; config in `release-please-config.json`). A change to the packages' public API, breaking or not, goes as a plain `feat` or `fix` that names the change in its body; never `!` or a `BREAKING CHANGE:` footer, which would move the packages to a new major version. A new major version is decided on its own, with a `Release-As:` footer.
+
 ## Architecture
 The solution follows a layered architecture with Core at the base:
 - **Core** contains all shared models, enums, events, service interfaces, and helpers (zero UI dependencies)
