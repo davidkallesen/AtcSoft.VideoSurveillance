@@ -28,6 +28,7 @@ public sealed class RecordingsFileProvider : IFileProvider, IDisposable
             [".mkv"] = "video/x-matroska",
             [".avi"] = "video/x-msvideo",
             [".png"] = "image/png",
+            [".jpg"] = "image/jpeg",
         });
 
     /// <inheritdoc />

@@ -1305,6 +1305,42 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /recordings/previews:
+    # No cache: the previews of a recording are made after it, and may be made again
+    # when it is analysed.
+    get:
+      summary: Get the preview pictures of a recording
+      description: The small pictures a timeline shows under the mouse, all in one JPEG beside the recording (imagePath, fetched from /recordings-files/ with the session's media token). A grid of tiles evenly over the recording, and a tile of the busiest second of each event. The server makes them when a recording or segment ends, and when it is analysed. A finished recording without them (one from before the previews existed) is queued for them on this call, so the answer says isBeingMade and a later call has them; a recording still being written has none until it ends.
+      operationId: getRecordingPreviews
+      tags:
+        - recordings
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          description: The recording's path relative to the recordings root, as the listing returns it in filePath.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The previews of the recording, or that it has none yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingPreviewSheet"
+        '400':
+          description: The path does not name a recording
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: Recording not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /timeline:
     # No cache: a span that reaches now grows every second; the server keeps the summaries
     # of the activity indexes instead.
@@ -2753,6 +2789,73 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RecordingActivityBucket"
+
+    RecordingPreviewSheet:
+      title: RecordingPreviewSheet
+      type: object
+      description: Where the preview pictures of a recording are in their JPEG. Tiles of one size, row by row, columns to a row; first the grid (tile i is i times intervalSeconds into the recording), then a tile for each event.
+      required:
+        - hasPreviews
+        - isBeingMade
+        - intervalSeconds
+        - tileWidth
+        - tileHeight
+        - columns
+        - gridCount
+        - events
+      properties:
+        hasPreviews:
+          type: boolean
+          description: Whether the recording has previews. Without them the numbers are 0 and events is empty.
+        isBeingMade:
+          type: boolean
+          description: Whether the previews are queued or being made. Neither this nor hasPreviews means the recording is still being written, or they could not be made.
+        imagePath:
+          type: string
+          description: The JPEG's path relative to the recordings root, fetched from /recordings-files/ like a thumbnail. Left out without previews.
+        intervalSeconds:
+          type: number
+          format: double
+          description: How far apart the grid's tiles are, in seconds.
+        tileWidth:
+          type: integer
+          format: int32
+          description: The width of a tile in pixels, as the picture is displayed.
+        tileHeight:
+          type: integer
+          format: int32
+          description: The height of a tile in pixels.
+        columns:
+          type: integer
+          format: int32
+          description: How many tiles a row of the JPEG has.
+        gridCount:
+          type: integer
+          format: int32
+          description: How many tiles the grid has.
+        events:
+          type: array
+          maxItems: 200
+          description: The events' tiles, from the start, after the grid.
+          items:
+            $ref: "#/components/schemas/RecordingPreviewTile"
+
+    RecordingPreviewTile:
+      title: RecordingPreviewTile
+      type: object
+      description: The preview tile of an event, of its busiest second.
+      required:
+        - seconds
+        - tile
+      properties:
+        seconds:
+          type: number
+          format: double
+          description: How far into the recording the picture is, in seconds.
+        tile:
+          type: integer
+          format: int32
+          description: The tile's number in the JPEG.
 
     RecordingActivityBucket:
       title: RecordingActivityBucket

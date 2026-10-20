@@ -189,6 +189,71 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Recording_That_Ends_Gets_Previews_That_Are_Served_And_Go_With_It()
+    {
+        var ffmpeg = FindFFmpegTool();
+        Assert.SkipWhen(ffmpeg is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = host.CreateClient();
+        var port = GetFreePort();
+        using var stream = StartTestStream(ffmpeg!, port);
+        var cameraId = Guid.Empty;
+
+        try
+        {
+            // Arrange — a recording of a few seconds
+            var name = "Previews " + Guid.NewGuid().ToString("N")[..8];
+            var created = await client.PostAsJsonAsync(
+                "/cameras",
+                new { displayName = name, ipAddress = "127.0.0.1", port, protocol = "http", path = "live" },
+                cancellationToken);
+            created.StatusCode.Should().Be(HttpStatusCode.Created);
+            cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+            var started = await client.PostAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), content: null, cancellationToken);
+            started.StatusCode.Should().Be(HttpStatusCode.OK, await started.Content.ReadAsStringAsync(cancellationToken));
+            await WaitForActivityAsync(client, name, cancellationToken);
+            var filePath = (await FindRecordingAsync(client, name, cancellationToken))!.Value.GetProperty("filePath").GetString()!;
+            var query = "/recordings/previews?filePath=" + Uri.EscapeDataString(filePath);
+            var whileRecording = await client.GetFromJsonAsync<JsonElement>(query, cancellationToken);
+
+            // Act — the recording ends
+            await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), cancellationToken);
+
+            // Assert — none while it is written; made in the background after it ends, and served
+            whileRecording.GetProperty("hasPreviews").GetBoolean().Should().BeFalse();
+            whileRecording.GetProperty("isBeingMade").GetBoolean().Should().BeFalse("a recording still being written is not queued");
+
+            var sheet = await WaitForPreviewsAsync(client, query, cancellationToken);
+            sheet.GetProperty("gridCount").GetInt32().Should().BePositive();
+            sheet.GetProperty("tileWidth").GetInt32().Should().Be(160);
+            var image = await client.GetAsync(
+                new Uri("/recordings-files/" + RecordingPathHelper.EscapePathSegments(sheet.GetProperty("imagePath").GetString()!), UriKind.Relative),
+                cancellationToken);
+            image.StatusCode.Should().Be(HttpStatusCode.OK);
+            image.Content.Headers.ContentType!.MediaType.Should().Be("image/jpeg");
+
+            // The previews are companions of the recording: they go with it
+            var recordingPath = (await client.GetFromJsonAsync<JsonElement>("/settings", cancellationToken)).GetProperty("recordingPath").GetString()!;
+            var previewImage = RecordingPathHelper.BuildPreviewImagePath(Path.Combine(recordingPath, filePath));
+            File.Exists(previewImage).Should().BeTrue();
+            var deleted = await client.DeleteAsync(new Uri("/recordings?filePath=" + Uri.EscapeDataString(filePath), UriKind.Relative), cancellationToken);
+            deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            File.Exists(previewImage).Should().BeFalse();
+        }
+        finally
+        {
+            if (cameraId != Guid.Empty)
+            {
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), CancellationToken.None);
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
+            }
+
+            Stop(stream);
+        }
+    }
+
+    [Fact]
     public async Task The_Timeline_Covers_A_Recording_Across_Its_Segments_Without_A_Gap()
     {
         var ffmpeg = FindFFmpegTool();
@@ -391,6 +456,28 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
         }
 
         Assert.Fail($"No analysed second showed up in the activity of '{cameraName}' within {ThumbnailTimeout.TotalSeconds:N0} seconds.");
+        return default;
+    }
+
+    // The previews are made a few seconds after the recording ends, by a worker that starts late.
+    private static async Task<JsonElement> WaitForPreviewsAsync(
+        HttpClient client,
+        string query,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        while (DateTime.UtcNow < deadline)
+        {
+            var sheet = await client.GetFromJsonAsync<JsonElement>(query, cancellationToken);
+            if (sheet.GetProperty("hasPreviews").GetBoolean())
+            {
+                return sheet;
+            }
+
+            await Task.Delay(500, cancellationToken);
+        }
+
+        Assert.Fail($"No previews were made within a minute: {query}");
         return default;
     }
 

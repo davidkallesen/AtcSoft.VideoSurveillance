@@ -12,16 +12,19 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
     private readonly ConcurrentDictionary<string, byte> pending = new(StringComparer.OrdinalIgnoreCase);
     private readonly IApplicationSettingsService settingsService;
     private readonly ICameraStorageService cameraStorageService;
+    private readonly IRecordingPreviews? previews;
 
     public RecordingAnalysisService(
         ILogger<RecordingAnalysisService> logger,
         RecordingAnalysisServiceOptions options,
         IApplicationSettingsService settingsService,
-        ICameraStorageService cameraStorageService)
+        ICameraStorageService cameraStorageService,
+        IRecordingPreviews? previews = null)
         : base(logger, options)
     {
         this.settingsService = settingsService;
         this.cameraStorageService = cameraStorageService;
+        this.previews = previews;
     }
 
     /// <inheritdoc />
@@ -53,6 +56,9 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
                 var watch = Stopwatch.StartNew();
                 var pictures = Analyse(videoPath, settingsService.MotionDetection, camera, stoppingToken);
                 LogAnalysed(videoPath, pictures, watch.Elapsed.TotalSeconds);
+
+                // Its events get preview tiles of their own now.
+                previews?.TryEnqueue(videoPath);
             }
             catch (OperationCanceledException)
             {

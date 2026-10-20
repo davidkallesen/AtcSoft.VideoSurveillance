@@ -235,6 +235,12 @@ try
     builder.Services.AddSingleton<IRecordingAnalyses>(sp => sp.GetRequiredService<RecordingAnalysisService>());
     builder.Services.AddHostedService(sp => sp.GetRequiredService<RecordingAnalysisService>());
 
+    // The preview pictures of each recording that ends, one at a time in the background.
+    builder.Services.AddSingleton(new RecordingPreviewServiceOptions());
+    builder.Services.AddSingleton<RecordingPreviewService>();
+    builder.Services.AddSingleton<IRecordingPreviews>(sp => sp.GetRequiredService<RecordingPreviewService>());
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<RecordingPreviewService>());
+
     // GET /devices/usb is cached a few seconds; a camera plugged in or pulled out drops it.
     builder.Services.AddSingleton(new UsbDeviceCacheEvictorOptions());
     builder.Services.AddHostedService<UsbDeviceCacheEvictor>();
