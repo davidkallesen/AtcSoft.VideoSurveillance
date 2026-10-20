@@ -2748,4 +2748,28 @@
   <data name="RecordingNotAnalysed" xml:space="preserve">
     <value>The recording could not be analysed.</value>
   </data>
+  <data name="MotionZones" xml:space="preserve">
+    <value>Motion zones</value>
+  </data>
+  <data name="AddZone" xml:space="preserve">
+    <value>Add zone</value>
+  </data>
+  <data name="RemoveZone" xml:space="preserve">
+    <value>Remove zone</value>
+  </data>
+  <data name="AddCorner" xml:space="preserve">
+    <value>Add corner</value>
+  </data>
+  <data name="RemoveCorner" xml:space="preserve">
+    <value>Remove corner</value>
+  </data>
+  <data name="Zone1" xml:space="preserve">
+    <value>Zone {0}</value>
+  </data>
+  <data name="MotionZonesHelp" xml:space="preserve">
+    <value>Movement inside a zone is ignored. Drag a zone or its corners; double-click an edge to add a corner, or a corner to remove it.</value>
+  </data>
+  <data name="MotionZonesNoPicture" xml:space="preserve">
+    <value>No picture yet: take a snapshot to draw on the camera's picture.</value>
+  </data>
 </root>

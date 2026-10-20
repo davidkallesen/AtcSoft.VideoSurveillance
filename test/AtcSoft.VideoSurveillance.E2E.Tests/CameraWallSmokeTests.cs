@@ -40,6 +40,7 @@ public sealed class CameraWallSmokeTests
         // Ribbon: Cameras
         steps.Run("Cameras tab", () => SelectTab(app, main, "Cameras"));
         steps.Run("Add Camera", () => Walk(app, main, "Add Camera"));
+        steps.Run("draw a motion zone", () => DrawMotionZone(app, main));
         steps.Run("Add USB Camera", () => Walk(app, main, "Add USB Camera"));
         steps.Run("Reconnect All", () => DesktopApp.Press(app.Find(main, "Reconnect All", ControlType.Button)));
 
@@ -79,6 +80,25 @@ public sealed class CameraWallSmokeTests
         Window main,
         string buttonName)
         => app.WalkAndClose(app.OpenWindow(() => DesktopApp.Press(app.Find(main, buttonName, ControlType.Button)), buttonName));
+
+    // The zone editor in the camera dialog: a zone added with its button is picked, so it can get
+    // a corner, which is picked in turn. The dialog is closed without saving.
+    private static void DrawMotionZone(
+        DesktopApp app,
+        Window main)
+    {
+        var dialog = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Add Camera", ControlType.Button)), "Add Camera");
+        DesktopApp.Press(app.Find(dialog, "Motion zones", ControlType.TabItem));
+        app.Find(dialog, "Remove zone", ControlType.Button).IsEnabled.Should().BeFalse("no zone is picked yet");
+
+        DesktopApp.Press(app.Find(dialog, "Add zone", ControlType.Button));
+        var addCorner = app.Find(dialog, "Add corner", ControlType.Button);
+        addCorner.IsEnabled.Should().BeTrue("the new zone is picked");
+        DesktopApp.Press(addCorner);
+        app.Find(dialog, "Remove corner", ControlType.Button).IsEnabled.Should().BeTrue("the new corner is picked");
+
+        app.CloseWindow(dialog);
+    }
 
     // The seeded recordings have an activity index with one event: the player shows the timeline,
     // and "Next event" jumps to it.

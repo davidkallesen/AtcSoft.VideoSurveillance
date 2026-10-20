@@ -57,7 +57,8 @@ public class DialogService : IDialogService
     public CameraConfiguration? ShowCameraConfigurationDialog(
         CameraConfiguration? camera,
         bool isNew,
-        IReadOnlyCollection<(string IpAddress, string? Path)> existingEndpoints)
+        IReadOnlyCollection<(string IpAddress, string? Path)> existingEndpoints,
+        Func<CancellationToken, Task<byte[]?>>? livePicture = null)
     {
         var cameraConfig = camera ?? new CameraConfiguration { Display = { DisplayName = Translations.NewCamera } };
 
@@ -74,7 +75,8 @@ public class DialogService : IDialogService
             settingsService,
             videoPlayerFactory,
             usbCameraEnumerator,
-            connectionTypeDetector);
+            connectionTypeDetector,
+            livePicture);
 
         var dialog = new CameraConfigurationDialog(viewModel)
         {

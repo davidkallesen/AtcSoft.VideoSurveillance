@@ -11,6 +11,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
     private readonly IVideoPlayerFactory videoPlayerFactory;
     private readonly AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator;
     private readonly AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector;
+    private readonly Func<CancellationToken, Task<byte[]?>>? livePicture;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnIsTestingChanged))]
     private bool isTesting;
@@ -47,7 +48,8 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         IApplicationSettingsService settingsService,
         IVideoPlayerFactory videoPlayerFactory,
         AtcSoft.VideoSurveillance.Services.IUsbCameraEnumerator usbEnumerator,
-        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null)
+        AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null,
+        Func<CancellationToken, Task<byte[]?>>? livePicture = null)
     {
         ArgumentNullException.ThrowIfNull(camera);
         ArgumentNullException.ThrowIfNull(settingsService);
@@ -67,11 +69,13 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         // caller to think about which enumerator they want.
         this.usbEnumerator = usbEnumerator;
         this.connectionTypeDetector = connectionTypeDetector;
+        this.livePicture = livePicture;
 
         UsbDevices = [];
 
         // Create a clone for editing - changes only apply when Save is clicked
         Camera = camera.Clone();
+        zoneDraft = new MotionZoneDraft(Camera.MotionZones, Camera.Display.Rotation);
 
         Camera.PropertyChanged += OnCameraPropertyChanged;
         NetworkScanner.EntrySelected += OnNetworkScannerEntrySelected;
@@ -347,6 +351,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             {
                 Camera.Display.Rotation = rotation;
                 RaisePropertyChanged();
+                TurnZones(rotation);
             }
         }
     }
@@ -1763,22 +1768,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
         try
         {
-            var options = new StreamOptions
-            {
-                Source = Camera.Display.DisplayName,
-                InputFormat = locator.InputFormat switch
-                {
-                    "dshow" => InputFormatKind.Dshow,
-                    "v4l2" => InputFormatKind.V4l2,
-                    "avfoundation" => InputFormatKind.AVFoundation,
-                    _ => InputFormatKind.Auto,
-                },
-                RawDeviceSpec = locator.RawDeviceSpec,
-                VideoSize = locator.VideoSize,
-                FrameRate = locator.FrameRate,
-                PixelFormat = locator.PixelFormat,
-            };
-            player.Open(locator.Uri, options);
+            player.Open(locator.Uri, CreateStreamOptions(locator));
             return await WaitForConnectionResultAsync(tcs, cts.Token).ConfigureAwait(false);
         }
         finally
@@ -1802,6 +1792,24 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             }
         }
     }
+
+    private StreamOptions CreateStreamOptions(
+        AtcSoft.VideoSurveillance.Helpers.SourceLocator locator)
+        => new()
+        {
+            Source = Camera.Display.DisplayName,
+            InputFormat = locator.InputFormat switch
+            {
+                "dshow" => InputFormatKind.Dshow,
+                "v4l2" => InputFormatKind.V4l2,
+                "avfoundation" => InputFormatKind.AVFoundation,
+                _ => InputFormatKind.Auto,
+            },
+            RawDeviceSpec = locator.RawDeviceSpec,
+            VideoSize = locator.VideoSize,
+            FrameRate = locator.FrameRate,
+            PixelFormat = locator.PixelFormat,
+        };
 
     private async Task<bool> WaitForConnectionResultAsync(
         TaskCompletionSource<bool> tcs,

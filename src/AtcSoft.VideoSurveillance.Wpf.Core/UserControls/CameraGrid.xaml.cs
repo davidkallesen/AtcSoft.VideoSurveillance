@@ -463,6 +463,23 @@ public partial class CameraGrid
     }
 
     /// <summary>
+    /// Takes the picture a camera's tile shows now, turned by the camera's rotation as it is stored,
+    /// without opening the camera again (a USB camera opens only once).
+    /// </summary>
+    /// <param name="cameraId">The camera.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The picture as PNG, or <see langword="null"/> when no tile shows the camera.</returns>
+    public Task<byte[]?> CapturePictureAsync(
+        Guid cameraId,
+        CancellationToken cancellationToken = default)
+    {
+        var index = CameraTiles?.ToList().FindIndex(c => c.Id == cameraId) ?? -1;
+        return index >= 0 && GetCameraTileAt(index) is { } tile
+            ? tile.CapturePictureAsync(cancellationToken)
+            : Task.FromResult<byte[]?>(null);
+    }
+
+    /// <summary>
     /// Gets the CameraTile control at the specified collection index.
     /// </summary>
     /// <param name="index">The index in the CameraTiles collection.</param>

@@ -2751,4 +2751,28 @@ Vorschaubild:
   <data name="RecordingNotAnalysed" xml:space="preserve">
     <value>Die Aufnahme konnte nicht analysiert werden.</value>
   </data>
+  <data name="MotionZones" xml:space="preserve">
+    <value>Bewegungszonen</value>
+  </data>
+  <data name="AddZone" xml:space="preserve">
+    <value>Zone hinzufügen</value>
+  </data>
+  <data name="RemoveZone" xml:space="preserve">
+    <value>Zone entfernen</value>
+  </data>
+  <data name="AddCorner" xml:space="preserve">
+    <value>Ecke hinzufügen</value>
+  </data>
+  <data name="RemoveCorner" xml:space="preserve">
+    <value>Ecke entfernen</value>
+  </data>
+  <data name="Zone1" xml:space="preserve">
+    <value>Zone {0}</value>
+  </data>
+  <data name="MotionZonesHelp" xml:space="preserve">
+    <value>Bewegung innerhalb einer Zone wird ignoriert. Ziehen Sie eine Zone oder ihre Ecken; doppelklicken Sie auf eine Kante, um eine Ecke hinzuzufügen, oder auf eine Ecke, um sie zu entfernen.</value>
+  </data>
+  <data name="MotionZonesNoPicture" xml:space="preserve">
+    <value>Noch kein Bild: Nehmen Sie einen Schnappschuss auf, um auf dem Kamerabild zu zeichnen.</value>
+  </data>
 </root>

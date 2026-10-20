@@ -518,11 +518,19 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
 
         // Exclude current camera's endpoint when editing (allow keeping same IP+Path)
         var existingEndpoints = GetExistingCameraEndpoints(excludeCameraId: camera.Id);
-        var result = dialogService.ShowCameraConfigurationDialog(camera, isNew: false, existingEndpoints);
+        var result = dialogService.ShowCameraConfigurationDialog(
+            camera,
+            isNew: false,
+            existingEndpoints,
+            livePicture: cancellationToken => CameraGrid?.CapturePictureAsync(camera.Id, cancellationToken) ?? Task.FromResult<byte[]?>(null));
 
         if (result is not null)
         {
             storageService.AddOrUpdateCamera(camera);
+
+            // A running analysis (the tile's motion watch, the recording's index) takes the edited
+            // zones at once; the dialog has turned them with a new rotation already.
+            motionDetectionService.UseZones(camera.Id, camera.MotionZones);
 
             // The dialog mutates the camera in place, so the CameraTile's Camera
             // dependency property reference is unchanged and OnCameraChanged

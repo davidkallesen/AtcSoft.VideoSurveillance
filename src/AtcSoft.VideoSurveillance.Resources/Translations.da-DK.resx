@@ -2751,4 +2751,28 @@ Miniature:
   <data name="RecordingNotAnalysed" xml:space="preserve">
     <value>Optagelsen kunne ikke analyseres.</value>
   </data>
+  <data name="MotionZones" xml:space="preserve">
+    <value>Bevægelseszoner</value>
+  </data>
+  <data name="AddZone" xml:space="preserve">
+    <value>Tilføj zone</value>
+  </data>
+  <data name="RemoveZone" xml:space="preserve">
+    <value>Fjern zone</value>
+  </data>
+  <data name="AddCorner" xml:space="preserve">
+    <value>Tilføj hjørne</value>
+  </data>
+  <data name="RemoveCorner" xml:space="preserve">
+    <value>Fjern hjørne</value>
+  </data>
+  <data name="Zone1" xml:space="preserve">
+    <value>Zone {0}</value>
+  </data>
+  <data name="MotionZonesHelp" xml:space="preserve">
+    <value>Bevægelse inde i en zone ignoreres. Træk en zone eller dens hjørner; dobbeltklik på en kant for at tilføje et hjørne, eller på et hjørne for at fjerne det.</value>
+  </data>
+  <data name="MotionZonesNoPicture" xml:space="preserve">
+    <value>Intet billede endnu: tag et skærmbillede for at tegne på kameraets billede.</value>
+  </data>
 </root>

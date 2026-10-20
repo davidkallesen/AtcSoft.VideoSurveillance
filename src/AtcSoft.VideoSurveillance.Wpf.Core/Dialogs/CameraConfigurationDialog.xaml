@@ -9,6 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:userControls="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.UserControls"
     Title="{Binding Path=DialogTitle}"
     Width="1200"
     Height="1000"
@@ -234,6 +235,17 @@
                         </TabControl>
 
                     </atc:GridEx>
+                </TabItem>
+
+                <TabItem Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MotionZones}">
+                    <atc:BusyOverlay IsBusy="{Binding Path=IsTakingZonePicture}">
+                        <userControls:MotionZoneEditor
+                            Margin="15"
+                            Picture="{Binding Path=ZonePicture}"
+                            Status="{Binding Path=ZonePictureStatus}"
+                            TakePictureCommand="{Binding Path=TakeZonePictureCommand}"
+                            Zones="{Binding Path=MotionZones, Mode=TwoWay}" />
+                    </atc:BusyOverlay>
                 </TabItem>
 
             </TabControl>

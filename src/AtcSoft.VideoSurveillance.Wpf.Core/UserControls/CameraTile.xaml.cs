@@ -2495,6 +2495,17 @@ public partial class CameraTile : IDisposable
         => Camera is not null &&
            ConnectionState == ConnectionState.Connected;
 
+    /// <summary>
+    /// Takes the picture the tile shows now, turned by the camera's rotation, without saving it.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The picture as PNG, or <see langword="null"/> when the tile shows none.</returns>
+    public Task<byte[]?> CapturePictureAsync(
+        CancellationToken cancellationToken = default)
+        => CanExecuteWhenConnected() && Player is { } shownPlayer
+            ? shownPlayer.CaptureFrameAsync(cancellationToken)
+            : Task.FromResult<byte[]?>(null);
+
     [RelayCommand("Snapshot", CanExecute = nameof(CanExecuteWhenConnected))]
     private async Task SnapshotAsync()
     {
