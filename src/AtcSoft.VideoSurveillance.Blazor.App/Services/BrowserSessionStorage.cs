@@ -13,8 +13,17 @@ public sealed class BrowserSessionStorage(IJSRuntime js) : ISessionStorage
         CancellationToken cancellationToken)
         => js.InvokeVoidAsync("atcSession.set", cancellationToken, value);
 
-    public ValueTask RemoveIfAsync(
+    public async ValueTask RemoveIfAsync(
         string expected,
         CancellationToken cancellationToken)
-        => js.InvokeVoidAsync("atcSession.clearIf", cancellationToken, expected);
+    {
+        try
+        {
+            await js.InvokeVoidAsync("atcSession.clearIf", cancellationToken, expected).ConfigureAwait(false);
+        }
+        catch (JSException)
+        {
+            // An older session.js still in the browser's cache: the refused session is refused again next time.
+        }
+    }
 }

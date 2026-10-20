@@ -37,7 +37,14 @@ public sealed class AuthService : IDisposable
         if (watcher is null)
         {
             watcher = DotNetObjectReference.Create(this);
-            await js.InvokeVoidAsync("atcSession.watch", watcher).ConfigureAwait(true);
+            try
+            {
+                await js.InvokeVoidAsync("atcSession.watch", watcher).ConfigureAwait(true);
+            }
+            catch (JSException)
+            {
+                // An older session.js still in the browser's cache: the other tabs' sign-out is not seen.
+            }
         }
 
         if (session.IsSignedIn)

@@ -75,8 +75,10 @@ public sealed partial class GatewayService
                 ? (result.OkContent, SessionRenewalOutcome.Renewed)
                 : (null, SessionRenewal.Outcome((int)result.StatusCode));
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or TimeoutException or Polly.ExecutionRejectedException ||
+                                   (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
         {
+            // No server, or the resilience pipeline gave up on it (a timeout, an open circuit).
             return (null, SessionRenewalOutcome.Unavailable);
         }
     }
