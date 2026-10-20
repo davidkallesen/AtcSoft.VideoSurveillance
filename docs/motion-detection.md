@@ -196,6 +196,9 @@ Right-click a camera tile → **Edit** → **Motion zones**. A zone's **Type** i
   (a gate where a small animal matters, a corner the camera's settings are too blunt for). An empty
   field takes the camera's sensitivity and the default size. An object counts in the zone its middle
   is in. Where zones overlap, an ignore zone wins, and of two watch zones the one added last.
+  A watch zone's **Color on the timeline** colours the events that happened in it under the player
+  (orange without one). Events are linked to a zone by its name: a renamed zone loses its colour on
+  older recordings, and of two zones with one name the first one's colour counts.
 
 - **Take Snapshot** shows the camera's picture now (from its tile, or from the camera opened for it);
   without one the zones are drawn on a grey picture of the same shape.

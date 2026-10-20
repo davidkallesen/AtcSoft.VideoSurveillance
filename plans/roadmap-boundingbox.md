@@ -346,7 +346,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
-| 6 | Masks and zones | L | 🟨 in progress: ignore and watch zones work, are stored and drawn in all three apps; the zone colour on the timeline next |
+| 6 | Masks and zones | L | ✅ done 2026-10-20: ignore and watch zones, drawn on a snapshot in all three apps; an event in its watch zone's colour on the timeline |
 | 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
@@ -458,7 +458,7 @@ Cost per picture at 800×600: about 11 ms (today's 2 ms), so about 4–5 % of on
 
 **Test:** S5 gives exactly three tracks; S9 keeps the id; S2 gives none; a host test sees track ids in the event stream.
 
-### Phase 6 — Masks and zones 🟨 (L)
+### Phase 6 — Masks and zones ✅ (L)
 
 Covers the backlog row *Motion zones / exclusion masks*.
 
@@ -481,7 +481,9 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 - Watch zones (done 2026-10-20): `MotionZone.Sensitivity` (0 to 100, the camera's formula, `MotionDetectorOptions.Thresholds`) and `SmallestObjectPercent` (of the picture, default 0.02), both optional (empty is the camera's sensitivity and the default size). `ZoneMask.Watched` fills in which watch zone each pixel is in (an ignore zone wins, of two watch zones the one drawn last); the background takes each pixel's zone's thresholds (`BackgroundModel.ApplyZoned`), a blob whose middle is in a watch zone that zone's smallest object. Without watch zones the detector runs the path it had and the storybook baseline is unchanged. Storybook (`WatchZoneTests`): a cat smaller than the camera takes, and a faint cat below its thresholds (storybook animals take a `shade` now), are boxed inside a watch zone over their path and missed outside it; noise in a zone at full sensitivity gives no boxes; a watch zone without values detects as the camera does. In the spec (`sensitivity`, `smallestObjectPercent` on `MotionZone`, with limits), the server, both clients and CameraWall's `cameras.json`. The editors pick the type and, for a watch zone, the two values (read in the user's culture, `MotionZoneEditing.TryRead…`, with the web copy). The smallest object is not a camera setting yet (phase 1's open item); a watch zone's default is the detector's.
 
-**Open in phase 6:** the zone colour on the timeline.
+- The zone colour on the timeline (done 2026-10-20): a box gets the name of the watch zone its middle is in (`BoundingBox.Zone`, not sent with motion events); the activity index keeps a second's zones (`"z"`, left out when none; still version 1, as its reader skips what it does not know, which a test holds), a stretch the zones of its seconds (`ActivityBucket.Zones`, `RecordingActivityBucket.zones` in the spec), and an event the zone of most of its stretches, the earlier on a tie (`ActivityEvent.Zone`, `ActivityTimelineLayout.MainZone`, with the web copy). A watch zone gets a colour by name in the editors (the 16 named colours; the zone is drawn in it too). The timeline under the player draws an event in its zone's colour, orange without one, in CameraWall's recordings browser and both API clients, which load the camera's zones now with the activity.
+
+**Left as they are:** zones are known by name, so renaming a zone loses its colour on older recordings, and of two zones with one name the first one's colour counts. CameraWall's Timeline window, the Timeline views' lanes and *play all* tiles keep orange events.
 
 ### Phase 7 — Activity index ✅ (M)
 
