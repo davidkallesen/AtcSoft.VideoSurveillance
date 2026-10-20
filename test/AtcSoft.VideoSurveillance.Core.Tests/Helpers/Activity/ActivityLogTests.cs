@@ -102,6 +102,58 @@ public sealed class ActivityLogTests : IDisposable
     }
 
     [Fact]
+    public void The_Watch_Zones_Of_A_Second_Are_Kept_In_The_Order_Seen_And_Read_Back()
+    {
+        var path = Path.Combine(folder, "Cam_20261019_101500_000.activity.jsonl");
+        using (var writer = ActivityLogWriter.Create(path, Start))
+        {
+            writer.Add(Start.AddSeconds(0.2), Zoned("Gate", 1));
+            writer.Add(Start.AddSeconds(0.5), Zoned("Path", 2));
+            writer.Add(Start.AddSeconds(0.7), Zoned("Gate", 1));
+            writer.Add(Start.AddSeconds(1.2), Result(1, 1));
+        }
+
+        var log = ActivityLogReader.Read(path)!;
+
+        log.Seconds[0].Zones.Should().Equal("Gate", "Path");
+        log.Seconds[1].Zones.Should().BeEmpty("a box outside every watch zone has none");
+        File.ReadAllLines(path)[2].Should().NotContain("\"z\"", "a second without zones leaves them out");
+    }
+
+    [Fact]
+    public void A_Line_With_Fields_The_Reader_Does_Not_Know_Is_Still_Read()
+    {
+        // What a newer writer might add: the reader of version 1 skips it.
+        var text = string.Join(
+            '\n',
+            """{"v":1,"start":"2026-10-19T10:15:00.000Z"}""",
+            """{"t":2,"a":3,"n":1,"later":[{"x":[1,2]},"y"],"ids":[4],"also":7,"z":["Gate",5,"Path"]}""");
+
+        var second = ActivityLogReader.Read(new StringReader(text))!.Seconds.Single();
+
+        (second.Offset, second.Level, second.Tracks).Should().Be((2, 3.0, 1));
+        second.TrackIds.Should().Equal(4);
+        second.Zones.Should().Equal("Gate", "Path");
+    }
+
+    [Fact]
+    public void A_Stretch_Keeps_The_Zones_Of_Its_Seconds()
+    {
+        var log = new ActivityLog(
+            Start,
+            [
+                new ActivitySecond(0, 5, 1, [1]) { Zones = ["Gate"] },
+                new ActivitySecond(1, 5, 1, [1]) { Zones = ["Path", "Gate"] },
+                new ActivitySecond(2, 0, 0, []),
+            ]);
+
+        var buckets = ActivityDownsampler.ByMax(log, 4, 2);
+
+        buckets[0].Zones.Should().Equal("Gate", "Path");
+        buckets[1].Zones.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Without_A_Header_Or_A_File_There_Is_No_Index()
     {
         ActivityLogReader.Read(new StringReader("""{"t":0,"a":1,"n":0}""")).Should().BeNull();
@@ -158,6 +210,11 @@ public sealed class ActivityLogTests : IDisposable
         RecordingPathHelper.GetCompanionPaths(video, folder).Should().Contain(activity)
             .And.Contain(RecordingPathHelper.GetThumbnailCandidates(video, folder));
     }
+
+    private static MotionDetectorResult Zoned(
+        string zone,
+        int trackId)
+        => new(true, MotionHoldChange.Continues, 2, [new BoundingBox { Width = 10, Height = 10, TrackId = trackId, Zone = zone }]);
 
     private static MotionDetectorResult Result(
         double changePercent,

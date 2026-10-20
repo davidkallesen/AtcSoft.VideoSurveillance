@@ -14,4 +14,11 @@ public sealed record ActivitySecond(
     int Offset,
     double Level,
     int Tracks,
-    IReadOnlyList<int> TrackIds);
+    IReadOnlyList<int> TrackIds)
+{
+    /// <summary>
+    /// Gets the names of the watch zones a confirmed track was in during that second, in the order
+    /// they were first seen; none outside every watch zone.
+    /// </summary>
+    public IReadOnlyList<string> Zones { get; init; } = [];
+}

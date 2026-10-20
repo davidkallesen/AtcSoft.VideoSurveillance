@@ -30,6 +30,21 @@ public sealed class ActivityTimelineLayoutTests
     }
 
     [Fact]
+    public void An_Event_Is_In_The_Zone_Of_Most_Of_Its_Stretches_The_Earlier_On_A_Tie()
+    {
+        ActivityBucket Moving(params string[] zones) => new(5, 1, IsAnalysed: true) { Zones = zones };
+        var quiet = new ActivityBucket(0, 0, IsAnalysed: true);
+        IReadOnlyList<ActivityBucket> buckets =
+        [
+            Moving("Path"), Moving("Gate", "Path"), Moving("Gate"), Moving("Gate"), quiet,
+            Moving("Path"), Moving("Gate"), quiet,
+            Moving(), quiet,
+        ];
+
+        ActivityTimelineLayout.FindEvents(buckets).Select(e => e.Zone).Should().Equal("Gate", "Path", null);
+    }
+
+    [Fact]
     public void A_Five_Second_Event_In_An_Hour_Is_Drawn_Three_Pixels_Wide_Around_Its_Middle()
     {
         var fiveSeconds = new ActivityEvent(1800.0 / 3600, 1805.0 / 3600);

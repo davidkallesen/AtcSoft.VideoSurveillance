@@ -3,8 +3,9 @@ namespace AtcSoft.VideoSurveillance.Helpers.Activity;
 /// <summary>
 /// The lines of an activity index file (JSON Lines). The first line is the header,
 /// <c>{"v":1,"start":"2026-10-19T10:15:00.000Z"}</c>; every further line is one analysed second,
-/// <c>{"t":12,"a":3.4,"n":1,"ids":[4]}</c> (offset, level, tracks, track ids; the ids are left out
-/// when there are none).
+/// <c>{"t":12,"a":3.4,"n":1,"ids":[4],"z":["Gate"]}</c> (offset, level, tracks, track ids, the watch
+/// zones a track was in; the ids and zones are left out when there are none). A reader skips what it
+/// does not know, so the zones, added later, did not need a new version.
 /// </summary>
 internal static class ActivityLogFormat
 {
@@ -29,6 +30,17 @@ internal static class ActivityLogFormat
                 foreach (var id in second.TrackIds)
                 {
                     w.WriteNumberValue(id);
+                }
+
+                w.WriteEndArray();
+            }
+
+            if (second.Zones.Count > 0)
+            {
+                w.WriteStartArray("z");
+                foreach (var zone in second.Zones)
+                {
+                    w.WriteStringValue(zone);
                 }
 
                 w.WriteEndArray();
@@ -81,6 +93,7 @@ internal static class ActivityLogFormat
         double level = 0;
         var tracks = 0;
         List<int>? ids = null;
+        List<string>? zones = null;
 
         try
         {
@@ -115,6 +128,21 @@ internal static class ActivityLogFormat
                         }
                     }
                 }
+                else if (reader.ValueTextEquals("z"u8) && reader.Read() && reader.TokenType == JsonTokenType.StartArray)
+                {
+                    zones = [];
+                    while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+                    {
+                        if (reader.TokenType == JsonTokenType.String && reader.GetString() is { Length: > 0 } zone)
+                        {
+                            zones.Add(zone);
+                        }
+                        else
+                        {
+                            reader.Skip();
+                        }
+                    }
+                }
                 else
                 {
                     reader.Read();
@@ -138,7 +166,7 @@ internal static class ActivityLogFormat
             return false;
         }
 
-        second = new ActivitySecond(offset.Value, level, tracks, ids ?? []);
+        second = new ActivitySecond(offset.Value, level, tracks, ids ?? []) { Zones = zones ?? [] };
         return true;
     }
 

@@ -15,4 +15,10 @@ public sealed record ActivityBucket(
     /// Gets a stretch in which nothing was analysed.
     /// </summary>
     public static ActivityBucket NotAnalysed { get; } = new(0, 0, IsAnalysed: false);
+
+    /// <summary>
+    /// Gets the names of the watch zones a confirmed track was in during the stretch, in the order
+    /// they were first seen.
+    /// </summary>
+    public IReadOnlyList<string> Zones { get; init; } = [];
 }

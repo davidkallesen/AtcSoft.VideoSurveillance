@@ -24,6 +24,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private int ignoredWidth;
     private int ignoredHeight;
     private byte[]? watched;
+    private IReadOnlyList<MotionZone> watchZones = [];
     private double[] zoneSigmas = [];
     private double[] zoneMinThresholds = [];
     private double[] zoneSmallestShares = [];
@@ -110,7 +111,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         var time = (frame.Time - DateTimeOffset.UnixEpoch).TotalSeconds;
         var tracks = tracker.Update(blobs, time, options, frame.Width);
         var boxes = tracks
-            .Select(t => new BoundingBox { X = t.Box.MinX, Y = t.Box.MinY, Width = t.Box.Width, Height = t.Box.Height, TrackId = t.Id })
+            .Select(t => new BoundingBox { X = t.Box.MinX, Y = t.Box.MinY, Width = t.Box.Width, Height = t.Box.Height, TrackId = t.Id, Zone = ZoneOf(t.Box, frame.Width, frame.Height) })
             .OrderByDescending(b => b.Area)
             .ToList();
 
@@ -153,6 +154,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             ignored = ZoneMask.Ignored(current, width, height);
             watched = ZoneMask.Watched(current, width, height);
             var watch = ZoneMask.WatchZones(current);
+            watchZones = watch;
             var camera = (ThresholdSigmas: options.ThresholdSigmas, MinThreshold: options.MinThreshold);
             var thresholds = watch.Select(z => z.Sensitivity is { } s ? MotionDetectorOptions.Thresholds(s) : camera).Prepend(camera).ToList();
             zoneSigmas = [.. thresholds.Select(t => t.ThresholdSigmas)];
@@ -180,6 +182,23 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         => watched is { } zoneOf
             ? background.ApplyZoned(blurred, mask, zoneSigmas, zoneMinThresholds, zoneOf, backgroundRate, foregroundRate, ignore)
             : background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, backgroundRate, foregroundRate, ignore);
+
+    // The name of the watch zone a box's middle is in, or null.
+    private string? ZoneOf(
+        Blob box,
+        int width,
+        int height)
+    {
+        if (watched is not { } zoneOf)
+        {
+            return null;
+        }
+
+        var x = Math.Clamp((int)box.CenterX, 0, width - 1);
+        var y = Math.Clamp((int)box.CenterY, 0, height - 1);
+        var zone = zoneOf[(y * width) + x];
+        return zone == 0 ? null : watchZones[zone - 1].Name;
+    }
 
     // The smallest object for a blob: that of the watch zone its middle is in, else the camera's.
     private double SmallestShare(

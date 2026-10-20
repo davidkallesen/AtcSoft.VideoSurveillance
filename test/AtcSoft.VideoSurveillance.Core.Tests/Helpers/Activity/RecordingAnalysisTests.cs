@@ -90,6 +90,30 @@ public sealed class RecordingAnalysisTests : IDisposable
         log.Seconds.Should().OnlyContain(s => s.Tracks == 0, "the square moves only inside the zone");
     }
 
+    [Fact]
+    public void A_Track_Through_A_Watch_Zone_Leaves_The_Zone_In_The_Index()
+    {
+        // The square crosses rows 50 to 70 of 120 from the left: a watch zone on the right half.
+        var camera = new CameraConfiguration
+        {
+            MotionZones = [new MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Points = [new(0.5, 0), new(1, 0), new(1, 1), new(0.5, 1)] }],
+        };
+        var video = Video();
+
+        RecordingAnalysis.Run(
+            Pictures(),
+            Width,
+            Height,
+            RecordingAnalysis.DetectorFor(camera, new MotionDetectionSettings(), recordingRotation: 0),
+            video,
+            DateTimeOffset.UnixEpoch,
+            TestContext.Current.CancellationToken);
+
+        var moving = ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(video))!.Seconds.Where(s => s.Tracks > 0).ToList();
+        moving.Should().Contain(s => s.Zones.SequenceEqual(new[] { "Gate" }), "the square crosses the zone");
+        moving.Should().Contain(s => s.Zones.Count == 0, "it is outside the zone at first");
+    }
+
     [Theory]
     [InlineData(90, 0.1, 0.2)]
     [InlineData(0, 0.2, 0.9)]

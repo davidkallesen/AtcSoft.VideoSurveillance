@@ -71,5 +71,8 @@ public static class ActivityLogReader
                     g.Key,
                     g.Max(s => s.Level),
                     g.Max(s => s.Tracks),
-                    [.. g.SelectMany(s => s.TrackIds).Distinct().Order()]))];
+                    [.. g.SelectMany(s => s.TrackIds).Distinct().Order()])
+                {
+                    Zones = [.. g.SelectMany(s => s.Zones).Distinct(StringComparer.Ordinal)],
+                })];
 }

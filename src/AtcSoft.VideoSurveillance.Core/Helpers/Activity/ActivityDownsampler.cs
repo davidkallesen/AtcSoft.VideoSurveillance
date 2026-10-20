@@ -47,7 +47,12 @@ public static class ActivityDownsampler
                 result[i] = new ActivityBucket(
                     Math.Max(bucket.Level, second.Level),
                     Math.Max(bucket.Tracks, second.Tracks),
-                    IsAnalysed: true);
+                    IsAnalysed: true)
+                {
+                    Zones = second.Zones.Count == 0
+                        ? bucket.Zones
+                        : [.. bucket.Zones.Concat(second.Zones).Distinct(StringComparer.Ordinal)],
+                };
             }
         }
 

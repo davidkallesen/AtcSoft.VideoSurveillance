@@ -8,6 +8,7 @@ namespace AtcSoft.VideoSurveillance.Helpers.Activity;
 public sealed class ActivityAccumulator
 {
     private readonly SortedSet<int> trackIds = [];
+    private readonly List<string> zones = [];
     private int? offset;
     private double level;
     private int tracks;
@@ -63,11 +64,12 @@ public sealed class ActivityAccumulator
             return null;
         }
 
-        var completed = new ActivitySecond(current, Math.Round(level, 1), tracks, [.. trackIds]);
+        var completed = new ActivitySecond(current, Math.Round(level, 1), tracks, [.. trackIds]) { Zones = [.. zones] };
         offset = null;
         level = 0;
         tracks = 0;
         trackIds.Clear();
+        zones.Clear();
         return completed;
     }
 
@@ -80,6 +82,11 @@ public sealed class ActivityAccumulator
             if (box.TrackId is { } id)
             {
                 trackIds.Add(id);
+            }
+
+            if (box.Zone is { Length: > 0 } zone && !zones.Contains(zone, StringComparer.Ordinal))
+            {
+                zones.Add(zone);
             }
         }
     }

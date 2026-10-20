@@ -48,6 +48,7 @@ public sealed class MotionZoneEditingTests
                 webSmallest.Should().Be(coreSmallest);
             }
         }
+
         for (var count = 0; count <= 33; count++)
         {
             MotionZoneEditing.CanAddZone(count).Should().Be(CoreEditing.CanAddZone(count));

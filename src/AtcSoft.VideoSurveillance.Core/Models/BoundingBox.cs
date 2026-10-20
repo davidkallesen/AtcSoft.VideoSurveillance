@@ -37,6 +37,13 @@ public class BoundingBox
     /// </summary>
     public int? TrackId { get; set; }
 
+    /// <summary>
+    /// Gets or sets the name of the watch zone the box's middle is in, or <see langword="null"/>
+    /// outside every watch zone. Kept in the activity index, so a timeline can draw the event in
+    /// the zone's colour; not sent with motion events.
+    /// </summary>
+    public string? Zone { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
         => $"BoundingBox {{ X={X.ToString(CultureInfo.InvariantCulture)}, Y={Y.ToString(CultureInfo.InvariantCulture)}, Width={Width.ToString(CultureInfo.InvariantCulture)}, Height={Height.ToString(CultureInfo.InvariantCulture)} }}";
