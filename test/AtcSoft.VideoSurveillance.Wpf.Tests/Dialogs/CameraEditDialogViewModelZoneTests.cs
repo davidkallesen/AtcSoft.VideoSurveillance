@@ -1,12 +1,14 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Dialogs;
 
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-
 using ApiMotionZone = global::VideoSurveillance.Generated.Cameras.Models.MotionZone;
 using ApiMotionZoneKind = global::VideoSurveillance.Generated.Cameras.Models.MotionZoneKind;
 using ApiZonePoint = global::VideoSurveillance.Generated.Cameras.Models.ZonePoint;
+using BitmapFrame = System.Windows.Media.Imaging.BitmapFrame;
+using BitmapSource = System.Windows.Media.Imaging.BitmapSource;
 using CameraRotation = global::VideoSurveillance.Generated.Cameras.Models.CameraRotation;
+using ImageSource = System.Windows.Media.ImageSource;
+using PixelFormats = System.Windows.Media.PixelFormats;
+using PngBitmapEncoder = System.Windows.Media.Imaging.PngBitmapEncoder;
 
 /// <summary>
 /// The motion zones in the client's camera dialog: drawn on the server's snapshot, turned with a

@@ -1,14 +1,15 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.Dialogs;
 
-using System.IO;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-
-using AtcSoft.VideoSurveillance.Resources;
-
+using BitmapFrame = System.Windows.Media.Imaging.BitmapFrame;
+using BitmapSource = System.Windows.Media.Imaging.BitmapSource;
 using CameraConfiguration = AtcSoft.VideoSurveillance.Wpf.Core.Models.CameraConfiguration;
+using ImageSource = System.Windows.Media.ImageSource;
 using IWpfCoreSettingsService = AtcSoft.VideoSurveillance.Wpf.Core.Services.IApplicationSettingsService;
+using MemoryStream = System.IO.MemoryStream;
 using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
+using PixelFormats = System.Windows.Media.PixelFormats;
+using PngBitmapEncoder = System.Windows.Media.Imaging.PngBitmapEncoder;
+using Translations = AtcSoft.VideoSurveillance.Resources.Translations;
 using ZonePoint = AtcSoft.VideoSurveillance.Models.ZonePoint;
 
 /// <summary>

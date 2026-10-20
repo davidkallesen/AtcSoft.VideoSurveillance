@@ -1,9 +1,9 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
-using System.Windows;
-
 using MotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
 using MotionZoneKind = AtcSoft.VideoSurveillance.Enums.MotionZoneKind;
+using Rect = System.Windows.Rect;
+using Size = System.Windows.Size;
 using ZonePoint = AtcSoft.VideoSurveillance.Models.ZonePoint;
 
 /// <summary>

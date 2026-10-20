@@ -76,7 +76,14 @@ public sealed class RecordingAnalysisTests : IDisposable
         };
         var video = Video();
 
-        RecordingAnalysis.Run(Pictures(), Width, Height, RecordingAnalysis.DetectorFor(camera, new MotionDetectionSettings(), recordingRotation: 0), video, DateTimeOffset.UnixEpoch);
+        RecordingAnalysis.Run(
+            Pictures(),
+            Width,
+            Height,
+            RecordingAnalysis.DetectorFor(camera, new MotionDetectionSettings(), recordingRotation: 0),
+            video,
+            DateTimeOffset.UnixEpoch,
+            TestContext.Current.CancellationToken);
 
         var log = ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(video))!;
         log.Seconds.Should().HaveCount(20);

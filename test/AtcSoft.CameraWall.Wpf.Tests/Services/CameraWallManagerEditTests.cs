@@ -29,7 +29,8 @@ public sealed class CameraWallManagerEditTests
                 return camera;
             });
 
-        Build(storage, dialog, motion).EditCamera(camera);
+        using var manager = Build(storage, dialog, motion);
+        manager.EditCamera(camera);
 
         livePicture.Should().NotBeNull();
         storage.Received(1).AddOrUpdateCamera(camera);
@@ -49,9 +50,10 @@ public sealed class CameraWallManagerEditTests
             .ShowCameraConfigurationDialog(camera, isNew: false, Arg.Any<IReadOnlyCollection<(string, string?)>>(), Arg.Any<Func<CancellationToken, Task<byte[]?>>?>())
             .Returns((CameraConfiguration?)null);
 
-        Build(storage, dialog, motion).EditCamera(camera);
+        using var manager = Build(storage, dialog, motion);
+        manager.EditCamera(camera);
 
-        motion.DidNotReceiveWithAnyArgs().UseZones(default, default!);
+        motion.DidNotReceiveWithAnyArgs().UseZones(Guid.Empty, default!);
     }
 
     private static CameraWallManager Build(

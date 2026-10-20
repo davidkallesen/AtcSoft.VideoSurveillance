@@ -138,21 +138,43 @@ public sealed class MotionZoneEditingTests
         web.IsChanged.Should().Be(core.IsChanged).And.BeTrue();
     }
 
-    private static List<ZonePoint> Web(IEnumerable<(double X, double Y)> corners)
+    [Fact]
+    public void A_Zone_That_Differs_Only_In_Its_Own_Values_Is_A_Change_As_In_Core()
+    {
+        var zone = WebZone(Shape) with { Kind = new MotionZoneKind(MotionZoneKind.Names.Watch) };
+        var web = new MotionZoneDraft([zone], new CameraRotation(CameraRotation.Names.None));
+        var core = new CoreDraft([CoreZoneOf(Shape)], CoreRotation.None);
+        var coreEdited = core.Zones[0].Clone();
+        coreEdited.Sensitivity = 90;
+
+        web.Change([zone with { Sensitivity = 90 }]);
+        core.Change([coreEdited]);
+
+        web.IsChanged.Should().Be(core.IsChanged).And.BeTrue();
+        MotionZoneDraft.ValueEquals(zone, zone with { SmallestObjectPercent = 0.1 }).Should().BeFalse();
+        web.Zones[0].Sensitivity.Should().Be(90);
+    }
+
+    private static List<ZonePoint> Web(
+        IEnumerable<(double X, double Y)> corners)
         => [.. corners.Select(c => new ZonePoint(c.X, c.Y))];
 
-    private static List<CoreZonePoint> Core(IEnumerable<(double X, double Y)> corners)
+    private static List<CoreZonePoint> Core(
+        IEnumerable<(double X, double Y)> corners)
         => [.. corners.Select(c => new CoreZonePoint(c.X, c.Y))];
 
     private static MotionZone WebZone(IEnumerable<(double X, double Y)> corners)
         => new("Tree", new MotionZoneKind(MotionZoneKind.Names.Ignore), Web(corners), Color: null);
 
-    private static CoreZone CoreZoneOf(IEnumerable<(double X, double Y)> corners)
+    private static CoreZone CoreZoneOf(
+        IEnumerable<(double X, double Y)> corners)
         => new() { Name = "Tree", Points = Core(corners) };
 
-    private static IEnumerable<(double X, double Y)> Pairs(IEnumerable<ZonePoint> corners)
+    private static IEnumerable<(double X, double Y)> Pairs(
+        IEnumerable<ZonePoint> corners)
         => corners.Select(c => (c.X, c.Y));
 
-    private static IEnumerable<(double X, double Y)> Pairs(IEnumerable<CoreZonePoint> corners)
+    private static IEnumerable<(double X, double Y)> Pairs(
+        IEnumerable<CoreZonePoint> corners)
         => corners.Select(c => (c.X, c.Y));
 }
