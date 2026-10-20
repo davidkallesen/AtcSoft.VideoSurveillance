@@ -81,6 +81,8 @@
         <userControls:MotionZoneCanvas
             x:Name="ZoneCanvas"
             MinHeight="240"
+            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                            Key=MotionZones}"
             Picture="{Binding Path=Picture, ElementName=Root}"
             SelectedCorner="{Binding Path=SelectedCorner, ElementName=Root, Mode=TwoWay}"
             SelectedZone="{Binding Path=SelectedZone, ElementName=Root, Mode=TwoWay}"

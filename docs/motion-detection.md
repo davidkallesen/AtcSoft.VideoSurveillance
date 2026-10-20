@@ -242,7 +242,9 @@ A camera's ignore zones are: `motionZones` on the camera (`GET /cameras/{id}`), 
 (`ignore`; `watch` is reserved for zones with their own sensitivity) and 3 to 32 `points` (`x`, `y`
 from 0 to 1 of the picture as shown). An update without `motionZones` keeps them (turned with a new
 `rotation`), `[]` removes them. Both API clients draw them on a snapshot from
-`GET /cameras/{id}/snapshot`, which for a camera being recorded is taken from the recording.
+`GET /cameras/{id}/snapshot`, which for a camera being recorded is taken from the recording. Like
+every snapshot, each one is also saved in the server's snapshot folder; the clean-up removes old ones
+only when it includes snapshots (`cleanupIncludeSnapshots`, off by default).
 
 ### 3. Monitor Events
 

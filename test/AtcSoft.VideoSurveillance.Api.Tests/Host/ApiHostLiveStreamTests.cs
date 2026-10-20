@@ -84,6 +84,55 @@ public sealed class ApiHostLiveStreamTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Snapshot_Of_A_Camera_Being_Recorded_Comes_From_The_Recording_Turned_As_Shown()
+    {
+        var ffmpeg = FindFFmpegTool();
+        Assert.SkipWhen(ffmpeg is null, "The FFmpeg command-line tool is not installed.");
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = host.CreateClient();
+        var port = GetFreePort();
+        using var stream = StartTestStream(ffmpeg!, port);
+        var cameraId = Guid.Empty;
+
+        try
+        {
+            // Arrange — a 320 x 240 camera turned a quarter, recorded. The test stream serves one
+            // client, the recording, so a picture can only come from the recording.
+            var name = "Snapshot " + Guid.NewGuid().ToString("N")[..8];
+            var created = await client.PostAsJsonAsync(
+                "/cameras",
+                new { displayName = name, ipAddress = "127.0.0.1", port, protocol = "http", path = "live", rotation = "rotate90" },
+                cancellationToken);
+            created.StatusCode.Should().Be(HttpStatusCode.Created);
+            cameraId = (await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("id").GetGuid();
+            var started = await client.PostAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), content: null, cancellationToken);
+            started.StatusCode.Should().Be(HttpStatusCode.OK, await started.Content.ReadAsStringAsync(cancellationToken));
+            await WaitForActivityAsync(client, name, cancellationToken);
+
+            // Act
+            using var snapshot = await client.GetAsync(new Uri($"/cameras/{cameraId}/snapshot", UriKind.Relative), cancellationToken);
+
+            // Assert — a PNG of the picture as shown: 240 wide, 320 high
+            snapshot.StatusCode.Should().Be(HttpStatusCode.OK, await snapshot.Content.ReadAsStringAsync(cancellationToken));
+            var png = await snapshot.Content.ReadAsByteArrayAsync(cancellationToken);
+            png.Take(8).Should().Equal(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A);
+            System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16, 4)).Should().Be(240);
+            System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20, 4)).Should().Be(320);
+        }
+        finally
+        {
+            if (cameraId != Guid.Empty)
+            {
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}/recording", UriKind.Relative), CancellationToken.None);
+                await client.DeleteAsync(new Uri($"/cameras/{cameraId}", UriKind.Relative), CancellationToken.None);
+            }
+
+            Stop(stream);
+        }
+    }
+
+    [Fact]
     public async Task A_Recording_Gets_An_Activity_Index_That_Is_Served_While_It_Grows()
     {
         var ffmpeg = FindFFmpegTool();

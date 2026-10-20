@@ -93,7 +93,7 @@ public sealed class WebClientSmokeTests(ServerFixture server)
             await run($"camera form {cameraId}", () => VisitAsync(page, $"/cameras/{cameraId}/edit"));
         }
 
-        await run("draw a motion zone", () => DrawMotionZoneAsync(page, cameraIds[^1]));
+        await run("draw a motion zone", () => DrawMotionZoneAsync(page, cameraIds[^1], shots));
 
         await run("play a recording with its activity timeline", () => PlayWithTimelineAsync(page));
         await run("timeline lanes", () => TimelineLanesAsync(page));
@@ -159,7 +159,8 @@ public sealed class WebClientSmokeTests(ServerFixture server)
     // used as it is: one page load fewer.
     private static async Task DrawMotionZoneAsync(
         IPage page,
-        Guid cameraId)
+        Guid cameraId,
+        string shots)
     {
         if (!page.Url.EndsWith($"/cameras/{cameraId}/edit", StringComparison.OrdinalIgnoreCase))
         {
@@ -171,18 +172,28 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByText("No picture yet: take a snapshot to draw on the camera's picture.", new PageGetByTextOptions { Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = 45_000 });
 
+        var drawing = page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Motion zones", Exact = true });
+        var failed = await page.GetByText("Failed to capture snapshot.", new PageGetByTextOptions { Exact = true }).IsVisibleAsync();
+        (await drawing.Locator("image").CountAsync()).Should().Be(failed ? 0 : 1, "a snapshot that came is drawn under the zones");
+
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Add zone", Exact = true }).ClickAsync();
         var removeZone = page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Remove zone", Exact = true });
         (await removeZone.IsEnabledAsync()).Should().BeTrue("the new zone is picked");
 
         // The new zone covers 0.25 to 0.55 of the picture: drag it by its middle.
-        var drawing = page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Motion zones", Exact = true });
+        var zone = drawing.Locator("polygon").Last;
+        var before = await zone.GetAttributeAsync("points");
+        await drawing.ScrollIntoViewIfNeededAsync();
         var box = (await drawing.BoundingBoxAsync())!;
         await page.Mouse.MoveAsync(box.X + (box.Width * 0.4f), box.Y + (box.Height * 0.4f));
         await page.Mouse.DownAsync();
         await page.Mouse.MoveAsync(box.X + (box.Width * 0.6f), box.Y + (box.Height * 0.5f), new MouseMoveOptions { Steps = 5 });
         await page.Mouse.UpAsync();
+        await page.WaitForTimeoutAsync(300);
+
+        (await zone.GetAttributeAsync("points")).Should().NotBe(before, "the zone follows the pointer");
         (await removeZone.IsEnabledAsync()).Should().BeTrue("the dragged zone stays picked");
+        await drawing.ScreenshotAsync(new LocatorScreenshotOptions { Path = Path.Combine(shots, "motion-zone.png") });
     }
 
     // Every camera has a lane on the Timeline page; the offline camera's is all gap.

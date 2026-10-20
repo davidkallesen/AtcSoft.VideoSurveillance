@@ -97,7 +97,36 @@ public sealed class CameraWallSmokeTests
         DesktopApp.Press(addCorner);
         app.Find(dialog, "Remove corner", ControlType.Button).IsEnabled.Should().BeTrue("the new corner is picked");
 
+        // The pointer: the new corner is in the middle of the zone's top edge (0.4, 0.25 of the
+        // grey picture). A double click on it removes it; one on the edge there adds one again.
+        var canvas = app.FindWhere(dialog, e => e.ControlType == ControlType.Custom && e.Name == "Motion zones", "the zone drawing");
+        var topMiddle = OnPicture(canvas, 0.4, 0.25);
+        FlaUI.Core.Input.Mouse.DoubleClick(topMiddle);
+        DesktopApp.Settle(TimeSpan.FromSeconds(1));
+        app.Find(dialog, "Remove corner", ControlType.Button).IsEnabled.Should().BeFalse("the corner is gone, none is picked");
+
+        FlaUI.Core.Input.Mouse.DoubleClick(topMiddle);
+        DesktopApp.Settle(TimeSpan.FromSeconds(1));
+        app.Find(dialog, "Remove corner", ControlType.Button).IsEnabled.Should().BeTrue("a corner is added on the edge and picked");
+
         app.CloseWindow(dialog);
+    }
+
+    // A point of the picture in the zone drawing: the picture keeps its shape (16:9 while there is
+    // none) in the middle of the drawing.
+    private static System.Drawing.Point OnPicture(
+        AutomationElement canvas,
+        double x,
+        double y)
+    {
+        var bounds = canvas.BoundingRectangle;
+        var picture = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneEditing.Fit(
+            bounds.Width,
+            bounds.Height,
+            AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneEditing.DefaultAspectRatio);
+        return new System.Drawing.Point(
+            (int)Math.Round(bounds.X + picture.X + (x * picture.Width)),
+            (int)Math.Round(bounds.Y + picture.Y + (y * picture.Height)));
     }
 
     // The seeded recordings have an activity index with one event: the player shows the timeline,
