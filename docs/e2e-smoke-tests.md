@@ -59,8 +59,11 @@ load renews the session.
 Both WPF walks also play a recording: CameraWall the one the fixture writes (with an activity index
 beside it that has one event), the client the one the server recorded from the live camera. The player
 must show its activity timeline; the event buttons are pressed (in the client only when the detector
-found a track in the test pattern). The web walk plays the server's recording too and waits for the
-timeline (an SVG named Activity), which shows whether or not the browser can play the file. The web and
+found a track in the test pattern), and the zoom buttons must be there (a three-second recording is too
+short to zoom). CameraWall's walk rests the mouse on the middle of the timeline and waits for the tooltip
+to say "Moving: 1". The web walk plays the server's recording too and waits for the timeline (an SVG
+named Activity), which shows whether or not the browser can play the file, its zoom buttons, and the
+words over it when the mouse rests on it. The web and
 WPF client walks also open the Timeline view and wait for the live camera's lane, then press *Play all
 from here*: the live camera's tile must leave "Loading..." (the web walk accepts a tile the browser cannot
 play, and saves `play-all.png`), and Pause must turn into Play. CameraWall's walk opens its Timeline
