@@ -161,6 +161,42 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void The_Preview_Look_Ups_Are_The_Same_As_The_Desktop_Apps()
+    {
+        var (core, _) = AtcSoft.VideoSurveillance.Helpers.Activity.RecordingPreviewLayout.Plan(30, 640, 480, [6.5, 20.5]);
+        var web = Sheet(core);
+
+        foreach (var seconds in new[] { -1, 0, 0.4, 4.6, 29.9, 99 })
+        {
+            RecordingPreviewLayout.GridTile(web, seconds).Should().Be(AtcSoft.VideoSurveillance.Helpers.Activity.RecordingPreviewLayout.GridTile(core, seconds));
+        }
+
+        foreach (var (from, to) in new[] { (6d, 7d), (1d, 2d), (20d, 21d) })
+        {
+            RecordingPreviewLayout.EventTile(web, from, to).Should().Be(AtcSoft.VideoSurveillance.Helpers.Activity.RecordingPreviewLayout.EventTile(core, from, to));
+        }
+
+        foreach (var tile in new[] { 0, 19, 20, 32 })
+        {
+            RecordingPreviewLayout.TileRect(web, tile).Should().Be(AtcSoft.VideoSurveillance.Helpers.Activity.RecordingPreviewLayout.TileRect(core, tile));
+        }
+    }
+
+    [Fact]
+    public void Under_The_Mouse_An_Event_Shows_Its_Busiest_Moment_And_Elsewhere_The_Nearest_Picture()
+    {
+        var (core, _) = AtcSoft.VideoSurveillance.Helpers.Activity.RecordingPreviewLayout.Plan(10, 640, 480, [6.5]);
+        var web = Sheet(core);
+        ActivityTimelineEvent[] events = [new(0.6, 0.7)];
+
+        RecordingPreviewLayout.Pick(web, events, 0.14, 0.16, 10).Should().Be((2, 0.2), "1.5 s is nearest the tile of 2 s");
+        RecordingPreviewLayout.Pick(web, events, 0.64, 0.66, 10).Should().Be((11, 0.65), "the event's own picture, of 6.5 s");
+        RecordingPreviewLayout.Pick(null, events, 0.64, 0.66, 10).Should().BeNull();
+        RecordingPreviewLayout.TileStyle(web, 21, "http://server/a'b.jpg?media=x").Should().Be(
+            "width: 160px; height: 120px; background-image: url('http://server/a%27b.jpg?media=x'); background-position: -160px -120px; background-repeat: no-repeat;");
+    }
+
+    [Fact]
     public void The_Zoom_Is_The_Same_As_The_Desktop_Apps()
     {
         (double Start, double End)[] windows = [(0, 1), (0.5, 1), (0.2, 0.3), (0.99, 1), (0.4, 0.40001)];
@@ -251,6 +287,20 @@ public sealed class ActivityTimelineTests
         string? duration,
         double seconds)
         => RecordingDisplay.DurationSeconds(duration).Should().Be(seconds);
+
+    // The server's answer for a layout made by Core.
+    private static RecordingPreviewSheet Sheet(
+        AtcSoft.VideoSurveillance.Models.RecordingPreviews layout)
+        => new(
+            HasPreviews: true,
+            IsBeingMade: false,
+            ImagePath: "Cam/Cam.previews.jpg",
+            IntervalSeconds: layout.IntervalSeconds,
+            TileWidth: layout.TileWidth,
+            TileHeight: layout.TileHeight,
+            Columns: layout.Columns,
+            GridCount: layout.GridCount,
+            Events: [.. layout.Events.Select(e => new RecordingPreviewTile(Seconds: e.Seconds, Tile: e.Tile))]);
 
     private static RecordingActivityBucket Bucket(
         double level,

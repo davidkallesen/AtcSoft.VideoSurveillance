@@ -160,34 +160,41 @@ public sealed class CameraWallSmokeTests
     }
 
     // Resting the mouse on the middle of the timeline (a second and a half into the three) tells
-    // what moved there, in a tooltip that follows the mouse.
+    // what moved there, in a tooltip that follows the mouse. The recording had no previews: playing
+    // it queues them, the player asks again, and the tooltip shows the picture once they are made.
     private static void HoverTimeline(
         DesktopApp app,
         AutomationElement timeline)
     {
         var bounds = timeline.BoundingRectangle;
         var middle = new System.Drawing.Point(bounds.X + (bounds.Width / 2), bounds.Y + (bounds.Height / 2));
-        FlaUI.Core.Input.Mouse.MoveTo(middle);
-        FlaUI.Core.Input.Mouse.MoveTo(middle with { X = middle.X + 1 });
 
         // A WPF tooltip is a pop-up window of the app's own, with the tooltip inside it.
         var desktop = app.Automation.GetDesktop();
         var processId = timeline.Properties.ProcessId.Value;
-        var deadline = DateTime.UtcNow + DesktopApp.ElementTimeout;
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         string? words = null;
-        while (DateTime.UtcNow < deadline && words is null)
+        var hasPicture = false;
+        var nudge = 1;
+        while (DateTime.UtcNow < deadline && (words is null || !hasPicture))
         {
-            words = desktop
+            // The tooltip's picture and words change as the mouse moves.
+            FlaUI.Core.Input.Mouse.MoveTo(middle with { X = middle.X + (nudge = -nudge) });
+            Thread.Sleep(500);
+            var tips = desktop
                 .FindAllChildren(app.Conditions.ByProcessId(processId))
                 .SelectMany(w => w.Properties.ControlType.ValueOrDefault == ControlType.ToolTip
                     ? [w]
                     : w.FindAllDescendants(app.Conditions.ByControlType(ControlType.ToolTip)))
+                .ToList();
+            words = tips
                 .SelectMany(t => new[] { t.Properties.Name.ValueOrDefault }.Concat(t.FindAllDescendants().Select(d => d.Properties.Name.ValueOrDefault)))
                 .FirstOrDefault(n => n?.Contains("Moving", StringComparison.Ordinal) == true);
-            Thread.Sleep(250);
+            hasPicture = tips.Any(t => t.FindFirstDescendant(app.Conditions.ByControlType(ControlType.Image)) is { IsOffscreen: false });
         }
 
         words.Should().NotBeNull("resting the mouse on the timeline shows a tooltip").And.Contain("Moving: 1");
+        hasPicture.Should().BeTrue("the previews are made after the recording is played, and the tooltip shows its picture");
         FlaUI.Core.Input.Mouse.MoveTo(new System.Drawing.Point(bounds.X, bounds.Y - 200));
     }
 

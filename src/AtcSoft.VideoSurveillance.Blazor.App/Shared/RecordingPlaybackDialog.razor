@@ -1,6 +1,7 @@
 @using MudBlazor
 @inject IJSRuntime JS
 @inject GatewayService Gateway
+@inject BrowserSession Session
 @implements IDisposable
 
 <MudDialog>
@@ -51,6 +52,10 @@
                     <div role="tooltip"
                          class="mud-elevation-4"
                          style="position: absolute; bottom: 100%; left: @ActivityHoverText.Left(hoverShare); transform: translateX(-50%); margin-bottom: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(33,33,33,0.92); color: #fff; font-size: 12px; white-space: nowrap; pointer-events: none; z-index: 1;">
+                        @if (hoverPicture is { } picture)
+                        {
+                            <div aria-hidden="true" style="@picture; margin: 0 auto 4px auto;"></div>
+                        }
                         @foreach (var hoverLine in hoverLines)
                         {
                             <div>@hoverLine</div>
@@ -147,6 +152,12 @@
 
     // What the timeline tells under the mouse, and where; nothing while the mouse is elsewhere.
     private IReadOnlyList<string> hoverLines = [];
+
+    // The preview pictures of the recording, and where their JPEG is; the picture under the mouse as CSS.
+    private RecordingPreviewSheet? previews;
+    private string? previewsUrl;
+    private string? hoverPicture;
+    private CancellationTokenSource previewsLoading = new();
     private double hoverShare;
 
     private bool HasHover
@@ -278,6 +289,12 @@
         wheelListened = false;
         reloadedForLength = false;
         hoverLines = [];
+        hoverPicture = null;
+        previews = null;
+        previewsUrl = null;
+        await previewsLoading.CancelAsync();
+        previewsLoading.Dispose();
+        previewsLoading = new CancellationTokenSource();
         RecordingStart = next.RecordingStart;
         StateHasChanged();
         await OnInitializedAsync();
@@ -285,7 +302,11 @@
     }
 
     public void Dispose()
-        => self?.Dispose();
+    {
+        previewsLoading.Cancel();
+        previewsLoading.Dispose();
+        self?.Dispose();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -299,6 +320,42 @@
             : null;
         zoneColours = MotionZoneColors.ByZone(camera?.MotionZones);
         Redraw();
+        if (HasActivity)
+        {
+            _ = LoadPreviewsAsync(FilePath, previewsLoading.Token);
+        }
+    }
+
+    // Previews still being made (a recording from before them) are asked for again a while.
+    private async Task LoadPreviewsAsync(string filePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            for (var attempt = 0; attempt <= 24; attempt++)
+            {
+                if (attempt > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                }
+
+                var sheet = await Gateway.GetRecordingPreviewsAsync(filePath, cancellationToken);
+                if (sheet is { HasPreviews: true, ImagePath: { Length: > 0 } imagePath })
+                {
+                    previews = sheet;
+                    previewsUrl = RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, imagePath, Session.MediaToken);
+                    return;
+                }
+
+                if (sheet is not { IsBeingMade: true })
+                {
+                    return;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
+        {
+            // The dialog closed or moved on, or the server did not answer: words only.
+        }
     }
 
     // One stretch a second, so a minute zoomed in still has its seconds; false when there is none.
@@ -382,13 +439,18 @@
     {
         hoverShare = share;
         hoverLines = [];
-        if (share >= 0 && buckets is not null &&
-            ActivityTimelineHover.At(
-                buckets,
-                events,
-                ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share - ActivityHoverText.HalfWidth),
-                ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share + ActivityHoverText.HalfWidth)) is { } hover)
+        hoverPicture = null;
+        var from = ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share - ActivityHoverText.HalfWidth);
+        var to = ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share + ActivityHoverText.HalfWidth);
+        if (share >= 0 && buckets is not null && ActivityTimelineHover.At(buckets, events, from, to) is { } hover)
         {
+            // With a picture, the time told is the picture's.
+            if (previewsUrl is not null && RecordingPreviewLayout.Pick(previews, events, from, to, ShownSeconds) is { } pick)
+            {
+                hoverPicture = RecordingPreviewLayout.TileStyle(previews!, pick.Tile, previewsUrl);
+                hover = hover with { Position = pick.Position };
+            }
+
             hoverLines = ActivityHoverText.Lines(hover, RecordingStart, ShownSeconds);
         }
 
