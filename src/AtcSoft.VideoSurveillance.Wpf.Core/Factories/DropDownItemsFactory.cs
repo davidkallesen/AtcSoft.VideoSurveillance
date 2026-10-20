@@ -172,19 +172,36 @@ public static class DropDownItemsFactory
         };
 
     /// <summary>
-    /// Gets the motion analysis resolution options for dropdowns.
-    /// Keys are "WIDTHxHEIGHT", values are display text with performance hints.
-    /// Higher resolutions improve small object detection but increase CPU usage.
+    /// Gets the motion analysis size options for dropdowns. Keys are the longer side of the
+    /// analysed picture in pixels (the other side follows the picture's shape), values are display
+    /// text with performance hints. Larger sizes find smaller objects but use more CPU.
     /// </summary>
     public static IDictionary<string, string> MotionAnalysisResolutionItems
         => new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["320x240"] = Translations.MotionResolutionLowCpu,
-            ["480x360"] = Translations.MotionResolutionBalanced,
-            ["640x480"] = Translations.MotionResolutionBetterDetection,
-            ["800x600"] = Translations.MotionResolutionHighCpu,
-            ["960x720"] = Translations.MotionResolutionVeryHighCpu,
+            ["320"] = Translations.MotionResolutionLowCpu,
+            ["480"] = Translations.MotionResolutionBalanced,
+            ["640"] = Translations.MotionResolutionBetterDetection,
+            ["800"] = Translations.MotionResolutionHighCpu,
+            ["960"] = Translations.MotionResolutionVeryHighCpu,
         };
+
+    /// <summary>
+    /// Gets the motion analysis size options with a size that is not among them (set in an
+    /// older version or by hand) added, so it stays shown.
+    /// </summary>
+    /// <param name="current">The key shown now.</param>
+    public static IDictionary<string, string> MotionAnalysisResolutionItemsWith(
+        string? current)
+    {
+        var items = MotionAnalysisResolutionItems;
+        if (!string.IsNullOrEmpty(current) && !items.ContainsKey(current))
+        {
+            items[current] = string.Format(CultureInfo.CurrentCulture, Translations.Pixels1, current);
+        }
+
+        return items;
+    }
 
     /// <summary>
     /// Gets the post-motion duration options for dropdowns (in seconds).
@@ -396,9 +413,9 @@ public static class DropDownItemsFactory
     public const int DefaultBoundingBoxMinArea = 25;
 
     /// <summary>
-    /// Gets the default motion analysis resolution.
+    /// Gets the default motion analysis size: the longer side, as in Core's settings.
     /// </summary>
-    public const string DefaultMotionAnalysisResolution = "320x240";
+    public const string DefaultMotionAnalysisResolution = "800";
 
     /// <summary>
     /// Gets the default media cleanup schedule.
@@ -472,39 +489,23 @@ public static class DropDownItemsFactory
         };
 
     /// <summary>
-    /// Parses a resolution string (e.g., "640x480") into width and height.
+    /// Parses a motion analysis size key ("800") into the longer side; an older "800x600" key
+    /// gives its width.
     /// </summary>
-    /// <param name="resolution">The resolution string in "WIDTHxHEIGHT" format.</param>
-    /// <returns>A tuple of (width, height), or (320, 240) if parsing fails.</returns>
-    public static (int Width, int Height) ParseAnalysisResolution(
-        string? resolution)
-    {
-        if (string.IsNullOrEmpty(resolution))
-        {
-            return (320, 240);
-        }
-
-        var parts = resolution.Split('x');
-        if (parts.Length == 2 &&
-            int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
-            int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var height))
-        {
-            return (width, height);
-        }
-
-        return (320, 240);
-    }
+    /// <param name="resolution">The key.</param>
+    /// <returns>The longer side in pixels, or the default when the key cannot be read.</returns>
+    public static int ParseAnalysisResolution(string? resolution)
+        => int.TryParse(resolution?.Split('x')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var side) && side > 0
+            ? side
+            : MotionAnalysisSize.DefaultLongerSide;
 
     /// <summary>
-    /// Formats width and height into a resolution string (e.g., "640x480").
+    /// Formats the longer side of the analysed picture as a motion analysis size key ("800").
     /// </summary>
-    /// <param name="width">The width in pixels.</param>
-    /// <param name="height">The height in pixels.</param>
-    /// <returns>The resolution string in "WIDTHxHEIGHT" format.</returns>
-    public static string FormatAnalysisResolution(
-        int width,
-        int height)
-        => $"{width}x{height}";
+    /// <param name="longerSide">The longer side in pixels; 0 or less gives the default.</param>
+    /// <returns>The key.</returns>
+    public static string FormatAnalysisResolution(int longerSide)
+        => (longerSide > 0 ? longerSide : MotionAnalysisSize.DefaultLongerSide).ToString(CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Parses a timelapse interval string (e.g., "10s", "5m", "1h") into a TimeSpan.

@@ -1446,7 +1446,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
         => DropDownItemsFactory.BoundingBoxThicknessItems;
 
     public IDictionary<string, string> AnalysisResolutionItems
-        => DropDownItemsFactory.MotionAnalysisResolutionItems;
+        => DropDownItemsFactory.MotionAnalysisResolutionItemsWith(OverrideAnalysisResolution);
 
     public IDictionary<string, string> ThumbnailTileCountItems
         => DropDownItemsFactory.ThumbnailTileCountItems;
@@ -1561,7 +1561,7 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
     public bool UseDefaultAnalysisResolution
     {
-        get => Camera.Overrides?.MotionDetection.AnalysisWidth is null && Camera.Overrides?.MotionDetection.AnalysisHeight is null;
+        get => Camera.Overrides?.MotionDetection.AnalysisWidth is null;
         set
         {
             if (value)
@@ -1575,14 +1575,9 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
             else
             {
                 EnsureOverrides();
-                var (width, height) = DropDownItemsFactory.ParseAnalysisResolution(
-                    settingsService.MotionDetection.AnalysisWidth > 0 && settingsService.MotionDetection.AnalysisHeight > 0
-                        ? DropDownItemsFactory.FormatAnalysisResolution(
-                            settingsService.MotionDetection.AnalysisWidth,
-                            settingsService.MotionDetection.AnalysisHeight)
-                        : DropDownItemsFactory.DefaultMotionAnalysisResolution);
-                Camera.Overrides!.MotionDetection.AnalysisWidth = width;
-                Camera.Overrides!.MotionDetection.AnalysisHeight = height;
+                Camera.Overrides!.MotionDetection.AnalysisWidth = DropDownItemsFactory.ParseAnalysisResolution(
+                    DropDownItemsFactory.FormatAnalysisResolution(settingsService.MotionDetection.AnalysisWidth));
+                Camera.Overrides!.MotionDetection.AnalysisHeight = null;
             }
 
             RaisePropertyChanged();
@@ -1592,24 +1587,14 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
     public string OverrideAnalysisResolution
     {
-        get
-        {
-            var width = Camera.Overrides?.MotionDetection.AnalysisWidth ?? settingsService.MotionDetection.AnalysisWidth;
-            var height = Camera.Overrides?.MotionDetection.AnalysisHeight ?? settingsService.MotionDetection.AnalysisHeight;
-            if (width > 0 && height > 0)
-            {
-                return DropDownItemsFactory.FormatAnalysisResolution(width, height);
-            }
-
-            return DropDownItemsFactory.DefaultMotionAnalysisResolution;
-        }
+        get => DropDownItemsFactory.FormatAnalysisResolution(
+            Camera.Overrides?.MotionDetection.AnalysisWidth ?? settingsService.MotionDetection.AnalysisWidth);
 
         set
         {
-            var (width, height) = DropDownItemsFactory.ParseAnalysisResolution(value);
             EnsureOverrides();
-            Camera.Overrides!.MotionDetection.AnalysisWidth = width;
-            Camera.Overrides!.MotionDetection.AnalysisHeight = height;
+            Camera.Overrides!.MotionDetection.AnalysisWidth = DropDownItemsFactory.ParseAnalysisResolution(value);
+            Camera.Overrides!.MotionDetection.AnalysisHeight = null;
             RaisePropertyChanged();
         }
     }

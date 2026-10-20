@@ -17,8 +17,8 @@
                  Class="mt-2" />
 <SettingSwitch @bind-Value="State.IgnoreLightingChanges" Label="@Translations.IgnoreLightingChanges" />
 <MudText Typo="Typo.caption" Class="mb-2">@Translations.IgnoreLightingChangesInfo</MudText>
-<MudSelect @bind-Value="State.AnalysisResolution" Label="@Translations.AnalysisResolution" Class="mt-2">
-    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.AnalysisResolutions, State.AnalysisResolution, v => v.Replace("x", " x ", StringComparison.Ordinal)))
+<MudSelect @bind-Value="State.AnalysisWidth" Label="@Translations.AnalysisResolution" HelperText="@Translations.AnalysisResolutionInfo" Class="mt-2">
+    @foreach (var (value, label) in SettingsOptions.WithCurrent(SettingsOptions.AnalysisWidths, State.AnalysisWidth, v => string.Format(CultureInfo.CurrentCulture, Translations.Pixels1, v)))
     {
         <MudSelectItem Value="@value">@label</MudSelectItem>
     }

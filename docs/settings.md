@@ -150,8 +150,8 @@ Frame-based motion analysis configuration. See [motion-detection.md](motion-dete
 | `IgnoreLightingChanges` | bool | `true` | Yes | A change over most of the picture at once is light (a cloud, a lamp), not motion. Turn off for a camera at a door, where a person can fill most of the picture: it is then seen sooner, but after a change of light motion is missed until the new light has become background (about 15 s at the default stopped-object time) |
 | `MinimumChangePercent` | double | `0.5` | Yes | Read only by the comparison detector (`FrameDifferenceMotionDetector`); not shown in the dialogs, deprecated in the API |
 | `AnalysisFrameRate` | int | `30` | Yes | Frames per second for motion analysis (clamped 2-15) |
-| `AnalysisWidth` | int | `800` | Yes | Width of analysis frame in pixels |
-| `AnalysisHeight` | int | `600` | Yes | Height of analysis frame in pixels |
+| `AnalysisWidth` | int | `800` | Yes | The longer side of the analysed picture in pixels (its width for a camera lying down); the other side follows the camera's picture |
+| `AnalysisHeight` | int | `600` | Yes | Not used any more (the height follows the picture); kept so older files read, deprecated in the API |
 | `PostMotionDurationSeconds` | int | `10` | Yes | Seconds to continue reporting motion after it stops |
 | `CooldownSeconds` | int | `5` | Yes | Minimum seconds between motion-triggered recordings |
 | `BoundingBox` | object | *(see below)* | Yes | Bounding box visualization settings |

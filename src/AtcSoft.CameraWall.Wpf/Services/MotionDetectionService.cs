@@ -10,8 +10,6 @@ namespace AtcSoft.CameraWall.Wpf.Services;
 [Registration(Lifetime.Singleton)]
 public partial class MotionDetectionService : IMotionDetectionService, IDisposable
 {
-    private const int DefaultAnalysisWidth = 800;
-    private const int DefaultAnalysisHeight = 600;
     private const int MinTargetFps = 2;
     private const int MaxTargetFps = 15;
     private const int MinSchedulerIntervalMs = 16; // ~60 Hz ceiling for scheduler ticks
@@ -153,16 +151,9 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
     /// <inheritdoc/>
     public (int Width, int Height) GetAnalysisResolution(Guid cameraId)
-    {
-        if (contexts.TryGetValue(cameraId, out var context))
-        {
-            var width = context.Settings.AnalysisWidth > 0 ? context.Settings.AnalysisWidth : DefaultAnalysisWidth;
-            var height = context.Settings.AnalysisHeight > 0 ? context.Settings.AnalysisHeight : DefaultAnalysisHeight;
-            return (width, height);
-        }
-
-        return (DefaultAnalysisWidth, DefaultAnalysisHeight);
-    }
+        => contexts.TryGetValue(cameraId, out var context)
+            ? AnalysisSize(context)
+            : MotionAnalysisSize.For(0, 0, 0);
 
     /// <summary>
     /// Disposes of the service resources.
@@ -358,7 +349,7 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
         {
             // Grey straight from the decoded picture; a PNG read back as grey where the pipeline
             // cannot make one.
-            var (width, height) = AnalysisSize(context.Settings);
+            var (width, height) = AnalysisSize(context);
             var grey = await context.Pipeline.CaptureGreyAsync(width, height).ConfigureAwait(false);
             if (grey?.Length != width * height)
             {
@@ -388,10 +379,13 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
         }
     }
 
+    // The longer side as set, the other following the camera's picture as displayed.
     private static (int Width, int Height) AnalysisSize(
-        MotionDetectionSettings settings)
-        => (settings.AnalysisWidth > 0 ? settings.AnalysisWidth : DefaultAnalysisWidth,
-            settings.AnalysisHeight > 0 ? settings.AnalysisHeight : DefaultAnalysisHeight);
+        MotionDetectionContext context)
+    {
+        var (displayWidth, displayHeight) = context.Pipeline.DisplaySize;
+        return MotionAnalysisSize.For(context.Settings.AnalysisWidth, displayWidth, displayHeight);
+    }
 
     private void ProcessCapturedFrame(
         Guid cameraId,
@@ -405,7 +399,7 @@ public partial class MotionDetectionService : IMotionDetectionService, IDisposab
 
         try
         {
-            var (analysisWidth, analysisHeight) = AnalysisSize(context.Settings);
+            var (analysisWidth, analysisHeight) = AnalysisSize(context);
 
             // Grey from the pipeline, or a PNG made grey and downscaled by the same reader the server uses.
             var currentFrame = grey ?? (frameBytes is null ? null : frameReader.ReadGrayscale(frameBytes, analysisWidth, analysisHeight));

@@ -117,6 +117,14 @@ public interface IMediaPipeline : IDisposable
         => Task.FromResult<byte[]?>(null);
 
     /// <summary>
+    /// Gets the size of the picture as displayed (turned by the rotation), for the size it is
+    /// analysed at (<see cref="Helpers.MotionDetection.MotionAnalysisSize"/>); (0, 0) while no picture
+    /// has arrived or the pipeline cannot tell.
+    /// </summary>
+    (int Width, int Height) DisplaySize
+        => (0, 0);
+
+    /// <summary>
     /// Sets the clockwise rotation applied to live display, snapshots, and
     /// (via container metadata) any active or future recording.
     /// </summary>

@@ -25,9 +25,6 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     // the scene and keeps a server with many cameras usable.
     private const int MaxAnalysesPerSecond = 4;
 
-    private const int DefaultAnalysisWidth = 320;
-    private const int DefaultAnalysisHeight = 240;
-
     private readonly ILogger<ServerMotionDetectionService> logger;
     private readonly IMotionFrameReader? frameReader;
     private readonly TimeProvider timeProvider;
@@ -188,8 +185,8 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
     /// <inheritdoc/>
     public (int Width, int Height) GetAnalysisResolution(Guid cameraId)
         => contexts.TryGetValue(cameraId, out var ctx)
-            ? GetAnalysisSize(ctx.Settings)
-            : (DefaultAnalysisWidth, DefaultAnalysisHeight);
+            ? GetAnalysisSize(ctx)
+            : MotionAnalysisSize.For(0, 0, 0);
 
     /// <summary>
     /// Takes one picture from the camera and compares it with the one before.
@@ -207,7 +204,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         }
 
         byte[]? current;
-        var (width, height) = GetAnalysisSize(context.Settings);
+        var (width, height) = GetAnalysisSize(context);
         try
         {
             // Grey straight from the decoded picture; a PNG read back as grey where the pipeline
@@ -357,10 +354,13 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         LogMotionDetectionStopped(cameraId);
     }
 
+    // The longer side as set, the other following the camera's picture as displayed.
     private static (int Width, int Height) GetAnalysisSize(
-        MotionDetectionSettings settings)
-        => (settings.AnalysisWidth > 0 ? settings.AnalysisWidth : DefaultAnalysisWidth,
-            settings.AnalysisHeight > 0 ? settings.AnalysisHeight : DefaultAnalysisHeight);
+        DetectionContext context)
+    {
+        var (displayWidth, displayHeight) = context.Pipeline.DisplaySize;
+        return MotionAnalysisSize.For(context.Settings.AnalysisWidth, displayWidth, displayHeight);
+    }
 
     private void Analyze(
         Guid cameraId,
@@ -442,7 +442,7 @@ public sealed partial class ServerMotionDetectionService : IMotionDetectionServi
         Guid cameraId,
         DetectionContext context)
     {
-        var (width, height) = GetAnalysisSize(context.Settings);
+        var (width, height) = GetAnalysisSize(context);
         Raise(cameraId, new MotionDetectedEventArgs(cameraId, 0, isMotionActive: false, boundingBoxes: null, width, height));
     }
 

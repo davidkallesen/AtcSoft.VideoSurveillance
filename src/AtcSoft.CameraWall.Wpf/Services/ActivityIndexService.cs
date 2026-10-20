@@ -72,7 +72,6 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
         MotionDetectionSettings defaults)
     {
         var overrides = camera.Overrides?.MotionDetection;
-        var hasOwnSize = overrides?.AnalysisWidth is > 0 && overrides.AnalysisHeight is > 0;
         return new MotionDetectionSettings
         {
             Sensitivity = overrides?.Sensitivity ?? defaults.Sensitivity,
@@ -81,8 +80,7 @@ public sealed class ActivityIndexService : BackgroundServiceBase<ActivityIndexSe
             IgnoreLightingChanges = overrides?.IgnoreLightingChanges ?? defaults.IgnoreLightingChanges,
             MinimumChangePercent = overrides?.MinimumChangePercent ?? defaults.MinimumChangePercent,
             AnalysisFrameRate = overrides?.AnalysisFrameRate ?? defaults.AnalysisFrameRate,
-            AnalysisWidth = hasOwnSize ? overrides!.AnalysisWidth!.Value : defaults.AnalysisWidth,
-            AnalysisHeight = hasOwnSize ? overrides!.AnalysisHeight!.Value : defaults.AnalysisHeight,
+            AnalysisWidth = overrides?.AnalysisWidth is > 0 and var ownWidth ? ownWidth : defaults.AnalysisWidth,
             PostMotionDurationSeconds = overrides?.PostMotionDurationSeconds ?? defaults.PostMotionDurationSeconds,
             CooldownSeconds = overrides?.CooldownSeconds ?? defaults.CooldownSeconds,
         };

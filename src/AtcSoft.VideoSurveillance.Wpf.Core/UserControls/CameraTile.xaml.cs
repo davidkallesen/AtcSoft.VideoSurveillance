@@ -194,6 +194,10 @@ public partial class CameraTile : IDisposable
     [DependencyProperty(DefaultValue = 2)]
     private int motionAnalysisFrameRate;
 
+    // The longer side of the analysed picture, as the app sets it.
+    [DependencyProperty(DefaultValue = MotionAnalysisSize.DefaultLongerSide)]
+    private int motionAnalysisWidth;
+
     [DependencyProperty(DefaultValue = 10)]
     private int motionPostDurationSeconds;
 
@@ -411,28 +415,11 @@ public partial class CameraTile : IDisposable
         => Camera?.Overrides?.Connection.ReconnectDelaySeconds ?? ReconnectDelaySeconds;
 
     /// <summary>
-    /// Gets the effective motion analysis resolution, considering camera override.
-    /// Returns width and height from override if set, otherwise uses service default.
+    /// Gets the longer side of the analysed picture, considering camera override; the other side
+    /// follows the picture's shape.
     /// </summary>
-    private (int Width, int Height) GetEffectiveMotionAnalysisResolution()
-    {
-        var overrideWidth = Camera?.Overrides?.MotionDetection.AnalysisWidth;
-        var overrideHeight = Camera?.Overrides?.MotionDetection.AnalysisHeight;
-
-        if (overrideWidth.HasValue && overrideHeight.HasValue && overrideWidth.Value > 0 && overrideHeight.Value > 0)
-        {
-            return (overrideWidth.Value, overrideHeight.Value);
-        }
-
-        // Fall back to service default
-        if (motionDetectionService is not null && Camera is not null)
-        {
-            return motionDetectionService.GetAnalysisResolution(Camera.Id);
-        }
-
-        // Last resort: default values
-        return (320, 240);
-    }
+    private int GetEffectiveMotionAnalysisWidth()
+        => Camera?.Overrides?.MotionDetection.AnalysisWidth is > 0 and var own ? own : MotionAnalysisWidth;
 
     /// <summary>
     /// Occurs when a full screen request is made.
@@ -2899,7 +2886,6 @@ public partial class CameraTile : IDisposable
         }
 
         // Build settings using effective values that consider per-camera overrides
-        var (analysisWidth, analysisHeight) = GetEffectiveMotionAnalysisResolution();
         var settings = new MotionDetectionSettings
         {
             Sensitivity = GetEffectiveMotionSensitivity(),
@@ -2908,8 +2894,7 @@ public partial class CameraTile : IDisposable
             IgnoreLightingChanges = GetEffectiveMotionIgnoreLightingChanges(),
             MinimumChangePercent = GetEffectiveMotionMinimumChangePercent(),
             AnalysisFrameRate = GetEffectiveMotionAnalysisFrameRate(),
-            AnalysisWidth = analysisWidth,
-            AnalysisHeight = analysisHeight,
+            AnalysisWidth = GetEffectiveMotionAnalysisWidth(),
             PostMotionDurationSeconds = GetEffectiveMotionPostDurationSeconds(),
             CooldownSeconds = GetEffectiveMotionCooldownSeconds(),
             BoundingBox = new BoundingBoxSettings

@@ -1102,7 +1102,7 @@
     <value>Number of frames analyzed per second for motion. Higher values detect motion faster but use more CPU. Values between 5 and 15 are recommended.</value>
   </data>
   <data name="AnalysisResolutionInfo" xml:space="preserve">
-    <value>Resolution used for motion analysis. Lower resolutions are faster and use less CPU, while higher resolutions detect smaller objects more accurately.</value>
+    <value>The longer side of the picture used for motion analysis, in pixels; the other side follows the camera's picture. Smaller is faster and uses less CPU, larger finds smaller objects more accurately.</value>
   </data>
   <data name="CooldownSecondsInfo" xml:space="preserve">
     <value>Minimum wait time in seconds after a recording stops before a new motion-triggered recording can start. Prevents rapid on/off recording cycles.</value>

@@ -79,30 +79,11 @@ public sealed class SettingsState
 
     public int AnalysisFrameRate { get; set; } = 15;
 
-    public int AnalysisWidth { get; set; } = 800;
-
-    public int AnalysisHeight { get; set; } = 600;
-
     /// <summary>
-    /// Gets or sets the analysis size as one "width x height" choice.
+    /// Gets or sets the longer side of the analysed picture; the other side follows the camera's
+    /// picture, so the height is left to the server.
     /// </summary>
-    public string AnalysisResolution
-    {
-        get => string.Create(CultureInfo.InvariantCulture, $"{AnalysisWidth}x{AnalysisHeight}");
-        set
-        {
-            var parts = (value ?? string.Empty).Split('x');
-            if (parts.Length == 2 &&
-                int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
-                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var height) &&
-                width > 0 &&
-                height > 0)
-            {
-                AnalysisWidth = width;
-                AnalysisHeight = height;
-            }
-        }
-    }
+    public int AnalysisWidth { get; set; } = 800;
 
     public int PostMotionDurationSeconds { get; set; } = 10;
 
@@ -252,7 +233,6 @@ public sealed class SettingsState
         IgnoreLightingChanges = settings.IgnoreLightingChanges;
         AnalysisFrameRate = settings.AnalysisFrameRate;
         AnalysisWidth = settings.AnalysisWidth;
-        AnalysisHeight = settings.AnalysisHeight;
         PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
         CooldownSeconds = settings.CooldownSeconds;
         BoundingBoxShowInGrid = settings.BoundingBoxShowInGrid;
@@ -333,7 +313,6 @@ public sealed class SettingsState
             IgnoreLightingChanges: IgnoreLightingChanges,
             AnalysisFrameRate: AnalysisFrameRate,
             AnalysisWidth: AnalysisWidth,
-            AnalysisHeight: AnalysisHeight,
             PostMotionDurationSeconds: PostMotionDurationSeconds,
             CooldownSeconds: CooldownSeconds,
             BoundingBoxShowInGrid: BoundingBoxShowInGrid,

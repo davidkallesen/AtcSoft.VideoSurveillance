@@ -28,13 +28,14 @@ public static class SettingsOptions
         (70, Translations.MotionSensitivityVeryHigh),
     ];
 
-    public static IReadOnlyList<(string Value, string Label)> AnalysisResolutions { get; } =
+    // The longer side of the analysed picture; the other side follows the camera's picture.
+    public static IReadOnlyList<(int Value, string Label)> AnalysisWidths { get; } =
     [
-        ("320x240", Translations.MotionResolutionLowCpu),
-        ("480x360", Translations.MotionResolutionBalanced),
-        ("640x480", Translations.MotionResolutionBetterDetection),
-        ("800x600", Translations.MotionResolutionHighCpu),
-        ("960x720", Translations.MotionResolutionVeryHighCpu),
+        (320, Translations.MotionResolutionLowCpu),
+        (480, Translations.MotionResolutionBalanced),
+        (640, Translations.MotionResolutionBetterDetection),
+        (800, Translations.MotionResolutionHighCpu),
+        (960, Translations.MotionResolutionVeryHighCpu),
     ];
 
     public static IReadOnlyList<(int Value, string Label)> PostMotionDurations { get; } =

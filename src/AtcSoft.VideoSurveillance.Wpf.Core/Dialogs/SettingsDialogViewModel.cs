@@ -183,11 +183,11 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
     [ObservableProperty]
     private int analysisFrameRate = 2;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(AnalysisResolutionItems)])]
     private string selectedAnalysisResolution = DropDownItemsFactory.DefaultMotionAnalysisResolution;
 
     public IDictionary<string, string> AnalysisResolutionItems
-        => DropDownItemsFactory.MotionAnalysisResolutionItems;
+        => DropDownItemsFactory.MotionAnalysisResolutionItemsWith(SelectedAnalysisResolution);
 
     [ObservableProperty]
     private int cooldownSeconds = 5;
@@ -632,7 +632,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         IgnoreLightingChanges = motionDetection.IgnoreLightingChanges;
         PostMotionDurationSeconds = motionDetection.PostMotionDurationSeconds;
         AnalysisFrameRate = motionDetection.AnalysisFrameRate;
-        SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(motionDetection.AnalysisWidth, motionDetection.AnalysisHeight);
+        SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(motionDetection.AnalysisWidth);
         CooldownSeconds = motionDetection.CooldownSeconds;
         ShowBoundingBoxInGrid = motionDetection.BoundingBox.ShowInGrid;
         ShowBoundingBoxInFullScreen = motionDetection.BoundingBox.ShowInFullScreen;
@@ -779,7 +779,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
     private void SaveMotionDetectionSettings()
     {
-        var (analysisWidth, analysisHeight) = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
+        var analysisWidth = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
 
         // What the dialog does not show is kept as it was.
         var current = settingsService.MotionDetection;
@@ -793,7 +793,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
             PostMotionDurationSeconds = PostMotionDurationSeconds,
             AnalysisFrameRate = AnalysisFrameRate,
             AnalysisWidth = analysisWidth,
-            AnalysisHeight = analysisHeight,
+            AnalysisHeight = current.AnalysisHeight,
             CooldownSeconds = CooldownSeconds,
             BoundingBox = new BoundingBoxSettings
             {

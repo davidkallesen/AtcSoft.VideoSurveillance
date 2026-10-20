@@ -94,8 +94,8 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
         var settings = RecordingAnalysis.SettingsFor(camera, appSettings);
         var rotation = MediaProbe.GetRotation(videoPath);
 
-        var width = settings.AnalysisWidth > 0 ? settings.AnalysisWidth : 800;
-        var height = settings.AnalysisHeight > 0 ? settings.AnalysisHeight : 600;
+        var (displayWidth, displayHeight) = MediaProbe.GetDisplaySize(videoPath);
+        var (width, height) = MotionAnalysisSize.For(settings.AnalysisWidth, displayWidth, displayHeight);
         using var reader = AtcSoft.VideoEngine.Capture.GreyFrameFileReader.Open(
             videoPath,
             width,

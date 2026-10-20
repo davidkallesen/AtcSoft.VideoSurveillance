@@ -182,11 +182,11 @@ public partial class SettingsDialogViewModel : ViewModelBase
     [ObservableProperty]
     private int analysisFrameRate = 2;
 
-    [ObservableProperty]
+    [ObservableProperty(DependentPropertyNames = [nameof(AnalysisResolutionItems)])]
     private string selectedAnalysisResolution = DropDownItemsFactory.DefaultMotionAnalysisResolution;
 
     public IDictionary<string, string> AnalysisResolutionItems
-        => DropDownItemsFactory.MotionAnalysisResolutionItems;
+        => DropDownItemsFactory.MotionAnalysisResolutionItemsWith(SelectedAnalysisResolution);
 
     [ObservableProperty]
     private int cooldownSeconds = 5;
@@ -452,7 +452,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
             IgnoreLightingChanges = settings.IgnoreLightingChanges;
             PostMotionDurationSeconds = settings.PostMotionDurationSeconds;
             AnalysisFrameRate = settings.AnalysisFrameRate;
-            SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(settings.AnalysisWidth, settings.AnalysisHeight);
+            SelectedAnalysisResolution = DropDownItemsFactory.FormatAnalysisResolution(settings.AnalysisWidth);
             CooldownSeconds = settings.CooldownSeconds;
             ShowBoundingBoxInGrid = settings.BoundingBoxShowInGrid;
             ShowBoundingBoxInFullScreen = settings.BoundingBoxShowInFullScreen;
@@ -715,7 +715,7 @@ public partial class SettingsDialogViewModel : ViewModelBase
 
         _ = int.TryParse(SelectedBoundingBoxThickness, NumberStyles.Integer, CultureInfo.InvariantCulture, out var boundingBoxThickness);
 
-        var (analysisWidth, analysisHeight) = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
+        var analysisWidth = DropDownItemsFactory.ParseAnalysisResolution(SelectedAnalysisResolution);
 
         return new UpdateSettingsRequest(
             ThemeBase: themeBase,
@@ -754,7 +754,6 @@ public partial class SettingsDialogViewModel : ViewModelBase
             IgnoreLightingChanges: IgnoreLightingChanges,
             AnalysisFrameRate: AnalysisFrameRate,
             AnalysisWidth: analysisWidth,
-            AnalysisHeight: analysisHeight,
             PostMotionDurationSeconds: PostMotionDurationSeconds,
             CooldownSeconds: CooldownSeconds,
             BoundingBoxShowInGrid: ShowBoundingBoxInGrid,

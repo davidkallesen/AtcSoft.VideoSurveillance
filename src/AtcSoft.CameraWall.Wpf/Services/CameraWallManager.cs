@@ -448,6 +448,7 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
         CameraGrid.MotionStoppedObjectSeconds = motionDetection.StoppedObjectSeconds;
         CameraGrid.MotionIgnoreLightingChanges = motionDetection.IgnoreLightingChanges;
         CameraGrid.MotionAnalysisFrameRate = motionDetection.AnalysisFrameRate;
+        CameraGrid.MotionAnalysisWidth = motionDetection.AnalysisWidth;
         CameraGrid.MotionPostDurationSeconds = motionDetection.PostMotionDurationSeconds;
         CameraGrid.MotionCooldownSeconds = motionDetection.CooldownSeconds;
 

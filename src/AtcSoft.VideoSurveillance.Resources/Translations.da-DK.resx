@@ -1099,7 +1099,7 @@
     <value>Antal billeder der analyseres per sekund for bevægelse. Højere værdier registrerer bevægelse hurtigere, men bruger mere CPU. Værdier mellem 5 og 15 anbefales.</value>
   </data>
   <data name="AnalysisResolutionInfo" xml:space="preserve">
-    <value>Opløsning brugt til bevægelsesanalyse. Lavere opløsninger er hurtigere og bruger mindre CPU, mens højere opløsninger registrerer mindre objekter mere præcist.</value>
+    <value>Den længste side af billedet brugt til bevægelsesanalyse, i pixels; den anden side følger kameraets billede. Mindre er hurtigere og bruger mindre CPU, større finder mindre objekter mere præcist.</value>
   </data>
   <data name="CooldownSecondsInfo" xml:space="preserve">
     <value>Minimum ventetid i sekunder efter en optagelse stopper, før en ny bevægelsesudløst optagelse kan starte. Forhindrer hurtige til/fra optagelsescyklusser.</value>

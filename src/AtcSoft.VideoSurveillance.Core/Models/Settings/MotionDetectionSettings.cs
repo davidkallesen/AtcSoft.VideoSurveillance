@@ -34,8 +34,16 @@ public class MotionDetectionSettings
 
     public int AnalysisFrameRate { get; set; } = 15;
 
-    public int AnalysisWidth { get; set; } = 800;
+    /// <summary>
+    /// Gets or sets the longer side of the analysed picture, in pixels (its width for a camera
+    /// lying down); the other side follows the picture's shape (<see cref="Helpers.MotionDetection.MotionAnalysisSize"/>).
+    /// </summary>
+    public int AnalysisWidth { get; set; } = Helpers.MotionDetection.MotionAnalysisSize.DefaultLongerSide;
 
+    /// <summary>
+    /// Gets or sets the analysed picture's height as it used to be set. Not used any more: the
+    /// height follows the picture's shape. Kept so older files and clients are read as they are.
+    /// </summary>
     public int AnalysisHeight { get; set; } = 600;
 
     public int PostMotionDurationSeconds { get; set; } = 10;

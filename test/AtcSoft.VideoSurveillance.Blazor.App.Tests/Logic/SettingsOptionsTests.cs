@@ -29,7 +29,7 @@ public sealed class SettingsOptionsTests
 
         SettingsOptions.VideoQualities.Should().Contain(o => o.Value == state.VideoQuality);
         SettingsOptions.MotionSensitivities.Should().Contain(o => o.Value == state.MotionSensitivity);
-        SettingsOptions.AnalysisResolutions.Should().Contain(o => o.Value == state.AnalysisResolution);
+        SettingsOptions.AnalysisWidths.Should().Contain(o => o.Value == state.AnalysisWidth);
         SettingsOptions.PostMotionDurations.Should().Contain(o => o.Value == state.PostMotionDurationSeconds);
         SettingsOptions.BoundingBoxThicknesses.Should().Contain(o => o.Value == state.BoundingBoxThickness);
         SettingsOptions.ThumbnailTiles.Should().Contain(o => o.Value == state.ThumbnailTileCount);

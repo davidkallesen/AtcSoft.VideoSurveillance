@@ -91,6 +91,23 @@ public sealed class ServerMotionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Wide_Camera_Is_Analysed_In_Its_Own_Shape()
+    {
+        // 16:9 as displayed: the longer side as set, the height following, in the events too.
+        pipeline.DisplaySize.Returns((1920, 1080));
+        var reader = new BlockReader();
+        foreach (var scene in new[] { EmptyScene, SceneWithBlock })
+        {
+            pipeline.CaptureGreyAsync(Width, 180, Arg.Any<CancellationToken>()).Returns(reader.ReadGrayscale([scene], Width, 180));
+            await sut.AnalyzeOnceAsync(cameraId, TestContext.Current.CancellationToken);
+        }
+
+        var motion = events.Should().ContainSingle().Subject;
+        (motion.AnalysisWidth, motion.AnalysisHeight).Should().Be((Width, 180));
+        sut.GetAnalysisResolution(cameraId).Should().Be((Width, 180));
+    }
+
+    [Fact]
     public async Task Motion_Is_Over_Only_After_The_Scene_Has_Been_Quiet_For_The_Post_Motion_Time()
     {
         // Something that moves stops and starts; an end reported at every

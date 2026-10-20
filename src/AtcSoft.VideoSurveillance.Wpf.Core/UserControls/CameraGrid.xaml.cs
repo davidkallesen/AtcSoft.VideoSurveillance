@@ -158,6 +158,10 @@ public partial class CameraGrid
     [DependencyProperty(DefaultValue = true)]
     private bool motionIgnoreLightingChanges;
 
+    // The longer side of the analysed picture.
+    [DependencyProperty(DefaultValue = MotionAnalysisSize.DefaultLongerSide)]
+    private int motionAnalysisWidth;
+
     [DependencyProperty(DefaultValue = 2)]
     private int motionAnalysisFrameRate;
 

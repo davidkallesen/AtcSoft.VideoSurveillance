@@ -3088,11 +3088,14 @@ components:
           format: int32
           minimum: 1
           maximum: 8192
+          description: The longer side of the analysed picture, in pixels (its width for a camera lying down); the other side follows the camera's picture.
         analysisHeight:
           type: integer
           format: int32
           minimum: 1
           maximum: 8192
+          deprecated: true
+          description: Not used any more; the height follows the camera's picture. Kept so an older client is not refused.
         postMotionDurationSeconds:
           type: integer
           format: int32
@@ -3327,11 +3330,14 @@ components:
           format: int32
           minimum: 1
           maximum: 8192
+          description: The longer side of the analysed picture, in pixels (its width for a camera lying down); the other side follows the camera's picture.
         analysisHeight:
           type: integer
           format: int32
           minimum: 1
           maximum: 8192
+          deprecated: true
+          description: Not used any more; the height follows the camera's picture. Kept so an older client is not refused.
         postMotionDurationSeconds:
           type: integer
           format: int32

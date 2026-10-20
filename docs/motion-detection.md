@@ -26,7 +26,7 @@ graph LR
 
 | Step | What | Why |
 |---|---|---|
-| 1 | The picture is captured, made grey and scaled to the analysis size (`AnalysisWidth` × `AnalysisHeight`) | Fewer pixels, less work |
+| 1 | The picture is captured, made grey and scaled to the analysis size: the longer side `AnalysisWidth`, the other following the picture as displayed (`MotionAnalysisSize`), so a 16:9 camera is analysed at 800 × 450 and one turned upright at 450 × 800 | Fewer pixels, less work |
 | 2 | A 3×3 blur | Removes sensor noise and compression blocks |
 | 3 | A **background per pixel**: a running mean and variance. A pixel is foreground when it differs from the mean by more than a few standard deviations and by a minimum number of grey levels (both from *Sensitivity*) | A moving object differs from the background as a whole figure, not only at its edges, so a slow walker is found. A leaf that keeps moving raises its pixel's variance and stops counting |
 | 4 | The background learns: pixels that are background quickly (a few seconds), foreground pixels slowly (a minute) | A parked car becomes background after a while; a passing one does not |
@@ -67,20 +67,22 @@ The scheduler prevents CPU spikes when monitoring multiple cameras:
 | `Sensitivity` | int | `30` | 0-100 | Detection threshold. Higher values detect more subtle motion. |
 | `MinimumChangePercent` | double | `0.5` | 0.0-100.0 | No longer decides motion (a confirmed track does). Kept so older settings still read. |
 | `AnalysisFrameRate` | int | `15` | 1-30 | Target FPS for analysis (internally clamped to 2-15; the server analyses at most 4 a second). |
-| `AnalysisWidth` | int | `800` | - | Width of downscaled analysis frame. |
-| `AnalysisHeight` | int | `600` | - | Height of downscaled analysis frame. |
+| `AnalysisWidth` | int | `800` | - | The longer side of the analysed picture (its width for a camera lying down); the other side follows the camera's picture. |
+| `AnalysisHeight` | int | `600` | - | Not used any more: the height follows the picture. Kept so older settings still read; deprecated in the API. |
 | `PostMotionDurationSeconds` | int | `10` | 1-300 | Seconds to continue reporting motion after it stops. |
 | `CooldownSeconds` | int | `5` | 0-60 | Minimum seconds between motion-triggered recordings. |
 
 ### Analysis Resolution Presets
 
-| Preset | Resolution | CPU Impact | Use Case |
+The size is the longer side; a 4:3 camera gets the height in brackets, a 16:9 camera less.
+
+| Preset | Longer side | CPU Impact | Use Case |
 |--------|-----------|------------|----------|
-| Low | 320x240 | Minimal | Many cameras, basic detection |
-| Balanced | 480x360 | Low | General purpose |
-| Standard | 640x480 | Moderate | Good detection accuracy |
-| High | 800x600 | High | High accuracy (default) |
-| Very High | 960x720 | Very High | Maximum accuracy |
+| Low | 320 (× 240) | Minimal | Many cameras, basic detection |
+| Balanced | 480 (× 360) | Low | General purpose |
+| Standard | 640 (× 480) | Moderate | Good detection accuracy |
+| High | 800 (× 600) | High | High accuracy (default) |
+| Very High | 960 (× 720) | Very High | Maximum accuracy |
 
 ### Bounding Box Settings
 
@@ -310,17 +312,17 @@ displayH = (box.Height / analysisHeight) * displayHeight
 | Strategy | Setting | Impact |
 |----------|---------|--------|
 | Lower frame rate | `AnalysisFrameRate: 2-4` | Major reduction, slight delay in detection |
-| Lower resolution | `AnalysisWidth/Height: 320x240` | Major reduction, may miss small motion |
+| Lower resolution | `AnalysisWidth: 320` | Major reduction, may miss small motion |
 | Increase sensitivity threshold | `Sensitivity: 10-20` | Fewer false positives, less processing |
 
 ### Memory Usage Per Camera
 
-| Resolution | Buffer Size | Suitable For |
+| Longer side (4:3 camera) | Buffer Size | Suitable For |
 |-----------|-------------|--------------|
-| 320x240 | ~76 KB | Many cameras (16+) |
-| 480x360 | ~170 KB | Medium deployments (8-16) |
-| 640x480 | ~300 KB | Standard deployments (4-8) |
-| 800x600 | ~480 KB | Few cameras (1-4) |
+| 320 | ~76 KB | Many cameras (16+) |
+| 480 | ~170 KB | Medium deployments (8-16) |
+| 640 | ~300 KB | Standard deployments (4-8) |
+| 800 | ~480 KB | Few cameras (1-4) |
 
 ### Recommended Configurations
 
@@ -329,9 +331,8 @@ displayH = (box.Height / analysisHeight) * displayHeight
 {
   "analysisFrameRate": 2,
   "analysisWidth": 320,
-  "analysisHeight": 240,
   "sensitivity": 20,
-  "minimumChangePercent": 1.0
+  "smallestObjectPercent": 0.1
 }
 ```
 
@@ -340,9 +341,8 @@ displayH = (box.Height / analysisHeight) * displayHeight
 {
   "analysisFrameRate": 5,
   "analysisWidth": 640,
-  "analysisHeight": 480,
   "sensitivity": 30,
-  "minimumChangePercent": 0.5
+  "smallestObjectPercent": 0.02
 }
 ```
 
@@ -351,9 +351,8 @@ displayH = (box.Height / analysisHeight) * displayHeight
 {
   "analysisFrameRate": 10,
   "analysisWidth": 800,
-  "analysisHeight": 600,
   "sensitivity": 50,
-  "minimumChangePercent": 0.3
+  "smallestObjectPercent": 0.01
 }
 ```
 
@@ -384,7 +383,7 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Symptom**: CPU usage spikes with motion detection enabled.
 - **Solutions**:
   - Reduce `AnalysisFrameRate` to 2-4 fps
-  - Reduce analysis resolution to 320x240 or 480x360
+  - Reduce the analysis size to 320 or 480
   - Use per-camera overrides to lower settings on less important cameras
 
 ### Recording Gaps

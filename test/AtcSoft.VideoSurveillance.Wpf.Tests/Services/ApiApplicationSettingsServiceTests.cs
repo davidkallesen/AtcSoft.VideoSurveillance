@@ -93,7 +93,7 @@ public class ApiApplicationSettingsServiceTests
 
     /// <summary>
     /// What the server answers to the update: the same settings, as it writes them, with what the
-    /// client leaves out (the old detector's settings) kept at the server's values.
+    /// client leaves out (the old detector's settings, the analysis height) kept at the server's values.
     /// </summary>
     private static AppSettings AsServerAnswer(UpdateSettingsRequest update)
     {
@@ -101,6 +101,7 @@ public class ApiApplicationSettingsServiceTests
         var kept = new AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings();
         answer["MinimumChangePercent"] ??= kept.MinimumChangePercent;
         answer["BoundingBoxMinArea"] ??= kept.BoundingBox.MinArea;
+        answer["AnalysisHeight"] ??= kept.AnalysisHeight;
         return answer.Deserialize<AppSettings>()!;
     }
 }

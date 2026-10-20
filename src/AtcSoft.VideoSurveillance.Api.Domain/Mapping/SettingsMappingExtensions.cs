@@ -305,11 +305,13 @@ internal static class SettingsMappingExtensions
             motionDetection.AnalysisWidth = analysisWidth;
         }
 
+        // Deprecated in the spec (the height follows the picture) but still stored for older clients.
+#pragma warning disable CS0618
         if (api.AnalysisHeight is { } analysisHeight)
         {
             motionDetection.AnalysisHeight = analysisHeight;
         }
-
+#pragma warning restore CS0618
         if (api.PostMotionDurationSeconds is { } postMotionDurationSeconds)
         {
             motionDetection.PostMotionDurationSeconds = postMotionDurationSeconds;

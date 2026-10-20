@@ -28,7 +28,6 @@ public sealed class SettingsStateTests
         sut.IgnoreLightingChanges.Should().Be(motion.IgnoreLightingChanges);
         sut.AnalysisFrameRate.Should().Be(motion.AnalysisFrameRate);
         sut.AnalysisWidth.Should().Be(motion.AnalysisWidth);
-        sut.AnalysisHeight.Should().Be(motion.AnalysisHeight);
         sut.PostMotionDurationSeconds.Should().Be(motion.PostMotionDurationSeconds);
         sut.CooldownSeconds.Should().Be(motion.CooldownSeconds);
         sut.BoundingBoxShowInFullScreen.Should().Be(motion.BoundingBox.ShowInFullScreen);
@@ -65,6 +64,7 @@ public sealed class SettingsStateTests
             options => options
                 .Excluding(settings => settings.Language)
                 .Excluding(settings => settings.MinimumChangePercent)
+                .Excluding(settings => settings.AnalysisHeight)
                 .Excluding(settings => settings.BoundingBoxMinArea));
 #pragma warning restore CS0618
     }
@@ -129,31 +129,15 @@ public sealed class SettingsStateTests
     }
 
     [Fact]
-    public void The_Analysis_Resolution_Is_Width_And_Height_As_One_Choice()
-    {
-        var sut = new SettingsState();
-        sut.LoadFrom(CreateSettings());
-        sut.AnalysisResolution.Should().Be("640x480");
-
-        sut.AnalysisResolution = "320x240";
-
-        sut.AnalysisWidth.Should().Be(320);
-        sut.AnalysisHeight.Should().Be(240);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("wide")]
-    [InlineData("0x0")]
-    public void A_Resolution_That_Makes_No_Sense_Changes_Nothing(
-        string resolution)
+    public void The_Analysis_Size_Is_The_Longer_Side_And_The_Height_Is_Left_To_The_Server()
     {
         var sut = new SettingsState();
         sut.LoadFrom(CreateSettings());
 
-        sut.AnalysisResolution = resolution;
-
-        sut.AnalysisResolution.Should().Be("640x480");
+        sut.AnalysisWidth.Should().Be(640);
+#pragma warning disable CS0618 // deprecated in the spec: the height follows the picture
+        sut.ToApiModel().AnalysisHeight.Should().BeNull();
+#pragma warning restore CS0618
     }
 
     [Fact]

@@ -1099,7 +1099,7 @@
     <value>Anzahl der pro Sekunde auf Bewegung analysierten Bilder. Höhere Werte erkennen Bewegung schneller, verbrauchen aber mehr CPU. Werte zwischen 5 und 15 werden empfohlen.</value>
   </data>
   <data name="AnalysisResolutionInfo" xml:space="preserve">
-    <value>Auflösung für die Bewegungsanalyse. Niedrigere Auflösungen sind schneller und verbrauchen weniger CPU, während höhere Auflösungen kleinere Objekte genauer erkennen.</value>
+    <value>Die längere Seite des Bildes für die Bewegungsanalyse, in Pixeln; die andere Seite folgt dem Bild der Kamera. Kleiner ist schneller und verbraucht weniger CPU, größer erkennt kleinere Objekte genauer.</value>
   </data>
   <data name="CooldownSecondsInfo" xml:space="preserve">
     <value>Mindestwartezeit in Sekunden nach dem Stopp einer Aufnahme, bevor eine neue bewegungsausgelöste Aufnahme starten kann. Verhindert schnelle Ein/Aus-Aufnahmezyklen.</value>

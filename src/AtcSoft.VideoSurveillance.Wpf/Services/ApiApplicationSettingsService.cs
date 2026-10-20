@@ -360,7 +360,6 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             IgnoreLightingChanges = api.IgnoreLightingChanges,
             AnalysisFrameRate = api.AnalysisFrameRate,
             AnalysisWidth = api.AnalysisWidth,
-            AnalysisHeight = api.AnalysisHeight,
             PostMotionDurationSeconds = api.PostMotionDurationSeconds,
             CooldownSeconds = api.CooldownSeconds,
             BoundingBox = new BoundingBoxSettings
@@ -471,7 +470,6 @@ public sealed partial class ApiApplicationSettingsService : IApplicationSettings
             IgnoreLightingChanges: settings.MotionDetection.IgnoreLightingChanges,
             AnalysisFrameRate: settings.MotionDetection.AnalysisFrameRate,
             AnalysisWidth: settings.MotionDetection.AnalysisWidth,
-            AnalysisHeight: settings.MotionDetection.AnalysisHeight,
             PostMotionDurationSeconds: settings.MotionDetection.PostMotionDurationSeconds,
             CooldownSeconds: settings.MotionDetection.CooldownSeconds,
             BoundingBoxShowInGrid: settings.MotionDetection.BoundingBox.ShowInGrid,

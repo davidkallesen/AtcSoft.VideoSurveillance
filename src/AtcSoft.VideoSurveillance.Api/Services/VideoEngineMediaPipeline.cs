@@ -11,6 +11,7 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
     private readonly string source;
     private ConnectionState currentState = ConnectionState.Disconnected;
     private bool disposed;
+    private CameraRotation rotation;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VideoEngineMediaPipeline"/> class.
@@ -134,8 +135,17 @@ public sealed class VideoEngineMediaPipeline : IMediaPipeline
         => (await player.CaptureGreyAsync(width, height, ct).ConfigureAwait(false))?.Pixels;
 
     /// <inheritdoc />
+    public (int Width, int Height) DisplaySize
+        => player.StreamInfo is { Width: > 0, Height: > 0 } stream
+            ? MotionBoxMapper.GetDisplaySize(stream.Width, stream.Height, rotation)
+            : (0, 0);
+
+    /// <inheritdoc />
     public void SetRotation(CameraRotation rotation)
-        => player.SetRotation(MapRotation(rotation));
+    {
+        this.rotation = rotation;
+        player.SetRotation(MapRotation(rotation));
+    }
 
     private static VideoRotation MapRotation(CameraRotation rotation)
         => rotation switch

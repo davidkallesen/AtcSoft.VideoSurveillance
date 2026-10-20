@@ -180,6 +180,9 @@
                         <local:CameraTile.MotionIgnoreLightingChanges>
                             <Binding Path="MotionIgnoreLightingChanges" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                         </local:CameraTile.MotionIgnoreLightingChanges>
+                        <local:CameraTile.MotionAnalysisWidth>
+                            <Binding Path="MotionAnalysisWidth" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
+                        </local:CameraTile.MotionAnalysisWidth>
                         <local:CameraTile.MotionAnalysisFrameRate>
                             <Binding Path="MotionAnalysisFrameRate" RelativeSource="{RelativeSource AncestorType=local:CameraGrid}" />
                         </local:CameraTile.MotionAnalysisFrameRate>
