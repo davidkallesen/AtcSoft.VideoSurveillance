@@ -5,11 +5,17 @@ using ApiCameraProtocol = VideoSurveillance.Generated.Cameras.Models.CameraProto
 using ApiCameraRotation = VideoSurveillance.Generated.Cameras.Models.CameraRotation;
 using ApiCameraSource = VideoSurveillance.Generated.Cameras.Models.CameraSource;
 using ApiCameraStreamRtspTransport = VideoSurveillance.Generated.Cameras.Models.CameraStreamRtspTransport;
+using ApiMotionZone = VideoSurveillance.Generated.Cameras.Models.MotionZone;
+using ApiMotionZoneKind = VideoSurveillance.Generated.Cameras.Models.MotionZoneKind;
+using ApiZonePoint = VideoSurveillance.Generated.Cameras.Models.ZonePoint;
 
 using CoreCameraConnectionType = AtcSoft.VideoSurveillance.Enums.CameraConnectionType;
 using CoreCameraProtocol = AtcSoft.VideoSurveillance.Enums.CameraProtocol;
 using CoreCameraRotation = AtcSoft.VideoSurveillance.Enums.CameraRotation;
+using CoreMotionZone = AtcSoft.VideoSurveillance.Models.MotionZone;
+using CoreMotionZoneKind = AtcSoft.VideoSurveillance.Enums.MotionZoneKind;
 using CoreOverlayPosition = AtcSoft.VideoSurveillance.Enums.OverlayPosition;
+using CoreZonePoint = AtcSoft.VideoSurveillance.Models.ZonePoint;
 
 using WpfCoreModels = AtcSoft.VideoSurveillance.Wpf.Core.Models;
 
@@ -45,6 +51,7 @@ public static class CameraModelMappingExtensions
         config.Display.Description = camera.Description ?? string.Empty;
         config.Display.OverlayPosition = camera.OverlayPosition.ToCoreOverlayPosition();
         config.Display.Rotation = camera.Rotation.ToCoreRotation();
+        config.MotionZones = [.. (camera.MotionZones ?? []).Select(ToCoreZone)];
 
         config.Stream.UseLowLatencyMode = camera.StreamUseLowLatencyMode;
         config.Stream.MaxLatencyMs = camera.StreamMaxLatencyMs;
@@ -158,6 +165,37 @@ public static class CameraModelMappingExtensions
             ApiCameraRotation.Names.Rotate270 => CoreCameraRotation.Rotate270,
             _ => CoreCameraRotation.None,
         };
+
+    /// <summary>
+    /// Converts an API motion zone to a Core one, for the zone editor. A kind the client does not
+    /// know yet is read as ignore, the only kind the detector uses now.
+    /// </summary>
+    public static CoreMotionZone ToCoreZone(this ApiMotionZone zone)
+    {
+        ArgumentNullException.ThrowIfNull(zone);
+
+        return new CoreMotionZone
+        {
+            Name = zone.Name,
+            Kind = zone.Kind.Value == ApiMotionZoneKind.Names.Watch ? CoreMotionZoneKind.Watch : CoreMotionZoneKind.Ignore,
+            Points = [.. (zone.Points ?? []).Select(p => new CoreZonePoint(p.X, p.Y))],
+            Color = zone.Color,
+        };
+    }
+
+    /// <summary>
+    /// Converts a Core motion zone to an API one, to send.
+    /// </summary>
+    public static ApiMotionZone ToApiZone(this CoreMotionZone zone)
+    {
+        ArgumentNullException.ThrowIfNull(zone);
+
+        return new ApiMotionZone(
+            Name: zone.Name,
+            Kind: zone.Kind == CoreMotionZoneKind.Watch ? ApiMotionZoneKind.Watch : ApiMotionZoneKind.Ignore,
+            Points: [.. zone.Points.Select(p => new ApiZonePoint(p.X, p.Y))],
+            Color: string.IsNullOrEmpty(zone.Color) ? null : zone.Color);
+    }
 
     /// <summary>
     /// Converts a Core <see cref="CoreCameraRotation"/> to an API <see cref="ApiCameraRotation"/>.

@@ -18,6 +18,7 @@ global using System.Windows.Controls;
 global using System.Windows.Input;
 global using System.Windows.Interop;
 global using System.Windows.Media;
+global using System.Windows.Media.Imaging;
 global using System.Windows.Threading;
 
 global using Atc;
@@ -85,6 +86,7 @@ global using VideoSurveillance.Generated.Users.Models;
 
 global using ActivityEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
 global using GapReason = AtcSoft.VideoSurveillance.Enums.GapReason;
+global using MotionZoneDraft = AtcSoft.VideoSurveillance.Helpers.MotionDetection.MotionZoneDraft;
 global using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
 global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
 global using TimelineMarks = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks;

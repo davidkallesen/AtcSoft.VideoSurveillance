@@ -37,7 +37,7 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     [ObservableProperty(DependentPropertyNames = [nameof(SelectedConnectionTypeKey)])]
     private CameraConnectionType selectedConnectionType = CameraConnectionType.None;
 
-    [ObservableProperty(DependentPropertyNames = [nameof(SelectedRotationKey)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(SelectedRotationKey)], AfterChangedCallback = nameof(OnSelectedRotationChanged))]
     private CameraRotation selectedRotation = CameraRotation.None;
 
     [ObservableProperty(DependentPropertyNames = [nameof(SelectedOverlayPositionKey)])]
@@ -172,18 +172,27 @@ public partial class CameraEditDialogViewModel : ViewModelBase
     public CameraEditDialogViewModel()
     {
         IsEdit = false;
+        zoneDraft = new MotionZoneDraft([], AtcSoft.VideoSurveillance.Enums.CameraRotation.None);
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CameraEditDialogViewModel"/> class for editing an existing camera.
     /// </summary>
+    /// <param name="camera">The camera.</param>
+    /// <param name="detectConnectionType">Asks the server for the camera's connection type.</param>
+    /// <param name="takeSnapshot">Asks the server for a snapshot to draw the motion zones on.</param>
     public CameraEditDialogViewModel(
         Camera camera,
-        Func<Guid, Task<CameraConnectionType?>>? detectConnectionType = null)
+        Func<Guid, Task<CameraConnectionType?>>? detectConnectionType = null,
+        Func<Guid, CancellationToken, Task<byte[]?>>? takeSnapshot = null)
     {
         ArgumentNullException.ThrowIfNull(camera);
 
         this.detectConnectionType = detectConnectionType;
+        this.takeSnapshot = takeSnapshot;
+        storedRotation = camera.Rotation.ToCoreRotation();
+        zoneDraft = new MotionZoneDraft((camera.MotionZones ?? []).Select(z => z.ToCoreZone()), storedRotation);
+        zonePictureStatus = takeSnapshot is null ? null : Translations.MotionZonesNoPicture;
 
         IsEdit = true;
         cameraId = camera.Id;
@@ -223,7 +232,8 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             StreamMaxLatencyMs: StreamMaxLatencyMs,
             StreamRtspTransport: SelectedRtspTransport,
             StreamBufferDurationMs: StreamBufferDurationMs,
-            Port: Port);
+            Port: Port,
+            MotionZones: ZonesToSend);
 
     /// <summary>
     /// Builds an <see cref="UpdateCameraRequest"/> from the form fields.
@@ -249,7 +259,8 @@ public partial class CameraEditDialogViewModel : ViewModelBase
             StreamUseLowLatencyMode: StreamUseLowLatencyMode,
             StreamMaxLatencyMs: StreamMaxLatencyMs,
             StreamRtspTransport: SelectedRtspTransport,
-            StreamBufferDurationMs: StreamBufferDurationMs);
+            StreamBufferDurationMs: StreamBufferDurationMs,
+            MotionZones: ZonesToSend);
 
     /// <summary>
     /// Gets the camera ID for update operations.

@@ -71,6 +71,8 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
             steps.Run($"Edit camera {index + 1}", () => app.WalkAndClose(app.OpenWindow(() => DesktopApp.Press(RowButtons(app, main, "Edit", index)), "Edit")));
         }
 
+        steps.Run("draw a motion zone on a snapshot", () => DrawZoneOnSnapshot(app, main));
+
         // Layouts: add, and edit each layout
         steps.Run("Layouts view", () => ShowView(app, main, "Layouts"));
         steps.Run("Add Layout", () => Walk(app, main, "Add Layout"));
@@ -127,6 +129,24 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
         }
 
         app.CloseWindow(player);
+    }
+
+    // The client asks the server for a snapshot and shows the answer: the picture, or that there
+    // is none. The live test camera serves one client, which the live view's stream holds, so the
+    // server usually cannot take one here; a camera that allows a second session gives one. A zone
+    // added is picked either way. The dialog is closed without saving.
+    private static void DrawZoneOnSnapshot(
+        DesktopApp app,
+        Window main)
+    {
+        var dialog = app.OpenWindow(() => DesktopApp.Press(RowButtons(app, main, "Edit", 0)), "Edit");
+        DesktopApp.Press(app.Find(dialog, "Take Snapshot", ControlType.Button));
+        app.WaitUntilGone(dialog, "No picture yet: take a snapshot to draw on the camera's picture.", ControlType.Text, TimeSpan.FromSeconds(45))
+            .Should().BeTrue("the snapshot either comes or is reported missing");
+
+        DesktopApp.Press(app.Find(dialog, "Add zone", ControlType.Button));
+        app.Find(dialog, "Remove zone", ControlType.Button).IsEnabled.Should().BeTrue("the new zone is picked");
+        app.CloseWindow(dialog);
     }
 
     private static void Walk(

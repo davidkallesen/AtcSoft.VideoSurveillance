@@ -42,18 +42,6 @@ public partial class CameraConfigurationDialogViewModel
     private static void OnIsTakingZonePictureChanged()
         => CommandManager.InvalidateRequerySuggested();
 
-    private static BitmapSource Decode(byte[] png)
-    {
-        using var stream = new MemoryStream(png);
-        var image = new BitmapImage();
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad;
-        image.StreamSource = stream;
-        image.EndInit();
-        image.Freeze();
-        return image;
-    }
-
     private void TurnZones(CameraRotation rotation)
     {
         zoneDraft.Turn(rotation);
@@ -69,24 +57,9 @@ public partial class CameraConfigurationDialogViewModel
     }
 
     private void ShowZonePicture()
-    {
-        if (zoneSnapshot is null)
-        {
-            ZonePicture = null;
-            return;
-        }
-
-        var quarters = MotionZoneGeometry.QuarterTurns(zoneSnapshotRotation, Camera.Display.Rotation);
-        if (quarters == 0)
-        {
-            ZonePicture = zoneSnapshot;
-            return;
-        }
-
-        var turned = new TransformedBitmap(zoneSnapshot, new RotateTransform(quarters * 90));
-        turned.Freeze();
-        ZonePicture = turned;
-    }
+        => ZonePicture = zoneSnapshot is null
+            ? null
+            : MotionZonePicture.Show(zoneSnapshot, zoneSnapshotRotation, Camera.Display.Rotation);
 
     [RelayCommand("TakeZonePicture", CanExecute = nameof(CanTakeZonePicture))]
     private async Task TakeZonePictureAsync()
@@ -102,7 +75,7 @@ public partial class CameraConfigurationDialogViewModel
                 return;
             }
 
-            zoneSnapshot = Decode(png);
+            zoneSnapshot = MotionZonePicture.Decode(png);
             zoneSnapshotRotation = rotation;
             ZonePictureStatus = null;
             ShowZonePicture();

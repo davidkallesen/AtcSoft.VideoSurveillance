@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:userControls="clr-namespace:AtcSoft.VideoSurveillance.Wpf.Core.UserControls;assembly=AtcSoft.VideoSurveillance.Wpf.Core"
     Title="{Binding DialogTitle}"
     Width="960"
     SizeToContent="Height"
@@ -17,6 +18,7 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -131,9 +133,27 @@
             </GroupBox>
         </StackPanel>
 
+        <!--  Motion zones, drawn on a snapshot from the server  -->
+        <GroupBox
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8,0,0"
+            Header="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=MotionZones}">
+            <atc:BusyOverlay IsBusy="{Binding IsTakingZonePicture}">
+                <userControls:MotionZoneEditor
+                    Height="400"
+                    Margin="8"
+                    Picture="{Binding ZonePicture}"
+                    Status="{Binding ZonePictureStatus}"
+                    TakePictureCommand="{Binding TakeZonePictureCommand}"
+                    Zones="{Binding MotionZones, Mode=TwoWay}" />
+            </atc:BusyOverlay>
+        </GroupBox>
+
         <!--  Buttons  -->
         <StackPanel
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="3"
             Margin="0,16,0,0"
