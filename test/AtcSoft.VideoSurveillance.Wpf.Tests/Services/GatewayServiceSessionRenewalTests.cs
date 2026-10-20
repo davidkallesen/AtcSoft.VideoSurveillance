@@ -13,10 +13,10 @@ public sealed class GatewayServiceSessionRenewalTests
         using var body = new StringContent("""{"title":"Bad Request","status":400,"detail":"The session has ended; sign in again."}""");
         using var server = new GatewayTestServer(HttpStatusCode.BadRequest, body, "application/problem+json");
 
-        var (session, refused) = await server.Gateway.RefreshSessionAsync("old-token", TestContext.Current.CancellationToken);
+        var (session, outcome) = await server.Gateway.RefreshSessionAsync("old-token", TestContext.Current.CancellationToken);
 
         session.Should().BeNull();
-        refused.Should().BeTrue();
+        outcome.Should().Be(SessionRenewalOutcome.Refused);
     }
 
     [Theory]
@@ -29,9 +29,20 @@ public sealed class GatewayServiceSessionRenewalTests
         using var body = new StringContent($$"""{"title":"Busy","status":{{(int)status}}}""");
         using var server = new GatewayTestServer(status, body, "application/problem+json");
 
-        var (session, refused) = await server.Gateway.RefreshSessionAsync("token", TestContext.Current.CancellationToken);
+        var (session, outcome) = await server.Gateway.RefreshSessionAsync("token", TestContext.Current.CancellationToken);
 
         session.Should().BeNull();
-        refused.Should().BeFalse();
+        outcome.Should().Be(SessionRenewalOutcome.Unavailable);
+    }
+
+    [Fact]
+    public async Task No_Server_Is_Not_A_Refusal()
+    {
+        using var server = new GatewayTestServer(_ => throw new HttpRequestException("No such host."));
+
+        var (session, outcome) = await server.Gateway.RefreshSessionAsync("token", TestContext.Current.CancellationToken);
+
+        session.Should().BeNull();
+        outcome.Should().Be(SessionRenewalOutcome.Unavailable);
     }
 }

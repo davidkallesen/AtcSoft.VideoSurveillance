@@ -53,4 +53,18 @@ public sealed class SessionStoreTests : IDisposable
 
         sut.Load(new Uri("http://server-a:5000")).Should().BeNull();
     }
+
+    [Fact]
+    public void A_Refused_Token_Is_Forgotten_Only_While_It_Is_Still_Kept()
+    {
+        var sut = new SessionStore(folder);
+        var server = new Uri("http://server-a:5000");
+        sut.Save(server, "newer", "admin");
+
+        sut.ClearIf(server, "older");
+        sut.Load(server)!.Value.RefreshToken.Should().Be("newer", "another instance kept a newer session");
+
+        sut.ClearIf(server, "newer");
+        sut.Load(server).Should().BeNull();
+    }
 }

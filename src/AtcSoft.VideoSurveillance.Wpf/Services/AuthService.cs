@@ -104,26 +104,38 @@ public sealed class AuthService
         store.Save(server, signedIn.RefreshToken, signedIn.UserName);
     }
 
-    private async Task<bool> RenewAsync(CancellationToken cancellationToken)
+    // Another instance of the client may have renewed the session already, so the kept
+    // refresh token is the one sent. A refused one is forgotten only while it is still kept.
+    private async Task<SessionRenewalOutcome> RenewAsync(
+        CancellationToken cancellationToken)
     {
         if (session.RefreshToken is not { } refreshToken)
         {
-            return false;
+            return SessionRenewalOutcome.Refused;
         }
 
-        var (renewed, refused) = await gateway.RefreshSessionAsync(refreshToken, cancellationToken).ConfigureAwait(false);
-        if (renewed is null)
+        var token = store.Load(server)?.RefreshToken ?? refreshToken;
+        var (renewed, outcome) = await gateway.RefreshSessionAsync(token, cancellationToken).ConfigureAwait(false);
+        if (outcome == SessionRenewalOutcome.Refused &&
+            store.Load(server)?.RefreshToken is { } kept &&
+            !string.Equals(kept, token, StringComparison.Ordinal))
         {
-            // Only a refused refresh token ends the stored session; a busy or absent server keeps it.
-            if (refused)
-            {
-                store.Clear(server);
-            }
-
-            return false;
+            // Renewed by another instance while this call was on its way: one more try with its token.
+            token = kept;
+            (renewed, outcome) = await gateway.RefreshSessionAsync(token, cancellationToken).ConfigureAwait(false);
         }
 
-        Take(renewed);
-        return true;
+        if (renewed is not null)
+        {
+            Take(renewed);
+            return SessionRenewalOutcome.Renewed;
+        }
+
+        if (outcome == SessionRenewalOutcome.Refused)
+        {
+            store.ClearIf(server, token);
+        }
+
+        return outcome;
     }
 }

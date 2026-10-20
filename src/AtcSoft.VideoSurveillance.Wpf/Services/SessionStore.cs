@@ -81,6 +81,21 @@ public sealed class SessionStore
         }
     }
 
+    /// <summary>
+    /// Forgets the kept session for a server only while it is still the one with
+    /// <paramref name="refreshToken"/>: a newer one another instance kept stays.
+    /// </summary>
+    public void ClearIf(
+        Uri server,
+        string refreshToken)
+    {
+        if (Load(server) is { } kept &&
+            string.Equals(kept.RefreshToken, refreshToken, StringComparison.Ordinal))
+        {
+            Clear(server);
+        }
+    }
+
     // One file per server; the address in any casing and with or without a
     // trailing slash is the same server.
     private string PathFor(Uri server)

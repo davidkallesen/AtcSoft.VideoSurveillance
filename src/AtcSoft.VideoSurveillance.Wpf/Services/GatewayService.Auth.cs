@@ -61,11 +61,11 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
-    /// Renews a session. <c>Refused</c> is <see langword="true"/> only when the server does not
-    /// know the refresh token (sign in again); a busy or failing server, or none, leaves the
-    /// stored session for the next try.
+    /// Renews a session. The outcome is <see cref="SessionRenewalOutcome.Refused"/> only when
+    /// the server does not know the refresh token (sign in again); a busy or failing server,
+    /// or none, is <see cref="SessionRenewalOutcome.Unavailable"/> and keeps the session.
     /// </summary>
-    public async Task<(Session? Session, bool Refused)> RefreshSessionAsync(
+    public async Task<(Session? Session, SessionRenewalOutcome Outcome)> RefreshSessionAsync(
         string refreshToken,
         CancellationToken cancellationToken = default)
     {
@@ -76,13 +76,20 @@ public sealed partial class GatewayService
                 .ExecuteAsync(parameters, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
-            return result.IsOk
-                ? (result.OkContent, false)
-                : (null, result.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Unauthorized);
+            if (result.IsOk)
+            {
+                return (result.OkContent, SessionRenewalOutcome.Renewed);
+            }
+
+            return result.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Unauthorized
+                ? (null, SessionRenewalOutcome.Refused)
+                : (null, SessionRenewalOutcome.Unavailable);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or TimeoutException or Polly.ExecutionRejectedException ||
+                                   (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
         {
-            return (null, false);
+            // No server, or the resilience pipeline gave up on it (a timeout, an open circuit).
+            return (null, SessionRenewalOutcome.Unavailable);
         }
     }
 
