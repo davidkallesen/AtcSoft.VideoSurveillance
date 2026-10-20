@@ -2774,6 +2774,13 @@ components:
         isAnalysed:
           type: boolean
           description: Whether any second of the stretch was analysed. A stretch that was not is unknown, not quiet.
+        zones:
+          type: array
+          maxItems: 16
+          description: The names of the camera's watch zones a moving thing was in during the stretch, in the order first seen; left out when none. A client draws an event in its zone's colour.
+          items:
+            type: string
+            maxLength: 64
 
     AppSettings:
       title: AppSettings

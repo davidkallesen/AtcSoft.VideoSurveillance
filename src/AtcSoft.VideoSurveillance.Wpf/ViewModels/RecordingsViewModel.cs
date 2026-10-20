@@ -260,7 +260,7 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             .ConfigureAwait(false);
 
         return activity is { HasIndex: true }
-            ? [.. activity.Buckets.Select(b => new AtcSoft.VideoSurveillance.Models.ActivityBucket(b.Level, b.Tracks, b.IsAnalysed))]
+            ? [.. activity.Buckets.Select(b => new AtcSoft.VideoSurveillance.Models.ActivityBucket(b.Level, b.Tracks, b.IsAnalysed) { Zones = b.Zones ?? [] })]
             : null;
     }
 

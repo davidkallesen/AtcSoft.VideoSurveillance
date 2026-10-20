@@ -50,6 +50,18 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void The_Copy_Names_An_Events_Zone_Like_The_Desktop_Apps()
+    {
+        string[][] zones = [["Path"], ["Gate", "Path"], ["Gate"], ["Gate"], [], ["Path"], ["Gate"], [], [], []];
+        int[] tracks = [1, 1, 1, 1, 0, 1, 1, 0, 1, 0];
+
+        var web = ActivityTimelineLayout.FindEvents([.. tracks.Select((t, i) => Bucket(t, t) with { Zones = zones[i].Length > 0 ? [.. zones[i]] : null })]);
+        var core = CoreLayout.FindEvents([.. tracks.Select((t, i) => new CoreBucket(t, t, IsAnalysed: true) { Zones = zones[i] })]);
+
+        web.Select(e => e.Zone).Should().Equal(core.Select(e => e.Zone)).And.Equal("Gate", "Path", null);
+    }
+
+    [Fact]
     public void Bars_Rise_From_Above_The_Band_And_Stretches_Not_Analysed_Are_Marked()
     {
         RecordingActivityBucket[] buckets = [Bucket(25, 0), Bucket(0, 0), Bucket(100, 1), new(Level: 0, Tracks: 0, IsAnalysed: false)];

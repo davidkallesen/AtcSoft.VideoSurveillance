@@ -45,7 +45,7 @@ public sealed class GetRecordingActivityHandler(
             HasIndex: true,
             IsBeingAnalysed: false,
             DurationSeconds: duration,
-            Buckets: [.. buckets.Select(b => new RecordingActivityBucket(Level: b.Level, Tracks: b.Tracks, IsAnalysed: b.IsAnalysed))],
+            Buckets: [.. buckets.Select(b => new RecordingActivityBucket(Level: b.Level, Tracks: b.Tracks, IsAnalysed: b.IsAnalysed, Zones: b.Zones.Count > 0 ? [.. b.Zones] : null))],
             StartedAt: log.Start)));
     }
 }

@@ -53,6 +53,21 @@ public sealed class GetRecordingActivityHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_Stretch_Names_The_Watch_Zones_Something_Moved_In_And_Leaves_Them_Out_Otherwise()
+    {
+        using (var writer = ActivityLogWriter.Create(RecordingPathHelper.BuildActivityPath(video), Start))
+        {
+            writer.Add(Start, Moving(30, trackId: 4, zone: "Gate"));
+            writer.Add(Start.AddSeconds(1), Moving(30, trackId: 4));
+        }
+
+        var activity = await OkAsync("Garden/Garden_20261019_101500_000.mp4", buckets: 2, durationSeconds: 2);
+
+        activity.Buckets[0].Zones.Should().Equal("Gate");
+        activity.Buckets[1].Zones.Should().BeNull("no zone is left out, not an empty list");
+    }
+
+    [Fact]
     public async Task Without_A_Length_The_Buckets_Cover_The_Index_As_Far_As_It_Reaches()
     {
         using (var writer = ActivityLogWriter.Create(RecordingPathHelper.BuildActivityPath(video), Start))
@@ -117,8 +132,9 @@ public sealed class GetRecordingActivityHandlerTests : IDisposable
 
     private static MotionDetectorResult Moving(
         double level,
-        int trackId)
-        => new(true, MotionHoldChange.Continues, level, [new BoundingBox { X = 1, Y = 1, Width = 5, Height = 5, TrackId = trackId }]);
+        int trackId,
+        string? zone = null)
+        => new(true, MotionHoldChange.Continues, level, [new BoundingBox { X = 1, Y = 1, Width = 5, Height = 5, TrackId = trackId, Zone = zone }]);
 
     private async Task<RecordingActivity> OkAsync(
         string filePath,

@@ -42,12 +42,45 @@ public static class ActivityTimelineLayout
             }
             else if (!moving && start is { } first)
             {
-                events.Add(new ActivityTimelineEvent((double)first / count, (double)i / count));
+                events.Add(new ActivityTimelineEvent((double)first / count, (double)i / count, MainZone(buckets, first, i)));
                 start = null;
             }
         }
 
         return events;
+    }
+
+    /// <summary>
+    /// Gets the watch zone an event happened in: the one in most of its stretches, the one seen
+    /// first on a tie; <see langword="null"/> when none was.
+    /// </summary>
+    /// <param name="buckets">The stretches of the recording.</param>
+    /// <param name="from">The event's first stretch.</param>
+    /// <param name="to">The stretch after its last.</param>
+    public static string? MainZone(
+        IReadOnlyList<RecordingActivityBucket> buckets,
+        int from,
+        int to)
+    {
+        ArgumentNullException.ThrowIfNull(buckets);
+
+        string? main = null;
+        var mainCount = 0;
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var i = Math.Max(from, 0); i < Math.Min(to, buckets.Count); i++)
+        {
+            foreach (var zone in buckets[i].Zones ?? [])
+            {
+                var count = counts[zone] = counts.GetValueOrDefault(zone) + 1;
+                if (count > mainCount)
+                {
+                    main = zone;
+                    mainCount = count;
+                }
+            }
+        }
+
+        return main;
     }
 
     /// <summary>

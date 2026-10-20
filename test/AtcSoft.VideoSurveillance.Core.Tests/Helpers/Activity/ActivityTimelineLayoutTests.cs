@@ -32,7 +32,9 @@ public sealed class ActivityTimelineLayoutTests
     [Fact]
     public void An_Event_Is_In_The_Zone_Of_Most_Of_Its_Stretches_The_Earlier_On_A_Tie()
     {
-        ActivityBucket Moving(params string[] zones) => new(5, 1, IsAnalysed: true) { Zones = zones };
+        ActivityBucket Moving(
+            params string[] zones)
+            => new(5, 1, IsAnalysed: true) { Zones = zones };
         var quiet = new ActivityBucket(0, 0, IsAnalysed: true);
         IReadOnlyList<ActivityBucket> buckets =
         [
