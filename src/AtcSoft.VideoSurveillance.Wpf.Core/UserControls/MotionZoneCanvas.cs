@@ -173,6 +173,15 @@ public sealed partial class MotionZoneCanvas : FrameworkElement
                 Edit(SelectedZone, added);
                 return;
             }
+
+            // On the edge, just outside the zone, it stays picked: the first click of a double
+            // click there must not let it go.
+            if (MotionZoneEditing.FindEdge(corners, at.X, at.Y, area.Width, area.Height) is not null)
+            {
+                SetCurrentValue(SelectedCornerProperty, -1);
+                StartDrag(corners, at, corner: -1);
+                return;
+            }
         }
 
         var hit = MotionZoneEditing.FindZone([.. shown.Select(z => (IReadOnlyList<ZonePoint>)z.Points)], at.X, at.Y);

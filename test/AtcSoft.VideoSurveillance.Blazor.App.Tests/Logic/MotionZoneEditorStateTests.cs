@@ -43,6 +43,22 @@ public sealed class MotionZoneEditorStateTests
     }
 
     [Fact]
+    public void A_Press_On_The_Edge_Just_Outside_Keeps_The_Zone_Picked_For_A_Double_Click()
+    {
+        var state = new MotionZoneEditorState([Square("Tree")]);
+        state.PointerDown(0.4, 0.4, Width, Height);
+        state.PointerUp();
+
+        // 4 pixels above the top edge: outside the zone, within the grab distance.
+        state.PointerDown(0.4, 0.192, Width, Height);
+        state.PointerUp();
+
+        state.SelectedZone.Should().Be(0);
+        state.DoubleClick(0.4, 0.192, Width, Height).Should().BeTrue();
+        state.Zones[0].Points.Should().HaveCount(5);
+    }
+
+    [Fact]
     public void A_Click_Outside_Every_Zone_Picks_None()
     {
         var state = new MotionZoneEditorState([Square("Tree")]);

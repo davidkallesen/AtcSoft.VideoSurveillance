@@ -133,6 +133,16 @@ public sealed class MotionZoneEditorState
             return;
         }
 
+        // On the edge, just outside the zone, it stays picked: the first click of a double click
+        // there must not let it go.
+        if (Picked is { } edged &&
+            MotionZoneEditing.FindEdge(edged.Points, x, y, width, height) is not null)
+        {
+            SelectedCorner = -1;
+            StartDrag(edged.Points, x, y, corner: -1);
+            return;
+        }
+
         var hit = MotionZoneEditing.FindZone([.. Zones.Select(z => (IReadOnlyList<ZonePoint>)z.Points)], x, y);
         SelectedZone = hit ?? -1;
         SelectedCorner = -1;
