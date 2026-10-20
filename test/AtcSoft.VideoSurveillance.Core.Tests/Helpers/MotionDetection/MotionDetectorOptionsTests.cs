@@ -57,6 +57,48 @@ public sealed class MotionDetectorOptionsTests
         notIgnored.Should().BeLessThan(ignored ?? int.MaxValue, $"with lighting changes ignored it is first taken for light (seen at frame {ignored})");
     }
 
+    [Fact]
+    public void After_A_Lamp_Is_Switched_On_Someone_Walking_In_Is_Seen_Later_When_Lighting_Changes_Are_Not_Ignored()
+    {
+        var ignored = WalkerFirstSeen(ignoreLighting: true);
+        var notIgnored = WalkerFirstSeen(ignoreLighting: false);
+
+        ignored.Should().NotBeNull();
+        notIgnored.Should().NotBeNull("the new light becomes the background in a few seconds");
+        notIgnored.Should().BeGreaterThan(ignored!.Value + 20, $"the whole picture is moving until it has (seen at frame {ignored} and {notIgnored})");
+    }
+
+    // The picture turns brighter at 5 s; at 9 s someone small walks in from the left, four
+    // pictures a second: the first picture the walker has a box in, null without one.
+    private static int? WalkerFirstSeen(bool ignoreLighting)
+    {
+        const int width = 160;
+        const int height = 120;
+        var detector = new BuiltInMotionDetector(new MotionDetectionSettings { IgnoreLightingChanges = ignoreLighting });
+        var start = DateTimeOffset.UnixEpoch;
+        for (var i = 0; i < 80; i++)
+        {
+            var grey = new byte[width * height];
+            Array.Fill(grey, i < 20 ? (byte)70 : (byte)170);
+            if (i >= 36)
+            {
+                var left = (i - 36) * 3;
+                for (var y = 50; y < 80; y++)
+                {
+                    Array.Fill(grey, (byte)20, (y * width) + left, Math.Min(10, width - left));
+                }
+            }
+
+            var boxes = detector.Process(new MotionFrame(grey, width, height, start.AddSeconds(i * 0.25))).Boxes;
+            if (i >= 36 && boxes.Any(b => b.Width < width / 2))
+            {
+                return i;
+            }
+        }
+
+        return null;
+    }
+
     // A dark shape three quarters of the picture wide walks in over a light, empty picture, four
     // pictures a second: the first picture with a box, null without one.
     private static int? FirstSeen(bool ignoreLighting)

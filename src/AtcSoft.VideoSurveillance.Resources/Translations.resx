@@ -2815,6 +2815,6 @@ Thumbnail:
     <value>Ignore lighting changes</value>
   </data>
   <data name="IgnoreLightingChangesInfo" xml:space="preserve">
-    <value>A change over most of the picture at once, such as a cloud or a lamp switched on, is not motion. Turn it off for a camera at a door, where a person can fill most of the picture.</value>
+    <value>A change over most of the picture at once, such as a cloud or a lamp switched on, is not motion. Turn it off for a camera at a door, where a person can fill most of the picture; then, after a change of light, motion is not seen for a while.</value>
   </data>
 </root>
