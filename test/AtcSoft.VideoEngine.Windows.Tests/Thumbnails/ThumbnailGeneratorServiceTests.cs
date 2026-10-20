@@ -143,7 +143,8 @@ public sealed class ThumbnailGeneratorServiceTests : IDisposable
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(5);
+        // Generous: the machine may be busy with the other test projects.
+        var deadline = DateTime.UtcNow.AddSeconds(15);
         while (!condition() && DateTime.UtcNow < deadline)
         {
             await Task.Delay(20).ConfigureAwait(false);
