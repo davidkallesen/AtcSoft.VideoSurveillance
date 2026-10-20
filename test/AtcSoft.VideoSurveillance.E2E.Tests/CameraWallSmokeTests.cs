@@ -143,13 +143,52 @@ public sealed class CameraWallSmokeTests
         row.Patterns.SelectionItem.Pattern.Select();
 
         var player = app.OpenWindow(() => DesktopApp.Press(app.Find(browser, "Play", ControlType.Button)), "Play");
-        app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        var timeline = app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        HoverTimeline(app, timeline);
         DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Play events only"));
 
+        // A three-second recording is shorter than the shortest zoom: the buttons are there, not usable.
+        foreach (var name in new[] { "Zoom in", "Zoom out" })
+        {
+            app.Find(player, name, ControlType.Button);
+        }
+
         app.CloseWindow(player);
         app.CloseWindow(browser);
+    }
+
+    // Resting the mouse on the middle of the timeline (a second and a half into the three) tells
+    // what moved there, in a tooltip that follows the mouse.
+    private static void HoverTimeline(
+        DesktopApp app,
+        AutomationElement timeline)
+    {
+        var bounds = timeline.BoundingRectangle;
+        var middle = new System.Drawing.Point(bounds.X + (bounds.Width / 2), bounds.Y + (bounds.Height / 2));
+        FlaUI.Core.Input.Mouse.MoveTo(middle);
+        FlaUI.Core.Input.Mouse.MoveTo(middle with { X = middle.X + 1 });
+
+        // A WPF tooltip is a pop-up window of the app's own, with the tooltip inside it.
+        var desktop = app.Automation.GetDesktop();
+        var processId = timeline.Properties.ProcessId.Value;
+        var deadline = DateTime.UtcNow + DesktopApp.ElementTimeout;
+        string? words = null;
+        while (DateTime.UtcNow < deadline && words is null)
+        {
+            words = desktop
+                .FindAllChildren(app.Conditions.ByProcessId(processId))
+                .SelectMany(w => w.Properties.ControlType.ValueOrDefault == ControlType.ToolTip
+                    ? [w]
+                    : w.FindAllDescendants(app.Conditions.ByControlType(ControlType.ToolTip)))
+                .SelectMany(t => new[] { t.Properties.Name.ValueOrDefault }.Concat(t.FindAllDescendants().Select(d => d.Properties.Name.ValueOrDefault)))
+                .FirstOrDefault(n => n?.Contains("Moving", StringComparison.Ordinal) == true);
+            Thread.Sleep(250);
+        }
+
+        words.Should().NotBeNull("resting the mouse on the timeline shows a tooltip").And.Contain("Moving: 1");
+        FlaUI.Core.Input.Mouse.MoveTo(new System.Drawing.Point(bounds.X, bounds.Y - 200));
     }
 
     // The oldest recording was seeded without an activity index: analysing it reads the file

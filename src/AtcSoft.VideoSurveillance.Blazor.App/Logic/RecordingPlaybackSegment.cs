@@ -8,6 +8,7 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 /// <param name="VideoUrl">Where the player fetches it.</param>
 /// <param name="DownloadUrl">Where the browser saves it from.</param>
 /// <param name="Title">The dialog's title while it plays.</param>
+/// <param name="RecordingStart">When it started, for the time its timeline tells; <see langword="null"/> when not known.</param>
 [SuppressMessage(
     "Design",
     "CA1054:URI parameters should not be strings",
@@ -20,4 +21,5 @@ public sealed record RecordingPlaybackSegment(
     string FilePath,
     string VideoUrl,
     string DownloadUrl,
-    string Title);
+    string Title,
+    DateTimeOffset? RecordingStart = null);

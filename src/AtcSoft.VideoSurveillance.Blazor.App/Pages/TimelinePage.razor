@@ -294,7 +294,8 @@ else if (timeline is { } shown)
                     c.FilePath,
                     RecordingDisplay.FileUrl(Gateway.ApiBaseUrl, c.FilePath, Session.MediaToken) ?? string.Empty,
                     RecordingDisplay.DownloadUrl(Gateway.ApiBaseUrl, c.FilePath, Session.MediaToken) ?? string.Empty,
-                    TitleOf(lane.CameraName, c.RecordingStart)))
+                    TitleOf(lane.CameraName, c.RecordingStart),
+                    c.RecordingStart))
                 .ToList();
 
         var parameters = new DialogParameters<RecordingPlaybackDialog>
@@ -307,6 +308,7 @@ else if (timeline is { } shown)
             { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(playback.FilePath) },
             { x => x.FilePath, playback.FilePath },
             { x => x.StartSeconds, playback.OffsetSeconds },
+            { x => x.RecordingStart, moment.AddSeconds(-playback.OffsetSeconds) },
             { x => x.CameraId, lane?.CameraId },
         };
 

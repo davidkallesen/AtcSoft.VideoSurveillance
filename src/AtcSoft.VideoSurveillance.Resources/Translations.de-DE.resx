@@ -2665,7 +2665,7 @@ Vorschaubild:
     <value>Aktivität</value>
   </data>
   <data name="ActivityTimelineHint" xml:space="preserve">
-    <value>Was sich wann bewegt hat. Orange zeigt, wo sich etwas fortbewegt hat. Klicken, um dorthin zu springen.</value>
+    <value>Was sich wann bewegt hat. Orange zeigt, wo sich etwas fortbewegt hat. Klicken, um dorthin zu springen; scrollen zum Zoomen.</value>
   </data>
   <data name="PreviousEvent" xml:space="preserve">
     <value>Vorheriges Ereignis</value>
@@ -2789,5 +2789,17 @@ Vorschaubild:
   </data>
   <data name="TimelineColour" xml:space="preserve">
     <value>Farbe auf der Zeitleiste</value>
+  </data>
+  <data name="ActivityHoverNotAnalysed" xml:space="preserve">
+    <value>Nicht analysiert</value>
+  </data>
+  <data name="ActivityHoverNothingMoving" xml:space="preserve">
+    <value>Nichts in Bewegung</value>
+  </data>
+  <data name="ActivityHoverMoving1" xml:space="preserve">
+    <value>In Bewegung: {0}</value>
+  </data>
+  <data name="ActivityHoverZone1" xml:space="preserve">
+    <value>Zone: {0}</value>
   </data>
 </root>

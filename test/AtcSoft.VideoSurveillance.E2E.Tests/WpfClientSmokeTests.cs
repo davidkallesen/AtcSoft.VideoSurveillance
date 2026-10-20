@@ -128,6 +128,11 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
             }
         }
 
+        foreach (var name in new[] { "Zoom in", "Zoom out" })
+        {
+            app.Find(player, name, ControlType.Button);
+        }
+
         app.CloseWindow(player);
     }
 

@@ -2665,7 +2665,7 @@ Miniature:
     <value>Aktivitet</value>
   </data>
   <data name="ActivityTimelineHint" xml:space="preserve">
-    <value>Hvad bevægede sig hvornår. Orange viser, hvor noget flyttede sig. Klik for at springe dertil.</value>
+    <value>Hvad bevægede sig hvornår. Orange viser, hvor noget flyttede sig. Klik for at springe dertil; rul for at zoome.</value>
   </data>
   <data name="PreviousEvent" xml:space="preserve">
     <value>Forrige hændelse</value>
@@ -2789,5 +2789,17 @@ Miniature:
   </data>
   <data name="TimelineColour" xml:space="preserve">
     <value>Farve på tidslinjen</value>
+  </data>
+  <data name="ActivityHoverNotAnalysed" xml:space="preserve">
+    <value>Ikke analyseret</value>
+  </data>
+  <data name="ActivityHoverNothingMoving" xml:space="preserve">
+    <value>Intet i bevægelse</value>
+  </data>
+  <data name="ActivityHoverMoving1" xml:space="preserve">
+    <value>I bevægelse: {0}</value>
+  </data>
+  <data name="ActivityHoverZone1" xml:space="preserve">
+    <value>Zone: {0}</value>
   </data>
 </root>

@@ -132,8 +132,9 @@ window.recordingTimeline = {
         }
     },
 
-    // A click on the timeline jumps to the same place in the recording.
-    seekAt: function (videoId, element, clientX) {
+    // A click on the timeline jumps to the same place in the recording; the timeline shows the
+    // part of it from start to end (fractions of the recording).
+    seekAt: function (videoId, element, clientX, start, end) {
         var video = document.getElementById(videoId);
         if (!video || !element || !isFinite(video.duration)) {
             return;
@@ -141,9 +142,55 @@ window.recordingTimeline = {
 
         var box = element.getBoundingClientRect();
         if (box.width > 0) {
-            var fraction = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
-            video.currentTime = fraction * video.duration;
+            var share = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
+            video.currentTime = (start + share * (end - start)) * video.duration;
         }
+    },
+
+    // The mouse over the timeline: the wheel zooms it around the place under the mouse (listened
+    // to here, not in Blazor: its wheel listener is passive, so the page would scroll as well), and
+    // a move tells the place, at most once a frame, so the timeline can say what happened there.
+    listen: function (element, dotNetRef) {
+        if (!element) {
+            return;
+        }
+
+        var pending = null;
+        var shareAt = function (clientX) {
+            var box = element.getBoundingClientRect();
+            return box.width > 0 ? Math.max(0, Math.min(1, (clientX - box.left) / box.width)) : -1;
+        };
+        var tell = function (share) {
+            dotNetRef.invokeMethodAsync('OnTimelineHover', share).catch(function () { });
+        };
+
+        element.addEventListener('mousemove', function (e) {
+            var first = pending === null;
+            pending = shareAt(e.clientX);
+            if (first) {
+                window.requestAnimationFrame(function () {
+                    var share = pending;
+                    pending = null;
+                    tell(share);
+                });
+            }
+        });
+        element.addEventListener('mouseleave', function () {
+            pending = null;
+            tell(-1);
+        });
+
+        element.addEventListener('wheel', function (e) {
+            var box = element.getBoundingClientRect();
+            if (box.width <= 0 || e.deltaY === 0) {
+                return;
+            }
+
+            e.preventDefault();
+            var share = Math.max(0, Math.min(1, (e.clientX - box.left) / box.width));
+            dotNetRef.invokeMethodAsync('OnTimelineWheel', share, e.deltaY < 0)
+                .catch(function () { });
+        }, { passive: false });
     }
 };
 

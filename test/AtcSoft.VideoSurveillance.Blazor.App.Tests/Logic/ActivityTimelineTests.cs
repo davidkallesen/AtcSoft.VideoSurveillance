@@ -1,7 +1,10 @@
 namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 
 using CoreBucket = AtcSoft.VideoSurveillance.Models.ActivityBucket;
+using CoreEvent = AtcSoft.VideoSurveillance.Models.ActivityEvent;
+using CoreHover = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityTimelineHover;
 using CoreLayout = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityTimelineLayout;
+using CoreZoom = AtcSoft.VideoSurveillance.Helpers.Activity.ActivityTimelineZoom;
 
 /// <summary>
 /// The web player's activity timeline: the same layout as the desktop apps' (a copy, kept equal
@@ -65,7 +68,7 @@ public sealed class ActivityTimelineTests
             new("Path", new MotionZoneKind(MotionZoneKind.Names.Ignore), [], "Blue"),
         ];
 
-        var fills = ActivityTimelineShapes.Bands(buckets, MotionZoneColors.ByZone(zones)).Select(b => b.Fill);
+        var fills = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets), MotionZoneColors.ByZone(zones)).Select(b => b.Fill);
 
         fills.Should().Equal("#00FF00", MotionZoneColors.Event, MotionZoneColors.Event);
     }
@@ -89,12 +92,112 @@ public sealed class ActivityTimelineTests
 
         var bars = ActivityTimelineShapes.Bars(buckets);
         var notAnalysed = ActivityTimelineShapes.NotAnalysed(buckets);
-        var bands = ActivityTimelineShapes.Bands(buckets);
+        var bands = ActivityTimelineShapes.Bands(ActivityTimelineLayout.FindEvents(buckets), zoneColours: null);
 
         var area = ActivityTimelineShapes.BoxHeight - ActivityTimelineShapes.BandHeight;
-        bars.Should().Equal(new TimelineRect(0, area / 2, 1, area / 2), new TimelineRect(2, 0, 1, area));
-        notAnalysed.Should().Equal(new TimelineRect(3, 0, 1, area));
-        bands.Should().ContainSingle().Which.Should().Be(new TimelineRect(1, area, 3, ActivityTimelineShapes.BandHeight), "a one-stretch event is widened around its middle");
+        bars.Should().Equal(new TimelineRect(0, area / 2, 100, area / 2), new TimelineRect(200, 0, 100, area));
+        notAnalysed.Should().Equal(new TimelineRect(300, 0, 100, area));
+        bands.Should().ContainSingle().Which.Band.Should().Be(new TimelineRect(200, area, 100, ActivityTimelineShapes.BandHeight));
+    }
+
+    [Fact]
+    public void Zoomed_In_The_Part_Shown_Fills_The_Box()
+    {
+        RecordingActivityBucket[] buckets = [Bucket(100, 1), Bucket(0, 0), Bucket(100, 1), Bucket(0, 0)];
+        var events = ActivityTimelineLayout.FindEvents(buckets);
+
+        var area = ActivityTimelineShapes.BoxHeight - ActivityTimelineShapes.BandHeight;
+        ActivityTimelineShapes.Bars(buckets, 0.5, 1).Should().Equal(new TimelineRect(0, 0, 200, area));
+        ActivityTimelineShapes.Bands(events, zoneColours: null, 0.5, 1).Should().ContainSingle()
+            .Which.Band.Should().Be(new TimelineRect(0, area, 200, ActivityTimelineShapes.BandHeight), "the first event is not shown");
+        ActivityTimelineShapes.Playhead(0.25, 0.5, 1).Should().BeNull("the player is not in the part shown");
+        ActivityTimelineShapes.Playhead(0.75, 0.5, 1)!.X.Should().Be(199);
+        ActivityTimelineShapes.PlayheadColumn(0.25, 0.5, 1).Should().Be(-1);
+    }
+
+    [Fact]
+    public void The_Hover_Is_The_Same_As_The_Desktop_Apps()
+    {
+        List<string>?[] zones = [null, ["Gate"], null, ["Path", "Gate"], null, null];
+        int[] tracks = [0, 2, 1, 1, 0, 3];
+        RecordingActivityBucket[] web = [.. tracks.Select((t, i) => Bucket(t * 10, t) with { Zones = zones[i] })];
+        CoreBucket[] core = [.. tracks.Select((t, i) => new CoreBucket(t * 10, t, IsAnalysed: i != 5) { Zones = zones[i] ?? [] })];
+        web[5] = web[5] with { IsAnalysed = false };
+        var webEvents = ActivityTimelineLayout.FindEvents(web);
+        var coreEvents = CoreLayout.FindEvents(core);
+
+        foreach (var (from, to) in new[] { (0d, 0.1), (0.2, 0.3), (0.45, 0.55), (0.9, 1), (1.2, -1) })
+        {
+            var a = ActivityTimelineHover.At(web, webEvents, from, to)!;
+            var b = CoreHover.At(core, coreEvents, from, to)!;
+            (a.Position, a.Tracks, a.Level, a.IsAnalysed, a.Zone).Should().Be((b.Position, b.Tracks, b.Level, b.IsAnalysed, b.Zone));
+        }
+
+        ActivityTimelineHover.At([], [], 0, 1).Should().BeNull();
+    }
+
+    [Fact]
+    public void The_Hover_Tells_The_Time_What_Moved_And_The_Zone()
+    {
+        var start = new DateTimeOffset(2026, 10, 20, 9, 0, 0, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2026, 10, 20, 9, 0, 0, DateTimeKind.Local)));
+
+        ActivityHoverText.Lines(new ActivityHover(0.5, 2, 30, IsAnalysed: true, "Gate"), start, 120)
+            .Should().Equal("09:01:00", string.Format(CultureInfo.CurrentCulture, Translations.ActivityHoverMoving1, 2), string.Format(CultureInfo.CurrentCulture, Translations.ActivityHoverZone1, "Gate"));
+        ActivityHoverText.Lines(new ActivityHover(0.25, 0, 0, IsAnalysed: true, Zone: null), recordingStart: null, 120)
+            .Should().Equal("00:30", Translations.ActivityHoverNothingMoving);
+        ActivityHoverText.Lines(new ActivityHover(0.5, 0, 0, IsAnalysed: false, Zone: null), recordingStart: null, 7200)
+            .Should().Equal("01:00:00", Translations.ActivityHoverNotAnalysed);
+        ActivityHoverText.Left(0.5).Should().Be("50%");
+        ActivityHoverText.Left(1).Should().Be("90%", "the words stay clear of the edge");
+    }
+
+    [Fact]
+    public void The_Zoom_Is_The_Same_As_The_Desktop_Apps()
+    {
+        (double Start, double End)[] windows = [(0, 1), (0.5, 1), (0.2, 0.3), (0.99, 1), (0.4, 0.40001)];
+        double[] places = [-1, 0, 0.1, 0.25, 0.5, 0.95, 1];
+        double[] lengths = [0, 30, 600, 3600, 4 * 3600];
+
+        foreach (var seconds in lengths)
+        {
+            ActivityTimelineZoom.BucketsFor(seconds).Should().Be(CoreZoom.BucketsFor(seconds));
+        }
+
+        foreach (var (start, end) in windows)
+        {
+            ActivityTimelineZoom.CanZoomOut(start, end).Should().Be(CoreZoom.CanZoomOut(start, end));
+            foreach (var seconds in lengths)
+            {
+                ActivityTimelineZoom.CanZoomIn(start, end, seconds).Should().Be(CoreZoom.CanZoomIn(start, end, seconds));
+            }
+
+            foreach (var place in places)
+            {
+                ActivityTimelineZoom.In(start, end, place, 3600).Should().Be(CoreZoom.In(start, end, place, 3600));
+                ActivityTimelineZoom.Out(start, end, place).Should().Be(CoreZoom.Out(start, end, place));
+                ActivityTimelineZoom.ToRecording(start, end, place).Should().Be(CoreZoom.ToRecording(start, end, place));
+                ActivityTimelineZoom.ToShare(start, end, place).Should().Be(CoreZoom.ToShare(start, end, place));
+                foreach (var previous in places)
+                {
+                    ActivityTimelineZoom.Follow(start, end, previous, place).Should().Be(CoreZoom.Follow(start, end, previous, place));
+                }
+            }
+
+            foreach (var tracks in Recordings)
+            {
+                var web = ActivityTimelineZoom.Bars([.. tracks.Select(t => Bucket(t * 7, t))], start, end, 400);
+                var core = CoreZoom.Bars([.. tracks.Select(t => new CoreBucket(t * 7, t, IsAnalysed: true))], start, end, 400);
+                web.Select(b => (b.Start, b.End, b.Level, b.IsAnalysed)).Should().Equal(core.Select(b => (b.Start, b.End, b.Level, b.IsAnalysed)));
+            }
+
+            ActivityTimelineEvent[] webEvents = [new(0.1, 0.2), new(0.45, 0.55, "Gate"), new(0.9, 1)];
+            CoreEvent[] coreEvents = [new(0.1, 0.2), new(0.45, 0.55, "Gate"), new(0.9, 1)];
+            ActivityTimelineZoom.Visible(webEvents, start, end).Select(e => (e.Start, e.End, e.Zone))
+                .Should().Equal(CoreZoom.Visible(coreEvents, start, end).Select(e => (e.Start, e.End, e.Zone)));
+        }
+
+        ActivityTimelineZoom.ShortestSeconds.Should().Be(CoreZoom.ShortestSeconds);
+        ActivityTimelineZoom.MostBuckets.Should().Be(CoreZoom.MostBuckets);
     }
 
     [Fact]
@@ -156,9 +259,9 @@ public sealed class ActivityTimelineTests
         ActivityEventJumps.EventsOnly(events, 33, 100).Should().Be(100, "after the last event: the end");
         ActivityEventJumps.EventsOnly(events, 33, 0).Should().BeNull("the length is not known yet");
 
-        ActivityTimelineShapes.Playhead(-1, 400).Should().BeNull();
-        ActivityTimelineShapes.Playhead(0.5, 400)!.X.Should().Be(199);
-        ActivityTimelineShapes.Playhead(1, 400)!.X.Should().Be(398, "the line stays inside the box");
+        ActivityTimelineShapes.Playhead(-1).Should().BeNull();
+        ActivityTimelineShapes.Playhead(0.5)!.X.Should().Be(199);
+        ActivityTimelineShapes.Playhead(1)!.X.Should().Be(398, "the line stays inside the box");
     }
 
     [Fact]

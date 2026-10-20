@@ -123,6 +123,16 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Img, new LocatorGetByRoleOptions { Name = "Activity", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Play events only", Exact = true }).ClickAsync();
+        foreach (var name in new[] { "Zoom in", "Zoom out" })
+        {
+            await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = name, Exact = true })
+                .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+        }
+
+        // Resting the mouse on the timeline tells what happened there, above it.
+        await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Img, new LocatorGetByRoleOptions { Name = "Activity", Exact = true }).HoverAsync();
+        await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Tooltip).Filter(new LocatorFilterOptions { HasText = ":" })
+            .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
 
         // Its tooltip stays while the pointer rests on it, over the dialog's buttons.
         await page.Mouse.MoveAsync(0, 0);

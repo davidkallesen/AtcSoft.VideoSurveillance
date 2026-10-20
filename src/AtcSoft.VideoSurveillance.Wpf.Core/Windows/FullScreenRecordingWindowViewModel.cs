@@ -8,9 +8,10 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.Windows;
 public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialogBase, IDisposable
 {
     /// <summary>
-    /// How many stretches the activity timeline shows: one per pixel of the seek bar under it.
+    /// The fewest stretches the activity timeline loads; a longer recording is loaded in one a
+    /// second (up to <see cref="ActivityTimelineZoom.MostBuckets"/>), so a minute zoomed in still has its seconds.
     /// </summary>
-    public const int ActivityBucketCount = 400;
+    public const int ActivityBucketCount = ActivityTimelineZoom.LeastBuckets;
 
     private static readonly double[] SpeedOptions = [1.0, 2.0, 4.0, 8.0, 16.0];
 
@@ -113,6 +114,30 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// </summary>
     [ObservableProperty]
     private double activityPosition;
+
+    /// <summary>
+    /// How long the recording is, in seconds, for the time the timeline tells under the mouse.
+    /// </summary>
+    [ObservableProperty]
+    private double activityDurationSeconds;
+
+    /// <summary>
+    /// When the recording started, in local time, for the time the timeline tells under the mouse.
+    /// </summary>
+    [ObservableProperty]
+    private DateTime? activityRecordingStart;
+
+    /// <summary>
+    /// Where the part of the recording the timeline shows starts, as a fraction of the recording.
+    /// </summary>
+    [ObservableProperty]
+    private double activityStart;
+
+    /// <summary>
+    /// Where the part of the recording the timeline shows ends, as a fraction of the recording.
+    /// </summary>
+    [ObservableProperty]
+    private double activityEnd = 1;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FullScreenRecordingWindowViewModel"/> class.
@@ -383,7 +408,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         IReadOnlyList<ActivityBucket>? buckets;
         try
         {
-            buckets = await loader(ActivityBucketCount, durationSeconds, activityCancellation.Token).ConfigureAwait(false);
+            buckets = await loader(ActivityTimelineZoom.BucketsFor(durationSeconds), durationSeconds, activityCancellation.Token).ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -404,6 +429,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             }
 
             activityEvents = ActivityTimelineLayout.FindEvents(buckets);
+            ActivityDurationSeconds = durationSeconds;
+            ActivityRecordingStart = recordingStartTime;
+            ActivityStart = 0;
+            ActivityEnd = 1;
             ActivityBuckets = buckets;
             HasActivity = true;
             CommandManager.InvalidateRequerySuggested();
@@ -439,6 +468,57 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     [RelayCommand]
     private void SeekActivity(double fraction)
         => SeekTo(fraction);
+
+    [RelayCommand]
+    private void ZoomActivity(ActivityTimelineZoomRequest? request)
+    {
+        if (request is null || !HasActivity)
+        {
+            return;
+        }
+
+        if (request.ZoomIn && ActivityTimelineZoom.CanZoomIn(ActivityStart, ActivityEnd, ActivityDurationSeconds))
+        {
+            ShowActivity(ActivityTimelineZoom.In(ActivityStart, ActivityEnd, request.Focus, ActivityDurationSeconds));
+        }
+        else if (!request.ZoomIn && ActivityTimelineZoom.CanZoomOut(ActivityStart, ActivityEnd))
+        {
+            ShowActivity(ActivityTimelineZoom.Out(ActivityStart, ActivityEnd, request.Focus));
+        }
+    }
+
+    // The buttons zoom around the player.
+    [RelayCommand(CanExecute = nameof(CanZoomActivityIn))]
+    private void ZoomActivityIn()
+        => ZoomActivity(new ActivityTimelineZoomRequest(ActivityPosition, ZoomIn: true));
+
+    private bool CanZoomActivityIn()
+        => HasActivity && ActivityTimelineZoom.CanZoomIn(ActivityStart, ActivityEnd, ActivityDurationSeconds);
+
+    [RelayCommand(CanExecute = nameof(CanZoomActivityOut))]
+    private void ZoomActivityOut()
+        => ZoomActivity(new ActivityTimelineZoomRequest(ActivityPosition, ZoomIn: false));
+
+    private bool CanZoomActivityOut()
+        => HasActivity && ActivityTimelineZoom.CanZoomOut(ActivityStart, ActivityEnd);
+
+    private void ShowActivity((double Start, double End) window)
+    {
+        ActivityStart = window.Start;
+        ActivityEnd = window.End;
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    // Moves the timeline's player line, and the part shown with it when the player leaves it.
+    private void MoveActivityPosition(double position)
+    {
+        var window = ActivityTimelineZoom.Follow(ActivityStart, ActivityEnd, ActivityPosition, position);
+        ActivityPosition = position;
+        if (window != (ActivityStart, ActivityEnd))
+        {
+            ShowActivity(window);
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanJumpToEvent))]
     private void NextEvent()
@@ -535,7 +615,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         {
             SeekPosition = ticks;
             PositionText = FormatDuration(ticks);
-            ActivityPosition = ticks / SeekMaximum;
+            MoveActivityPosition(ticks / SeekMaximum);
         }
         finally
         {
@@ -574,6 +654,8 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         ActivityBuckets = null;
         HasActivity = false;
         ActivityPosition = 0;
+        ActivityStart = 0;
+        ActivityEnd = 1;
         CanSeek = false;
         isUpdatingPositionFromPlayer = true;
         try
@@ -636,7 +718,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
                     {
                         SeekPosition = position;
                         PositionText = FormatDuration(position);
-                        ActivityPosition = SeekMaximum > 0 ? position / SeekMaximum : 0;
+                        MoveActivityPosition(SeekMaximum > 0 ? position / SeekMaximum : 0);
                     }
                     finally
                     {

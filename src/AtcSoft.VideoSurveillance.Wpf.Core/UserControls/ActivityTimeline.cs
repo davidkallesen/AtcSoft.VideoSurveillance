@@ -6,6 +6,10 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 /// of the watch zone it happened in, when that zone has one, see <see cref="ZoneBrushes"/>), dim where
 /// nothing was analysed, and a line where the player is. A click asks to jump there through
 /// <see cref="SeekCommand"/> with the place as a fraction of the recording, 0 to 1.
+/// It shows the part of the recording from <see cref="VisibleStart"/> to <see cref="VisibleEnd"/>
+/// (the whole of it by default); the mouse wheel asks to zoom through <see cref="ZoomCommand"/>.
+/// Resting the mouse on it tells the time there, how many things moved and in which watch zone
+/// (<see cref="DescribeAt"/>), the time from <see cref="RecordingStart"/> and <see cref="DurationSeconds"/>.
 /// </summary>
 public sealed partial class ActivityTimeline : FrameworkElement
 {
@@ -16,14 +20,38 @@ public sealed partial class ActivityTimeline : FrameworkElement
     private static readonly Brush DefaultEventBrush = Frozen(Color.FromRgb(0xFF, 0x8C, 0x00));
     private static readonly Brush DefaultNotAnalysedBrush = Frozen(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
 
-    [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
+    // The tooltip follows the mouse along the strip, its words changing with the place.
+    private readonly ToolTip hoverTip = new() { Placement = System.Windows.Controls.Primitives.PlacementMode.Top };
+
+    private IReadOnlyList<ActivityEvent>? events;
+
+    [DependencyProperty(PropertyChangedCallback = nameof(OnBucketsChanged))]
     private IReadOnlyList<ActivityBucket>? buckets;
+
+    // When the recording started, in local time, for the time under the mouse; the time into it when null.
+    [DependencyProperty]
+    private DateTime? recordingStart;
+
+    // How long the recording is, in seconds, for the time under the mouse.
+    [DependencyProperty]
+    private double durationSeconds;
 
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private double position;
 
     [DependencyProperty]
     private ICommand? seekCommand;
+
+    // Where the part shown starts and ends, as fractions of the recording (ActivityTimelineZoom).
+    [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
+    private double visibleStart;
+
+    [DependencyProperty(DefaultValue = 1d, PropertyChangedCallback = nameof(OnLookChanged))]
+    private double visibleEnd;
+
+    // Takes an ActivityTimelineZoomRequest: where the mouse is in the recording, and which way.
+    [DependencyProperty]
+    private ICommand? zoomCommand;
 
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private Brush? barBrush;
@@ -47,6 +75,36 @@ public sealed partial class ActivityTimeline : FrameworkElement
     {
         Cursor = Cursors.Hand;
         ClipToBounds = true;
+        hoverTip.PlacementTarget = this;
+        hoverTip.Content = Translations.ActivityTimelineHint;
+        ToolTip = hoverTip;
+    }
+
+    /// <summary>
+    /// Gets the words the tooltip shows for a point of the strip: the time there, how many things
+    /// moved and in which watch zone, then how to use the timeline.
+    /// </summary>
+    /// <param name="x">The point, in pixels from the left.</param>
+    public string DescribeAt(double x)
+    {
+        if (Buckets is not { Count: > 0 } stretches || ActualWidth <= 0)
+        {
+            return Translations.ActivityTimelineHint;
+        }
+
+        // As wide as the narrowest band, so a widened band tells its event.
+        var (start, end) = Window();
+        var half = ActivityTimelineLayout.MinimumEventWidth / 2;
+        events ??= ActivityTimelineLayout.FindEvents(stretches);
+        var hover = ActivityTimelineHover.At(
+            stretches,
+            events,
+            ActivityTimelineZoom.ToRecording(start, end, (x - half) / ActualWidth),
+            ActivityTimelineZoom.ToRecording(start, end, (x + half) / ActualWidth));
+
+        return hover is null
+            ? Translations.ActivityTimelineHint
+            : string.Join(Environment.NewLine, [.. ActivityHoverText.Lines(hover, RecordingStart, DurationSeconds), Translations.ActivityTimelineHint]);
     }
 
     /// <inheritdoc />
@@ -65,26 +123,27 @@ public sealed partial class ActivityTimeline : FrameworkElement
             return;
         }
 
+        var (start, end) = Window();
         var barArea = height - BandHeight - 1;
-        var step = width / stretches.Count;
-        for (var i = 0; i < stretches.Count; i++)
+        foreach (var bar in ActivityTimelineZoom.Bars(stretches, start, end, (int)Math.Ceiling(width)))
         {
-            var stretch = stretches[i];
-            var x = i * step;
-            if (!stretch.IsAnalysed)
+            var x = bar.Start * width;
+            var barWidth = Math.Max((bar.End - bar.Start) * width, 1);
+            if (!bar.IsAnalysed)
             {
-                drawingContext.DrawRectangle(NotAnalysedBrush ?? DefaultNotAnalysedBrush, pen: null, new Rect(x, 0, Math.Max(step, 1), barArea));
+                drawingContext.DrawRectangle(NotAnalysedBrush ?? DefaultNotAnalysedBrush, pen: null, new Rect(x, 0, barWidth, barArea));
                 continue;
             }
 
-            var barHeight = ActivityTimelineLayout.BarHeight(stretch.Level) * barArea;
+            var barHeight = ActivityTimelineLayout.BarHeight(bar.Level) * barArea;
             if (barHeight > 0)
             {
-                drawingContext.DrawRectangle(BarBrush ?? DefaultBarBrush, pen: null, new Rect(x, barArea - barHeight, Math.Max(step, 1), barHeight));
+                drawingContext.DrawRectangle(BarBrush ?? DefaultBarBrush, pen: null, new Rect(x, barArea - barHeight, barWidth, barHeight));
             }
         }
 
-        foreach (var activityEvent in ActivityTimelineLayout.FindEvents(stretches))
+        events ??= ActivityTimelineLayout.FindEvents(stretches);
+        foreach (var activityEvent in ActivityTimelineZoom.Visible(events, start, end))
         {
             var (x, bandWidth) = ActivityTimelineLayout.ToPixels(activityEvent, width);
             var brush = activityEvent.Zone is { } zone && ZoneBrushes?.TryGetValue(zone, out var zoned) == true
@@ -93,7 +152,13 @@ public sealed partial class ActivityTimeline : FrameworkElement
             drawingContext.DrawRectangle(brush, pen: null, new Rect(x, height - BandHeight, bandWidth, BandHeight));
         }
 
-        var playhead = Math.Clamp(Position, 0, 1) * width;
+        var share = ActivityTimelineZoom.ToShare(start, end, Math.Clamp(Position, 0, 1));
+        if (share is < 0 or > 1)
+        {
+            return;
+        }
+
+        var playhead = share * width;
         drawingContext.DrawRectangle(PositionBrush ?? Brushes.White, pen: null, new Rect(Math.Clamp(playhead - 1, 0, Math.Max(width - 2, 0)), 0, 2, height));
     }
 
@@ -113,7 +178,7 @@ public sealed partial class ActivityTimeline : FrameworkElement
             return;
         }
 
-        var fraction = Math.Clamp(e.GetPosition(this).X / ActualWidth, 0, 1);
+        var fraction = PlaceAt(e.GetPosition(this).X);
         if (SeekCommand?.CanExecute(fraction) == true)
         {
             SeekCommand.Execute(fraction);
@@ -121,11 +186,67 @@ public sealed partial class ActivityTimeline : FrameworkElement
         }
     }
 
+    /// <inheritdoc />
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        base.OnMouseMove(e);
+
+        var x = e.GetPosition(this).X;
+        hoverTip.Content = DescribeAt(x);
+        hoverTip.HorizontalOffset = x;
+    }
+
+    /// <inheritdoc />
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        base.OnMouseWheel(e);
+
+        if (ActualWidth <= 0 || e.Delta == 0)
+        {
+            return;
+        }
+
+        var request = new ActivityTimelineZoomRequest(PlaceAt(e.GetPosition(this).X), ZoomIn: e.Delta > 0);
+        if (ZoomCommand?.CanExecute(request) == true)
+        {
+            ZoomCommand.Execute(request);
+            e.Handled = true;
+        }
+    }
+
+    // The part shown; the whole recording when the window is not a sensible one.
+    private (double Start, double End) Window()
+    {
+        var start = Math.Clamp(VisibleStart, 0, 1);
+        var end = Math.Clamp(VisibleEnd, 0, 1);
+        return end > start ? (start, end) : (0, 1);
+    }
+
+    // The place in the recording under a point of the strip, 0 to 1.
+    private double PlaceAt(double x)
+    {
+        var (start, end) = Window();
+        return ActivityTimelineZoom.ToRecording(start, end, x / ActualWidth);
+    }
+
     private static SolidColorBrush Frozen(Color color)
     {
         var brush = new SolidColorBrush(color);
         brush.Freeze();
         return brush;
+    }
+
+    private static void OnBucketsChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ActivityTimeline timeline)
+        {
+            timeline.events = null;
+            timeline.InvalidateVisual();
+        }
     }
 
     private static void OnLookChanged(

@@ -1,5 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
+using Translations = AtcSoft.VideoSurveillance.Resources.Translations;
+
 /// <summary>
 /// The timeline under a recording, drawn to a bitmap: an orange band where something went
 /// somewhere, nothing orange where nothing did, and the player's line where it is.
@@ -64,6 +66,86 @@ public sealed class ActivityTimelineTests
         error.Should().BeNull();
         Pixel(pixels, 25, Height - 2).Should().Be((0x00, 0xFF, 0x00), "the first zone named Gate is lime");
         Pixel(pixels, 75, Height - 2).Should().Be((0xFF, 0x8C, 0x00), "an ignore zone has no colour of its own: orange");
+    }
+
+    [Fact]
+    public void Zoomed_In_It_Draws_The_Part_Shown_Across_The_Strip()
+    {
+        byte[] pixels = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var timeline = new ActivityTimeline
+            {
+                Buckets = [.. Enumerable.Range(0, 10).Select(i => new ActivityBucket(i is 1 or 5 ? 30 : 1, i is 1 or 5 ? 1 : 0, IsAnalysed: true))],
+                Position = 0.9,
+                VisibleStart = 0.5,
+                VisibleEnd = 1,
+            };
+
+            pixels = Render(timeline);
+        });
+
+        error.Should().BeNull();
+        Pixel(pixels, 10, Height - 2).Should().Be((0xFF, 0x8C, 0x00), "the sixth of ten stretches fills the first fifth of the second half");
+        Pixel(pixels, 30, Height - 2).Should().NotBe((0xFF, 0x8C, 0x00), "the second stretch is not shown");
+        Pixel(pixels, 80, 2).Should().Be((0xFF, 0xFF, 0xFF), "the player at nine tenths is four fifths into the part shown");
+    }
+
+    [Fact]
+    public void A_Click_And_The_Wheel_Name_The_Place_In_The_Recording()
+    {
+        var places = new List<object?>();
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var command = new Atc.XamlToolkit.Command.RelayCommand<object?>(places.Add);
+            var timeline = new ActivityTimeline
+            {
+                Buckets = [new ActivityBucket(1, 0, IsAnalysed: true)],
+                VisibleStart = 0.5,
+                VisibleEnd = 1,
+                SeekCommand = command,
+                ZoomCommand = command,
+            };
+            Render(timeline);
+
+            var mouse = System.Windows.Input.Mouse.PrimaryDevice;
+            timeline.RaiseEvent(new System.Windows.Input.MouseWheelEventArgs(mouse, 0, 120) { RoutedEvent = System.Windows.UIElement.MouseWheelEvent });
+            timeline.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(mouse, 0, System.Windows.Input.MouseButton.Left) { RoutedEvent = System.Windows.UIElement.MouseLeftButtonDownEvent });
+        });
+
+        error.Should().BeNull();
+        places.Should().HaveCount(2);
+        places[0].Should().BeOfType<ActivityTimelineZoomRequest>().Which.ZoomIn.Should().BeTrue();
+        ((double)places[1]!).Should().BeInRange(0.5, 1, "a click lands in the part shown");
+    }
+
+    [Fact]
+    public void Resting_The_Mouse_Tells_The_Time_What_Moved_And_The_Zone()
+    {
+        var words = string.Empty;
+        var quiet = string.Empty;
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var timeline = new ActivityTimeline
+            {
+                Buckets = [.. Enumerable.Range(0, 10).Select(i => i == 5
+                    ? new ActivityBucket(30, 2, IsAnalysed: true) { Zones = ["Gate"] }
+                    : new ActivityBucket(1, 0, IsAnalysed: true))],
+                RecordingStart = new DateTime(2026, 10, 20, 9, 0, 0, DateTimeKind.Local),
+                DurationSeconds = 100,
+            };
+            Render(timeline);
+
+            words = timeline.DescribeAt(55);
+            quiet = timeline.DescribeAt(15);
+        });
+
+        error.Should().BeNull();
+        words.Split(Environment.NewLine).Should().Equal("09:00:55", string.Format(CultureInfo.CurrentCulture, Translations.ActivityHoverMoving1, 2), string.Format(CultureInfo.CurrentCulture, Translations.ActivityHoverZone1, "Gate"), Translations.ActivityTimelineHint);
+        quiet.Split(Environment.NewLine).Should().Equal("09:00:15", Translations.ActivityHoverNothingMoving, Translations.ActivityTimelineHint);
     }
 
     [Fact]

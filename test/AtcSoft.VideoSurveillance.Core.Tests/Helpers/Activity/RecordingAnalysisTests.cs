@@ -28,7 +28,7 @@ public sealed class RecordingAnalysisTests : IDisposable
         var video = Video();
         var start = RecordingAnalysis.StartOf(video, Copenhagen);
 
-        var analysed = RecordingAnalysis.Run(Pictures(), Width, Height, new BuiltInMotionDetector(new MotionDetectionSettings()), video, start);
+        var analysed = RecordingAnalysis.Run(Pictures(), Width, Height, new BuiltInMotionDetector(new MotionDetectionSettings()), video, start, cancellationToken: TestContext.Current.CancellationToken);
 
         analysed.Should().Be(80);
         start.Should().Be(new DateTimeOffset(2026, 10, 19, 7, 0, 0, TimeSpan.Zero), "the name's 09:00 is Copenhagen time");

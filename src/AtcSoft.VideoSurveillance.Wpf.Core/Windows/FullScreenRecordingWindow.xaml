@@ -267,6 +267,40 @@
                                 Fill="#FF8C00"
                                 Stretch="Uniform" />
                         </ToggleButton>
+                        <Button
+                            Width="36"
+                            Height="40"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=ZoomOut}"
+                            Command="{Binding Path=ZoomActivityOutCommand}"
+                            Style="{StaticResource FullScreenIconButtonStyle}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=ZoomOut}">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M6.5,1.5 A5,5 0 1 1 6.5,11.5 A5,5 0 1 1 6.5,1.5 Z M10.2,10.2 L14.5,14.5 M4,6.5 L9,6.5"
+                                Stretch="Uniform"
+                                Stroke="#FF8C00"
+                                StrokeThickness="2" />
+                        </Button>
+                        <Button
+                            Width="36"
+                            Height="40"
+                            AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                                            Key=ZoomIn}"
+                            Command="{Binding Path=ZoomActivityInCommand}"
+                            Style="{StaticResource FullScreenIconButtonStyle}"
+                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                          Key=ZoomIn}">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M6.5,1.5 A5,5 0 1 1 6.5,11.5 A5,5 0 1 1 6.5,1.5 Z M10.2,10.2 L14.5,14.5 M4,6.5 L9,6.5 M6.5,4 L6.5,9"
+                                Stretch="Uniform"
+                                Stroke="#FF8C00"
+                                StrokeThickness="2" />
+                        </Button>
                     </StackPanel>
 
                     <!--  Position Text  -->
@@ -289,11 +323,14 @@
                             AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                                             Key=ActivityTimeline}"
                             Buckets="{Binding Path=ActivityBuckets}"
+                            DurationSeconds="{Binding Path=ActivityDurationSeconds}"
                             Position="{Binding Path=ActivityPosition}"
+                            RecordingStart="{Binding Path=ActivityRecordingStart}"
                             SeekCommand="{Binding Path=SeekActivityCommand}"
+                            VisibleEnd="{Binding Path=ActivityEnd}"
+                            VisibleStart="{Binding Path=ActivityStart}"
+                            ZoomCommand="{Binding Path=ZoomActivityCommand}"
                             ZoneBrushes="{Binding Path=ZoneBrushes}"
-                            ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
-                                                          Key=ActivityTimelineHint}"
                             Visibility="{Binding Path=HasActivity, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
 
                         <!--  Seek Slider  -->

@@ -278,6 +278,7 @@
             { x => x.FilePath, recording.FilePath },
             { x => x.DurationSeconds, RecordingDisplay.DurationSeconds(recording.Duration) },
             { x => x.CameraId, recording.CameraId },
+            { x => x.RecordingStart, recording.StartedAt },
         };
 
         var options = new DialogOptions

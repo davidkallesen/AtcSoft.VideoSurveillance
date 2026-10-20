@@ -2662,7 +2662,7 @@
     <value>Activity</value>
   </data>
   <data name="ActivityTimelineHint" xml:space="preserve">
-    <value>What moved when. Orange marks where something went somewhere. Click to jump there.</value>
+    <value>What moved when. Orange marks where something went somewhere. Click to jump there; scroll to zoom.</value>
   </data>
   <data name="PreviousEvent" xml:space="preserve">
     <value>Previous event</value>
@@ -2786,5 +2786,17 @@
   </data>
   <data name="TimelineColour" xml:space="preserve">
     <value>Colour on the timeline</value>
+  </data>
+  <data name="ActivityHoverNotAnalysed" xml:space="preserve">
+    <value>Not analysed</value>
+  </data>
+  <data name="ActivityHoverNothingMoving" xml:space="preserve">
+    <value>Nothing moving</value>
+  </data>
+  <data name="ActivityHoverMoving1" xml:space="preserve">
+    <value>Moving: {0}</value>
+  </data>
+  <data name="ActivityHoverZone1" xml:space="preserve">
+    <value>Zone: {0}</value>
   </data>
 </root>

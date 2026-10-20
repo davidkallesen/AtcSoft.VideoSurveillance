@@ -45,12 +45,24 @@
                                    Disabled="@(events.Count == 0)"
                                    OnClick="PreviousEventAsync" />
                 </MudTooltip>
+                <div style="flex: 1; position: relative;">
+                @if (HasHover)
+                {
+                    <div role="tooltip"
+                         class="mud-elevation-4"
+                         style="position: absolute; bottom: 100%; left: @ActivityHoverText.Left(hoverShare); transform: translateX(-50%); margin-bottom: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(33,33,33,0.92); color: #fff; font-size: 12px; white-space: nowrap; pointer-events: none; z-index: 1;">
+                        @foreach (var hoverLine in hoverLines)
+                        {
+                            <div>@hoverLine</div>
+                        }
+                    </div>
+                }
                 <svg @ref="timeline"
                      role="img"
                      aria-label="@Translations.ActivityTimeline"
-                     viewBox="0 0 @buckets!.Count @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
+                     viewBox="0 0 @ActivityTimelineShapes.BoxWidth @SvgNumber.Format(ActivityTimelineShapes.BoxHeight)"
                      preserveAspectRatio="none"
-                     style="flex: 1; height: 32px; cursor: pointer;"
+                     style="display: block; width: 100%; height: 32px; cursor: pointer;"
                      @onclick="SeekAtAsync">
                     <title>@Translations.ActivityTimelineHint</title>
                     @foreach (var shape in notAnalysed)
@@ -65,11 +77,12 @@
                     {
                         <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="@fill" />
                     }
-                    @if (ActivityTimelineShapes.Playhead(playhead, buckets.Count) is { } line)
+                    @if (ActivityTimelineShapes.Playhead(playhead, zoomStart, zoomEnd) is { } line)
                     {
                         <rect x="@SvgNumber.Format(line.X)" y="@SvgNumber.Format(line.Y)" width="@SvgNumber.Format(line.Width)" height="@SvgNumber.Format(line.Height)" fill="#1E88E5" />
                     }
                 </svg>
+                </div>
                 <MudTooltip Text="@Translations.NextEvent">
                     <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
                                    aria-label="@Translations.NextEvent"
@@ -85,6 +98,20 @@
                                          aria-label="@Translations.PlayEventsOnly"
                                          Size="Size.Small" />
                 </MudTooltip>
+                <MudTooltip Text="@Translations.ZoomOut">
+                    <MudIconButton Icon="@Icons.Material.Filled.ZoomOut"
+                                   aria-label="@Translations.ZoomOut"
+                                   Size="Size.Small"
+                                   Disabled="@(!ActivityTimelineZoom.CanZoomOut(zoomStart, zoomEnd))"
+                                   OnClick="ZoomOut" />
+                </MudTooltip>
+                <MudTooltip Text="@Translations.ZoomIn">
+                    <MudIconButton Icon="@Icons.Material.Filled.ZoomIn"
+                                   aria-label="@Translations.ZoomIn"
+                                   Size="Size.Small"
+                                   Disabled="@(!ActivityTimelineZoom.CanZoomIn(zoomStart, zoomEnd, ShownSeconds))"
+                                   OnClick="ZoomIn" />
+                </MudTooltip>
             </div>
         }
     </DialogContent>
@@ -97,9 +124,6 @@
 </MudDialog>
 
 @code {
-    // One stretch per two pixels or so of a large dialog.
-    private const int BucketCount = 400;
-
     private readonly string videoId = "recording-" + Guid.NewGuid().ToString("N");
     private bool failed;
     private ElementReference timeline;
@@ -108,6 +132,22 @@
     private IReadOnlyList<TimelineRect> bars = [];
     private IReadOnlyList<TimelineRect> notAnalysed = [];
     private IReadOnlyList<(TimelineRect Band, string Fill)> bands = [];
+    private IReadOnlyDictionary<string, string>? zoneColours;
+
+    // The part of the recording the timeline shows, as fractions of it (ActivityTimelineZoom).
+    private double zoomStart;
+    private double zoomEnd = 1;
+
+    // How long the player says the recording is; 0 while not known.
+    private double videoSeconds;
+    private bool wheelListened;
+
+    // What the timeline tells under the mouse, and where; nothing while the mouse is elsewhere.
+    private IReadOnlyList<string> hoverLines = [];
+    private double hoverShare;
+
+    private bool HasHover
+        => hoverLines.Count != 0;
 
     // Written as a property: a pattern with ">" in the markup reads as text to the literal-text check.
     private bool HasActivity
@@ -162,6 +202,12 @@
     public double StartSeconds { get; set; }
 
     /// <summary>
+    /// When the recording started, for the time the timeline tells under the mouse; the time into it when not known.
+    /// </summary>
+    [Parameter]
+    public DateTimeOffset? RecordingStart { get; set; }
+
+    /// <summary>
     /// The recording's camera, whose watch zones colour the events; <see langword="null"/> draws them orange.
     /// </summary>
     [Parameter]
@@ -175,21 +221,31 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || failed)
+        if (failed)
         {
             return;
         }
 
-        if (StartSeconds > 0)
+        if (firstRender)
         {
-            await JS.InvokeVoidAsync("timelineInterop.startAt", videoId, StartSeconds);
+            if (StartSeconds > 0)
+            {
+                await JS.InvokeVoidAsync("timelineInterop.startAt", videoId, StartSeconds);
+            }
+
+            self = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("recordingTimeline.onTime", videoId, self);
+            if (FollowingSegments.Count > 0)
+            {
+                await JS.InvokeVoidAsync("timelineInterop.onEnded", videoId, self);
+            }
         }
 
-        self = DotNetObjectReference.Create(this);
-        await JS.InvokeVoidAsync("recordingTimeline.onTime", videoId, self);
-        if (FollowingSegments.Count > 0)
+        // The timeline comes with its activity, after the first drawing, and again with each recording.
+        if (HasActivity && !wheelListened && self is not null)
         {
-            await JS.InvokeVoidAsync("timelineInterop.onEnded", videoId, self);
+            wheelListened = true;
+            await JS.InvokeVoidAsync("recordingTimeline.listen", timeline, self);
         }
     }
 
@@ -214,6 +270,11 @@
         StartSeconds = 0;
         buckets = null;
         events = [];
+        (zoomStart, zoomEnd) = (0, 1);
+        videoSeconds = 0;
+        wheelListened = false;
+        hoverLines = [];
+        RecordingStart = next.RecordingStart;
         StateHasChanged();
         await OnInitializedAsync();
         StateHasChanged();
@@ -231,14 +292,14 @@
 
         try
         {
-            if (await Gateway.GetRecordingActivityAsync(FilePath, BucketCount, DurationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
+            // One stretch a second, so a minute zoomed in still has its seconds.
+            if (await Gateway.GetRecordingActivityAsync(FilePath, ActivityTimelineZoom.BucketsFor(DurationSeconds), DurationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
             {
+                var camera = CameraId is { } id ? await Gateway.GetCameraByIdAsync(id) : null;
+                zoneColours = MotionZoneColors.ByZone(camera?.MotionZones);
                 buckets = activity.Buckets;
                 events = ActivityTimelineLayout.FindEvents(activity.Buckets);
-                bars = ActivityTimelineShapes.Bars(activity.Buckets);
-                notAnalysed = ActivityTimelineShapes.NotAnalysed(activity.Buckets);
-                var camera = CameraId is { } id ? await Gateway.GetCameraByIdAsync(id) : null;
-                bands = ActivityTimelineShapes.Bands(activity.Buckets, MotionZoneColors.ByZone(camera?.MotionZones));
+                Redraw();
             }
         }
         catch (HttpRequestException)
@@ -248,7 +309,83 @@
     }
 
     private async Task SeekAtAsync(MouseEventArgs e)
-        => await JS.InvokeVoidAsync("recordingTimeline.seekAt", videoId, timeline, e.ClientX);
+        => await JS.InvokeVoidAsync("recordingTimeline.seekAt", videoId, timeline, e.ClientX, zoomStart, zoomEnd);
+
+    // The length the zoom stops at a minute of: the player's, else the listing's.
+    private double ShownSeconds
+        => videoSeconds > 0 ? videoSeconds : DurationSeconds;
+
+    // The buttons zoom around the player, else the middle.
+    private void ZoomIn()
+        => Zoom(playhead, zoomIn: true);
+
+    private void ZoomOut()
+        => Zoom(playhead, zoomIn: false);
+
+    /// <summary>
+    /// The mouse wheel turned over the timeline: zoom around the place under the mouse.
+    /// </summary>
+    /// <param name="share">Where the mouse is on the timeline, 0 (left) to 1 (right).</param>
+    /// <param name="zoomIn">Whether to zoom in; out when <see langword="false"/>.</param>
+    [JSInvokable]
+    public void OnTimelineWheel(double share, bool zoomIn)
+    {
+        Zoom(ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share), zoomIn);
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// The mouse moved over the timeline, or left it: tell what happened under it.
+    /// </summary>
+    /// <param name="share">Where the mouse is on the timeline, 0 (left) to 1 (right); below 0 when it left.</param>
+    [JSInvokable]
+    public void OnTimelineHover(double share)
+    {
+        hoverShare = share;
+        hoverLines = [];
+        if (share >= 0 && buckets is not null &&
+            ActivityTimelineHover.At(
+                buckets,
+                events,
+                ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share - ActivityHoverText.HalfWidth),
+                ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share + ActivityHoverText.HalfWidth)) is { } hover)
+        {
+            hoverLines = ActivityHoverText.Lines(hover, RecordingStart, ShownSeconds);
+        }
+
+        StateHasChanged();
+    }
+
+    private void Zoom(double focus, bool zoomIn)
+    {
+        if (zoomIn && ActivityTimelineZoom.CanZoomIn(zoomStart, zoomEnd, ShownSeconds))
+        {
+            (zoomStart, zoomEnd) = ActivityTimelineZoom.In(zoomStart, zoomEnd, focus, ShownSeconds);
+        }
+        else if (!zoomIn && ActivityTimelineZoom.CanZoomOut(zoomStart, zoomEnd))
+        {
+            (zoomStart, zoomEnd) = ActivityTimelineZoom.Out(zoomStart, zoomEnd, focus);
+        }
+        else
+        {
+            return;
+        }
+
+        Redraw();
+    }
+
+    // The shapes of the part shown.
+    private void Redraw()
+    {
+        if (buckets is null)
+        {
+            return;
+        }
+
+        bars = ActivityTimelineShapes.Bars(buckets, zoomStart, zoomEnd);
+        notAnalysed = ActivityTimelineShapes.NotAnalysed(buckets, zoomStart, zoomEnd);
+        bands = ActivityTimelineShapes.Bands(events, zoneColours, zoomStart, zoomEnd);
+    }
 
     private async Task NextEventAsync()
     {
@@ -276,8 +413,20 @@
     [JSInvokable]
     public async Task OnTimeAsync(double currentSeconds, double durationSeconds)
     {
-        var shownStretch = PlayheadStretch(playhead);
+        var shownColumn = ActivityTimelineShapes.PlayheadColumn(playhead, zoomStart, zoomEnd);
+        var previous = playhead;
+        videoSeconds = durationSeconds;
         playhead = durationSeconds > 0 ? currentSeconds / durationSeconds : -1;
+
+        // The part shown follows the player out of it.
+        var window = ActivityTimelineZoom.Follow(zoomStart, zoomEnd, previous, playhead);
+        var moved = window != (zoomStart, zoomEnd);
+        if (moved)
+        {
+            (zoomStart, zoomEnd) = window;
+            Redraw();
+        }
+
         if (playEventsOnly && HasActivity && durationSeconds > 0)
         {
             var target = events.Count == 0 ? durationSeconds : ActivityEventJumps.EventsOnly(events, currentSeconds, durationSeconds);
@@ -291,15 +440,12 @@
             }
         }
 
-        // The whole timeline is drawn again only when the playhead moves into another stretch.
-        if (PlayheadStretch(playhead) != shownStretch)
+        // The whole timeline is drawn again only when the playhead moves into another column.
+        if (moved || ActivityTimelineShapes.PlayheadColumn(playhead, zoomStart, zoomEnd) != shownColumn)
         {
             StateHasChanged();
         }
     }
-
-    private int PlayheadStretch(double position)
-        => position < 0 || buckets is null ? -1 : (int)(Math.Min(position, 1) * buckets.Count);
 
     // After the last event: the next recording, else the player stops where it is.
     private async Task FinishEventsOnlyAsync()
