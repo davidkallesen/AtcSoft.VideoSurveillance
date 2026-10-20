@@ -116,6 +116,24 @@ public sealed class MotionZoneEditorStateTests
     }
 
     [Fact]
+    public void A_Picked_Zone_Becomes_A_Watch_Zone_With_Its_Own_Values_And_An_Ignore_Zone_Again_Without()
+    {
+        var state = new MotionZoneEditorState([Square("Tree")]);
+        state.SetKind(new MotionZoneKind(MotionZoneKind.Names.Watch)).Should().BeFalse("nothing is picked");
+        state.PointerDown(0.4, 0.4, Width, Height);
+        state.PointerUp();
+
+        state.SetKind(new MotionZoneKind(MotionZoneKind.Names.Watch)).Should().BeTrue();
+        state.SetSensitivity(80).Should().BeTrue();
+        state.SetSensitivity(80).Should().BeFalse("it is 80 already");
+        state.SetSmallestObjectPercent(0.1).Should().BeTrue();
+        (state.Zones[0].Sensitivity, state.Zones[0].SmallestObjectPercent).Should().Be((80, 0.1));
+
+        state.SetKind(new MotionZoneKind(MotionZoneKind.Names.Ignore)).Should().BeTrue();
+        (state.Zones[0].Sensitivity, state.Zones[0].SmallestObjectPercent).Should().Be(((int?)null, (double?)null), "an ignore zone has no values of its own");
+    }
+
+    [Fact]
     public void No_More_Than_Sixteen_Zones()
     {
         var state = new MotionZoneEditorState([.. Enumerable.Range(1, 16).Select(i => Square($"Zone {i}"))]);

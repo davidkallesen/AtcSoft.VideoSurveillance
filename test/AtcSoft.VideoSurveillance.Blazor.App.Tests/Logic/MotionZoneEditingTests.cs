@@ -36,6 +36,18 @@ public sealed class MotionZoneEditingTests
         MotionZoneEditing.MaxNameLength.Should().Be(CoreEditing.MaxNameLength);
         MotionZoneEditing.DefaultAspectRatio.Should().Be(CoreEditing.DefaultAspectRatio);
         MotionZoneEditing.GrabDistance.Should().Be(CoreEditing.GrabDistance);
+        MotionZoneEditing.DefaultSmallestObjectPercent.Should().Be(CoreEditing.DefaultSmallestObjectPercent);
+        foreach (var culture in new[] { "en-US", "da-DK" })
+        {
+            foreach (var text in new[] { "", "5", "105", "-1", "0.05", "0,05", "x" })
+            {
+                var format = CultureInfo.GetCultureInfo(culture);
+                MotionZoneEditing.TryReadSensitivity(text, format, out var webSensitivity).Should().Be(CoreEditing.TryReadSensitivity(text, format, out var coreSensitivity));
+                webSensitivity.Should().Be(coreSensitivity);
+                MotionZoneEditing.TryReadSmallestObjectPercent(text, format, out var webSmallest).Should().Be(CoreEditing.TryReadSmallestObjectPercent(text, format, out var coreSmallest));
+                webSmallest.Should().Be(coreSmallest);
+            }
+        }
         for (var count = 0; count <= 33; count++)
         {
             MotionZoneEditing.CanAddZone(count).Should().Be(CoreEditing.CanAddZone(count));

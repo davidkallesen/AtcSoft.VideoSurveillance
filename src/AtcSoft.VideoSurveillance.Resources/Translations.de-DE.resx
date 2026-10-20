@@ -2770,9 +2770,21 @@ Vorschaubild:
     <value>Zone {0}</value>
   </data>
   <data name="MotionZonesHelp" xml:space="preserve">
-    <value>Bewegung innerhalb einer Zone wird ignoriert. Ziehen Sie eine Zone oder ihre Ecken; doppelklicken Sie auf eine Kante, um eine Ecke hinzuzufügen, oder auf eine Ecke, um sie zu entfernen.</value>
+    <value>Eine ignorierte Zone blendet die Bewegung in ihr aus; eine überwachte Zone hat eine eigene Empfindlichkeit und ein eigenes kleinstes Objekt, leer gelassen gelten die der Kamera. Ziehen Sie eine Zone oder ihre Ecken; doppelklicken Sie auf eine Kante, um eine Ecke hinzuzufügen, oder auf eine Ecke, um sie zu entfernen.</value>
   </data>
   <data name="MotionZonesNoPicture" xml:space="preserve">
     <value>Noch kein Bild: Nehmen Sie einen Schnappschuss auf, um auf dem Kamerabild zu zeichnen.</value>
+  </data>
+  <data name="ZoneKindIgnore" xml:space="preserve">
+    <value>Bewegung ignorieren</value>
+  </data>
+  <data name="ZoneKindWatch" xml:space="preserve">
+    <value>Mit eigenen Werten überwachen</value>
+  </data>
+  <data name="SmallestObjectPercent" xml:space="preserve">
+    <value>Kleinstes Objekt (% des Bildes)</value>
+  </data>
+  <data name="CamerasOwn" xml:space="preserve">
+    <value>Wie die Kamera</value>
   </data>
 </root>

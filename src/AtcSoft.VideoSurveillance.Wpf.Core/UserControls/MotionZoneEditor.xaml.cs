@@ -32,7 +32,16 @@ public partial class MotionZoneEditor
     [DependencyProperty(PropertyChangedCallback = nameof(OnZoneNameChanged))]
     private string? zoneName;
 
-    // Set while the name box is filled from the picked zone, so that is not taken as a rename.
+    [DependencyProperty(PropertyChangedCallback = nameof(OnZoneKindKeyChanged))]
+    private string? zoneKindKey;
+
+    [DependencyProperty(PropertyChangedCallback = nameof(OnZoneSensitivityTextChanged))]
+    private string? zoneSensitivityText;
+
+    [DependencyProperty(PropertyChangedCallback = nameof(OnZoneSmallestObjectTextChanged))]
+    private string? zoneSmallestObjectText;
+
+    // Set while the fields are filled from the picked zone, so that is not taken as an edit.
     private bool showingName;
 
     // Atc.Wpf finds the texts only in assemblies already loaded: load them before the XAML.
@@ -48,6 +57,21 @@ public partial class MotionZoneEditor
     {
         InitializeComponent();
     }
+
+    /// <summary>
+    /// Gets the kinds a zone can be: ignored, or watched with its own values.
+    /// </summary>
+    public static IDictionary<string, string> KindItems { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [nameof(MotionZoneKind.Ignore)] = Translations.ZoneKindIgnore,
+        [nameof(MotionZoneKind.Watch)] = Translations.ZoneKindWatch,
+    };
+
+    /// <summary>
+    /// Gets the smallest object a watch zone takes when its field is empty, as the field shows it.
+    /// </summary>
+    public static string DefaultSmallestObjectText
+        => MotionZoneEditing.DefaultSmallestObjectPercent.ToString(CultureInfo.CurrentCulture);
 
     private IReadOnlyList<MotionZone> Current
         => Zones ?? [];
@@ -121,6 +145,59 @@ public partial class MotionZoneEditor
         if (!string.Equals(name, zone.Name, StringComparison.Ordinal))
         {
             editor.Change(editor.SelectedZone, z => z.Name = name);
+        }
+    }
+
+    private static void OnZoneKindKeyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not MotionZoneEditor editor ||
+            editor.showingName ||
+            editor.Picked is not { } zone ||
+            !Enum.TryParse<MotionZoneKind>(editor.ZoneKindKey, out var kind) ||
+            kind == zone.Kind)
+        {
+            return;
+        }
+
+        // An ignore zone has no values of its own.
+        editor.Change(editor.SelectedZone, z =>
+        {
+            z.Kind = kind;
+            if (kind == MotionZoneKind.Ignore)
+            {
+                z.Sensitivity = null;
+                z.SmallestObjectPercent = null;
+            }
+        });
+    }
+
+    private static void OnZoneSensitivityTextChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MotionZoneEditor editor &&
+            !editor.showingName &&
+            editor.Picked is { } zone &&
+            MotionZoneEditing.TryReadSensitivity(editor.ZoneSensitivityText, CultureInfo.CurrentCulture, out var value) &&
+            value != zone.Sensitivity)
+        {
+            editor.Change(editor.SelectedZone, z => z.Sensitivity = value);
+        }
+    }
+
+    private static void OnZoneSmallestObjectTextChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MotionZoneEditor editor &&
+            !editor.showingName &&
+            editor.Picked is { } zone &&
+            MotionZoneEditing.TryReadSmallestObjectPercent(editor.ZoneSmallestObjectText, CultureInfo.CurrentCulture, out var value) &&
+            !EqualityComparer<double?>.Default.Equals(value, zone.SmallestObjectPercent))
+        {
+            editor.Change(editor.SelectedZone, z => z.SmallestObjectPercent = value);
         }
     }
 
@@ -230,19 +307,43 @@ public partial class MotionZoneEditor
                                        SelectedCorner < zone.Points.Count &&
                                        MotionZoneEditing.CanRemoveCorner(zone.Points.Count);
         NameBox.IsEnabled = zone is not null;
+        KindBox.IsEnabled = zone is not null;
+        var watched = zone?.Kind == MotionZoneKind.Watch ? Visibility.Visible : Visibility.Collapsed;
+        SensitivityBox.Visibility = watched;
+        SmallestObjectBox.Visibility = watched;
 
-        var name = zone?.Name ?? string.Empty;
-        if (!string.Equals(ZoneName ?? string.Empty, name, StringComparison.Ordinal))
+        showingName = true;
+        try
         {
-            showingName = true;
-            try
+            var name = zone?.Name ?? string.Empty;
+            if (!string.Equals(ZoneName ?? string.Empty, name, StringComparison.Ordinal))
             {
                 SetCurrentValue(ZoneNameProperty, name);
             }
-            finally
+
+            var kind = zone?.Kind.ToString();
+            if (!string.Equals(ZoneKindKey, kind, StringComparison.Ordinal))
             {
-                showingName = false;
+                SetCurrentValue(ZoneKindKeyProperty, kind);
             }
+
+            // A field is filled from the zone only when it means something else, so "0.0" on the
+            // way to "0.05" stays as typed.
+            if (!MotionZoneEditing.TryReadSensitivity(ZoneSensitivityText, CultureInfo.CurrentCulture, out var sensitivity) ||
+                sensitivity != zone?.Sensitivity)
+            {
+                SetCurrentValue(ZoneSensitivityTextProperty, zone?.Sensitivity?.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+            }
+
+            if (!MotionZoneEditing.TryReadSmallestObjectPercent(ZoneSmallestObjectText, CultureInfo.CurrentCulture, out var smallest) ||
+                !EqualityComparer<double?>.Default.Equals(smallest, zone?.SmallestObjectPercent))
+            {
+                SetCurrentValue(ZoneSmallestObjectTextProperty, zone?.SmallestObjectPercent?.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+            }
+        }
+        finally
+        {
+            showingName = false;
         }
     }
 }

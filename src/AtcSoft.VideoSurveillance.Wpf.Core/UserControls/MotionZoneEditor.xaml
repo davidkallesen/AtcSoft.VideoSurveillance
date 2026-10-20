@@ -62,6 +62,38 @@
                                             Key=Name}"
             Text="{Binding Path=ZoneName, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
+        <!--  The picked zone's kind; a watch zone's own values, empty for the camera's  -->
+        <atc:GridEx
+            Margin="0,0,0,10"
+            Columns="*,10,*,10,*"
+            DockPanel.Dock="Top">
+            <atc:LabelComboBox
+                x:Name="KindBox"
+                Grid.Column="0"
+                IsEnabled="False"
+                Items="{x:Static userControls:MotionZoneEditor.KindItems}"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=Type}"
+                SelectedKey="{Binding Path=ZoneKindKey, ElementName=Root, Mode=TwoWay}" />
+            <atc:LabelTextBox
+                x:Name="SensitivityBox"
+                Grid.Column="2"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=Sensitivity}"
+                Text="{Binding Path=ZoneSensitivityText, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Visibility="Collapsed"
+                WatermarkText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                    Key=CamerasOwn}" />
+            <atc:LabelTextBox
+                x:Name="SmallestObjectBox"
+                Grid.Column="4"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=SmallestObjectPercent}"
+                Text="{Binding Path=ZoneSmallestObjectText, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Visibility="Collapsed"
+                WatermarkText="{x:Static userControls:MotionZoneEditor.DefaultSmallestObjectText}" />
+        </atc:GridEx>
+
         <TextBlock
             Margin="0,0,0,6"
             DockPanel.Dock="Top"

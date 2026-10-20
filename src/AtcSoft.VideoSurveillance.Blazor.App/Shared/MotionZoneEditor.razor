@@ -28,6 +28,30 @@
                   MaxLength="MotionZoneEditing.MaxNameLength"
                   Immediate="true"
                   Class="mb-2" />
+    <MudStack Row="true" Spacing="2" Class="mb-2">
+        <MudSelect T="string"
+                   Value="picked.Kind.Value"
+                   ValueChanged="SetKindAsync"
+                   Label="@Translations.Type">
+            <MudSelectItem Value="MotionZoneKind.Names.Ignore">@Translations.ZoneKindIgnore</MudSelectItem>
+            <MudSelectItem Value="MotionZoneKind.Names.Watch">@Translations.ZoneKindWatch</MudSelectItem>
+        </MudSelect>
+        @if (picked.Kind.Value == MotionZoneKind.Names.Watch)
+        {
+            <MudTextField T="string"
+                          Value="sensitivityText"
+                          ValueChanged="SetSensitivityAsync"
+                          Label="@Translations.Sensitivity"
+                          Placeholder="@Translations.CamerasOwn"
+                          Immediate="true" />
+            <MudTextField T="string"
+                          Value="smallestObjectText"
+                          ValueChanged="SetSmallestObjectAsync"
+                          Label="@Translations.SmallestObjectPercent"
+                          Placeholder="@MotionZoneEditing.DefaultSmallestObjectPercent.ToString(CultureInfo.CurrentCulture)"
+                          Immediate="true" />
+        }
+    </MudStack>
 }
 
 <MudText Typo="Typo.body2" Class="mb-1">@Translations.MotionZonesHelp</MudText>
@@ -88,6 +112,11 @@
 
     // Where the drawing is on the page while the pointer is down: left, top, width, height.
     private double[] box = [0, 0, 0, 0];
+
+    // The watch zone's fields as typed, so "0.0" on the way to "0.05" stays; filled again when
+    // another zone is picked or the value means something else.
+    private string sensitivityText = string.Empty;
+    private string smallestObjectText = string.Empty;
 
     // A move outside a drag draws nothing new: the page is not drawn again for it. Moves are always
     // listened to, so the first moves of a quick drag are not lost while the press is handled.
@@ -158,6 +187,51 @@
 
         aspectRatio = MotionZoneShapes.AspectRatio(pictureSize, PictureQuarters);
         width = MotionZoneShapes.Width(aspectRatio);
+        ShowValues();
+    }
+
+    private void ShowValues()
+    {
+        var zone = state.Picked;
+        if (!MotionZoneEditing.TryReadSensitivity(sensitivityText, CultureInfo.CurrentCulture, out var sensitivity) ||
+            sensitivity != zone?.Sensitivity)
+        {
+            sensitivityText = zone?.Sensitivity?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+
+        if (!MotionZoneEditing.TryReadSmallestObjectPercent(smallestObjectText, CultureInfo.CurrentCulture, out var smallest) ||
+            !EqualityComparer<double?>.Default.Equals(smallest, zone?.SmallestObjectPercent))
+        {
+            smallestObjectText = zone?.SmallestObjectPercent?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+    }
+
+    private async Task SetKindAsync(string kind)
+    {
+        if (state.SetKind(new MotionZoneKind(kind)))
+        {
+            await TellAsync();
+        }
+    }
+
+    private async Task SetSensitivityAsync(string text)
+    {
+        sensitivityText = text ?? string.Empty;
+        if (MotionZoneEditing.TryReadSensitivity(sensitivityText, CultureInfo.CurrentCulture, out var value) &&
+            state.SetSensitivity(value))
+        {
+            await TellAsync();
+        }
+    }
+
+    private async Task SetSmallestObjectAsync(string text)
+    {
+        smallestObjectText = text ?? string.Empty;
+        if (MotionZoneEditing.TryReadSmallestObjectPercent(smallestObjectText, CultureInfo.CurrentCulture, out var value) &&
+            state.SetSmallestObjectPercent(value))
+        {
+            await TellAsync();
+        }
     }
 
     // The handles of the picked zone's corners, and which is the picked corner.

@@ -92,6 +92,9 @@ public sealed class CameraWallSmokeTests
         app.Find(dialog, "Remove zone", ControlType.Button).IsEnabled.Should().BeFalse("no zone is picked yet");
 
         DesktopApp.Press(app.Find(dialog, "Add zone", ControlType.Button));
+
+        // The picked zone's kind can be chosen now: its drop-down is opened like every other.
+        app.OpenEveryDropDown(dialog);
         var addCorner = app.Find(dialog, "Add corner", ControlType.Button);
         addCorner.IsEnabled.Should().BeTrue("the new zone is picked");
         DesktopApp.Press(addCorner);

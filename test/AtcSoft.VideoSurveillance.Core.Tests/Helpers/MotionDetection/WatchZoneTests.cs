@@ -68,6 +68,45 @@ public sealed class WatchZoneTests
         draft.Zones[0].Sensitivity.Should().Be(90);
     }
 
+    [Theory]
+    [InlineData("", "en-US", true, null)]
+    [InlineData("  ", "en-US", true, null)]
+    [InlineData("80", "en-US", true, 80)]
+    [InlineData("180", "en-US", true, 100)]
+    [InlineData("-5", "en-US", true, 0)]
+    [InlineData("8x", "en-US", false, null)]
+    [InlineData("8.5", "en-US", false, null)]
+    public void A_Typed_Sensitivity_Is_Read_And_Kept_From_0_To_100(
+        string text,
+        string culture,
+        bool read,
+        int? value)
+    {
+        MotionZoneEditing.TryReadSensitivity(text, CultureInfo.GetCultureInfo(culture), out var sensitivity).Should().Be(read);
+        sensitivity.Should().Be(value);
+    }
+
+    [Theory]
+    [InlineData("", "en-US", true, null)]
+    [InlineData("0.05", "en-US", true, 0.05)]
+    [InlineData("0,05", "da-DK", true, 0.05)]
+    [InlineData("250", "en-US", true, 100.0)]
+    [InlineData("0.", "en-US", true, 0.0)]
+    [InlineData("abc", "en-US", false, null)]
+    public void A_Typed_Smallest_Object_Is_Read_In_The_Culture_And_Kept_From_0_To_100(
+        string text,
+        string culture,
+        bool read,
+        double? value)
+    {
+        MotionZoneEditing.TryReadSmallestObjectPercent(text, CultureInfo.GetCultureInfo(culture), out var percent).Should().Be(read);
+        percent.Should().Be(value);
+    }
+
+    [Fact]
+    public void The_Editors_Default_Is_The_Detectors()
+        => MotionZoneEditing.DefaultSmallestObjectPercent.Should().BeApproximately(MotionDetectorOptions.DefaultSmallestObjectPercent, 1e-12);
+
     private static MotionZone Zone(
         MotionZoneKind kind,
         double left,

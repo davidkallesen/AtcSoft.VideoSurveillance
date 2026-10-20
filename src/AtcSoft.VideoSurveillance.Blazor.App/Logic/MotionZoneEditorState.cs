@@ -323,6 +323,43 @@ public sealed class MotionZoneEditorState
                Change(SelectedZone, z => z with { Name = name });
     }
 
+    /// <summary>
+    /// Makes the picked zone an ignore zone (without values of its own) or a watch zone.
+    /// </summary>
+    /// <param name="kind">The kind.</param>
+    /// <returns><see langword="true"/> when the zones changed.</returns>
+    public bool SetKind(MotionZoneKind kind)
+    {
+        if (Picked is not { } zone || zone.Kind.Equals(kind))
+        {
+            return false;
+        }
+
+        return kind.Value == MotionZoneKind.Names.Watch
+            ? Change(SelectedZone, z => z with { Kind = kind })
+            : Change(SelectedZone, z => z with { Kind = kind, Sensitivity = null, SmallestObjectPercent = null });
+    }
+
+    /// <summary>
+    /// Gives the picked zone its own sensitivity, or none (the camera's).
+    /// </summary>
+    /// <param name="sensitivity">The sensitivity, 0 to 100, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> when the zones changed.</returns>
+    public bool SetSensitivity(int? sensitivity)
+        => Picked is { } zone &&
+           zone.Sensitivity != sensitivity &&
+           Change(SelectedZone, z => z with { Sensitivity = sensitivity });
+
+    /// <summary>
+    /// Gives the picked zone its own smallest object, or none (the default).
+    /// </summary>
+    /// <param name="percent">The percent of the picture, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> when the zones changed.</returns>
+    public bool SetSmallestObjectPercent(double? percent)
+        => Picked is { } zone &&
+           !EqualityComparer<double?>.Default.Equals(zone.SmallestObjectPercent, percent) &&
+           Change(SelectedZone, z => z with { SmallestObjectPercent = percent });
+
     private void StartDrag(
         IReadOnlyList<ZonePoint> corners,
         double x,

@@ -39,6 +39,70 @@ public static class MotionZoneEditing
     public const double GrabDistance = 8;
 
     /// <summary>
+    /// The smallest object a watch zone without its own takes, in percent of the picture: the
+    /// detector's default, which an editor shows in the empty field.
+    /// </summary>
+    public const double DefaultSmallestObjectPercent = 0.02;
+
+    /// <summary>
+    /// Reads a watch zone's sensitivity as typed: empty is none (the camera's), a whole number is
+    /// kept from 0 to 100.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <param name="culture">The culture it is typed in.</param>
+    /// <param name="value">The sensitivity, or <see langword="null"/> for the camera's.</param>
+    /// <returns><see langword="false"/> when the text is not a number (yet).</returns>
+    public static bool TryReadSensitivity(
+        string? text,
+        IFormatProvider culture,
+        out int? value)
+    {
+        value = null;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+
+        if (!int.TryParse(text.Trim(), System.Globalization.NumberStyles.Integer, culture, out var read))
+        {
+            return false;
+        }
+
+        value = Math.Clamp(read, 0, 100);
+        return true;
+    }
+
+    /// <summary>
+    /// Reads a watch zone's smallest object as typed, in percent of the picture: empty is none (the
+    /// default), a number is kept from 0 to 100.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <param name="culture">The culture it is typed in.</param>
+    /// <param name="value">The percent, or <see langword="null"/> for the default.</param>
+    /// <returns><see langword="false"/> when the text is not a number (yet).</returns>
+    public static bool TryReadSmallestObjectPercent(
+        string? text,
+        IFormatProvider culture,
+        out double? value)
+    {
+        value = null;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+
+        if (!double.TryParse(text.Trim(), System.Globalization.NumberStyles.Float, culture, out var read) ||
+            double.IsNaN(read) ||
+            double.IsInfinity(read))
+        {
+            return false;
+        }
+
+        value = Math.Clamp(read, 0, 100);
+        return true;
+    }
+
+    /// <summary>
     /// Gets a value indicating whether another zone may be added.
     /// </summary>
     /// <param name="count">The number of zones.</param>

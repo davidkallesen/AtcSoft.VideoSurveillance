@@ -2770,9 +2770,21 @@ Miniature:
     <value>Zone {0}</value>
   </data>
   <data name="MotionZonesHelp" xml:space="preserve">
-    <value>Bevægelse inde i en zone ignoreres. Træk en zone eller dens hjørner; dobbeltklik på en kant for at tilføje et hjørne, eller på et hjørne for at fjerne det.</value>
+    <value>En ignoreret zone skjuler bevægelsen i den; en overvåget zone har sin egen følsomhed og mindste objekt, som tomme er kameraets. Træk en zone eller dens hjørner; dobbeltklik på en kant for at tilføje et hjørne, eller på et hjørne for at fjerne det.</value>
   </data>
   <data name="MotionZonesNoPicture" xml:space="preserve">
     <value>Intet billede endnu: tag et skærmbillede for at tegne på kameraets billede.</value>
+  </data>
+  <data name="ZoneKindIgnore" xml:space="preserve">
+    <value>Ignorér bevægelse</value>
+  </data>
+  <data name="ZoneKindWatch" xml:space="preserve">
+    <value>Overvåg med egne værdier</value>
+  </data>
+  <data name="SmallestObjectPercent" xml:space="preserve">
+    <value>Mindste objekt (% af billedet)</value>
+  </data>
+  <data name="CamerasOwn" xml:space="preserve">
+    <value>Kameraets egen</value>
   </data>
 </root>

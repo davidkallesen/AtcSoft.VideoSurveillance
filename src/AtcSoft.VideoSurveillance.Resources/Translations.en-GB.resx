@@ -2767,9 +2767,21 @@
     <value>Zone {0}</value>
   </data>
   <data name="MotionZonesHelp" xml:space="preserve">
-    <value>Movement inside a zone is ignored. Drag a zone or its corners; double-click an edge to add a corner, or a corner to remove it.</value>
+    <value>An ignore zone hides the movement in it; a watch zone has its own sensitivity and smallest object, which left empty are the camera's. Drag a zone or its corners; double-click an edge to add a corner, or a corner to remove it.</value>
   </data>
   <data name="MotionZonesNoPicture" xml:space="preserve">
     <value>No picture yet: take a snapshot to draw on the camera's picture.</value>
+  </data>
+  <data name="ZoneKindIgnore" xml:space="preserve">
+    <value>Ignore movement</value>
+  </data>
+  <data name="ZoneKindWatch" xml:space="preserve">
+    <value>Watch with its own values</value>
+  </data>
+  <data name="SmallestObjectPercent" xml:space="preserve">
+    <value>Smallest object (% of the picture)</value>
+  </data>
+  <data name="CamerasOwn" xml:space="preserve">
+    <value>Camera's own</value>
   </data>
 </root>
