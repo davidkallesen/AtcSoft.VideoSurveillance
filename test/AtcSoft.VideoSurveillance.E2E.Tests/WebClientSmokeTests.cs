@@ -87,10 +87,13 @@ public sealed class WebClientSmokeTests(ServerFixture server)
             await run($"page {path}", () => VisitAsync(page, path));
         }
 
-        foreach (var cameraId in await CameraIdsAsync())
+        var cameraIds = await CameraIdsAsync();
+        foreach (var cameraId in cameraIds)
         {
             await run($"camera form {cameraId}", () => VisitAsync(page, $"/cameras/{cameraId}/edit"));
         }
+
+        await run("draw a motion zone", () => DrawMotionZoneAsync(page, cameraIds[^1]));
 
         await run("play a recording with its activity timeline", () => PlayWithTimelineAsync(page));
         await run("timeline lanes", () => TimelineLanesAsync(page));
@@ -148,6 +151,38 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await dialog.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Play", Exact = true })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();
+    }
+
+    // The form asks the server for a snapshot and shows the answer (the live test camera serves one
+    // client, so there is often none to be had); a zone added is picked and can be dragged.
+    // The form is left without saving. The last camera's form is open from the step before, and is
+    // used as it is: one page load fewer.
+    private static async Task DrawMotionZoneAsync(
+        IPage page,
+        Guid cameraId)
+    {
+        if (!page.Url.EndsWith($"/cameras/{cameraId}/edit", StringComparison.OrdinalIgnoreCase))
+        {
+            await VisitAsync(page, $"/cameras/{cameraId}/edit");
+        }
+
+        await page.GetByText("Motion zones", new PageGetByTextOptions { Exact = true }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Take Snapshot", Exact = true }).ClickAsync();
+        await page.GetByText("No picture yet: take a snapshot to draw on the camera's picture.", new PageGetByTextOptions { Exact = true })
+            .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = 45_000 });
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Add zone", Exact = true }).ClickAsync();
+        var removeZone = page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Remove zone", Exact = true });
+        (await removeZone.IsEnabledAsync()).Should().BeTrue("the new zone is picked");
+
+        // The new zone covers 0.25 to 0.55 of the picture: drag it by its middle.
+        var drawing = page.GetByRole(AriaRole.Img, new PageGetByRoleOptions { Name = "Motion zones", Exact = true });
+        var box = (await drawing.BoundingBoxAsync())!;
+        await page.Mouse.MoveAsync(box.X + (box.Width * 0.4f), box.Y + (box.Height * 0.4f));
+        await page.Mouse.DownAsync();
+        await page.Mouse.MoveAsync(box.X + (box.Width * 0.6f), box.Y + (box.Height * 0.5f), new MouseMoveOptions { Steps = 5 });
+        await page.Mouse.UpAsync();
+        (await removeZone.IsEnabledAsync()).Should().BeTrue("the dragged zone stays picked");
     }
 
     // Every camera has a lane on the Timeline page; the offline camera's is all gap.

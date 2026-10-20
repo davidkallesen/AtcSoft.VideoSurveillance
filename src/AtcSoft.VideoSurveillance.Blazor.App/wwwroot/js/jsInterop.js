@@ -262,3 +262,24 @@ window.playAllInterop = {
         });
     }
 };
+
+window.zoneEditor = {
+    // Where the zone drawing is on the page: [left, top, width, height]. Given a pointer, the
+    // drawing keeps it until it is let go, so a drag goes on outside the drawing.
+    box: function (element, pointerId) {
+        if (!element) {
+            return [0, 0, 0, 0];
+        }
+
+        if (pointerId !== null && pointerId !== undefined && element.setPointerCapture) {
+            try {
+                element.setPointerCapture(pointerId);
+            } catch (e) {
+                // The pointer is gone already.
+            }
+        }
+
+        var box = element.getBoundingClientRect();
+        return [box.left, box.top, box.width, box.height];
+    }
+};

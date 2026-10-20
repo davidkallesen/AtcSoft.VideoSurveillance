@@ -104,6 +104,24 @@ public sealed class MotionZoneDraft
     }
 
     /// <summary>
+    /// Gets the zones a camera form sends: a new camera its zones (none when there are none), an
+    /// existing one only zones that changed, so the server keeps and turns the stored ones.
+    /// </summary>
+    /// <param name="draft">The form's zones.</param>
+    /// <param name="isNew">Whether the camera is new.</param>
+    [SuppressMessage("Design", "MA0016:Prefer using collection abstraction instead of implementation", Justification = "The generated requests take a List")]
+    public static List<MotionZone>? ToSend(
+        MotionZoneDraft draft,
+        bool isNew)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        return (isNew ? draft.Zones.Count > 0 : draft.IsChanged)
+            ? [.. Copy(draft.Zones)]
+            : null;
+    }
+
+    /// <summary>
     /// Turns the zones with the picture to the rotation chosen in the form.
     /// </summary>
     /// <param name="rotation">The rotation.</param>

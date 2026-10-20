@@ -126,7 +126,9 @@ else
                             <MudSelectItem Value="CameraConnectionType.Wifi">@Translations.ConnectionTypeWifi</MudSelectItem>
                         </MudSelect>
                     }
-                    <MudSelect @bind-Value="rotation"
+                    <MudSelect T="CameraRotation"
+                               Value="rotation"
+                               ValueChanged="OnRotationChanged"
                                Label="@Translations.RotationClockwise"
                                Class="mt-3">
                         <MudSelectItem Value="CameraRotation.None">@Translations.RotationNone</MudSelectItem>
@@ -168,6 +170,17 @@ else
                         <MudSelectItem Value="CameraOverlayPosition.BottomLeft">@Translations.OverlayPositionBottomLeft</MudSelectItem>
                         <MudSelectItem Value="CameraOverlayPosition.BottomRight">@Translations.OverlayPositionBottomRight</MudSelectItem>
                     </MudSelect>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="@Translations.MotionZones">
+                    <MotionZoneEditor Zones="zoneDraft.Zones"
+                                      ZonesChanged="OnZonesChanged"
+                                      Picture="zonePicture"
+                                      PictureQuarters="MotionZoneDraft.QuarterTurns(storedRotation, rotation)"
+                                      CanTakePicture="IsEdit"
+                                      IsTakingPicture="isTakingZonePicture"
+                                      TakePicture="TakeZonePictureAsync"
+                                      Status="@zonePictureStatus" />
                 </MudExpansionPanel>
 
                 @if (!IsUsb)
@@ -255,6 +268,38 @@ else
     private IReadOnlyList<double> usbFrameRates = [];
 
     private bool IsUsb => source == CameraSource.Usb;
+
+    // The zones as shown at the rotation chosen, the rotation they are stored at (the server's
+    // snapshot is turned by it too), and the snapshot to draw them on.
+    private MotionZoneDraft zoneDraft = new([], CameraRotation.None);
+    private CameraRotation storedRotation = CameraRotation.None;
+    private byte[]? zonePicture;
+    private bool isTakingZonePicture;
+    private string? zonePictureStatus;
+
+    private void OnRotationChanged(CameraRotation value)
+    {
+        rotation = value;
+        zoneDraft.Turn(value);
+    }
+
+    private void OnZonesChanged(IReadOnlyList<MotionZone> zones)
+        => zoneDraft.Change(zones);
+
+    private async Task TakeZonePictureAsync()
+    {
+        isTakingZonePicture = true;
+        try
+        {
+            var picture = await Gateway.CaptureSnapshotAsync(CameraId!.Value);
+            zonePicture = picture ?? zonePicture;
+            zonePictureStatus = picture is null ? Translations.FailedToCaptureSnapshot : null;
+        }
+        finally
+        {
+            isTakingZonePicture = false;
+        }
+    }
 
     private string UsbSizeKey => $"{usbWidth}x{usbHeight}";
 
@@ -372,6 +417,9 @@ else
                 overlayPosition = camera.OverlayPosition;
                 connectionType = camera.ConnectionType;
                 rotation = camera.Rotation;
+                storedRotation = camera.Rotation;
+                zoneDraft = new MotionZoneDraft(camera.MotionZones ?? [], camera.Rotation);
+                zonePictureStatus = Translations.MotionZonesNoPicture;
                 streamUseLowLatencyMode = camera.StreamUseLowLatencyMode;
                 streamMaxLatencyMs = camera.StreamMaxLatencyMs;
                 streamRtspTransport = camera.StreamRtspTransport;
@@ -450,7 +498,8 @@ else
                 StreamUseLowLatencyMode: streamUseLowLatencyMode,
                 StreamMaxLatencyMs: streamMaxLatencyMs,
                 StreamRtspTransport: streamRtspTransport,
-                StreamBufferDurationMs: streamBufferDurationMs);
+                StreamBufferDurationMs: streamBufferDurationMs,
+                MotionZones: MotionZoneDraft.ToSend(zoneDraft, isNew: false));
 
             var result = await Gateway.UpdateCameraAsync(CameraId!.Value, request);
             if (result.IsSuccess)
@@ -489,7 +538,8 @@ else
                 StreamMaxLatencyMs: streamMaxLatencyMs,
                 StreamRtspTransport: streamRtspTransport,
                 StreamBufferDurationMs: streamBufferDurationMs,
-                Port: port);
+                Port: port,
+                MotionZones: MotionZoneDraft.ToSend(zoneDraft, isNew: true));
 
             var result = await Gateway.CreateCameraAsync(request);
             if (result.IsSuccess)
