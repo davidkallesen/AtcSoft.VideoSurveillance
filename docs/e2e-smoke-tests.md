@@ -49,6 +49,13 @@ goes, so `LiveTestCamera` starts it again on the same port: the camera survives 
 Each WPF walk selects every tab and opens every drop-down in each dialog before closing it; binding
 errors show up when a template is first used.
 
+All three walks draw a motion zone in a camera form without saving it: *Add zone* picks the new zone
+(CameraWall also adds a corner, and the web walk drags the zone with the mouse). The API client walks
+press *Take Snapshot* first and wait for the answer, a picture or "Failed to capture snapshot.": the
+live test camera serves one client, which the live view's stream usually holds, so the server has
+no picture to give. The web walk draws on the camera form the walk has open already, since a page
+load renews the session.
+
 Both WPF walks also play a recording: CameraWall the one the fixture writes (with an activity index
 beside it that has one event), the client the one the server recorded from the live camera. The player
 must show its activity timeline; the event buttons are pressed (in the client only when the detector

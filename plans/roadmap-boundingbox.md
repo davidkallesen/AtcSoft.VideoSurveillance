@@ -346,7 +346,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
-| 6 | Masks and zones | L | 🟨 in progress: ignore masks work and are stored; editors next |
+| 6 | Masks and zones | L | 🟨 in progress: ignore masks work, are stored and drawn in all three apps; watch zones next |
 | 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
@@ -475,7 +475,9 @@ Covers the backlog row *Motion zones / exclusion masks*.
 - Rotation: a rotation changed without new zones turns the zones with the picture (`MotionZoneGeometry.Turn`), so they stay on the same part of the scene; zones sent with the rotation are taken as drawn.
 - To the detector: both apps start the analysis (watching and index-only) with the camera's zones, and a running analysis takes edited zones at once without forgetting its background (`IMotionDetector.UseZones`, `IMotionDetectionService.UseZones`); on the server the camera update hands them over.
 
-**Open in phase 6:** the editors (a polygon drawn on a snapshot in both camera dialogs and the web form, its logic in Core with a `Logic/` copy, walk steps, texts in four languages); CameraWall turning its zones when the rotation changes in the dialog; *Analyse recording* with the camera's zones (it uses the camera's settings on the server, the app's in CameraWall); watch zones with their own sensitivity and smallest object; the zone colour on the timeline.
+- The editors (done 2026-10-20): the zones drawn on a snapshot in all three apps. `MotionZoneEditing` (Core, a `Logic/` copy kept equal by a test) adds, moves and removes zones and corners within the spec's limits and finds what is under the pointer; `MotionZoneDraft` keeps a form's zones turned with the rotation chosen there, always from the zones as last drawn (turning step by step drifts: 0.1 turned twice by a half is 0.09999999999999998), and tells whether they changed. The WPF editor (`MotionZoneEditor` with the drawn `MotionZoneCanvas`, Wpf.Core) is a tab of CameraWall's camera dialog and a box in the client's; the web one an SVG panel of the camera form (`MotionZoneEditorState`, `MotionZoneShapes`). A zone is dragged by its inside, a corner by its handle; a double click adds a corner on an edge or removes one; buttons do the same from the keyboard. Snapshots: CameraWall takes the tile's picture (a USB camera opens once), else opens the camera; the API clients ask the server, which now takes a recorded camera's picture from its recording instead of opening it again. The picture is shown turned to the rotation chosen. CameraWall saves the turned zones and hands them to the running analysis (`UseZones`); the API clients send zones only when they changed, so the server keeps and turns the stored ones. Texts in four languages; a step in each walk (the live test camera serves one client, so the API walks accept a snapshot that is not there).
+
+**Open in phase 6:** *Analyse recording* with the camera's zones (it uses the camera's settings on the server, the app's in CameraWall); watch zones with their own sensitivity and smallest object (the editors draw an existing watch zone blue, but offer only ignore zones); the zone colour on the timeline.
 
 ### Phase 7 — Activity index ✅ (M)
 

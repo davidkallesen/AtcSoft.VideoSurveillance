@@ -185,7 +185,21 @@ Right-click a camera tile → **Edit** → navigate to the **Motion Detection** 
 - Toggle individual settings to **Override Locally**
 - Useful for cameras in high-traffic areas (lower sensitivity) or quiet areas (higher sensitivity)
 
-### 5. Verify Detection
+### 5. Ignore Zones (Optional)
+
+Right-click a camera tile → **Edit** → **Motion zones**: movement inside a zone is ignored (a road
+beyond the fence, a busy display, the tree that sways too much).
+
+- **Take Snapshot** shows the camera's picture now (from its tile, or from the camera opened for it);
+  without one the zones are drawn on a grey picture of the same shape.
+- **Add zone** puts a square in the middle. Drag the zone by its inside and its corners by their
+  handles; double-click an edge to add a corner there, or a corner to remove it (**Add corner** and
+  **Remove corner** do the same from the keyboard).
+- Up to 16 zones, 3 to 32 corners each. The corners are fractions of the picture as it is shown, so
+  they fit any analysis size; a new rotation chosen in the dialog turns them with the picture.
+- Save hands the zones to the running analysis at once; it keeps what it has learnt of the scene.
+
+### 6. Verify Detection
 
 - Watch for bounding boxes appearing on camera tiles (if enabled)
 - Check the recording indicator when motion triggers recording
@@ -223,6 +237,12 @@ The settings resource is flat. Send only the settings you change: the server kee
 ### 2. Per-Camera Overrides
 
 Per-camera motion overrides are not part of the API; they are set in the desktop apps.
+
+A camera's ignore zones are: `motionZones` on the camera (`GET /cameras/{id}`), each a `name`, a `kind`
+(`ignore`; `watch` is reserved for zones with their own sensitivity) and 3 to 32 `points` (`x`, `y`
+from 0 to 1 of the picture as shown). An update without `motionZones` keeps them (turned with a new
+`rotation`), `[]` removes them. Both API clients draw them on a snapshot from
+`GET /cameras/{id}/snapshot`, which for a camera being recorded is taken from the recording.
 
 ### 3. Monitor Events
 
@@ -333,6 +353,7 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Solutions**:
   - Decrease `Sensitivity` (try 15-20)
   - Something that only sways (a tree, a flag) gets no box: it never travels. If it does, report the scene, so it can become a storybook test
+  - Draw an ignore zone over what moves but does not matter (see *Ignore Zones* above): it no longer counts towards motion or the activity timeline
   - Lighting changes are learnt away; a box right after the IR switch should vanish within a few seconds
 
 ### Missed Motion
