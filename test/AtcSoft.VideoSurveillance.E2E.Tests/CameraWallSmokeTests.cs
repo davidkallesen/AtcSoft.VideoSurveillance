@@ -144,6 +144,7 @@ public sealed class CameraWallSmokeTests
 
         var player = app.OpenWindow(() => DesktopApp.Press(app.Find(browser, "Play", ControlType.Button)), "Play");
         var timeline = app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        app.ShouldCoverTheTaskbar(player);
         HoverTimeline(app, timeline);
         DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));

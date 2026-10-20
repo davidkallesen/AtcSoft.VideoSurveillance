@@ -335,6 +335,7 @@ Use Atc controls instead of standard WPF controls:
 - `atc:LabelComboBox` for labeled dropdowns (uses `IDictionary<string, string>` Items and `SelectedKey`)
 - `atc:LabelPasswordBox` for password inputs
 - `atc:LabelIntegerBox` for numeric inputs
+- Every window and dialog has `atc:NiceWindow` as its root (or an Atc dialog box: `InfoDialogBox`, `QuestionDialogBox`, `InputDialogBox`, all `NiceDialogBox`), never a plain `Window`: a plain one does not follow the dark and light theme. A full-screen video window is a `NiceWindow` with `UseNoneWindowStyle="True"`, black whatever the theme; the walks check it still covers the taskbar. Only `VideoHost`'s hidden surface windows are plain
 
 ## Models
 Models that need UI binding should inherit from `ObservableObject`:

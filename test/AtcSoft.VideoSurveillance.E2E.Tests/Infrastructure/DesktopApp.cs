@@ -450,6 +450,26 @@ internal sealed class DesktopApp : IDisposable
     }
 
     /// <summary>
+    /// Checks that a full-screen window fills the screen: it covers the taskbar, not just the
+    /// space beside it. Passes when there is no taskbar to find.
+    /// </summary>
+    public void ShouldCoverTheTaskbar(Window window)
+    {
+        var desktop = Automation.GetDesktop();
+        if (desktop.FindFirstChild(Conditions.ByClassName("Shell_TrayWnd")) is not { } taskbar)
+        {
+            return;
+        }
+
+        // An auto-hidden taskbar sits partly off the screen: only its part on the screen counts.
+        var visible = System.Drawing.Rectangle.Intersect(taskbar.BoundingRectangle, desktop.BoundingRectangle);
+        if (!window.BoundingRectangle.Contains(visible))
+        {
+            throw Fail($"The window '{SafeName(window)}' at {window.BoundingRectangle} does not cover the taskbar at {visible}.");
+        }
+    }
+
+    /// <summary>
     /// Writes every window's UI Automation tree to a file in the run folder, for a failure
     /// and for writing new steps.
     /// </summary>

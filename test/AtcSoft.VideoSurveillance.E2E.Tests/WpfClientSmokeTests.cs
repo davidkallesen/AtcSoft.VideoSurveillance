@@ -120,6 +120,7 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
 
         var player = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Play", ControlType.Button)), "Play");
         app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        app.ShouldCoverTheTaskbar(player);
         foreach (var name in new[] { "Next event", "Previous event" })
         {
             if (app.Find(player, name, ControlType.Button) is { IsEnabled: true } button)

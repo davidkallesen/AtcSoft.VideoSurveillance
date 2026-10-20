@@ -1,7 +1,8 @@
-<Window
+<atc:NiceWindow
     x:Class="AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenCameraWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:atc="https://github.com/atc-net/atc-wpf/tree/main/schemas"
     xmlns:atcTranslation="https://github.com/atc-net/atc-wpf/tree/main/schemas/translations"
     xmlns:atcValueConverters="https://github.com/atc-net/atc-wpf/tree/main/schemas/value-converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -14,17 +15,19 @@
     d:DataContext="{d:DesignInstance Type=windows:FullScreenCameraWindowViewModel,
                                      IsDesignTimeCreatable=False}"
     AllowsTransparency="False"
+    IgnoreTaskbarOnMaximize="True"
     Background="Black"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
     Topmost="True"
+    UseNoneWindowStyle="True"
     WindowState="Maximized"
     WindowStyle="None"
     mc:Ignorable="d">
 
-    <Window.Resources>
+    <atc:NiceWindow.Resources>
         <ResourceDictionary Source="/AtcSoft.VideoSurveillance.Wpf.Core;component/Themes/FullScreenStyles.xaml" />
-    </Window.Resources>
+    </atc:NiceWindow.Resources>
 
     <!--  ReSharper disable Xaml.BindingWithContextNotResolved  -->
     <Grid x:Name="RootGrid">
@@ -158,4 +161,4 @@
         </lve:VideoHost>
     </Grid>
     <!--  ReSharper restore Xaml.BindingWithContextNotResolved  -->
-</Window>
+</atc:NiceWindow>
