@@ -66,6 +66,56 @@ public sealed class RecordingAnalysisTests : IDisposable
         Directory.GetFiles(Path.GetDirectoryName(video)!).Should().Equal(video);
     }
 
+    [Fact]
+    public void A_Cameras_Ignore_Zone_Over_The_Path_Leaves_No_Event()
+    {
+        // A band across the middle of the picture, where the square crosses (rows 50 to 70 of 120).
+        var camera = new CameraConfiguration
+        {
+            MotionZones = [new MotionZone { Name = "Road", Points = [new(0, 0.35), new(1, 0.35), new(1, 0.65), new(0, 0.65)] }],
+        };
+        var video = Video();
+
+        RecordingAnalysis.Run(Pictures(), Width, Height, RecordingAnalysis.DetectorFor(camera, new MotionDetectionSettings(), recordingRotation: 0), video, DateTimeOffset.UnixEpoch);
+
+        var log = ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(video))!;
+        log.Seconds.Should().HaveCount(20);
+        log.Seconds.Should().OnlyContain(s => s.Tracks == 0, "the square moves only inside the zone");
+    }
+
+    [Theory]
+    [InlineData(90, 0.1, 0.2)]
+    [InlineData(0, 0.2, 0.9)]
+    [InlineData(-270, 0.1, 0.2)]
+    public void The_Zones_Are_Turned_From_The_Cameras_Rotation_To_The_Recordings(
+        int recordingRotation,
+        double x,
+        double y)
+    {
+        // Drawn on the picture turned a quarter; a recording made before the turn is not turned.
+        var camera = new CameraConfiguration
+        {
+            MotionZones = [new MotionZone { Name = "Tree", Points = [new(0.1, 0.2), new(0.5, 0.2), new(0.5, 0.6)] }],
+        };
+        camera.Display.Rotation = CameraRotation.Rotate90;
+
+        var zones = RecordingAnalysis.ZonesFor(camera, recordingRotation);
+
+        zones.Single().Points[0].X.Should().BeApproximately(x, 1e-9);
+        zones.Single().Points[0].Y.Should().BeApproximately(y, 1e-9);
+        camera.MotionZones[0].Points[0].Should().Be(new ZonePoint(0.1, 0.2), "the camera's zones are left as they are");
+    }
+
+    [Fact]
+    public void A_Recording_Of_A_Camera_Not_Known_Is_Analysed_With_The_Apps_Settings_And_No_Zones()
+    {
+        var appSettings = new MotionDetectionSettings();
+
+        RecordingAnalysis.SettingsFor(null, appSettings).Should().BeSameAs(appSettings);
+        RecordingAnalysis.ZonesFor(null, 90).Should().BeEmpty();
+        RecordingAnalysis.SettingsFor(new CameraConfiguration(), appSettings).Should().NotBeSameAs(appSettings, "a camera's own settings are its overrides on a copy");
+    }
+
     // Twenty seconds at four pictures a second: a grey yard, and a dark square crossing it from 5 to 15 s.
     private static IEnumerable<(TimeSpan Position, byte[] Pixels)> Pictures()
     {

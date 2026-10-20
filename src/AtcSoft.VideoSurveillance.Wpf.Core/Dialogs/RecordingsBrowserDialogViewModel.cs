@@ -10,6 +10,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
 
     private readonly IApplicationSettingsService settingsService;
     private readonly Func<IEnumerable<string?>>? cameraRecordingPaths;
+    private readonly Func<string, AtcSoft.VideoSurveillance.Models.CameraConfiguration?>? cameraByFolder;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnSelectedCameraFilterChanged))]
     private string selectedCameraFilter = AllCamerasKey;
@@ -40,12 +41,18 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
     /// Gets each camera's own recording folder (<c>Overrides.Recording.RecordingPath</c>), so
     /// their recordings are listed too; <see langword="null"/> reads the global folder only.
     /// </param>
+    /// <param name="cameraByFolder">
+    /// Gets the camera whose recordings are in a camera folder, so *Analyse recording* uses its own
+    /// motion settings and ignore zones; <see langword="null"/> (or no camera) uses the app's settings.
+    /// </param>
     public RecordingsBrowserDialogViewModel(
         IApplicationSettingsService settingsService,
-        Func<IEnumerable<string?>>? cameraRecordingPaths = null)
+        Func<IEnumerable<string?>>? cameraRecordingPaths = null,
+        Func<string, AtcSoft.VideoSurveillance.Models.CameraConfiguration?>? cameraByFolder = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.cameraRecordingPaths = cameraRecordingPaths;
+        this.cameraByFolder = cameraByFolder;
 
         LoadRecordings();
     }
@@ -363,19 +370,23 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
     }
 
     /// <summary>
-    /// Analyses a recording file for its activity index, with the app's motion settings: the
-    /// pictures are read straight from the file, four a second, as fast as it decodes.
+    /// Analyses a recording file for its activity index, with its camera's motion settings and
+    /// ignore zones (the app's settings when the camera is not known): the pictures are read
+    /// straight from the file, four a second, as fast as it decodes.
     /// </summary>
     /// <param name="videoPath">The recording.</param>
-    /// <param name="settings">The motion settings to analyse with.</param>
+    /// <param name="appSettings">The app's motion settings.</param>
+    /// <param name="camera">The camera the recording is of, or <see langword="null"/>.</param>
     /// <param name="cancellationToken">Stops the analysis; nothing is written then.</param>
     /// <returns>How many pictures were analysed.</returns>
     internal static int AnalyseFile(
         string videoPath,
-        MotionDetectionSettings settings,
+        MotionDetectionSettings appSettings,
+        AtcSoft.VideoSurveillance.Models.CameraConfiguration? camera,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(settings);
+        var settings = RecordingAnalysis.SettingsFor(camera, appSettings);
+        var rotation = MediaProbe.GetRotation(videoPath);
 
         var width = settings.AnalysisWidth > 0 ? settings.AnalysisWidth : 800;
         var height = settings.AnalysisHeight > 0 ? settings.AnalysisHeight : 600;
@@ -383,7 +394,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
             videoPath,
             width,
             height,
-            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath),
+            (AtcSoft.VideoEngine.VideoRotation)rotation,
             RecordingAnalysis.DecoderThreads);
 
         // CameraWall names its recordings in local time.
@@ -391,7 +402,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
             reader.ReadFrames(RecordingAnalysis.FramesPerSecond, cancellationToken).Select(f => (f.Position, f.Pixels)),
             width,
             height,
-            new AtcSoft.VideoSurveillance.Helpers.MotionDetection.BuiltInMotionDetector(settings),
+            RecordingAnalysis.DetectorFor(camera, appSettings, rotation),
             videoPath,
             RecordingAnalysis.StartOf(videoPath, TimeZoneInfo.Local),
             cancellationToken);
@@ -410,8 +421,9 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
         try
         {
             var settings = settingsService.MotionDetection;
+            var camera = cameraByFolder?.Invoke(recording.CameraName);
             var stoppingToken = stopping.Token;
-            await Task.Run(() => AnalyseFile(recording.FilePath, settings, stoppingToken), stoppingToken).ConfigureAwait(true);
+            await Task.Run(() => AnalyseFile(recording.FilePath, settings, camera, stoppingToken), stoppingToken).ConfigureAwait(true);
             LoadRecordings();
             SelectedRecording = Recordings.FirstOrDefault(r => string.Equals(r.FilePath, recording.FilePath, StringComparison.OrdinalIgnoreCase));
             StatusMessage = Translations.RecordingAnalysed;

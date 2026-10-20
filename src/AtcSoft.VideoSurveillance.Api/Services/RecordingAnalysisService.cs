@@ -2,7 +2,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// *Analyse recording* on the server: analyses the queued recordings one at a time, each with its
-/// camera's own motion settings, reading the pictures straight from the file
+/// camera's own motion settings and ignore zones, reading the pictures straight from the file
 /// (<see cref="AtcSoft.VideoEngine.Capture.GreyFrameFileReader"/>) and writing the activity index beside it
 /// (<see cref="RecordingAnalysis"/>). The server names its recordings in UTC.
 /// </summary>
@@ -49,9 +49,9 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
         {
             try
             {
-                var settings = SettingsFor(videoPath);
+                var camera = CameraFor(videoPath);
                 var watch = Stopwatch.StartNew();
-                var pictures = Analyse(videoPath, settings, stoppingToken);
+                var pictures = Analyse(videoPath, settingsService.MotionDetection, camera, stoppingToken);
                 LogAnalysed(videoPath, pictures, watch.Elapsed.TotalSeconds);
             }
             catch (OperationCanceledException)
@@ -75,15 +75,18 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
     /// Analyses a recording file for its activity index.
     /// </summary>
     /// <param name="videoPath">The recording.</param>
-    /// <param name="settings">The motion settings to analyse with.</param>
+    /// <param name="appSettings">The server's motion settings.</param>
+    /// <param name="camera">The camera the recording is of, whose settings and zones are used; <see langword="null"/> when unknown.</param>
     /// <param name="cancellationToken">Stops the analysis; nothing is written then.</param>
     /// <returns>How many pictures were analysed.</returns>
     public static int Analyse(
         string videoPath,
-        MotionDetectionSettings settings,
+        MotionDetectionSettings appSettings,
+        CameraConfiguration? camera,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(settings);
+        var settings = RecordingAnalysis.SettingsFor(camera, appSettings);
+        var rotation = MediaProbe.GetRotation(videoPath);
 
         var width = settings.AnalysisWidth > 0 ? settings.AnalysisWidth : 800;
         var height = settings.AnalysisHeight > 0 ? settings.AnalysisHeight : 600;
@@ -91,33 +94,30 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
             videoPath,
             width,
             height,
-            (AtcSoft.VideoEngine.VideoRotation)MediaProbe.GetRotation(videoPath),
+            (AtcSoft.VideoEngine.VideoRotation)rotation,
             RecordingAnalysis.DecoderThreads);
 
         return RecordingAnalysis.Run(
             reader.ReadFrames(RecordingAnalysis.FramesPerSecond, cancellationToken).Select(f => (f.Position, f.Pixels)),
             width,
             height,
-            new BuiltInMotionDetector(settings),
+            RecordingAnalysis.DetectorFor(camera, appSettings, rotation),
             videoPath,
             RecordingAnalysis.StartOf(videoPath, TimeZoneInfo.Utc),
             cancellationToken);
     }
 
-    // The camera whose folder the recording is in, with its own overrides; else the app's settings.
-    private MotionDetectionSettings SettingsFor(string videoPath)
+    // The camera whose folder the recording is in, or null.
+    private CameraConfiguration? CameraFor(string videoPath)
     {
         var root = settingsService.Recording.RecordingPath;
         var folder = string.IsNullOrEmpty(root) ? null : RecordingPathHelper.GetCameraFolderFromPath(videoPath, root);
-        var camera = folder is null
+        return folder is null
             ? null
             : cameraStorageService.GetAllCameras().FirstOrDefault(c => string.Equals(
                 RecordingPathHelper.GetCameraFolderName(c.Display.DisplayName, c.Id),
                 folder,
                 StringComparison.OrdinalIgnoreCase));
-        return camera is null
-            ? settingsService.MotionDetection
-            : MotionDetectionPolicy.Resolve(camera, settingsService.MotionDetection);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Analysed {Path}: {Pictures} pictures in {Seconds:F1} s")]

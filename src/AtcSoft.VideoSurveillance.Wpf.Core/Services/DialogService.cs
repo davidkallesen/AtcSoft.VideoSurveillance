@@ -339,7 +339,13 @@ public class DialogService : IDialogService
     {
         var viewModel = new RecordingsBrowserDialogViewModel(
             settingsService,
-            () => cameraStorage?.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath) ?? []);
+            () => cameraStorage?.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath) ?? [],
+            folder => cameraStorage?.GetAllCameras()
+                .FirstOrDefault(c => string.Equals(
+                    AtcSoft.VideoSurveillance.Helpers.RecordingPathHelper.GetCameraFolderName(c.Display.DisplayName, c.Id),
+                    folder,
+                    StringComparison.OrdinalIgnoreCase))
+                ?.Core);
         if (settingsService.Recording.RememberRecordingsBrowserState &&
             lastRecordingsBrowserState is not null)
         {

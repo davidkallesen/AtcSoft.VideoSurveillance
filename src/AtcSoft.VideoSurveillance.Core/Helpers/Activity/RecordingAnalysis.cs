@@ -20,6 +20,50 @@ public static class RecordingAnalysis
     public const int DecoderThreads = 2;
 
     /// <summary>
+    /// Gets the settings an older recording of a camera is analysed with: the camera's own, or the
+    /// app's when the camera is not known (any more).
+    /// </summary>
+    /// <param name="camera">The camera the recording is of, or <see langword="null"/>.</param>
+    /// <param name="appSettings">The app's motion settings.</param>
+    public static MotionDetectionSettings SettingsFor(
+        CameraConfiguration? camera,
+        MotionDetectionSettings appSettings)
+    {
+        ArgumentNullException.ThrowIfNull(appSettings);
+
+        return camera is null
+            ? appSettings
+            : MotionDetectionPolicy.Resolve(camera, appSettings);
+    }
+
+    /// <summary>
+    /// Gets the zones an older recording of a camera is analysed with: the camera's, drawn at its
+    /// rotation now, turned to the rotation the recording was made at, so they lie on the same part
+    /// of the scene in its pictures.
+    /// </summary>
+    /// <param name="camera">The camera the recording is of, or <see langword="null"/> for none.</param>
+    /// <param name="recordingRotation">The recording's rotation in degrees clockwise (its display matrix).</param>
+    public static IReadOnlyList<MotionZone> ZonesFor(
+        CameraConfiguration? camera,
+        int recordingRotation)
+        => camera is null
+            ? []
+            : MotionDetection.MotionZoneGeometry.Turn(camera.MotionZones, camera.Display.Rotation, ToRotation(recordingRotation));
+
+    /// <summary>
+    /// Gets the detector an older recording of a camera is analysed with: the camera's settings
+    /// and its zones (see <see cref="SettingsFor"/> and <see cref="ZonesFor"/>).
+    /// </summary>
+    /// <param name="camera">The camera the recording is of, or <see langword="null"/>.</param>
+    /// <param name="appSettings">The app's motion settings.</param>
+    /// <param name="recordingRotation">The recording's rotation in degrees clockwise.</param>
+    public static IMotionDetector DetectorFor(
+        CameraConfiguration? camera,
+        MotionDetectionSettings appSettings,
+        int recordingRotation)
+        => new MotionDetection.BuiltInMotionDetector(SettingsFor(camera, appSettings), zones: ZonesFor(camera, recordingRotation));
+
+    /// <summary>
     /// Gets when a recording started: the time in its name, read in the zone it was written in,
     /// else when the file was made.
     /// </summary>
@@ -36,6 +80,15 @@ public static class RecordingAnalysis
             ? LocalTimeline.InZone(named, nameZone)
             : new DateTimeOffset(File.GetCreationTimeUtc(videoPath), TimeSpan.Zero);
     }
+
+    private static CameraRotation ToRotation(int degrees)
+        => ((((degrees / 90) % 4) + 4) % 4) switch
+        {
+            1 => CameraRotation.Rotate90,
+            2 => CameraRotation.Rotate180,
+            3 => CameraRotation.Rotate270,
+            _ => CameraRotation.None,
+        };
 
     /// <summary>
     /// Analyses a recording's pictures and writes its activity index beside it. The index is
