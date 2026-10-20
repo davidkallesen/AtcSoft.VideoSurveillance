@@ -152,6 +152,15 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void A_Recording_Opened_Without_Its_Length_Is_Loaded_Again_Once_The_Video_Tells_It()
+    {
+        ActivityReload.IsNeeded(400, 0).Should().BeFalse("the length is not known yet");
+        ActivityReload.IsNeeded(400, 120).Should().BeFalse("two minutes have no more seconds than the fewest stretches");
+        ActivityReload.IsNeeded(400, 3600).Should().BeTrue("an hour has a stretch a second");
+        ActivityReload.IsNeeded(3600, 3600).Should().BeFalse("loaded for its length already");
+    }
+
+    [Fact]
     public void The_Zoom_Is_The_Same_As_The_Desktop_Apps()
     {
         (double Start, double End)[] windows = [(0, 1), (0.5, 1), (0.2, 0.3), (0.99, 1), (0.4, 0.40001)];

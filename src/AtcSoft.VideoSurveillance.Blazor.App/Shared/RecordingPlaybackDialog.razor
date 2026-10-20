@@ -142,6 +142,9 @@
     private double videoSeconds;
     private bool wheelListened;
 
+    // Loaded again for the video's length once per recording, worked or not.
+    private bool reloadedForLength;
+
     // What the timeline tells under the mouse, and where; nothing while the mouse is elsewhere.
     private IReadOnlyList<string> hoverLines = [];
     private double hoverShare;
@@ -273,6 +276,7 @@
         (zoomStart, zoomEnd) = (0, 1);
         videoSeconds = 0;
         wheelListened = false;
+        reloadedForLength = false;
         hoverLines = [];
         RecordingStart = next.RecordingStart;
         StateHasChanged();
@@ -290,21 +294,56 @@
             return;
         }
 
+        var camera = await LoadActivityAsync(DurationSeconds) && CameraId is { } id
+            ? await TryGetCameraAsync(id)
+            : null;
+        zoneColours = MotionZoneColors.ByZone(camera?.MotionZones);
+        Redraw();
+    }
+
+    // One stretch a second, so a minute zoomed in still has its seconds; false when there is none.
+    private async Task<bool> LoadActivityAsync(double durationSeconds)
+    {
         try
         {
-            // One stretch a second, so a minute zoomed in still has its seconds.
-            if (await Gateway.GetRecordingActivityAsync(FilePath, ActivityTimelineZoom.BucketsFor(DurationSeconds), DurationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
+            if (await Gateway.GetRecordingActivityAsync(FilePath, ActivityTimelineZoom.BucketsFor(durationSeconds), durationSeconds) is { HasIndex: true, Buckets.Count: > 0 } activity)
             {
-                var camera = CameraId is { } id ? await Gateway.GetCameraByIdAsync(id) : null;
-                zoneColours = MotionZoneColors.ByZone(camera?.MotionZones);
                 buckets = activity.Buckets;
                 events = ActivityTimelineLayout.FindEvents(activity.Buckets);
-                Redraw();
+                return true;
             }
         }
         catch (HttpRequestException)
         {
             // Without its activity the recording plays without a timeline.
+        }
+
+        return false;
+    }
+
+    private async Task<Camera?> TryGetCameraAsync(Guid id)
+    {
+        try
+        {
+            return await Gateway.GetCameraByIdAsync(id);
+        }
+        catch (HttpRequestException)
+        {
+            // Without the camera, events are orange.
+            return null;
+        }
+    }
+
+    // A recording opened without its length was loaded in the fewest stretches: once the video
+    // tells it, load as many as it should have.
+    private async Task ReloadForLengthAsync(double durationSeconds)
+    {
+        var segmentPath = FilePath;
+        reloadedForLength = true;
+        if (await LoadActivityAsync(durationSeconds) && string.Equals(segmentPath, FilePath, StringComparison.Ordinal))
+        {
+            Redraw();
+            StateHasChanged();
         }
     }
 
@@ -417,6 +456,11 @@
         var previous = playhead;
         videoSeconds = durationSeconds;
         playhead = durationSeconds > 0 ? currentSeconds / durationSeconds : -1;
+
+        if (!reloadedForLength && buckets is not null && ActivityReload.IsNeeded(buckets.Count, durationSeconds))
+        {
+            _ = ReloadForLengthAsync(durationSeconds);
+        }
 
         // The part shown follows the player out of it.
         var window = ActivityTimelineZoom.Follow(zoomStart, zoomEnd, previous, playhead);
