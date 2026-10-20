@@ -71,6 +71,23 @@ public static class ActivityTimelineShapes
     }
 
     /// <summary>
+    /// Gets the bands of the events with their colours: an event in a watch zone with a colour in
+    /// that colour, else orange.
+    /// </summary>
+    /// <param name="buckets">The stretches of the recording.</param>
+    /// <param name="zoneColours">The colours of the camera's watch zones (<see cref="MotionZoneColors.ByZone"/>).</param>
+    public static IReadOnlyList<(TimelineRect Band, string Fill)> Bands(
+        IReadOnlyList<RecordingActivityBucket> buckets,
+        IReadOnlyDictionary<string, string>? zoneColours)
+    {
+        ArgumentNullException.ThrowIfNull(buckets);
+
+        return [.. ActivityTimelineLayout.FindEvents(buckets)
+            .Select(e => (Pixels: ActivityTimelineLayout.ToPixels(e, buckets.Count), e.Zone))
+            .Select(b => (new TimelineRect(b.Pixels.X, BoxHeight - BandHeight, b.Pixels.Width, BandHeight), MotionZoneColors.ForEvent(b.Zone, zoneColours)))];
+    }
+
+    /// <summary>
     /// Gets the playhead: a line the full height of the box where the player is, at least one
     /// stretch wide and kept inside the box.
     /// </summary>

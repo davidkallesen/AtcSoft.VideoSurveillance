@@ -188,11 +188,13 @@ public sealed partial class RecordingsViewModel : ViewModelBase
         }
 
         var filePath = SelectedRecording.FilePath;
+        var cameraId = SelectedRecording.CameraId;
         var vm = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindowViewModel(
             SelectedRecording.PlaybackUrl.AbsoluteUri,
             SelectedRecording.FileName,
             recordingStartTime: SelectedRecording.RecordingTime.LocalDateTime,
-            activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken));
+            activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken),
+            zonesLoader: cancellationToken => CameraZones.LoadAsync(gatewayService, cameraId, cancellationToken));
 
         var window = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
         window.Show();

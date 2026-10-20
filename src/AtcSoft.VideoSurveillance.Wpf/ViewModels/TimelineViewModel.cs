@@ -323,7 +323,8 @@ public sealed partial class TimelineViewModel : ViewModelBase
             recordingStartTime: (moment - offset).LocalDateTime,
             activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken),
             startPosition: offset,
-            nextSegment: lane is null ? null : NextSegments(lane, filePath));
+            nextSegment: lane is null ? null : NextSegments(lane, filePath),
+            zonesLoader: lane is null ? null : cancellationToken => CameraZones.LoadAsync(gatewayService, lane.CameraId, cancellationToken));
 
         new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(viewModel).Show();
     }

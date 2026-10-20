@@ -41,6 +41,9 @@ public partial class MotionZoneEditor
     [DependencyProperty(PropertyChangedCallback = nameof(OnZoneSmallestObjectTextChanged))]
     private string? zoneSmallestObjectText;
 
+    [DependencyProperty(PropertyChangedCallback = nameof(OnZoneColorKeyChanged))]
+    private string? zoneColorKey;
+
     // Set while the fields are filled from the picked zone, so that is not taken as an edit.
     private bool showingName;
 
@@ -169,6 +172,7 @@ public partial class MotionZoneEditor
             {
                 z.Sensitivity = null;
                 z.SmallestObjectPercent = null;
+                z.Color = null;
             }
         });
     }
@@ -198,6 +202,20 @@ public partial class MotionZoneEditor
             !EqualityComparer<double?>.Default.Equals(value, zone.SmallestObjectPercent))
         {
             editor.Change(editor.SelectedZone, z => z.SmallestObjectPercent = value);
+        }
+    }
+
+    private static void OnZoneColorKeyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var color = d is MotionZoneEditor { ZoneColorKey: { Length: > 0 } key } ? key : null;
+        if (d is MotionZoneEditor editor &&
+            !editor.showingName &&
+            editor.Picked is { } zone &&
+            !string.Equals(color, zone.Color, StringComparison.Ordinal))
+        {
+            editor.Change(editor.SelectedZone, z => z.Color = color);
         }
     }
 
@@ -311,6 +329,7 @@ public partial class MotionZoneEditor
         var watched = zone?.Kind == MotionZoneKind.Watch ? Visibility.Visible : Visibility.Collapsed;
         SensitivityBox.Visibility = watched;
         SmallestObjectBox.Visibility = watched;
+        ColorBox.Visibility = watched;
 
         showingName = true;
         try
@@ -325,6 +344,11 @@ public partial class MotionZoneEditor
             if (!string.Equals(ZoneKindKey, kind, StringComparison.Ordinal))
             {
                 SetCurrentValue(ZoneKindKeyProperty, kind);
+            }
+
+            if (!string.Equals(ZoneColorKey ?? string.Empty, zone?.Color ?? string.Empty, StringComparison.Ordinal))
+            {
+                SetCurrentValue(ZoneColorKeyProperty, zone?.Color);
             }
 
             // A field is filled from the zone only when it means something else, so "0.0" on the

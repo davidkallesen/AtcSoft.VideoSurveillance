@@ -2787,4 +2787,7 @@ Thumbnail:
   <data name="CamerasOwn" xml:space="preserve">
     <value>Camera's own</value>
   </data>
+  <data name="TimelineColour" xml:space="preserve">
+    <value>Color on the timeline</value>
+  </data>
 </root>

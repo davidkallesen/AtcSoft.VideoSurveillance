@@ -104,9 +104,10 @@ public sealed partial class MotionZoneCanvas : FrameworkElement
 
             var watch = shown[i].Kind == MotionZoneKind.Watch;
             var picked = i == SelectedZone;
+            var (fill, pen) = watch ? WatchLook(shown[i].Color) : (IgnoreFill, IgnorePen);
             drawingContext.DrawGeometry(
-                watch ? WatchFill : IgnoreFill,
-                picked ? PickedPen : watch ? WatchPen : IgnorePen,
+                fill,
+                picked ? PickedPen : pen,
                 Outline(corners, area));
             DrawName(drawingContext, shown[i].Name, corners, area);
         }
@@ -263,6 +264,18 @@ public sealed partial class MotionZoneCanvas : FrameworkElement
             Edit(SelectedZone, MotionZoneEditing.RemoveCorner(corners, corner));
             e.Handled = true;
         }
+    }
+
+    // A watch zone in its own colour, as on the timeline; blue without one.
+    private static (Brush Fill, Pen Pen) WatchLook(string? color)
+    {
+        if (MotionZoneColors.Brush(color) is not { } brush)
+        {
+            return (WatchFill, WatchPen);
+        }
+
+        var value = brush.Color;
+        return (Frozen(Color.FromArgb(0x59, value.R, value.G, value.B)), FrozenPen(value, 1.5));
     }
 
     private static SolidColorBrush Frozen(Color color)

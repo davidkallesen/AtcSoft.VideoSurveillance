@@ -65,7 +65,7 @@
         <!--  The picked zone's kind; a watch zone's own values, empty for the camera's  -->
         <atc:GridEx
             Margin="0,0,0,10"
-            Columns="*,10,*,10,*"
+            Columns="*,10,*,10,*,10,*"
             DockPanel.Dock="Top">
             <atc:LabelComboBox
                 x:Name="KindBox"
@@ -92,6 +92,13 @@
                 Text="{Binding Path=ZoneSmallestObjectText, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Visibility="Collapsed"
                 WatermarkText="{x:Static userControls:MotionZoneEditor.DefaultSmallestObjectText}" />
+            <atc:LabelWellKnownColorSelector
+                x:Name="ColorBox"
+                Grid.Column="6"
+                LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
+                                                Key=TimelineColour}"
+                SelectedKey="{Binding Path=ZoneColorKey, ElementName=Root, Mode=TwoWay}"
+                Visibility="Collapsed" />
         </atc:GridEx>
 
         <TextBlock

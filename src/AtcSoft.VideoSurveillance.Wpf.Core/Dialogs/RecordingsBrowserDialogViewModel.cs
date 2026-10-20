@@ -408,6 +408,19 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
             cancellationToken);
     }
 
+    /// <summary>
+    /// Gets the motion zones of a recording's camera now, for the colours of its timeline; none
+    /// when the camera is not known.
+    /// </summary>
+    /// <param name="recording">The recording.</param>
+    public IReadOnlyList<AtcSoft.VideoSurveillance.Models.MotionZone> ZonesFor(
+        RecordingEntry recording)
+    {
+        ArgumentNullException.ThrowIfNull(recording);
+
+        return cameraByFolder?.Invoke(recording.CameraName)?.MotionZones ?? [];
+    }
+
     [RelayCommand("Analyse", CanExecute = nameof(CanAnalyse))]
     private async Task AnalyseAsync()
     {

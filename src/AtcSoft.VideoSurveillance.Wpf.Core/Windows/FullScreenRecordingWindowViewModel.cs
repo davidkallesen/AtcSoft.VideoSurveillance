@@ -25,6 +25,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private readonly PlaybackOverlaySettings overlaySettings;
     private readonly Func<RecordingSegment?>? nextSegment;
     private readonly CancellationTokenSource activityCancellation = new();
+    private readonly Func<CancellationToken, Task<IReadOnlyList<MotionZone>>>? zonesLoader;
     private string filePath;
     private DateTime? recordingStartTime;
     private RecordingActivityLoader? activityLoader;
@@ -100,6 +101,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     [ObservableProperty]
     private IReadOnlyList<ActivityBucket>? activityBuckets;
 
+    // The brushes of the camera's watch zones by name, for the events of the timeline.
+    [ObservableProperty]
+    private IReadOnlyDictionary<string, Brush>? zoneBrushes;
+
     [ObservableProperty]
     private bool hasActivity;
 
@@ -130,6 +135,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// Gets the recording to move on to when this one ends (a timeline plays a camera's segments one
     /// after another); <see langword="null"/>, or a function that returns it, ends playback.
     /// </param>
+    /// <param name="zonesLoader">
+    /// Gets the camera's motion zones now, so the timeline draws an event in its watch zone's
+    /// colour; without one, every event is orange.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
@@ -137,13 +146,15 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         DateTime? recordingStartTime = null,
         RecordingActivityLoader? activityLoader = null,
         TimeSpan? startPosition = null,
-        Func<RecordingSegment?>? nextSegment = null)
+        Func<RecordingSegment?>? nextSegment = null,
+        Func<CancellationToken, Task<IReadOnlyList<MotionZone>>>? zonesLoader = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
 
         this.filePath = filePath;
         this.activityLoader = activityLoader;
+        this.zonesLoader = zonesLoader;
         this.startPosition = startPosition ?? TimeSpan.Zero;
         this.nextSegment = nextSegment;
         this.overlaySettings = overlaySettings ?? new PlaybackOverlaySettings();
@@ -355,6 +366,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             if (activityLoader is not null && duration > 0)
             {
                 _ = LoadActivityAsync(activityLoader, segment, TimeSpan.FromTicks(duration).TotalSeconds, Dispatcher.CurrentDispatcher);
+                if (zonesLoader is not null && ZoneBrushes is null)
+                {
+                    _ = LoadZonesAsync(zonesLoader, Dispatcher.CurrentDispatcher);
+                }
             }
         }
     }
@@ -392,6 +407,32 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
             ActivityBuckets = buckets;
             HasActivity = true;
             CommandManager.InvalidateRequerySuggested();
+        });
+    }
+
+    // The camera's zones are the same for every segment: loaded once.
+    private async Task LoadZonesAsync(
+        Func<CancellationToken, Task<IReadOnlyList<MotionZone>>> loader,
+        Dispatcher dispatcher)
+    {
+        IReadOnlyList<MotionZone> zones;
+        try
+        {
+            zones = await loader(activityCancellation.Token).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Without the zones, events are orange.
+            return;
+        }
+
+        var brushes = MotionZoneColors.ByZone(zones);
+        _ = dispatcher.BeginInvoke(() =>
+        {
+            if (!disposed)
+            {
+                ZoneBrushes = brushes;
+            }
         });
     }
 

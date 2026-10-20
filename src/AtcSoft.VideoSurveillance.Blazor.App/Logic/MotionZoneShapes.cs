@@ -100,23 +100,36 @@ public static class MotionZoneShapes
     }
 
     /// <summary>
-    /// Gets a zone's fill: red for an ignored zone, blue for a watched one.
+    /// How much of a zone's colour its fill takes, so the picture shows through.
     /// </summary>
-    /// <param name="kind">The zone's kind.</param>
-    public static string Fill(MotionZoneKind kind)
-        => kind.Value == MotionZoneKind.Names.Watch ? "rgba(30,136,229,0.35)" : "rgba(229,57,53,0.35)";
+    public const double FillOpacity = 0.35;
 
     /// <summary>
-    /// Gets a zone's outline: white when picked, else its kind's colour.
+    /// Gets a zone's colour: red for an ignored zone; a watched one in its own colour, as on the
+    /// timeline, else blue. Filled at <see cref="FillOpacity"/>.
     /// </summary>
-    /// <param name="kind">The zone's kind.</param>
+    /// <param name="zone">The zone.</param>
+    public static string Colour(MotionZone zone)
+    {
+        ArgumentNullException.ThrowIfNull(zone);
+
+        if (zone.Kind.Value != MotionZoneKind.Names.Watch)
+        {
+            return "#E53935";
+        }
+
+        return string.IsNullOrWhiteSpace(zone.Color) ? "#1E88E5" : ColorChoices.ToCss(zone.Color);
+    }
+
+    /// <summary>
+    /// Gets a zone's outline: white when picked, else its colour.
+    /// </summary>
+    /// <param name="zone">The zone.</param>
     /// <param name="picked">Whether the zone is picked.</param>
     public static string Stroke(
-        MotionZoneKind kind,
+        MotionZone zone,
         bool picked)
-        => picked
-            ? "#FFFFFF"
-            : kind.Value == MotionZoneKind.Names.Watch ? "#1E88E5" : "#E53935";
+        => picked ? "#FFFFFF" : Colour(zone);
 
     /// <summary>
     /// Reads the size of a PNG picture from its header.

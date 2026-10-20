@@ -32,6 +32,41 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void An_Event_In_A_Watch_Zone_Is_Drawn_In_The_Zones_Colour()
+    {
+        byte[] pixels = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var zones = new[]
+            {
+                new AtcSoft.VideoSurveillance.Models.MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Color = "Lime" },
+                new AtcSoft.VideoSurveillance.Models.MotionZone { Name = "Gate", Kind = MotionZoneKind.Watch, Color = "Red" },
+                new AtcSoft.VideoSurveillance.Models.MotionZone { Name = "Road", Kind = MotionZoneKind.Ignore, Color = "Blue" },
+            };
+            var timeline = new ActivityTimeline
+            {
+                Buckets =
+                [
+                    .. Enumerable.Range(0, 10).Select(i => i switch
+                    {
+                        2 => new ActivityBucket(30, 1, IsAnalysed: true) { Zones = ["Gate"] },
+                        7 => new ActivityBucket(30, 1, IsAnalysed: true) { Zones = ["Road"] },
+                        _ => new ActivityBucket(1, 0, IsAnalysed: true),
+                    }),
+                ],
+                ZoneBrushes = MotionZoneColors.ByZone(zones),
+            };
+
+            pixels = Render(timeline);
+        });
+
+        error.Should().BeNull();
+        Pixel(pixels, 25, Height - 2).Should().Be((0x00, 0xFF, 0x00), "the first zone named Gate is lime");
+        Pixel(pixels, 75, Height - 2).Should().Be((0xFF, 0x8C, 0x00), "an ignore zone has no colour of its own: orange");
+    }
+
+    [Fact]
     public void Without_Activity_Nothing_Is_Drawn_But_The_Strip_Still_Takes_Clicks()
     {
         byte[] pixels = [];

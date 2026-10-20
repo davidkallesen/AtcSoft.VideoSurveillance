@@ -61,9 +61,9 @@
                     {
                         <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="rgba(128,128,128,0.8)" />
                     }
-                    @foreach (var shape in bands)
+                    @foreach (var (shape, fill) in bands)
                     {
-                        <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="#FF8C00" />
+                        <rect x="@SvgNumber.Format(shape.X)" y="@SvgNumber.Format(shape.Y)" width="@SvgNumber.Format(shape.Width)" height="@SvgNumber.Format(shape.Height)" fill="@fill" />
                     }
                     @if (ActivityTimelineShapes.Playhead(playhead, buckets.Count) is { } line)
                     {
@@ -107,7 +107,7 @@
     private IReadOnlyList<ActivityTimelineEvent> events = [];
     private IReadOnlyList<TimelineRect> bars = [];
     private IReadOnlyList<TimelineRect> notAnalysed = [];
-    private IReadOnlyList<TimelineRect> bands = [];
+    private IReadOnlyList<(TimelineRect Band, string Fill)> bands = [];
 
     // Written as a property: a pattern with ">" in the markup reads as text to the literal-text check.
     private bool HasActivity
@@ -160,6 +160,12 @@
     /// </summary>
     [Parameter]
     public double StartSeconds { get; set; }
+
+    /// <summary>
+    /// The recording's camera, whose watch zones colour the events; <see langword="null"/> draws them orange.
+    /// </summary>
+    [Parameter]
+    public Guid? CameraId { get; set; }
 
     /// <summary>
     /// The recordings to move on to, one after another, when the one playing ends.
@@ -231,7 +237,8 @@
                 events = ActivityTimelineLayout.FindEvents(activity.Buckets);
                 bars = ActivityTimelineShapes.Bars(activity.Buckets);
                 notAnalysed = ActivityTimelineShapes.NotAnalysed(activity.Buckets);
-                bands = ActivityTimelineShapes.Bands(activity.Buckets);
+                var camera = CameraId is { } id ? await Gateway.GetCameraByIdAsync(id) : null;
+                bands = ActivityTimelineShapes.Bands(activity.Buckets, MotionZoneColors.ByZone(camera?.MotionZones));
             }
         }
         catch (HttpRequestException)

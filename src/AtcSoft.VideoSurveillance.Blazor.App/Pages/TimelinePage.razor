@@ -307,6 +307,7 @@ else if (timeline is { } shown)
             { x => x.PlaysInBrowser, RecordingDisplay.PlaysInBrowser(playback.FilePath) },
             { x => x.FilePath, playback.FilePath },
             { x => x.StartSeconds, playback.OffsetSeconds },
+            { x => x.CameraId, lane?.CameraId },
         };
 
         var options = new DialogOptions

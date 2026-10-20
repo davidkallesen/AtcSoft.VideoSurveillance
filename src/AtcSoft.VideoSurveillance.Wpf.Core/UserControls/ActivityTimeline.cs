@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 
 /// <summary>
 /// The activity of a recording drawn under its player: a bar for how much of the picture changed
-/// in each stretch, an orange band where something went somewhere (a confirmed track), dim where
+/// in each stretch, an orange band where something went somewhere (a confirmed track; in the colour
+/// of the watch zone it happened in, when that zone has one, see <see cref="ZoneBrushes"/>), dim where
 /// nothing was analysed, and a line where the player is. A click asks to jump there through
 /// <see cref="SeekCommand"/> with the place as a fraction of the recording, 0 to 1.
 /// </summary>
@@ -35,6 +36,9 @@ public sealed partial class ActivityTimeline : FrameworkElement
 
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private Brush? positionBrush;
+
+    [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
+    private IReadOnlyDictionary<string, Brush>? zoneBrushes;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ActivityTimeline"/> class.
@@ -83,7 +87,10 @@ public sealed partial class ActivityTimeline : FrameworkElement
         foreach (var activityEvent in ActivityTimelineLayout.FindEvents(stretches))
         {
             var (x, bandWidth) = ActivityTimelineLayout.ToPixels(activityEvent, width);
-            drawingContext.DrawRectangle(EventBrush ?? DefaultEventBrush, pen: null, new Rect(x, height - BandHeight, bandWidth, BandHeight));
+            var brush = activityEvent.Zone is { } zone && ZoneBrushes?.TryGetValue(zone, out var zoned) == true
+                ? zoned
+                : EventBrush ?? DefaultEventBrush;
+            drawingContext.DrawRectangle(brush, pen: null, new Rect(x, height - BandHeight, bandWidth, BandHeight));
         }
 
         var playhead = Math.Clamp(Position, 0, 1) * width;

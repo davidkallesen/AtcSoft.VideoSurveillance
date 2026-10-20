@@ -129,8 +129,11 @@ public sealed class MotionZoneEditorStateTests
         state.SetSmallestObjectPercent(0.1).Should().BeTrue();
         (state.Zones[0].Sensitivity, state.Zones[0].SmallestObjectPercent).Should().Be((80, 0.1));
 
+        state.SetColour("Lime").Should().BeTrue();
+        state.Zones[0].Color.Should().Be("Lime");
+
         state.SetKind(new MotionZoneKind(MotionZoneKind.Names.Ignore)).Should().BeTrue();
-        (state.Zones[0].Sensitivity, state.Zones[0].SmallestObjectPercent).Should().Be(((int?)null, (double?)null), "an ignore zone has no values of its own");
+        (state.Zones[0].Sensitivity, state.Zones[0].SmallestObjectPercent, state.Zones[0].Color).Should().Be(((int?)null, (double?)null, (string?)null), "an ignore zone has no values of its own");
     }
 
     [Fact]
@@ -191,8 +194,12 @@ public sealed class MotionZoneEditorStateTests
 
         MotionZoneShapes.Points([new ZonePoint(0.25, 0.5), new ZonePoint(0.5, 0.125)], 2000).Should().Be("500,500 1000,125");
         MotionZoneShapes.Handle(new ZonePoint(0.5, 0.5), 2000).Should().Be(new TimelineRect(992, 492, 16, 16));
-        MotionZoneShapes.Fill(new MotionZoneKind(MotionZoneKind.Names.Ignore)).Should().Contain("229,57,53");
-        MotionZoneShapes.Stroke(new MotionZoneKind(MotionZoneKind.Names.Watch), picked: true).Should().Be("#FFFFFF");
+        var watch = Square("Gate") with { Kind = new MotionZoneKind(MotionZoneKind.Names.Watch) };
+        MotionZoneShapes.Colour(Square("Tree")).Should().Be("#E53935");
+        MotionZoneShapes.Colour(watch).Should().Be("#1E88E5");
+        MotionZoneShapes.Colour(watch with { Color = "Lime" }).Should().Be("#00FF00", "a watch zone in its own colour, as on the timeline");
+        MotionZoneShapes.Colour(Square("Tree") with { Color = "Lime" }).Should().Be("#E53935", "an ignore zone has no colour of its own");
+        MotionZoneShapes.Stroke(watch, picked: true).Should().Be("#FFFFFF");
     }
 
     [Fact]

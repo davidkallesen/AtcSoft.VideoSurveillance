@@ -337,8 +337,18 @@ public sealed class MotionZoneEditorState
 
         return kind.Value == MotionZoneKind.Names.Watch
             ? Change(SelectedZone, z => z with { Kind = kind })
-            : Change(SelectedZone, z => z with { Kind = kind, Sensitivity = null, SmallestObjectPercent = null });
+            : Change(SelectedZone, z => z with { Kind = kind, Sensitivity = null, SmallestObjectPercent = null, Color = null });
     }
+
+    /// <summary>
+    /// Gives the picked zone a colour by name, for its events on the timeline, or none.
+    /// </summary>
+    /// <param name="colour">The colour's name, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> when the zones changed.</returns>
+    public bool SetColour(string? colour)
+        => Picked is { } zone &&
+           !string.Equals(zone.Color, colour, StringComparison.Ordinal) &&
+           Change(SelectedZone, z => z with { Color = colour });
 
     /// <summary>
     /// Gives the picked zone its own sensitivity, or none (the camera's).

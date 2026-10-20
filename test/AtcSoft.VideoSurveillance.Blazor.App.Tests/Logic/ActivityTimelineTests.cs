@@ -50,6 +50,27 @@ public sealed class ActivityTimelineTests
     }
 
     [Fact]
+    public void An_Event_Is_Drawn_In_Its_Watch_Zones_Colour_Else_Orange()
+    {
+        RecordingActivityBucket[] buckets =
+        [
+            Bucket(5, 1) with { Zones = ["Gate"] }, Bucket(0, 0),
+            Bucket(5, 1) with { Zones = ["Path"] }, Bucket(0, 0),
+            Bucket(5, 1), Bucket(0, 0),
+        ];
+        IReadOnlyList<MotionZone> zones =
+        [
+            new("Gate", new MotionZoneKind(MotionZoneKind.Names.Watch), [], "Lime"),
+            new("Gate", new MotionZoneKind(MotionZoneKind.Names.Watch), [], "Red"),
+            new("Path", new MotionZoneKind(MotionZoneKind.Names.Ignore), [], "Blue"),
+        ];
+
+        var fills = ActivityTimelineShapes.Bands(buckets, MotionZoneColors.ByZone(zones)).Select(b => b.Fill);
+
+        fills.Should().Equal("#00FF00", MotionZoneColors.Event, MotionZoneColors.Event);
+    }
+
+    [Fact]
     public void The_Copy_Names_An_Events_Zone_Like_The_Desktop_Apps()
     {
         string[][] zones = [["Path"], ["Gate", "Path"], ["Gate"], ["Gate"], [], ["Path"], ["Gate"], [], [], []];

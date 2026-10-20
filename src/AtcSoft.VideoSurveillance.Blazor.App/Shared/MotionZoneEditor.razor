@@ -50,6 +50,16 @@
                           Label="@Translations.SmallestObjectPercent"
                           Placeholder="@MotionZoneEditing.DefaultSmallestObjectPercent.ToString(CultureInfo.CurrentCulture)"
                           Immediate="true" />
+            <MudSelect T="string"
+                       Value="@(picked.Color ?? string.Empty)"
+                       ValueChanged="SetColourAsync"
+                       Label="@Translations.TimelineColour">
+                <MudSelectItem Value="@string.Empty">@Translations.ConnectionTypeNone</MudSelectItem>
+                @foreach (var colour in ColorChoices.Names)
+                {
+                    <MudSelectItem Value="@colour">@ColorChoices.Label(colour)</MudSelectItem>
+                }
+            </MudSelect>
         }
     </MudStack>
 }
@@ -84,9 +94,10 @@
             var (labelX, labelY) = MotionZoneShapes.Label(corners, width);
             <g>
                 <polygon points="@MotionZoneShapes.Points(corners, width)"
-                         fill="@MotionZoneShapes.Fill(zone.Kind)"
+                         fill="@MotionZoneShapes.Colour(zone)"
+                         fill-opacity="@SvgNumber.Format(MotionZoneShapes.FillOpacity)"
                          fill-rule="evenodd"
-                         stroke="@MotionZoneShapes.Stroke(zone.Kind, isPicked)"
+                         stroke="@MotionZoneShapes.Stroke(zone, isPicked)"
                          stroke-width="@(isPicked ? "5" : "3")"
                          stroke-linejoin="round" />
                 <text x="@SvgNumber.Format(labelX)" y="@SvgNumber.Format(labelY)" fill="#FFFFFF" font-size="28" style="pointer-events: none;">@zone.Name</text>
@@ -209,6 +220,14 @@
     private async Task SetKindAsync(string kind)
     {
         if (state.SetKind(new MotionZoneKind(kind)))
+        {
+            await TellAsync();
+        }
+    }
+
+    private async Task SetColourAsync(string colour)
+    {
+        if (state.SetColour(string.IsNullOrEmpty(colour) ? null : colour))
         {
             await TellAsync();
         }

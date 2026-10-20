@@ -291,6 +291,7 @@
                             Buckets="{Binding Path=ActivityBuckets}"
                             Position="{Binding Path=ActivityPosition}"
                             SeekCommand="{Binding Path=SeekActivityCommand}"
+                            ZoneBrushes="{Binding Path=ZoneBrushes}"
                             ToolTip="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                           Key=ActivityTimelineHint}"
                             Visibility="{Binding Path=HasActivity, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
