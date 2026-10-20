@@ -25,9 +25,20 @@ public sealed class MotionZone
     public List<ZonePoint> Points { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets the zone's colour by name, for the editor and the timeline.
+    /// Gets or sets the colour by name, for the editor and the timeline.
     /// </summary>
     public string? Color { get; set; }
+
+    /// <summary>
+    /// Gets or sets a watch zone's sensitivity, 0 to 100 as the camera's; <see langword="null"/> takes the camera's.
+    /// </summary>
+    public int? Sensitivity { get; set; }
+
+    /// <summary>
+    /// Gets or sets the smallest object that counts in a watch zone, in percent of the picture's area;
+    /// <see langword="null"/> takes the detector's default.
+    /// </summary>
+    public double? SmallestObjectPercent { get; set; }
 
     /// <summary>
     /// Creates a copy of the zone with its own list of corners.
@@ -39,6 +50,8 @@ public sealed class MotionZone
             Kind = Kind,
             Points = [.. Points],
             Color = Color,
+            Sensitivity = Sensitivity,
+            SmallestObjectPercent = SmallestObjectPercent,
         };
 
     /// <summary>
@@ -49,5 +62,7 @@ public sealed class MotionZone
            string.Equals(Name, other.Name, StringComparison.Ordinal) &&
            Kind == other.Kind &&
            Points.SequenceEqual(other.Points) &&
-           string.Equals(Color, other.Color, StringComparison.Ordinal);
+           string.Equals(Color, other.Color, StringComparison.Ordinal) &&
+           Sensitivity == other.Sensitivity &&
+           EqualityComparer<double?>.Default.Equals(SmallestObjectPercent, other.SmallestObjectPercent);
 }

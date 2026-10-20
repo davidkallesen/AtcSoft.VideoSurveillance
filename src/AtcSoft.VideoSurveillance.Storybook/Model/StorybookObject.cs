@@ -22,4 +22,10 @@ public sealed class StorybookObject
     /// and after the last it is not in the picture.
     /// </summary>
     public IList<StorybookKeyframe> Path { get; init; } = [];
+
+    /// <summary>
+    /// Gets or sets the grey level of a cat or a dog, 0 to 255, for a faint animal close to the
+    /// background's grey; <see langword="null"/> draws a cat dark (40) and a dog light (150).
+    /// </summary>
+    public int? Shade { get; set; }
 }

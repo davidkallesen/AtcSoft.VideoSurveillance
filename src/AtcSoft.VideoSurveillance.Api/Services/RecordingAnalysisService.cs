@@ -2,7 +2,7 @@ namespace AtcSoft.VideoSurveillance.Api.Services;
 
 /// <summary>
 /// *Analyse recording* on the server: analyses the queued recordings one at a time, each with its
-/// camera's own motion settings and ignore zones, reading the pictures straight from the file
+/// camera's own motion settings and zones, reading the pictures straight from the file
 /// (<see cref="AtcSoft.VideoEngine.Capture.GreyFrameFileReader"/>) and writing the activity index beside it
 /// (<see cref="RecordingAnalysis"/>). The server names its recordings in UTC.
 /// </summary>

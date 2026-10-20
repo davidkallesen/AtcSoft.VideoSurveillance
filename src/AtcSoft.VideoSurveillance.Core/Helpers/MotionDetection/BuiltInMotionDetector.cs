@@ -7,7 +7,9 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// that has been seen for a while and has travelled. A tree in the wind sways on the spot and
 /// never confirms; a slow walker differs from the background as a whole figure. A camera's ignore
 /// zones are never foreground and do not count towards the changed share, so the activity level
-/// and the lighting check leave them out too.
+/// and the lighting check leave them out too. A watch zone has its own sensitivity (its pixels'
+/// thresholds) and smallest object (for a blob whose middle is in it); without watch zones the
+/// detector works as it did before they existed.
 /// </summary>
 public sealed class BuiltInMotionDetector : IMotionDetector
 {
@@ -21,6 +23,10 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private byte[]? ignored;
     private int ignoredWidth;
     private int ignoredHeight;
+    private byte[]? watched;
+    private double[] zoneSigmas = [];
+    private double[] zoneMinThresholds = [];
+    private double[] zoneSmallestShares = [];
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
     private bool lastHadBoxes;
@@ -30,7 +36,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     /// </summary>
     /// <param name="settings">The camera's motion settings.</param>
     /// <param name="options">The tuning; from <paramref name="settings"/> when not given.</param>
-    /// <param name="zones">The camera's motion zones; the ignore zones are left out.</param>
+    /// <param name="zones">The camera's motion zones: ignored, or watched with their own values.</param>
     public BuiltInMotionDetector(
         MotionDetectionSettings settings,
         MotionDetectorOptions? options = null,
@@ -63,11 +69,9 @@ public sealed class BuiltInMotionDetector : IMotionDetector
 
         var mask = buffers.Mask;
         var ignore = Ignored(frame.Width, frame.Height);
-        var share = background.Apply(
+        var share = ApplyBackground(
             blurred,
             mask,
-            options.ThresholdSigmas,
-            options.MinThreshold,
             Rate(dt, options.BackgroundSeconds),
             Rate(dt, options.ForegroundSeconds),
             ignore);
@@ -78,7 +82,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         if (share > options.LightingChangeShare)
         {
             background.ShiftTo(blurred);
-            share = background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, 0, 0, ignore);
+            share = ApplyBackground(blurred, mask, 0, 0, ignore);
             if (share > options.LightingChangeShare)
             {
                 background.Reset(blurred, frame.Width, frame.Height);
@@ -97,9 +101,9 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         MaskOperations.Open(mask, frame.Width, frame.Height, radius: 1, buffers.Temp);
         MaskOperations.Close(mask, frame.Width, frame.Height, radius: 3, buffers.Temp);
 
-        var minPixels = options.SmallestObjectShare * frame.Width * frame.Height;
+        var area = frame.Width * frame.Height;
         var blobs = ConnectedComponents.Find(mask, frame.Width, frame.Height, buffers)
-            .Where(b => b.Pixels >= minPixels)
+            .Where(b => b.Pixels >= SmallestShare(b, frame.Width, frame.Height) * area)
             .ToList();
         blobs = ConnectedComponents.Merge(blobs, (int)Math.Ceiling(options.MergeGapShare * frame.Width));
 
@@ -136,7 +140,9 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         Volatile.Write(ref this.zones, [.. zones.Select(z => z.Clone())]);
     }
 
-    // The ignore zones at this size, filled in once until the size or the zones change.
+    // The zones at this size, filled in once until the size or the zones change: the ignored
+    // pixels, and the watch zone of each pixel with each zone's thresholds and smallest object
+    // (index 0 is the camera's).
     private byte[]? Ignored(
         int width,
         int height)
@@ -145,12 +151,50 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         if (ignoredWidth != width || ignoredHeight != height || !ReferenceEquals(ignoredFor, current))
         {
             ignored = ZoneMask.Ignored(current, width, height);
+            watched = ZoneMask.Watched(current, width, height);
+            var watch = ZoneMask.WatchZones(current);
+            var camera = (ThresholdSigmas: options.ThresholdSigmas, MinThreshold: options.MinThreshold);
+            var thresholds = watch.Select(z => z.Sensitivity is { } s ? MotionDetectorOptions.Thresholds(s) : camera).Prepend(camera).ToList();
+            zoneSigmas = [.. thresholds.Select(t => t.ThresholdSigmas)];
+            zoneMinThresholds = [.. thresholds.Select(t => t.MinThreshold)];
+            zoneSmallestShares =
+            [
+                options.SmallestObjectShare,
+                .. watch.Select(z => z.SmallestObjectPercent is { } percent ? Math.Clamp(percent, 0, 100) / 100 : options.SmallestObjectShare),
+            ];
             ignoredFor = current;
             ignoredWidth = width;
             ignoredHeight = height;
         }
 
         return ignored;
+    }
+
+    // Without watch zones, the one threshold of the camera, as before they existed.
+    private double ApplyBackground(
+        byte[] blurred,
+        byte[] mask,
+        double backgroundRate,
+        double foregroundRate,
+        byte[]? ignore)
+        => watched is { } zoneOf
+            ? background.ApplyZoned(blurred, mask, zoneSigmas, zoneMinThresholds, zoneOf, backgroundRate, foregroundRate, ignore)
+            : background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, backgroundRate, foregroundRate, ignore);
+
+    // The smallest object for a blob: that of the watch zone its middle is in, else the camera's.
+    private double SmallestShare(
+        Blob blob,
+        int width,
+        int height)
+    {
+        if (watched is not { } zoneOf)
+        {
+            return options.SmallestObjectShare;
+        }
+
+        var x = Math.Clamp((int)blob.CenterX, 0, width - 1);
+        var y = Math.Clamp((int)blob.CenterY, 0, height - 1);
+        return zoneSmallestShares[zoneOf[(y * width) + x]];
     }
 
     // How much a pixel learns in dt for a time constant: the share of the way to the new value.

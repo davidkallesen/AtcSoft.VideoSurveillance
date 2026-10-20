@@ -43,7 +43,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
     /// </param>
     /// <param name="cameraByFolder">
     /// Gets the camera whose recordings are in a camera folder, so *Analyse recording* uses its own
-    /// motion settings and ignore zones; <see langword="null"/> (or no camera) uses the app's settings.
+    /// motion settings and zones; <see langword="null"/> (or no camera) uses the app's settings.
     /// </param>
     public RecordingsBrowserDialogViewModel(
         IApplicationSettingsService settingsService,
@@ -371,7 +371,7 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
 
     /// <summary>
     /// Analyses a recording file for its activity index, with its camera's motion settings and
-    /// ignore zones (the app's settings when the camera is not known): the pictures are read
+    /// zones (the app's settings when the camera is not known): the pictures are read
     /// straight from the file, four a second, as fast as it decodes.
     /// </summary>
     /// <param name="videoPath">The recording.</param>

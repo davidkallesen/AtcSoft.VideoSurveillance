@@ -178,7 +178,7 @@ public sealed class SceneRenderer
         var top = (at.Y * height) - (h / 2);
 
         canvas.ResetTrace();
-        ObjectShapes.Draw(canvas, item.Kind, left, top, w, h, time, IsMoving(item, time), scene.Background.Seed);
+        ObjectShapes.Draw(canvas, item.Kind, left, top, w, h, time, IsMoving(item, time), scene.Background.Seed, item.Shade);
         return canvas.TracedBox();
     }
 

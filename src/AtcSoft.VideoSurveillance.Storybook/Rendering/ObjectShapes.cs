@@ -15,7 +15,8 @@ internal static class ObjectShapes
         double h,
         double time,
         bool moving,
-        int seed)
+        int seed,
+        int? shade = null)
     {
         switch (kind)
         {
@@ -26,10 +27,10 @@ internal static class ObjectShapes
                 DrawHuman(canvas, left, top, w, h, time, moving, seed);
                 break;
             case "cat":
-                DrawAnimal(canvas, left, top, w, h, shade: 40, seed);
+                DrawAnimal(canvas, left, top, w, h, shade ?? 40, seed);
                 break;
             case "dog":
-                DrawAnimal(canvas, left, top, w, h, shade: 150, seed);
+                DrawAnimal(canvas, left, top, w, h, shade ?? 150, seed);
                 break;
         }
     }

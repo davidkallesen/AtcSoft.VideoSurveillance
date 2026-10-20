@@ -20,7 +20,7 @@ public sealed record MotionDetectorOptions(
     double MinThreshold = 16,
     double BackgroundSeconds = 4,
     double ForegroundSeconds = 60,
-    double SmallestObjectShare = 0.0002,
+    double SmallestObjectShare = MotionDetectorOptions.DefaultSmallestObjectShare,
     double MergeGapShare = 0.01,
     double LightingChangeShare = 0.5,
     double LightingSettleSeconds = 1.5,
@@ -38,9 +38,32 @@ public sealed record MotionDetectorOptions(
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        var sensitivity = Math.Clamp(settings.Sensitivity, 0, 100) / 100.0;
+        var (sigmas, minThreshold) = Thresholds(settings.Sensitivity);
         return new MotionDetectorOptions(
-            ThresholdSigmas: 3.6 - (1.6 * sensitivity),
-            MinThreshold: 24 - (14 * sensitivity));
+            ThresholdSigmas: sigmas,
+            MinThreshold: minThreshold);
+    }
+
+    /// <summary>
+    /// The smallest blob that counts by default, as a share of the picture's area.
+    /// </summary>
+    public const double DefaultSmallestObjectShare = 0.0002;
+
+    /// <summary>
+    /// The smallest object that counts by default, in percent of the picture's area: what a watch
+    /// zone without its own takes, and what an editor shows for it.
+    /// </summary>
+    public const double DefaultSmallestObjectPercent = DefaultSmallestObjectShare * 100;
+
+    /// <summary>
+    /// Gets the thresholds for a sensitivity, 0 to 100: the camera's and a watch zone's alike.
+    /// </summary>
+    /// <param name="sensitivity">The sensitivity; a higher one lowers the thresholds.</param>
+    /// <returns>The standard deviations and the grey levels a pixel must differ by.</returns>
+    public static (double ThresholdSigmas, double MinThreshold) Thresholds(
+        int sensitivity)
+    {
+        var share = Math.Clamp(sensitivity, 0, 100) / 100.0;
+        return (3.6 - (1.6 * share), 24 - (14 * share));
     }
 }

@@ -114,4 +114,63 @@ internal sealed class BackgroundModel
 
         return looked > 0 ? count / (double)looked : 0;
     }
+
+    /// <summary>
+    /// As <see cref="Apply"/>, with the thresholds of the watch zone each pixel is in: index 0 of
+    /// the thresholds is the camera's, outside every watch zone.
+    /// </summary>
+    /// <param name="frame">The picture, blurred.</param>
+    /// <param name="mask">Where the foreground is written, one byte per pixel.</param>
+    /// <param name="sigmas">The standard deviations a pixel must differ by, by zone.</param>
+    /// <param name="minThresholds">The grey levels a pixel must differ by, by zone.</param>
+    /// <param name="watched">The watch zone of each pixel (see <see cref="ZoneMask.Watched"/>).</param>
+    /// <param name="backgroundRate">How much the background learns of a pixel that is not foreground.</param>
+    /// <param name="foregroundRate">How much it learns of one that is.</param>
+    /// <param name="ignored">The ignored pixels, or <see langword="null"/>.</param>
+    /// <returns>The share of the pixels looked at that are foreground.</returns>
+    public double ApplyZoned(
+        byte[] frame,
+        byte[] mask,
+        IReadOnlyList<double> sigmas,
+        IReadOnlyList<double> minThresholds,
+        byte[] watched,
+        double backgroundRate,
+        double foregroundRate,
+        byte[]? ignored = null)
+    {
+        ArgumentNullException.ThrowIfNull(sigmas);
+        ArgumentNullException.ThrowIfNull(minThresholds);
+        ArgumentNullException.ThrowIfNull(watched);
+
+        var s2 = sigmas.Select(s => (float)(s * s)).ToArray();
+        var min2 = minThresholds.Select(m => (float)(m * m)).ToArray();
+        var count = 0;
+        var looked = frame.Length;
+        var bg = (float)backgroundRate;
+        var fg = (float)foregroundRate;
+        for (var i = 0; i < frame.Length; i++)
+        {
+            var zone = watched[i];
+            var d = frame[i] - mean[i];
+            var d2 = d * d;
+            var isForeground = d2 > min2[zone] && d2 > s2[zone] * variance[i];
+            if (ignored is not null && ignored[i] != 0)
+            {
+                isForeground = false;
+                looked--;
+            }
+
+            mask[i] = isForeground ? (byte)1 : (byte)0;
+            if (isForeground)
+            {
+                count++;
+            }
+
+            var rate = isForeground ? fg : bg;
+            mean[i] += rate * d;
+            variance[i] = Math.Clamp(variance[i] + (rate * (d2 - variance[i])), MinVariance, MaxVariance);
+        }
+
+        return looked > 0 ? count / (double)looked : 0;
+    }
 }
