@@ -29,13 +29,16 @@ public interface IAccountService
         string password);
 
     /// <summary>
-    /// Renews a session for its refresh token, which cannot be used again;
+    /// Renews a session for its refresh token, which is replaced by a new one. For a
+    /// short grace window the replaced token gives the same new one again (two tabs,
+    /// an answer lost to a reload); used after it, the session ends.
     /// <see langword="null"/> when the token is not known or has run out.
     /// </summary>
     AccountSession? Refresh(string refreshToken);
 
     /// <summary>
-    /// Ends the session a refresh token belongs to; one that is gone is no error.
+    /// Ends the session a refresh token belongs to (the current token, or one
+    /// replaced within its grace window); one that is gone is no error.
     /// </summary>
     void SignOut(string refreshToken);
 

@@ -14,6 +14,9 @@ public sealed partial class AccountService
     [LoggerMessage(Level = LogLevel.Information, Message = "A sign-in was refused")]
     private partial void LogSignInRefused();
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "A refresh token of '{UserName}' that was already renewed was used again after its grace window; the session was ended")]
+    private partial void LogRefreshTokenReused(string userName);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "The accounts could not be saved to {Path}")]
     private partial void LogSaveFailed(string path);
 }

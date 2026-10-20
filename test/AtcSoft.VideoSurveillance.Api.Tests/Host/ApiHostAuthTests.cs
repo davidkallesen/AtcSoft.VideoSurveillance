@@ -44,15 +44,38 @@ public sealed class ApiHostAuthTests(ApiHostFixture host)
 
         (await anonymous.GetAsync(new Uri("/auth/me", UriKind.Relative), cancellationToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
-        // The refresh token is used once, and signing out ends the session.
+        // The refresh token is replaced by a new one, and signing out ends the session.
         var refreshToken = session.GetProperty("refreshToken").GetString();
         var renewed = await client.PostAsJsonAsync("/auth/refresh", new { refreshToken }, cancellationToken);
         renewed.StatusCode.Should().Be(HttpStatusCode.OK);
         var renewedToken = (await renewed.Content.ReadFromJsonAsync<JsonElement>(cancellationToken)).GetProperty("refreshToken").GetString();
-        (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken }, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        renewedToken.Should().NotBe(refreshToken);
 
         (await client.PostAsJsonAsync("/auth/sign-out", new { refreshToken = renewedToken }, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken = renewedToken }, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken }, cancellationToken)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // Two tabs share the refresh token and wake at once, or a reload loses the answer to a
+    // renewal: the token is sent twice. Both renewals succeed and agree on the new token.
+    [Fact]
+    public async Task Two_Renewals_With_The_Same_Token_Both_Succeed_With_The_Same_New_Token()
+    {
+        await host.EnsureAdminAsync();
+        var (status, session) = await host.SignInAsync(ApiHostFixture.AdminName, ApiHostFixture.AdminPassword);
+        status.Should().Be(StatusCodes.Status200OK);
+        var refreshToken = session.GetProperty("refreshToken").GetString()!;
+        var address = IPAddress.Parse("192.0.2.71");
+
+        var first = await RefreshAsync(address, refreshToken);
+        var second = await RefreshAsync(address, refreshToken);
+
+        first.Status.Should().Be(StatusCodes.Status200OK, first.Body.ToString());
+        second.Status.Should().Be(StatusCodes.Status200OK);
+        var newToken = first.Body.GetProperty("refreshToken").GetString();
+        newToken.Should().NotBe(refreshToken);
+        second.Body.GetProperty("refreshToken").GetString().Should().Be(newToken);
+        second.Body.GetProperty("accessToken").GetString().Should().NotBeNullOrEmpty();
     }
 
     [Fact]
@@ -65,5 +88,21 @@ public sealed class ApiHostAuthTests(ApiHostFixture host)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         refused.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+    }
+
+    // Renewals are rate-limited per address, so this goes from an address of its own.
+    private async Task<(int Status, JsonElement Body)> RefreshAsync(
+        IPAddress address,
+        string refreshToken)
+    {
+        using var client = host.CreateAnonymousClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/refresh")
+        {
+            Content = JsonContent.Create(new { refreshToken }),
+        };
+        request.Headers.Add(ApiHostFixture.TestAddressHeader, address.ToString());
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        return ((int)response.StatusCode, body);
     }
 }

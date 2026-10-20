@@ -2,7 +2,8 @@ namespace AtcSoft.VideoSurveillance.Api.Security;
 
 /// <summary>
 /// The server's users: the first admin made with the setup code from the data
-/// folder, sign-in, and sessions renewed with a refresh token that is used once.
+/// folder, sign-in, and sessions renewed with a refresh token that is replaced
+/// each time, the replaced one still renewing for a short grace window.
 /// </summary>
 public sealed class AccountServiceTests : IDisposable
 {
@@ -102,7 +103,7 @@ public sealed class AccountServiceTests : IDisposable
     }
 
     [Fact]
-    public void A_Refresh_Token_Renews_The_Session_Once()
+    public void A_Refresh_Token_Is_Replaced_By_A_New_One_That_Renews_The_Session()
     {
         var sut = CreateSetUpSut();
         var first = sut.SignIn(AdminName, AdminPassword)!;
@@ -110,8 +111,106 @@ public sealed class AccountServiceTests : IDisposable
         var renewed = sut.Refresh(first.RefreshToken);
 
         renewed!.RefreshToken.Should().NotBe(first.RefreshToken);
-        sut.Refresh(first.RefreshToken).Should().BeNull("a refresh token is used once");
         sut.Refresh(renewed.RefreshToken).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Renewals_With_The_Same_Token_Within_The_Grace_Window_All_Get_The_Same_New_Token()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+
+        // Several tabs waking at once.
+        var renewals = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() => sut.Refresh(first.RefreshToken))));
+        time.Advance(TimeSpan.FromSeconds(90));
+        var late = sut.Refresh(first.RefreshToken);
+
+        renewals.Should().AllSatisfy(r => r.Should().NotBeNull());
+        renewals.Select(r => r!.RefreshToken).Append(late!.RefreshToken).Distinct(StringComparer.Ordinal).Should().ContainSingle();
+        renewals[0]!.RefreshToken.Should().NotBe(first.RefreshToken);
+        sut.Refresh(late.RefreshToken).Should().NotBeNull("the new token renews the session");
+    }
+
+    [Fact]
+    public void A_Replay_Within_The_Grace_Window_Leads_To_The_Newest_Token_Of_The_Session()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        var second = sut.Refresh(first.RefreshToken)!;
+        var third = sut.Refresh(second.RefreshToken)!;
+
+        sut.Refresh(first.RefreshToken)!.RefreshToken.Should().Be(third.RefreshToken);
+        sut.Refresh(second.RefreshToken)!.RefreshToken.Should().Be(third.RefreshToken);
+    }
+
+    [Fact]
+    public void A_Replaced_Token_Used_After_The_Grace_Window_Ends_The_Session()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        var renewed = sut.Refresh(first.RefreshToken)!;
+
+        time.Advance(AccountService.RefreshGraceWindow + TimeSpan.FromSeconds(1));
+
+        sut.Refresh(first.RefreshToken).Should().BeNull("the old token was probably copied");
+        sut.Refresh(renewed.RefreshToken).Should().BeNull("the session it belonged to has ended");
+    }
+
+    [Fact]
+    public void After_A_Restart_A_Replaced_Token_Is_Refused_Within_Its_Window_And_Ends_The_Session_After_It()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        var renewed = sut.Refresh(first.RefreshToken)!;
+
+        var restarted = CreateSut();
+
+        restarted.Refresh(first.RefreshToken).Should().BeNull("a restart forgets the replays");
+        time.Advance(AccountService.RefreshGraceWindow + TimeSpan.FromSeconds(1));
+        var still = restarted.Refresh(renewed.RefreshToken);
+        still.Should().NotBeNull("a refusal within the window does not end the session");
+
+        time.Advance(AccountService.RefreshGraceWindow + TimeSpan.FromSeconds(1));
+        restarted.Refresh(renewed.RefreshToken).Should().BeNull();
+        restarted.Refresh(still!.RefreshToken).Should().BeNull("the replaced token was used after its window");
+    }
+
+    [Fact]
+    public void A_New_Password_Ends_The_Replays_Too()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        sut.Refresh(first.RefreshToken).Should().NotBeNull();
+
+        sut.ChangeOwnPassword(AdminName, AdminPassword, "another long password").Should().BeTrue();
+
+        sut.Refresh(first.RefreshToken).Should().BeNull();
+    }
+
+    [Fact]
+    public void Signing_Out_With_The_Replaced_Token_Within_Its_Window_Ends_The_Session()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        var renewed = sut.Refresh(first.RefreshToken)!;
+
+        sut.SignOut(first.RefreshToken);
+
+        sut.Refresh(renewed.RefreshToken).Should().BeNull();
+        sut.Refresh(first.RefreshToken).Should().BeNull();
+    }
+
+    [Fact]
+    public void Signing_Out_With_The_New_Token_Ends_The_Replays_Too()
+    {
+        var sut = CreateSetUpSut();
+        var first = sut.SignIn(AdminName, AdminPassword)!;
+        var renewed = sut.Refresh(first.RefreshToken)!;
+
+        sut.SignOut(renewed.RefreshToken);
+
+        sut.Refresh(first.RefreshToken).Should().BeNull();
+        sut.Refresh(renewed.RefreshToken).Should().BeNull();
     }
 
     [Fact]

@@ -6,6 +6,20 @@ namespace AtcSoft.VideoSurveillance.Api.Security;
 /// refresh tokens as SHA-256 hashes, so the file gives neither away. While the
 /// server has no user, a one-time setup code lies next to it.
 /// </summary>
+/// <remarks>
+/// A refresh token is rotated on every renewal, with a grace window
+/// (<see cref="RefreshGraceWindow"/>) for the token it replaced: two tabs waking
+/// at once, or a renewal whose answer was lost to a page reload, send the old
+/// token again. Within the window the old token gets the session's newest
+/// refresh token back (not another rotation), so every caller ends up with the
+/// same one. What the window needs (the old hash, the session it belongs to and
+/// that session's newest token) is kept in memory only; a replay looks the
+/// session up by its id, so it follows any number of rotations since. After the
+/// window, the token just before the current one means it was copied: the
+/// session ends. The file keeps that previous hash and when it was replaced, so
+/// after a restart (which forgets the replays) an old token inside its window is
+/// only refused, and one after it still ends the session.
+/// </remarks>
 public sealed partial class AccountService : IAccountService
 {
     /// <summary>
@@ -18,6 +32,11 @@ public sealed partial class AccountService : IAccountService
 
     // What an API key starts with, so one is told from other text (a log, a config file).
     private const string ApiKeyPrefix = "vsk_";
+
+    /// <summary>
+    /// How long a rotated refresh token still renews into the session's newest one.
+    /// </summary>
+    public static readonly TimeSpan RefreshGraceWindow = TimeSpan.FromMinutes(2);
 
     private static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(30);
 
@@ -35,6 +54,12 @@ public sealed partial class AccountService : IAccountService
     private readonly PasswordHasher<StoredUser> hasher = new();
     private readonly StoredAccounts file;
 
+    // In memory only: a rotated token's hash -> its session and how long it still renews.
+    private readonly Dictionary<string, GraceEntry> graces = new(StringComparer.Ordinal);
+
+    // In memory only: a session's newest refresh token, kept while a grace entry points at it.
+    private readonly Dictionary<Guid, string> newestTokens = [];
+
     public AccountService(
         ServerDataPaths paths,
         TimeProvider time,
@@ -47,6 +72,12 @@ public sealed partial class AccountService : IAccountService
         this.logger = logger;
         Tokens = new AccessTokens(paths.SigningKeyPath, time);
         file = SafeJsonFile.TryRead<StoredAccounts>(paths.AccountsPath, FileOptions) ?? new StoredAccounts();
+
+        // A file from before sessions had an id.
+        foreach (var session in file.Sessions.Where(s => s.Id == Guid.Empty))
+        {
+            session.Id = Guid.NewGuid();
+        }
 
         if (file.Users.Count == 0)
         {
@@ -149,25 +180,27 @@ public sealed partial class AccountService : IAccountService
         lock (sync)
         {
             var now = time.GetUtcNow();
+            ForgetEndedGraces(now);
             var hash = HashToken(refreshToken);
-            var stored = file.Sessions.Find(s => string.Equals(s.TokenHash, hash, StringComparison.Ordinal));
-            if (stored is null)
+
+            var stored = FindSessionByToken(hash);
+            if (stored is not null)
             {
-                return null;
+                return Rotate(stored, hash, now);
             }
 
-            // Used once: the old token goes, whether it is still valid or not.
-            file.Sessions.Remove(stored);
-            var user = file.Users.Find(u => u.Id == stored.UserId);
-            if (user is null || stored.ExpiresAt <= now)
+            if (graces.TryGetValue(hash, out var grace))
             {
-                Save();
-                return null;
+                return Replay(grace.SessionId, now);
             }
 
-            var session = StartSession(user);
-            Save();
-            return session;
+            var replaced = file.Sessions.Find(s => string.Equals(s.PreviousTokenHash, hash, StringComparison.Ordinal));
+            if (replaced is not null)
+            {
+                EndReusedSession(replaced, now);
+            }
+
+            return null;
         }
     }
 
@@ -355,9 +388,20 @@ public sealed partial class AccountService : IAccountService
     {
         lock (sync)
         {
+            ForgetEndedGraces(time.GetUtcNow());
             var hash = HashToken(refreshToken);
-            if (file.Sessions.RemoveAll(s => string.Equals(s.TokenHash, hash, StringComparison.Ordinal)) > 0)
+
+            // The current token, or one replaced within its grace window.
+            var stored = FindSessionByToken(hash);
+            if (stored is null && graces.TryGetValue(hash, out var grace))
             {
+                stored = file.Sessions.Find(s => s.Id == grace.SessionId);
+            }
+
+            if (stored is not null)
+            {
+                file.Sessions.Remove(stored);
+                ForgetGraces(stored.Id);
                 Save();
             }
         }
@@ -370,6 +414,9 @@ public sealed partial class AccountService : IAccountService
         => new(key.Id, key.Name, key.Role, key.CreatedAt);
 
     private static string DummyHash { get; } = new PasswordHasher<StoredUser>().HashPassword(new StoredUser(), "no such user");
+
+    private static string NewRefreshToken()
+        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
     private static string HashToken(string token)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
@@ -405,22 +452,126 @@ public sealed partial class AccountService : IAccountService
         var now = time.GetUtcNow();
         file.Sessions.RemoveAll(s => s.ExpiresAt <= now);
 
-        var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var refreshToken = NewRefreshToken();
         file.Sessions.Add(new StoredSession
         {
+            Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = HashToken(refreshToken),
             ExpiresAt = now + SessionLifetime,
         });
 
-        return new AccountSession(
+        return CreateSession(user, refreshToken);
+    }
+
+    // Called under the lock: gives a session a new refresh token, and keeps the
+    // one it replaces renewing into it for the grace window.
+    private AccountSession? Rotate(
+        StoredSession stored,
+        string oldHash,
+        DateTimeOffset now)
+    {
+        var user = file.Users.Find(u => u.Id == stored.UserId);
+        if (user is null || stored.ExpiresAt <= now)
+        {
+            file.Sessions.Remove(stored);
+            ForgetGraces(stored.Id);
+            Save();
+            return null;
+        }
+
+        file.Sessions.RemoveAll(s => s.ExpiresAt <= now);
+
+        var refreshToken = NewRefreshToken();
+        stored.PreviousTokenHash = oldHash;
+        stored.TokenHash = HashToken(refreshToken);
+        stored.RotatedAt = now;
+        stored.ExpiresAt = now + SessionLifetime;
+        graces[oldHash] = new GraceEntry(stored.Id, now + RefreshGraceWindow);
+        newestTokens[stored.Id] = refreshToken;
+        Save();
+
+        return CreateSession(user, refreshToken);
+    }
+
+    // Called under the lock: a rotated token within its grace window gets the
+    // session's newest refresh token again, with fresh access and media tokens.
+    private AccountSession? Replay(
+        Guid sessionId,
+        DateTimeOffset now)
+    {
+        var stored = file.Sessions.Find(s => s.Id == sessionId);
+        var user = stored is null ? null : file.Users.Find(u => u.Id == stored.UserId);
+        if (stored is null ||
+            user is null ||
+            stored.ExpiresAt <= now ||
+            !newestTokens.TryGetValue(sessionId, out var refreshToken))
+        {
+            return null;
+        }
+
+        return CreateSession(user, refreshToken);
+    }
+
+    // Called under the lock: the token before the current one, sent again after
+    // its grace window, was most likely copied, so the session ends. Inside the
+    // window (the replays were lost to a restart) it is only refused.
+    private void EndReusedSession(
+        StoredSession stored,
+        DateTimeOffset now)
+    {
+        if (stored.RotatedAt is { } rotatedAt && now - rotatedAt <= RefreshGraceWindow)
+        {
+            return;
+        }
+
+        file.Sessions.Remove(stored);
+        ForgetGraces(stored.Id);
+        Save();
+
+        var userName = file.Users.Find(u => u.Id == stored.UserId)?.UserName ?? string.Empty;
+        LogRefreshTokenReused(userName);
+    }
+
+    // Called under the lock.
+    private StoredSession? FindSessionByToken(string hash)
+        => file.Sessions.Find(s => string.Equals(s.TokenHash, hash, StringComparison.Ordinal));
+
+    // Called under the lock.
+    private void ForgetEndedGraces(DateTimeOffset now)
+    {
+        foreach (var ended in graces.Where(g => g.Value.Until <= now).Select(g => g.Key).ToList())
+        {
+            graces.Remove(ended);
+        }
+
+        foreach (var unused in newestTokens.Keys.Where(id => !graces.Values.Any(g => g.SessionId == id)).ToList())
+        {
+            newestTokens.Remove(unused);
+        }
+    }
+
+    // Called under the lock.
+    private void ForgetGraces(Guid sessionId)
+    {
+        foreach (var ended in graces.Where(g => g.Value.SessionId == sessionId).Select(g => g.Key).ToList())
+        {
+            graces.Remove(ended);
+        }
+
+        newestTokens.Remove(sessionId);
+    }
+
+    private AccountSession CreateSession(
+        StoredUser user,
+        string refreshToken)
+        => new(
             Tokens.Create(user.Id, user.UserName, user.Role),
             Tokens.Lifetime,
             refreshToken,
             user.UserName,
             user.Role,
             Tokens.CreateMediaToken(user.UserName));
-    }
 
     private void EnsureSetupCode()
     {
@@ -495,11 +646,24 @@ public sealed partial class AccountService : IAccountService
 
     private sealed class StoredSession
     {
+        // Stays the same while the refresh token is rotated.
+        public Guid Id { get; set; }
+
         public Guid UserId { get; set; }
 
         // The SHA-256 hash of the refresh token, never the token itself.
         public string TokenHash { get; set; } = string.Empty;
 
+        // The hash of the token the current one replaced, to recognise it used again.
+        public string? PreviousTokenHash { get; set; }
+
+        // When the current token replaced the previous one.
+        public DateTimeOffset? RotatedAt { get; set; }
+
         public DateTimeOffset ExpiresAt { get; set; }
     }
+
+    private sealed record GraceEntry(
+        Guid SessionId,
+        DateTimeOffset Until);
 }
