@@ -346,7 +346,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps; settings, SIMD and the rest of the scenes open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
-| 6 | Masks and zones | L | 🟨 in progress: ignore masks work, are stored and drawn in all three apps; watch zones next |
+| 6 | Masks and zones | L | 🟨 in progress: ignore and watch zones work, are stored and drawn in all three apps; the zone colour on the timeline next |
 | 7 | Activity index (sidecar, API) | M | ✅ Core, server, CameraWall, the setting and *Analyse recording* in all three apps |
 | 8 | Activity timeline in both WPF apps and the web client | L | 🟨 timeline, jumps, click to seek, play events only and sparklines in all three clients; hover and zoom open |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
@@ -479,7 +479,9 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 - *Analyse recording* with the camera's zones (done 2026-10-20): `RecordingAnalysis.DetectorFor` (Core) gives both apps the camera's own settings and its ignore zones, turned from the camera's rotation now to the one the recording was made at (its display matrix). CameraWall's browser finds the camera by the recording's folder, so it no longer analyses with the app's settings. A recording of a camera no longer known is analysed with the app's settings and no zones.
 
-**Open in phase 6:** watch zones with their own sensitivity and smallest object (the editors draw an existing watch zone blue, but offer only ignore zones); the zone colour on the timeline.
+- Watch zones (done 2026-10-20): `MotionZone.Sensitivity` (0 to 100, the camera's formula, `MotionDetectorOptions.Thresholds`) and `SmallestObjectPercent` (of the picture, default 0.02), both optional (empty is the camera's sensitivity and the default size). `ZoneMask.Watched` fills in which watch zone each pixel is in (an ignore zone wins, of two watch zones the one drawn last); the background takes each pixel's zone's thresholds (`BackgroundModel.ApplyZoned`), a blob whose middle is in a watch zone that zone's smallest object. Without watch zones the detector runs the path it had and the storybook baseline is unchanged. Storybook (`WatchZoneTests`): a cat smaller than the camera takes, and a faint cat below its thresholds (storybook animals take a `shade` now), are boxed inside a watch zone over their path and missed outside it; noise in a zone at full sensitivity gives no boxes; a watch zone without values detects as the camera does. In the spec (`sensitivity`, `smallestObjectPercent` on `MotionZone`, with limits), the server, both clients and CameraWall's `cameras.json`. The editors pick the type and, for a watch zone, the two values (read in the user's culture, `MotionZoneEditing.TryRead…`, with the web copy). The smallest object is not a camera setting yet (phase 1's open item); a watch zone's default is the detector's.
+
+**Open in phase 6:** the zone colour on the timeline.
 
 ### Phase 7 — Activity index ✅ (M)
 

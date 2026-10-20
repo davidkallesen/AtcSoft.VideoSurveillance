@@ -185,10 +185,17 @@ Right-click a camera tile → **Edit** → navigate to the **Motion Detection** 
 - Toggle individual settings to **Override Locally**
 - Useful for cameras in high-traffic areas (lower sensitivity) or quiet areas (higher sensitivity)
 
-### 5. Ignore Zones (Optional)
+### 5. Motion Zones (Optional)
 
-Right-click a camera tile → **Edit** → **Motion zones**: movement inside a zone is ignored (a road
-beyond the fence, a busy display, the tree that sways too much).
+Right-click a camera tile → **Edit** → **Motion zones**. A zone's **Type** is one of:
+
+- **Ignore movement**: movement inside it is left out (a road beyond the fence, a busy display, the
+  tree that sways too much). It does not count towards motion or the activity timeline.
+- **Watch with its own values**: inside it its own **Sensitivity** (0 to 100, as the camera's) and
+  **Smallest object** (in percent of the picture; the default is 0.02) count instead of the camera's
+  (a gate where a small animal matters, a corner the camera's settings are too blunt for). An empty
+  field takes the camera's sensitivity and the default size. An object counts in the zone its middle
+  is in. Where zones overlap, an ignore zone wins, and of two watch zones the one added last.
 
 - **Take Snapshot** shows the camera's picture now (from its tile, or from the camera opened for it);
   without one the zones are drawn on a grey picture of the same shape.
@@ -238,9 +245,10 @@ The settings resource is flat. Send only the settings you change: the server kee
 
 Per-camera motion overrides are not part of the API; they are set in the desktop apps.
 
-A camera's ignore zones are: `motionZones` on the camera (`GET /cameras/{id}`), each a `name`, a `kind`
-(`ignore`; `watch` is reserved for zones with their own sensitivity) and 3 to 32 `points` (`x`, `y`
-from 0 to 1 of the picture as shown). An update without `motionZones` keeps them (turned with a new
+A camera's zones are `motionZones` on the camera (`GET /cameras/{id}`), each a `name`, a `kind`
+(`ignore` or `watch`), 3 to 32 `points` (`x`, `y` from 0 to 1 of the picture as shown) and, for a
+watch zone, an optional `sensitivity` (0 to 100) and `smallestObjectPercent` (0 to 100); left out,
+they are the camera's sensitivity and the default size (not "keep what is stored", as for an update). An update without `motionZones` keeps them (turned with a new
 `rotation`), `[]` removes them. Both API clients draw them on a snapshot from
 `GET /cameras/{id}/snapshot`, which for a camera being recorded is taken from the recording. Like
 every snapshot, each one is also saved in the server's snapshot folder; the clean-up removes old ones
@@ -355,7 +363,7 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Solutions**:
   - Decrease `Sensitivity` (try 15-20)
   - Something that only sways (a tree, a flag) gets no box: it never travels. If it does, report the scene, so it can become a storybook test
-  - Draw an ignore zone over what moves but does not matter (see *Ignore Zones* above): it no longer counts towards motion or the activity timeline
+  - Draw an ignore zone over what moves but does not matter (see *Motion Zones* above): it no longer counts towards motion or the activity timeline
   - Lighting changes are learnt away; a box right after the IR switch should vanish within a few seconds
 
 ### Missed Motion
@@ -364,6 +372,7 @@ displayH = (box.Height / analysisHeight) * displayHeight
 - **Causes**: Sensitivity too low, resolution too low, objects too small.
 - **Solutions**:
   - Increase `Sensitivity` (try 50-70)
+  - Only in part of the picture: a watch zone there with a higher sensitivity or a smaller smallest object (see *Motion Zones* above)
   - Increase analysis resolution
   - A box shows only after something has moved 3 % of the picture's width, so the first half second of a slow walker has none
 
