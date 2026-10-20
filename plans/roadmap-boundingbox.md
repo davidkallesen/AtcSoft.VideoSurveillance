@@ -6,7 +6,7 @@ Affects **`AtcSoft.VideoSurveillance.Core`** (the detector), **`AtcSoft.VideoEng
 
 ← Back to the [roadmap home](roadmap.md)
 
-**Status: ⬜ Not started** — planned on 2026-10-18.
+**Status: 🟨 In progress** — planned on 2026-10-18.
 
 ---
 
