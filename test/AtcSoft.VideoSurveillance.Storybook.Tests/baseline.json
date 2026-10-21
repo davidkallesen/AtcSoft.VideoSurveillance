@@ -26,19 +26,19 @@
   "s02-tree-in-the-wind@15": {
     "recall": 1,
     "precision": 0,
-    "falseBoxesPerFrame": 3.5912,
+    "falseBoxesPerFrame": 2.7238,
     "meanLatencySeconds": null
   },
   "s02-tree-in-the-wind@15/builtIn": {
     "recall": 1,
     "precision": 0,
-    "falseBoxesPerFrame": 0.011,
+    "falseBoxesPerFrame": 0.0055,
     "meanLatencySeconds": null
   },
   "s02-tree-in-the-wind@4": {
     "recall": 1,
     "precision": 0,
-    "falseBoxesPerFrame": 2.2857,
+    "falseBoxesPerFrame": 2.3673,
     "meanLatencySeconds": null
   },
   "s02-tree-in-the-wind@4/builtIn": {
@@ -96,9 +96,9 @@
     "meanLatencySeconds": 0.467
   },
   "s05-car-human-cat@15": {
-    "recall": 0.8046,
-    "precision": 0.2878,
-    "falseBoxesPerFrame": 3.1989,
+    "recall": 0.7203,
+    "precision": 0.2717,
+    "falseBoxesPerFrame": 3.1105,
     "meanLatencySeconds": 0
   },
   "s05-car-human-cat@15/builtIn": {
@@ -109,8 +109,8 @@
   },
   "s05-car-human-cat@4": {
     "recall": 0.9552,
-    "precision": 0.4768,
-    "falseBoxesPerFrame": 1.6122,
+    "precision": 0.4832,
+    "falseBoxesPerFrame": 1.5714,
     "meanLatencySeconds": 0
   },
   "s05-car-human-cat@4/builtIn": {
@@ -193,27 +193,27 @@
   },
   "s10-rain@15": {
     "recall": 1,
-    "precision": 0.8929,
-    "falseBoxesPerFrame": 0.0994,
+    "precision": 0.9677,
+    "falseBoxesPerFrame": 0.0276,
     "meanLatencySeconds": 0
   },
   "s10-rain@15/builtIn": {
-    "recall": 1,
+    "recall": 0.9789,
     "precision": 1,
     "falseBoxesPerFrame": 0,
-    "meanLatencySeconds": 0
+    "meanLatencySeconds": 0.733
   },
   "s10-rain@4": {
     "recall": 1,
-    "precision": 0.9524,
-    "falseBoxesPerFrame": 0.0408,
+    "precision": 0.9756,
+    "falseBoxesPerFrame": 0.0204,
     "meanLatencySeconds": 0
   },
   "s10-rain@4/builtIn": {
     "recall": 1,
     "precision": 1,
     "falseBoxesPerFrame": 0,
-    "meanLatencySeconds": 0.467
+    "meanLatencySeconds": 0.733
   },
   "s12-camera-clock@15": {
     "recall": 1,
@@ -240,21 +240,21 @@
     "meanLatencySeconds": null
   },
   "s13-coming-closer@15": {
-    "recall": 0.5089,
-    "precision": 0.3725,
-    "falseBoxesPerFrame": 0.5304,
-    "meanLatencySeconds": 2.8
+    "recall": 0.5625,
+    "precision": 0.4315,
+    "falseBoxesPerFrame": 0.4586,
+    "meanLatencySeconds": 2.667
   },
   "s13-coming-closer@15/builtIn": {
-    "recall": 0.9732,
+    "recall": 0.9554,
     "precision": 1,
     "falseBoxesPerFrame": 0,
-    "meanLatencySeconds": 0.733
+    "meanLatencySeconds": 0.867
   },
   "s13-coming-closer@4": {
     "recall": 0.9655,
-    "precision": 0.3836,
-    "falseBoxesPerFrame": 0.9184,
+    "precision": 0.3784,
+    "falseBoxesPerFrame": 0.9388,
     "meanLatencySeconds": 1
   },
   "s13-coming-closer@4/builtIn": {

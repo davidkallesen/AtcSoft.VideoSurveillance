@@ -29,14 +29,17 @@ public static class StorybookRunner
         var frames = new List<ScoredFrame>();
         IReadOnlyList<BoundingBox> shown = [];
         var step = 1 / options.AnalysesPerSecond;
+        var (analysisWidth, analysisHeight) = options.AnalysisHeight is { } squeezed
+            ? (options.AnalysisWidth, squeezed)
+            : MotionAnalysisSize.For(options.AnalysisWidth, scene.Video.Width, scene.Video.Height);
 
         for (var k = 0; k * step <= scene.Video.DurationSeconds; k++)
         {
             var time = k * step;
             var frameIndex = Math.Min((int)Math.Round(time * scene.Video.Fps), renderer.FrameCount - 1);
             var frame = renderer.Render(frameIndex);
-            var analysis = Resize(frame.Luma, frame.Width, frame.Height, options.AnalysisWidth, options.AnalysisHeight);
-            var result = detector.Process(new MotionFrame(analysis, options.AnalysisWidth, options.AnalysisHeight, Epoch.AddSeconds(frame.Time)));
+            var analysis = Resize(frame.Luma, frame.Width, frame.Height, analysisWidth, analysisHeight);
+            var result = detector.Process(new MotionFrame(analysis, analysisWidth, analysisHeight, Epoch.AddSeconds(frame.Time)));
 
             shown = result.Change switch
             {
@@ -45,8 +48,8 @@ public static class StorybookRunner
                 _ => result.IsActive ? shown : [],
             };
 
-            var scaleX = frame.Width / (double)options.AnalysisWidth;
-            var scaleY = frame.Height / (double)options.AnalysisHeight;
+            var scaleX = frame.Width / (double)analysisWidth;
+            var scaleY = frame.Height / (double)analysisHeight;
             var detected = shown
                 .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
                 .ToList();

@@ -5,6 +5,7 @@ global using System.Text.Json;
 global using System.Text.Json.Serialization;
 
 global using AtcSoft.VideoSurveillance.Enums;
+global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 global using AtcSoft.VideoSurveillance.Models;
 global using AtcSoft.VideoSurveillance.Services;
 global using AtcSoft.VideoSurveillance.Storybook.Model;
