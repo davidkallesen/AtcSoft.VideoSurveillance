@@ -191,6 +191,30 @@
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": 0.2
   },
+  "s10-rain@15": {
+    "recall": 1,
+    "precision": 0.8929,
+    "falseBoxesPerFrame": 0.0994,
+    "meanLatencySeconds": 0
+  },
+  "s10-rain@15/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0
+  },
+  "s10-rain@4": {
+    "recall": 1,
+    "precision": 0.9524,
+    "falseBoxesPerFrame": 0.0408,
+    "meanLatencySeconds": 0
+  },
+  "s10-rain@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.467
+  },
   "s12-camera-clock@15": {
     "recall": 1,
     "precision": 1,

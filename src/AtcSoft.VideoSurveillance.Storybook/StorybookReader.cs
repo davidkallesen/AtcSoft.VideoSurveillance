@@ -7,7 +7,7 @@ namespace AtcSoft.VideoSurveillance.Storybook;
 public static class StorybookReader
 {
     private static readonly string[] ObjectKinds = ["car", "human", "cat", "dog"];
-    private static readonly string[] DistractorKinds = ["swayingTree", "clockOverlay", "brightnessStep", "rain"];
+    private static readonly string[] DistractorKinds = ["swayingTree", "clockOverlay", "brightnessStep", "rain", "snow"];
     private static readonly string[] States = ["mustBox", "mustNotBox", "dontCare"];
 
     private static readonly JsonSerializerOptions Options = new()

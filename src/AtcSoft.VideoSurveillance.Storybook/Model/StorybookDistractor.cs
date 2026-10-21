@@ -9,7 +9,7 @@ public sealed class StorybookDistractor
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the kind: <c>swayingTree</c>, <c>clockOverlay</c>, <c>brightnessStep</c> or <c>rain</c>.
+    /// Gets or sets the kind: <c>swayingTree</c>, <c>clockOverlay</c>, <c>brightnessStep</c>, <c>rain</c> or <c>snow</c>.
     /// </summary>
     public string Kind { get; set; } = string.Empty;
 
@@ -19,12 +19,12 @@ public sealed class StorybookDistractor
     public IList<double>? At { get; init; }
 
     /// <summary>
-    /// Gets or sets its size as a fraction of the picture's height (a tree).
+    /// Gets or sets its size as a fraction of the picture's height (a tree; snow: the radius of a flake at the lens).
     /// </summary>
     public double Size { get; set; } = 0.25;
 
     /// <summary>
-    /// Gets or sets how far it sways, as a fraction of the picture's width (a tree).
+    /// Gets or sets how far it sways, as a fraction of the picture's width (a tree, snow).
     /// </summary>
     public double Amplitude { get; set; } = 0.01;
 
@@ -46,7 +46,7 @@ public sealed class StorybookDistractor
     public int Delta { get; set; } = 40;
 
     /// <summary>
-    /// Gets or sets how many drops per frame (rain).
+    /// Gets or sets how many drops per frame (rain) or flakes in the scene (snow).
     /// </summary>
     public int Count { get; set; } = 200;
 }

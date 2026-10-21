@@ -10,6 +10,7 @@ public sealed class SceneRenderer
 {
     private const int PurposeNoise = 1;
     private const int PurposeRain = 2;
+    private const int PurposeSnow = 3;
     private const double MovingWindowSeconds = 0.5;
     private const double MinVisibleShare = 0.5;
 
@@ -80,6 +81,9 @@ public sealed class SceneRenderer
                     break;
                 case "rain":
                     DrawRain(canvas, distractor, frameIndex);
+                    break;
+                case "snow":
+                    DrawSnow(canvas, distractor, time);
                     break;
                 case "brightnessStep" when time >= distractor.AtSeconds:
                     canvas.AddAll(distractor.Delta);
@@ -310,6 +314,29 @@ public sealed class SceneRenderer
             var x = prng.Next(0, width);
             var y = prng.Next(0, height);
             canvas.FillRect(x, y, 1, 6, (_, _) => 210);
+        }
+    }
+
+    // Flakes that fall through the whole scene, each at its own depth: most far away (small, slow,
+    // dim), a few near the lens (large, fast, bright). A flake comes back in at the top.
+    private void DrawSnow(
+        Canvas canvas,
+        StorybookDistractor snow,
+        double time)
+    {
+        for (var i = 0; i < snow.Count; i++)
+        {
+            var prng = new ScenePrng(scene.Background.Seed, i, PurposeSnow);
+            var near = Math.Pow(prng.NextDouble(), 3);
+            var radius = Math.Max(0.8, snow.Size * height * near);
+            var fall = 0.12 + (0.6 * near);
+            var start = prng.NextDouble();
+            var x = (prng.NextDouble() * width) + (snow.Amplitude * width * Math.Sin((2 * Math.PI * time / snow.PeriodSeconds) + (prng.NextDouble() * 2 * Math.PI)));
+            var span = 1 + (4 * radius / height);
+            var travelled = (start + (fall * time)) % span;
+            var y = (travelled * height) - (2 * radius);
+            var shade = (int)Math.Round(190 + (50 * near));
+            canvas.FillEllipse(x, y, radius, radius, (_, _) => shade);
         }
     }
 
