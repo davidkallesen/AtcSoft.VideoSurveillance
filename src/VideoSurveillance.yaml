@@ -3071,7 +3071,7 @@ components:
           description: How long something that stops moving (a parked car) is seen at most before it becomes part of the background, in seconds (60 by default); something that differs little goes sooner.
         ignoreLightingChanges:
           type: boolean
-          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). Off, someone filling most of the picture (a camera at a door) is seen sooner, but after a change of light motion is missed until the new light has become background.
+          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). On, someone filling most of the picture (a camera at a door) is taken for light while close; off, they are seen, but after a change of light motion is missed until the new light has become background.
         minimumChangePercent:
           type: number
           format: double
@@ -3313,7 +3313,7 @@ components:
           description: How long something that stops moving (a parked car) is seen at most before it becomes part of the background, in seconds (60 by default); something that differs little goes sooner.
         ignoreLightingChanges:
           type: boolean
-          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). Off, someone filling most of the picture (a camera at a door) is seen sooner, but after a change of light motion is missed until the new light has become background.
+          description: Whether a change over most of the picture at once is taken for light (a cloud, a lamp) and ignored (true by default). On, someone filling most of the picture (a camera at a door) is taken for light while close; off, they are seen, but after a change of light motion is missed until the new light has become background.
         minimumChangePercent:
           type: number
           format: double
