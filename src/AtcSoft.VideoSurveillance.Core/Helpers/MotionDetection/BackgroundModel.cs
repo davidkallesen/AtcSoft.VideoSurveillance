@@ -5,6 +5,11 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// A pixel that keeps changing (a leaf in the wind) gets a large variance and stops counting as
 /// foreground; a moving object differs from the background as a whole, not only at its edges.
 /// </summary>
+/// <remarks>
+/// The per-pixel step runs on <see cref="Vector{T}"/>, with the plain loop for the last pixels.
+/// Both do the same single-precision operations in the same order (no fused multiply-add), so the
+/// result is the same to the bit whatever the CPU's vector width.
+/// </remarks>
 internal sealed class BackgroundModel
 {
     private const float StartVariance = 36f;
@@ -14,12 +19,31 @@ internal sealed class BackgroundModel
     private float[] mean = [];
     private float[] variance = [];
 
+    // The watch zones' thresholds spread per pixel, kept while the zones and their values stay.
+    private byte[]? zonedFor;
+    private float[] zonedSigmas = [];
+    private float[] zonedMins = [];
+    private float[] pixelSigmas = [];
+    private float[] pixelMins = [];
+
     public int Width { get; private set; }
 
     public int Height { get; private set; }
 
     public bool IsEmpty
         => mean.Length == 0;
+
+    /// <summary>
+    /// Gets the mean per pixel, read only (for the tests that compare the vector and plain steps).
+    /// </summary>
+    public ReadOnlySpan<float> Mean
+        => mean;
+
+    /// <summary>
+    /// Gets the variance per pixel, read only.
+    /// </summary>
+    public ReadOnlySpan<float> Variance
+        => variance;
 
     public void Reset(
         byte[] frame,
@@ -81,39 +105,16 @@ internal sealed class BackgroundModel
         double backgroundRate,
         double foregroundRate,
         byte[]? ignored = null)
-    {
-        var count = 0;
-        var looked = frame.Length;
-        var s2 = (float)(sigmas * sigmas);
-        var min2 = (float)(minThreshold * minThreshold);
-        var bg = (float)backgroundRate;
-        var fg = (float)foregroundRate;
-        for (var i = 0; i < frame.Length; i++)
-        {
-            var d = frame[i] - mean[i];
-            var d2 = d * d;
-            var isForeground = d2 > min2 && d2 > s2 * variance[i];
-            if (ignored is not null && ignored[i] != 0)
-            {
-                isForeground = false;
-                looked--;
-            }
-
-            mask[i] = isForeground ? (byte)1 : (byte)0;
-            if (isForeground)
-            {
-                count++;
-            }
-
-            var rate = isForeground ? fg : bg;
-            mean[i] += rate * d;
-
-            // The variance learns from every pixel, so swaying leaves raise theirs.
-            variance[i] = Math.Clamp(variance[i] + (rate * (d2 - variance[i])), MinVariance, MaxVariance);
-        }
-
-        return looked > 0 ? count / (double)looked : 0;
-    }
+        => Learn(
+            frame,
+            mask,
+            (float)(sigmas * sigmas),
+            (float)(minThreshold * minThreshold),
+            pixelSigmas: default,
+            pixelMins: default,
+            (float)backgroundRate,
+            (float)foregroundRate,
+            ignored);
 
     /// <summary>
     /// As <see cref="Apply"/>, with the thresholds of the watch zone each pixel is in: index 0 of
@@ -144,16 +145,113 @@ internal sealed class BackgroundModel
 
         var s2 = sigmas.Select(s => (float)(s * s)).ToArray();
         var min2 = minThresholds.Select(m => (float)(m * m)).ToArray();
+        SpreadZones(watched, s2, min2);
+        return Learn(
+            frame,
+            mask,
+            sigmas2: 0,
+            mins2: 0,
+            pixelSigmas,
+            pixelMins,
+            (float)backgroundRate,
+            (float)foregroundRate,
+            ignored);
+    }
+
+    // Each pixel's squared thresholds from its zone; spread again only when the zones or their values
+    // change. A new layout comes as a new array (ZoneMask.Watched), never as an edit of the old one.
+    private void SpreadZones(
+        byte[] watched,
+        float[] s2,
+        float[] min2)
+    {
+        if (ReferenceEquals(zonedFor, watched) &&
+            pixelSigmas.Length == watched.Length &&
+            s2.AsSpan().SequenceEqual(zonedSigmas) &&
+            min2.AsSpan().SequenceEqual(zonedMins))
+        {
+            return;
+        }
+
+        if (pixelSigmas.Length != watched.Length)
+        {
+            pixelSigmas = new float[watched.Length];
+            pixelMins = new float[watched.Length];
+        }
+
+        for (var i = 0; i < watched.Length; i++)
+        {
+            pixelSigmas[i] = s2[watched[i]];
+            pixelMins[i] = min2[watched[i]];
+        }
+
+        zonedFor = watched;
+        zonedSigmas = s2;
+        zonedMins = min2;
+    }
+
+    // The per-pixel step: foreground where the picture differs from the mean by more than both
+    // thresholds (squared), then the mean and variance learn at the pixel's rate. The thresholds are
+    // the same for every pixel, or per pixel when those spans are given.
+    private double Learn(
+        byte[] frame,
+        byte[] mask,
+        float sigmas2,
+        float mins2,
+        ReadOnlySpan<float> pixelSigmas,
+        ReadOnlySpan<float> pixelMins,
+        float bg,
+        float fg,
+        byte[]? ignored)
+    {
+        var perPixel = !pixelSigmas.IsEmpty;
         var count = 0;
         var looked = frame.Length;
-        var bg = (float)backgroundRate;
-        var fg = (float)foregroundRate;
-        for (var i = 0; i < frame.Length; i++)
+        var i = 0;
+        var lanes = Vector<float>.Count;
+        var step = Vector<byte>.Count;
+        if (Vector.IsHardwareAccelerated && frame.Length >= step)
         {
-            var zone = watched[i];
+            var thresholds = new LearnStep(sigmas2, mins2, bg, fg);
+            var counted = Vector<int>.Zero;
+            var lookedAt = Vector<int>.Zero;
+            for (; i + step <= frame.Length; i += step)
+            {
+                Vector.Widen(new Vector<byte>(frame.AsSpan(i, step)), out var pixelsLow, out var pixelsHigh);
+                Vector.Widen(pixelsLow, out var pixels0, out var pixels1);
+                Vector.Widen(pixelsHigh, out var pixels2, out var pixels3);
+                var keep = ignored is null
+                    ? Vector<byte>.AllBitsSet
+                    : Vector.Equals(new Vector<byte>(ignored.AsSpan(i, step)), Vector<byte>.Zero);
+
+                // Widened as signed, so all bits set stays all bits set (-1).
+                Vector.Widen(Vector.AsVectorSByte(keep), out var keepLow, out var keepHigh);
+                Vector.Widen(keepLow, out var keep0, out var keep1);
+                Vector.Widen(keepHigh, out var keep2, out var keep3);
+
+                var foreground0 = LearnLanes(i, pixels0, keep0, pixelSigmas, pixelMins, thresholds);
+                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, pixelSigmas, pixelMins, thresholds);
+                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, pixelSigmas, pixelMins, thresholds);
+                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, pixelSigmas, pixelMins, thresholds);
+
+                // -1 per foreground pixel and per pixel looked at.
+                counted += foreground0 + foreground1 + foreground2 + foreground3;
+                lookedAt += keep0 + keep1 + keep2 + keep3;
+                var foreground = Vector.AsVectorByte(Vector.Narrow(Vector.Narrow(foreground0, foreground1), Vector.Narrow(foreground2, foreground3)));
+                (foreground & Vector<byte>.One).CopyTo(mask.AsSpan(i, step));
+            }
+
+            count = -Vector.Sum(counted);
+            looked = -Vector.Sum(lookedAt) + (frame.Length - i);
+        }
+
+        for (; i < frame.Length; i++)
+        {
             var d = frame[i] - mean[i];
             var d2 = d * d;
-            var isForeground = d2 > min2[zone] && d2 > s2[zone] * variance[i];
+            var isForeground = perPixel
+                ? d2 > pixelMins[i] && d2 > pixelSigmas[i] * variance[i]
+                : d2 > mins2 && d2 > sigmas2 * variance[i];
             if (ignored is not null && ignored[i] != 0)
             {
                 isForeground = false;
@@ -168,9 +266,57 @@ internal sealed class BackgroundModel
 
             var rate = isForeground ? fg : bg;
             mean[i] += rate * d;
+
+            // The variance learns from every pixel, so swaying leaves raise theirs.
             variance[i] = Math.Clamp(variance[i] + (rate * (d2 - variance[i])), MinVariance, MaxVariance);
         }
 
         return looked > 0 ? count / (double)looked : 0;
+    }
+
+    // One vector of pixels from 'at': the same steps as the plain loop. Returns -1 where foreground.
+    private Vector<int> LearnLanes(
+        int at,
+        Vector<uint> pixels,
+        Vector<int> keep,
+        ReadOnlySpan<float> pixelSigmas,
+        ReadOnlySpan<float> pixelMins,
+        in LearnStep step)
+    {
+        var lanes = Vector<float>.Count;
+        var means = mean.AsSpan(at, lanes);
+        var variances = variance.AsSpan(at, lanes);
+        var m = new Vector<float>(means);
+        var v = new Vector<float>(variances);
+        var d = Vector.ConvertToSingle(Vector.AsVectorInt32(pixels)) - m;
+        var d2 = d * d;
+        var s = pixelSigmas.IsEmpty ? step.Sigmas : new Vector<float>(pixelSigmas.Slice(at, lanes));
+        var min = pixelMins.IsEmpty ? step.Mins : new Vector<float>(pixelMins.Slice(at, lanes));
+        var isForeground = Vector.GreaterThan(d2, min) & Vector.GreaterThan(d2, s * v) & keep;
+        var rate = Vector.ConditionalSelect(isForeground, step.Foreground, step.Background);
+        (m + (rate * d)).CopyTo(means);
+        Vector.Min(Vector.Max(v + (rate * (d2 - v)), step.Low), step.High).CopyTo(variances);
+        return isForeground;
+    }
+
+    // The values of one Learn as vectors.
+    [StructLayout(LayoutKind.Auto)]
+    private readonly struct LearnStep(
+        float sigmas2,
+        float mins2,
+        float background,
+        float foreground)
+    {
+        public Vector<float> Sigmas { get; } = new(sigmas2);
+
+        public Vector<float> Mins { get; } = new(mins2);
+
+        public Vector<float> Background { get; } = new(background);
+
+        public Vector<float> Foreground { get; } = new(foreground);
+
+        public Vector<float> Low { get; } = new(MinVariance);
+
+        public Vector<float> High { get; } = new(MaxVariance);
     }
 }

@@ -3,6 +3,7 @@ global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.Net.Http.Headers;
+global using System.Numerics;
 global using System.Runtime.InteropServices;
 global using System.Security.Cryptography;
 global using System.Text;
