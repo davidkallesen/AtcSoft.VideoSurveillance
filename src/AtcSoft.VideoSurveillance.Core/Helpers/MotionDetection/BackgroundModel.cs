@@ -4,6 +4,10 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// What the scene looks like without anything moving: per pixel a running mean and variance.
 /// A pixel that keeps changing (a leaf in the wind) gets a large variance and stops counting as
 /// foreground; a moving object differs from the background as a whole, not only at its edges.
+/// A foreground pixel learns slowly (something that stopped stays foreground for a while), but
+/// only once it has matched the background since it was learnt anew: until then the background
+/// is the more likely mistake (something that was in the first picture and left), and the pixel
+/// learns at the background's speed, so its ghost goes within a second.
 /// </summary>
 /// <remarks>
 /// The per-pixel step runs on <see cref="Vector{T}"/>, with the plain loop for the last pixels.
@@ -18,6 +22,9 @@ internal sealed class BackgroundModel
 
     private float[] mean = [];
     private float[] variance = [];
+
+    // 1 where the pixel has been background since the background was learnt anew.
+    private byte[] settled = [];
 
     // The watch zones' thresholds spread per pixel, kept while the zones and their values stay.
     private byte[]? zonedFor;
@@ -56,6 +63,11 @@ internal sealed class BackgroundModel
         {
             mean = new float[frame.Length];
             variance = new float[frame.Length];
+            settled = new byte[frame.Length];
+        }
+        else
+        {
+            Array.Clear(settled);
         }
 
         for (var i = 0; i < frame.Length; i++)
@@ -228,17 +240,22 @@ internal sealed class BackgroundModel
                 Vector.Widen(Vector.AsVectorSByte(keep), out var keepLow, out var keepHigh);
                 Vector.Widen(keepLow, out var keep0, out var keep1);
                 Vector.Widen(keepHigh, out var keep2, out var keep3);
+                var wasSettled = new Vector<byte>(settled.AsSpan(i, step));
+                Vector.Widen(Vector.AsVectorSByte(~Vector.Equals(wasSettled, Vector<byte>.Zero)), out var settledLow, out var settledHigh);
+                Vector.Widen(settledLow, out var settled0, out var settled1);
+                Vector.Widen(settledHigh, out var settled2, out var settled3);
 
-                var foreground0 = LearnLanes(i, pixels0, keep0, pixelSigmas, pixelMins, thresholds);
-                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, pixelSigmas, pixelMins, thresholds);
-                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, pixelSigmas, pixelMins, thresholds);
-                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, pixelSigmas, pixelMins, thresholds);
+                var foreground0 = LearnLanes(i, pixels0, keep0, settled0, pixelSigmas, pixelMins, thresholds);
+                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, settled1, pixelSigmas, pixelMins, thresholds);
+                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, settled2, pixelSigmas, pixelMins, thresholds);
+                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, settled3, pixelSigmas, pixelMins, thresholds);
 
                 // -1 per foreground pixel and per pixel looked at.
                 counted += foreground0 + foreground1 + foreground2 + foreground3;
                 lookedAt += keep0 + keep1 + keep2 + keep3;
                 var foreground = Vector.AsVectorByte(Vector.Narrow(Vector.Narrow(foreground0, foreground1), Vector.Narrow(foreground2, foreground3)));
                 (foreground & Vector<byte>.One).CopyTo(mask.AsSpan(i, step));
+                (wasSettled | Vector.AndNot(Vector<byte>.One, foreground)).CopyTo(settled.AsSpan(i, step));
             }
 
             count = -Vector.Sum(counted);
@@ -264,7 +281,12 @@ internal sealed class BackgroundModel
                 count++;
             }
 
-            var rate = isForeground ? fg : bg;
+            var rate = isForeground && settled[i] != 0 ? fg : bg;
+            if (!isForeground)
+            {
+                settled[i] = 1;
+            }
+
             mean[i] += rate * d;
 
             // The variance learns from every pixel, so swaying leaves raise theirs.
@@ -279,6 +301,7 @@ internal sealed class BackgroundModel
         int at,
         Vector<uint> pixels,
         Vector<int> keep,
+        Vector<int> wasSettled,
         ReadOnlySpan<float> pixelSigmas,
         ReadOnlySpan<float> pixelMins,
         in LearnStep step)
@@ -293,7 +316,7 @@ internal sealed class BackgroundModel
         var s = pixelSigmas.IsEmpty ? step.Sigmas : new Vector<float>(pixelSigmas.Slice(at, lanes));
         var min = pixelMins.IsEmpty ? step.Mins : new Vector<float>(pixelMins.Slice(at, lanes));
         var isForeground = Vector.GreaterThan(d2, min) & Vector.GreaterThan(d2, s * v) & keep;
-        var rate = Vector.ConditionalSelect(isForeground, step.Foreground, step.Background);
+        var rate = Vector.ConditionalSelect(isForeground & wasSettled, step.Foreground, step.Background);
         (m + (rate * d)).CopyTo(means);
         Vector.Min(Vector.Max(v + (rate * (d2 - v)), step.Low), step.High).CopyTo(variances);
         return isForeground;

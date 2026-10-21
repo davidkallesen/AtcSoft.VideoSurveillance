@@ -256,10 +256,13 @@ public sealed class VectorStepsTests
 
         public float[] Variance { get; private set; } = [];
 
+        private byte[] Settled { get; set; } = [];
+
         public void Reset(byte[] frame)
         {
             Mean = frame.Select(b => (float)b).ToArray();
             Variance = Enumerable.Repeat(36f, frame.Length).ToArray();
+            Settled = new byte[frame.Length];
         }
 
         public double Apply(
@@ -306,7 +309,12 @@ public sealed class VectorStepsTests
                     count++;
                 }
 
-                var rate = isForeground ? fg : bg;
+                var rate = isForeground && Settled[i] != 0 ? fg : bg;
+                if (!isForeground)
+                {
+                    Settled[i] = 1;
+                }
+
                 Mean[i] += rate * d;
                 Variance[i] = Math.Clamp(Variance[i] + (rate * (d2 - Variance[i])), 9f, 2500f);
             }
