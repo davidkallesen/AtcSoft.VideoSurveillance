@@ -79,7 +79,10 @@ public sealed class VectorStepsTests
         var pseudo = new Pseudo(width + (height * 7));
         var pixels = width * height;
         var ignored = pseudo.Mask(pixels, 0.2);
-        foreach (var ignore in new[] { null, ignored })
+
+        // Slow foreground learning, and fast, where the block is taken in while it stays and its
+        // pixels stay covered until it leaves.
+        foreach (var (ignore, foregroundRate) in new[] { (null, 0.001), (ignored, 0.001), (null, 0.6), (ignored, 0.6) })
         {
             var model = new BackgroundModel();
             var plain = new PlainBackground();
@@ -91,8 +94,8 @@ public sealed class VectorStepsTests
                 var mask = new byte[pixels];
                 var plainMask = new byte[pixels];
 
-                var share = model.Apply(picture, mask, 2.5, 12, 0.02, 0.001, ignore);
-                var plainShare = plain.Apply(picture, plainMask, 2.5, 12, 0.02, 0.001, ignore);
+                var share = model.Apply(picture, mask, 2.5, 12, 0.02, foregroundRate, ignore);
+                var plainShare = plain.Apply(picture, plainMask, 2.5, 12, 0.02, foregroundRate, ignore);
 
                 share.Should().Be(plainShare);
                 mask.Should().Equal(plainMask);
@@ -303,6 +306,7 @@ public sealed class VectorStepsTests
                 var d2 = d * d;
                 var isForeground = d2 > min2[zone] && d2 > s2[zone] * Variance[i];
                 var state = State[i];
+                var restored = false;
                 if (state == 2)
                 {
                     var back = frame[i] - Anchor[i];
@@ -313,6 +317,7 @@ public sealed class VectorStepsTests
                         d = back;
                         d2 = back2;
                         isForeground = false;
+                        restored = true;
                     }
                 }
 
@@ -335,7 +340,7 @@ public sealed class VectorStepsTests
 
                 var stopped = isForeground && state != 0;
                 var rate = stopped ? fg : bg;
-                State[i] = isForeground ? (state == 0 ? (byte)0 : (byte)2) : (byte)1;
+                State[i] = isForeground ? (state == 0 ? (byte)0 : (byte)2) : (state == 2 && !restored ? (byte)2 : (byte)1);
                 Mean[i] += rate * d;
                 var varianceRate = stopped ? 0f : rate;
                 Variance[i] = Math.Clamp(Variance[i] + (varianceRate * (d2 - Variance[i])), 9f, 2500f);

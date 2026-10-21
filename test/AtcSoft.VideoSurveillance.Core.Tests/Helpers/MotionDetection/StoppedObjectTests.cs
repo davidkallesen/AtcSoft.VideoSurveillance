@@ -3,8 +3,8 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// <summary>
 /// What "something that stops becomes background after" means: something that arrives and stops
 /// is still foreground at half the time and background by the time (sooner at low contrast), and
-/// when it leaves before that, its place is background again at once, with no ghost, even after a
-/// change of light.
+/// when it leaves, before that or after, its place is background again at once, with no ghost,
+/// even after a change of light. The same holds for a light taken in and switched off again.
 /// </summary>
 public sealed class StoppedObjectTests
 {
@@ -64,6 +64,46 @@ public sealed class StoppedObjectTests
         // A ghost would be the whole square, 4.7 % of the picture; a few pixels at its edge may stay a moment.
         changed[0].Should().BeLessThan(0.5, "the background from before it came moved with the light");
         changed[^1].Should().BeLessThan(0.1);
+    }
+
+    [Fact]
+    public void Something_Taken_In_That_Leaves_Leaves_No_Ghost()
+    {
+        var settings = new MotionDetectionSettings();
+        var detector = Arrived(settings, 150, out var next);
+        var end = next + ((settings.StoppedObjectSeconds + 10) * PerSecond);
+        for (var k = next; k < end; k++)
+        {
+            detector.Process(Picture(k, 150));
+        }
+
+        var changed = Enumerable.Range(end, PerSecond).Select(k => detector.Process(Picture(k, 0)).ChangePercent).ToList();
+
+        // A ghost would be the whole square, 4.7 % of the picture.
+        changed[0].Should().BeLessThan(0.1, "where it stood is the background from before it came, though it was taken in");
+    }
+
+    [Fact]
+    public void A_Light_Taken_In_And_Switched_Off_Is_Background_Again_At_Once()
+    {
+        var detector = new BuiltInMotionDetector(new MotionDetectionSettings { IgnoreLightingChanges = false });
+        var k = 0;
+        for (; k < 5 * PerSecond; k++)
+        {
+            detector.Process(Picture(k, 0));
+        }
+
+        // A lamp: the whole picture 60 grey levels brighter for ten seconds, then off again.
+        for (; k < 15 * PerSecond; k++)
+        {
+            detector.Process(Picture(k, 0, light: 60));
+        }
+
+        var on = detector.Process(Picture(k++, 0, light: 60)).ChangePercent;
+        var off = detector.Process(Picture(k, 0)).ChangePercent;
+
+        on.Should().BeLessThan(0.1, "the lamp's light was taken in");
+        off.Should().BeLessThan(0.1, "the picture from before the lamp is the background again");
     }
 
     // Five seconds of the empty scene, then the square arrives.
