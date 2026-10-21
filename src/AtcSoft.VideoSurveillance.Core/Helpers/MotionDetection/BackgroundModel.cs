@@ -19,12 +19,17 @@ internal sealed class BackgroundModel
     private const float StartVariance = 36f;
     private const float MinVariance = 9f;
     private const float MaxVariance = 2500f;
+    private const byte StateUnsettled = 0;
+    private const byte StateBackground = 1;
+    private const byte StateCovered = 2;
 
     private float[] mean = [];
     private float[] variance = [];
 
-    // 1 where the pixel has been background since the background was learnt anew.
+    // Per pixel: Unsettled (not background once since the background was learnt anew), Background,
+    // or Covered (foreground, with the background from before it was covered in 'anchor').
     private byte[] settled = [];
+    private float[] anchor = [];
 
     // The watch zones' thresholds spread per pixel, kept while the zones and their values stay.
     private byte[]? zonedFor;
@@ -64,6 +69,7 @@ internal sealed class BackgroundModel
             mean = new float[frame.Length];
             variance = new float[frame.Length];
             settled = new byte[frame.Length];
+            anchor = new float[frame.Length];
         }
         else
         {
@@ -95,6 +101,7 @@ internal sealed class BackgroundModel
         for (var i = 0; i < mean.Length; i++)
         {
             mean[i] += shift;
+            anchor[i] += shift;
         }
     }
 
@@ -240,22 +247,23 @@ internal sealed class BackgroundModel
                 Vector.Widen(Vector.AsVectorSByte(keep), out var keepLow, out var keepHigh);
                 Vector.Widen(keepLow, out var keep0, out var keep1);
                 Vector.Widen(keepHigh, out var keep2, out var keep3);
-                var wasSettled = new Vector<byte>(settled.AsSpan(i, step));
-                Vector.Widen(Vector.AsVectorSByte(~Vector.Equals(wasSettled, Vector<byte>.Zero)), out var settledLow, out var settledHigh);
-                Vector.Widen(settledLow, out var settled0, out var settled1);
-                Vector.Widen(settledHigh, out var settled2, out var settled3);
+                var states = new Vector<byte>(settled.AsSpan(i, step));
+                Vector.Widen(states, out var statesLow, out var statesHigh);
+                Vector.Widen(statesLow, out var states0, out var states1);
+                Vector.Widen(statesHigh, out var states2, out var states3);
 
-                var foreground0 = LearnLanes(i, pixels0, keep0, settled0, pixelSigmas, pixelMins, thresholds);
-                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, settled1, pixelSigmas, pixelMins, thresholds);
-                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, settled2, pixelSigmas, pixelMins, thresholds);
-                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, settled3, pixelSigmas, pixelMins, thresholds);
+                var foreground0 = LearnLanes(i, pixels0, keep0, Vector.AsVectorInt32(states0), pixelSigmas, pixelMins, thresholds);
+                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, Vector.AsVectorInt32(states1), pixelSigmas, pixelMins, thresholds);
+                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, Vector.AsVectorInt32(states2), pixelSigmas, pixelMins, thresholds);
+                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, Vector.AsVectorInt32(states3), pixelSigmas, pixelMins, thresholds);
 
                 // -1 per foreground pixel and per pixel looked at.
                 counted += foreground0 + foreground1 + foreground2 + foreground3;
                 lookedAt += keep0 + keep1 + keep2 + keep3;
                 var foreground = Vector.AsVectorByte(Vector.Narrow(Vector.Narrow(foreground0, foreground1), Vector.Narrow(foreground2, foreground3)));
                 (foreground & Vector<byte>.One).CopyTo(mask.AsSpan(i, step));
-                (wasSettled | Vector.AndNot(Vector<byte>.One, foreground)).CopyTo(settled.AsSpan(i, step));
+                var stillUnsettled = Vector.ConditionalSelect(Vector.Equals(states, new Vector<byte>(StateUnsettled)), new Vector<byte>(StateUnsettled), new Vector<byte>(StateCovered));
+                Vector.ConditionalSelect(foreground, stillUnsettled, new Vector<byte>(StateBackground)).CopyTo(settled.AsSpan(i, step));
             }
 
             count = -Vector.Sum(counted);
@@ -264,11 +272,26 @@ internal sealed class BackgroundModel
 
         for (; i < frame.Length; i++)
         {
+            var sigmaLimit = perPixel ? pixelSigmas[i] : sigmas2;
+            var minLimit = perPixel ? pixelMins[i] : mins2;
             var d = frame[i] - mean[i];
             var d2 = d * d;
-            var isForeground = perPixel
-                ? d2 > pixelMins[i] && d2 > pixelSigmas[i] * variance[i]
-                : d2 > mins2 && d2 > sigmas2 * variance[i];
+            var isForeground = d2 > minLimit && d2 > sigmaLimit * variance[i];
+            var state = settled[i];
+            if (state == StateCovered)
+            {
+                // Back to the background from before it was covered: what covered it left.
+                var back = frame[i] - anchor[i];
+                var back2 = back * back;
+                if (!(back2 > minLimit && back2 > sigmaLimit * variance[i]))
+                {
+                    mean[i] = anchor[i];
+                    d = back;
+                    d2 = back2;
+                    isForeground = false;
+                }
+            }
+
             if (ignored is not null && ignored[i] != 0)
             {
                 isForeground = false;
@@ -281,16 +304,21 @@ internal sealed class BackgroundModel
                 count++;
             }
 
-            var rate = isForeground && settled[i] != 0 ? fg : bg;
-            if (!isForeground)
+            if (isForeground && state == StateBackground)
             {
-                settled[i] = 1;
+                anchor[i] = mean[i];
             }
+
+            var stopped = isForeground && state != StateUnsettled;
+            var rate = stopped ? fg : bg;
+            settled[i] = isForeground ? (state == StateUnsettled ? StateUnsettled : StateCovered) : StateBackground;
 
             mean[i] += rate * d;
 
-            // The variance learns from every pixel, so swaying leaves raise theirs.
-            variance[i] = Math.Clamp(variance[i] + (rate * (d2 - variance[i])), MinVariance, MaxVariance);
+            // The variance learns how much the background varies (swaying leaves raise theirs),
+            // not how far something that stopped differs from it, or that would hide it in seconds.
+            var varianceRate = stopped ? 0f : rate;
+            variance[i] = Math.Clamp(variance[i] + (varianceRate * (d2 - variance[i])), MinVariance, MaxVariance);
         }
 
         return looked > 0 ? count / (double)looked : 0;
@@ -301,7 +329,7 @@ internal sealed class BackgroundModel
         int at,
         Vector<uint> pixels,
         Vector<int> keep,
-        Vector<int> wasSettled,
+        Vector<int> states,
         ReadOnlySpan<float> pixelSigmas,
         ReadOnlySpan<float> pixelMins,
         in LearnStep step)
@@ -309,16 +337,32 @@ internal sealed class BackgroundModel
         var lanes = Vector<float>.Count;
         var means = mean.AsSpan(at, lanes);
         var variances = variance.AsSpan(at, lanes);
+        var anchors = anchor.AsSpan(at, lanes);
         var m = new Vector<float>(means);
         var v = new Vector<float>(variances);
-        var d = Vector.ConvertToSingle(Vector.AsVectorInt32(pixels)) - m;
+        var a = new Vector<float>(anchors);
+        var value = Vector.ConvertToSingle(Vector.AsVectorInt32(pixels));
+        var d = value - m;
         var d2 = d * d;
         var s = pixelSigmas.IsEmpty ? step.Sigmas : new Vector<float>(pixelSigmas.Slice(at, lanes));
         var min = pixelMins.IsEmpty ? step.Mins : new Vector<float>(pixelMins.Slice(at, lanes));
-        var isForeground = Vector.GreaterThan(d2, min) & Vector.GreaterThan(d2, s * v) & keep;
-        var rate = Vector.ConditionalSelect(isForeground & wasSettled, step.Foreground, step.Background);
+        var isForeground = Vector.GreaterThan(d2, min) & Vector.GreaterThan(d2, s * v);
+
+        // Back to the background from before it was covered: what covered it left.
+        var back = value - a;
+        var back2 = back * back;
+        var restore = Vector.Equals(states, new Vector<int>(StateCovered)) & ~(Vector.GreaterThan(back2, min) & Vector.GreaterThan(back2, s * v));
+        m = Vector.ConditionalSelect(restore, a, m);
+        d = Vector.ConditionalSelect(restore, back, d);
+        d2 = Vector.ConditionalSelect(restore, back2, d2);
+        isForeground = Vector.AndNot(isForeground, restore) & keep;
+
+        Vector.ConditionalSelect(isForeground & Vector.Equals(states, new Vector<int>(StateBackground)), m, a).CopyTo(anchors);
+        var stopped = Vector.AndNot(isForeground, Vector.Equals(states, new Vector<int>(StateUnsettled)));
+        var rate = Vector.ConditionalSelect(stopped, step.Foreground, step.Background);
         (m + (rate * d)).CopyTo(means);
-        Vector.Min(Vector.Max(v + (rate * (d2 - v)), step.Low), step.High).CopyTo(variances);
+        var varianceRate = Vector.ConditionalSelect(stopped, Vector<float>.Zero, rate);
+        Vector.Min(Vector.Max(v + (varianceRate * (d2 - v)), step.Low), step.High).CopyTo(variances);
         return isForeground;
     }
 

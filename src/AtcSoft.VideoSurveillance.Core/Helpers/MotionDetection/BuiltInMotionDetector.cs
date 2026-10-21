@@ -13,6 +13,9 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// </summary>
 public sealed class BuiltInMotionDetector : IMotionDetector
 {
+    // Above this share of the picture foreground, the scene changed rather than something in it.
+    private const double LargeChangeShare = 0.5;
+
     private readonly MotionDetectorOptions options;
     private readonly MotionHold hold;
     private readonly BackgroundModel background = new();
@@ -31,6 +34,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
     private bool lastHadBoxes;
+    private double lastShare;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BuiltInMotionDetector"/> class.
@@ -70,12 +74,18 @@ public sealed class BuiltInMotionDetector : IMotionDetector
 
         var mask = buffers.Mask;
         var ignore = Ignored(frame.Width, frame.Height);
+
+        // Most of the picture still differs (a change of light taken for motion, as lighting
+        // changes are not ignored): it is learnt at the background's speed, not kept like
+        // something that stopped, so motion is seen again within seconds.
+        var foregroundSeconds = lastShare > LargeChangeShare ? options.BackgroundSeconds : options.ForegroundSeconds;
         var share = ApplyBackground(
             blurred,
             mask,
             Rate(dt, options.BackgroundSeconds),
-            Rate(dt, options.ForegroundSeconds),
+            Rate(dt, foregroundSeconds),
             ignore);
+        lastShare = share;
 
         // Most of the picture changed at once: light (exposure, a cloud, dusk), not an object.
         // Shift the background by the overall change, so what moves stays foreground; if the
@@ -84,6 +94,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         {
             background.ShiftTo(blurred);
             share = ApplyBackground(blurred, mask, 0, 0, ignore);
+            lastShare = share;
             if (share > options.LightingChangeShare)
             {
                 background.Reset(blurred, frame.Width, frame.Height);
@@ -130,6 +141,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         lastTime = null;
         settleUntil = null;
         lastHadBoxes = false;
+        lastShare = 0;
     }
 
     /// <inheritdoc />

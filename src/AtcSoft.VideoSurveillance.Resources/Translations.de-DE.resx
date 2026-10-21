@@ -2809,7 +2809,7 @@ Vorschaubild:
     <value>Etwas, das stehen bleibt, wird Hintergrund nach (Sekunden)</value>
   </data>
   <data name="StoppedObjectSecondsInfo" xml:space="preserve">
-    <value>Wie lange etwas, das sich nicht mehr bewegt, etwa ein geparktes Auto, noch erkannt wird, bevor es Teil des Bildes wird.</value>
+    <value>Wie lange etwas, das sich nicht mehr bewegt, etwa ein geparktes Auto, höchstens erkannt wird, bevor es Teil des Bildes wird; was sich nur wenig vom Bild unterscheidet, verschwindet früher.</value>
   </data>
   <data name="IgnoreLightingChanges" xml:space="preserve">
     <value>Lichtänderungen ignorieren</value>

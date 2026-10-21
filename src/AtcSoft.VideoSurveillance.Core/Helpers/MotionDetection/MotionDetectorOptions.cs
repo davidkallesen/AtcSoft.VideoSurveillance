@@ -7,7 +7,7 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// <param name="ThresholdSigmas">A pixel is foreground when it differs from the background by this many standard deviations.</param>
 /// <param name="MinThreshold">…and by at least this many grey levels.</param>
 /// <param name="BackgroundSeconds">How fast the background learns what stays (the time constant).</param>
-/// <param name="ForegroundSeconds">How fast it takes in something that stopped moving (much slower).</param>
+/// <param name="ForegroundSeconds">How fast it takes in something that stopped moving (much slower; the time constant, so it is gone after about three).</param>
 /// <param name="SmallestObjectShare">The smallest blob that counts, as a share of the picture's area.</param>
 /// <param name="MergeGapShare">Blobs closer than this share of the picture's width are one object.</param>
 /// <param name="LightingChangeShare">When more than this share of the picture changes at once, it is light, not an object.</param>
@@ -19,7 +19,7 @@ public sealed record MotionDetectorOptions(
     double ThresholdSigmas = 3.0,
     double MinThreshold = 16,
     double BackgroundSeconds = 4,
-    double ForegroundSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds,
+    double ForegroundSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds / (double)MotionDetectorOptions.StoppedObjectTimeConstants,
     double SmallestObjectShare = MotionDetectorOptions.DefaultSmallestObjectShare,
     double MergeGapShare = 0.01,
     double LightingChangeShare = 0.5,
@@ -34,10 +34,17 @@ public sealed record MotionDetectorOptions(
     public const double DefaultSmallestObjectShare = 0.0002;
 
     /// <summary>
-    /// How long something that stops moving is still seen by default, in seconds
-    /// (<see cref="ForegroundSeconds"/>).
+    /// How long something that stops moving is seen at most by default, in seconds
+    /// (<see cref="MotionDetectionSettings.StoppedObjectSeconds"/>).
     /// </summary>
     public const int DefaultStoppedObjectSeconds = 60;
+
+    /// <summary>
+    /// How many <see cref="ForegroundSeconds"/> the stopped-object time is: after three time
+    /// constants 5 % of the difference is left, under the threshold for most of what stops, so it
+    /// is background by then. Low contrast goes sooner.
+    /// </summary>
+    public const int StoppedObjectTimeConstants = 3;
 
     /// <summary>
     /// The lowest <see cref="MotionDetectionSettings.StoppedObjectSeconds"/>: below ten seconds
@@ -67,8 +74,9 @@ public sealed record MotionDetectorOptions(
 
     /// <summary>
     /// Gets the options for a camera's settings: <see cref="MotionDetectionSettings.Sensitivity"/>
-    /// (0 to 100) lowers the threshold as it rises; the smallest object, how long something that
-    /// stops is still seen, and whether lighting changes are ignored are taken as they are.
+    /// (0 to 100) lowers the threshold as it rises; the smallest object and whether lighting
+    /// changes are ignored are taken as they are, and how long something that stops is seen at most
+    /// gives the foreground's time constant (<see cref="StoppedObjectTimeConstants"/>).
     /// </summary>
     /// <param name="settings">The camera's motion settings.</param>
     /// <returns>The options.</returns>
@@ -83,7 +91,7 @@ public sealed record MotionDetectorOptions(
             ThresholdSigmas = sigmas,
             MinThreshold = minThreshold,
             SmallestObjectShare = Math.Clamp(settings.SmallestObjectPercent, 0, MaxSmallestObjectPercent) / 100,
-            ForegroundSeconds = Math.Clamp(settings.StoppedObjectSeconds, MinStoppedObjectSeconds, MaxStoppedObjectSeconds),
+            ForegroundSeconds = Math.Clamp(settings.StoppedObjectSeconds, MinStoppedObjectSeconds, MaxStoppedObjectSeconds) / (double)StoppedObjectTimeConstants,
             LightingChangeShare = settings.IgnoreLightingChanges ? defaults.LightingChangeShare : NeverLight,
         };
     }

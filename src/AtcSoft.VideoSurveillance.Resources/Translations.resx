@@ -2809,7 +2809,7 @@ Thumbnail:
     <value>Something that stops becomes background after (seconds)</value>
   </data>
   <data name="StoppedObjectSecondsInfo" xml:space="preserve">
-    <value>How long something that stops moving, such as a parked car, is still seen before it becomes part of the picture.</value>
+    <value>How long something that stops moving, such as a parked car, is seen at most before it becomes part of the picture; something that differs little from the picture goes sooner.</value>
   </data>
   <data name="IgnoreLightingChanges" xml:space="preserve">
     <value>Ignore lighting changes</value>

@@ -146,8 +146,8 @@ Frame-based motion analysis configuration. See [motion-detection.md](motion-dete
 |---------|------|---------|----------|-------------|
 | `Sensitivity` | int | `30` | Yes | Detection threshold (0-100, higher = more sensitive) |
 | `SmallestObjectPercent` | double | `0.02` | Yes | The smallest object that counts, in % of the picture's area (0-100). A watch zone without its own takes this one |
-| `StoppedObjectSeconds` | int | `60` | Yes | How long something that stops moving (a parked car) is still seen before it becomes background (10-600) |
-| `IgnoreLightingChanges` | bool | `true` | Yes | A change over most of the picture at once is light (a cloud, a lamp), not motion. Turn off for a camera at a door, where a person can fill most of the picture: it is then seen sooner, but after a change of light motion is missed until the new light has become background (about 15 s at the default stopped-object time) |
+| `StoppedObjectSeconds` | int | `60` | Yes | How long something that stops moving (a parked car) is seen at most before it becomes background (10-600); something that differs little goes sooner (at 60: about 15 s at low contrast, 40 s at high). Something that leaves before then leaves no trace |
+| `IgnoreLightingChanges` | bool | `true` | Yes | A change over most of the picture at once is light (a cloud, a lamp), not motion. Turn off for a camera at a door, where a person can fill most of the picture: it is then seen sooner, but after a change of light motion is missed until the new light has become background (a few seconds) |
 | `MinimumChangePercent` | double | `0.5` | Yes | Read only by the comparison detector (`FrameDifferenceMotionDetector`); not shown in the dialogs, deprecated in the API |
 | `AnalysisFrameRate` | int | `30` | Yes | Frames per second for motion analysis (clamped 2-15) |
 | `AnalysisWidth` | int | `800` | Yes | The longer side of the analysed picture in pixels (its width for a camera lying down); the other side follows the camera's picture |

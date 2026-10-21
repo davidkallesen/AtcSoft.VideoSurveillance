@@ -16,12 +16,12 @@ public sealed class MotionDetectorOptionsTests
     }
 
     [Fact]
-    public void The_Smallest_Object_And_How_Long_A_Stopped_Thing_Is_Seen_Are_Taken_As_They_Are()
+    public void The_Smallest_Object_Is_Taken_As_It_Is_And_The_Stopped_Time_Is_Three_Time_Constants()
     {
         var options = MotionDetectorOptions.From(new MotionDetectionSettings { SmallestObjectPercent = 0.5, StoppedObjectSeconds = 120 });
 
         options.SmallestObjectShare.Should().BeApproximately(0.005, 1e-12);
-        options.ForegroundSeconds.Should().Be(120);
+        options.ForegroundSeconds.Should().Be(40);
         options.BackgroundSeconds.Should().Be(new MotionDetectorOptions().BackgroundSeconds, "only what stops is learnt slower or faster");
     }
 
@@ -36,7 +36,7 @@ public sealed class MotionDetectorOptionsTests
     {
         var options = MotionDetectorOptions.From(new MotionDetectionSettings { StoppedObjectSeconds = stoppedSeconds, SmallestObjectPercent = smallestPercent });
 
-        options.ForegroundSeconds.Should().Be(expectedSeconds);
+        options.ForegroundSeconds.Should().Be(expectedSeconds / MotionDetectorOptions.StoppedObjectTimeConstants);
         options.SmallestObjectShare.Should().BeApproximately(expectedShare, 1e-12);
     }
 
@@ -64,8 +64,8 @@ public sealed class MotionDetectorOptionsTests
         var notIgnored = WalkerFirstSeen(ignoreLighting: false);
 
         ignored.Should().NotBeNull();
-        notIgnored.Should().NotBeNull("the new light becomes the background in a few seconds");
-        notIgnored.Should().BeGreaterThan(ignored!.Value + 20, $"the whole picture is moving until it has (seen at frame {ignored} and {notIgnored})");
+        notIgnored.Should().NotBeNull("the new light becomes the background in a few seconds, not the stopped-object time");
+        notIgnored.Should().BeGreaterThan(ignored!.Value, $"the whole picture is moving until it has (seen at frame {ignored} and {notIgnored})");
     }
 
     // The picture turns brighter at 5 s; at 9 s someone small walks in from the left, four

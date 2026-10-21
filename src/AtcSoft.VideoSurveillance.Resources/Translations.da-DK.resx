@@ -2809,7 +2809,7 @@ Miniature:
     <value>Noget, der står stille, bliver baggrund efter (sekunder)</value>
   </data>
   <data name="StoppedObjectSecondsInfo" xml:space="preserve">
-    <value>Hvor længe noget, der holder op med at bevæge sig, fx en parkeret bil, stadig ses, før det bliver en del af billedet.</value>
+    <value>Hvor længe noget, der holder op med at bevæge sig, fx en parkeret bil, højst ses, før det bliver en del af billedet; noget, der kun adskiller sig lidt fra billedet, forsvinder før.</value>
   </data>
   <data name="IgnoreLightingChanges" xml:space="preserve">
     <value>Ignorer lysændringer</value>

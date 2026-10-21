@@ -142,7 +142,8 @@ public sealed class VectorStepsTests
         }
     }
 
-    // A dozen pictures: noise around the first, a block that moves, then a jump in brightness.
+    // A dozen pictures: noise around the first, a block that comes in the third, moves slowly (most of it stays
+    // covered) and leaves after seven, then a jump in brightness.
     private static IEnumerable<byte[]> Pictures(
         Pseudo pseudo,
         byte[] first,
@@ -152,7 +153,7 @@ public sealed class VectorStepsTests
         for (var turn = 0; turn < 12; turn++)
         {
             var picture = first.Select(b => (byte)Math.Clamp(b + pseudo.Next(-6, 7) + (turn >= 9 ? 70 : 0), 0, 255)).ToArray();
-            for (var y = height / 4; y < height / 2; y++)
+            for (var y = height / 4; y < (turn is >= 2 and < 7 ? height / 2 : 0); y++)
             {
                 for (var x = turn; x < Math.Min(width, turn + (width / 3) + 1); x++)
                 {
@@ -256,13 +257,17 @@ public sealed class VectorStepsTests
 
         public float[] Variance { get; private set; } = [];
 
-        private byte[] Settled { get; set; } = [];
+        // 0 never background yet, 1 background, 2 covered (with the background from before in Anchor).
+        private byte[] State { get; set; } = [];
+
+        private float[] Anchor { get; set; } = [];
 
         public void Reset(byte[] frame)
         {
             Mean = frame.Select(b => (float)b).ToArray();
             Variance = Enumerable.Repeat(36f, frame.Length).ToArray();
-            Settled = new byte[frame.Length];
+            State = new byte[frame.Length];
+            Anchor = new float[frame.Length];
         }
 
         public double Apply(
@@ -297,6 +302,20 @@ public sealed class VectorStepsTests
                 var d = frame[i] - Mean[i];
                 var d2 = d * d;
                 var isForeground = d2 > min2[zone] && d2 > s2[zone] * Variance[i];
+                var state = State[i];
+                if (state == 2)
+                {
+                    var back = frame[i] - Anchor[i];
+                    var back2 = back * back;
+                    if (!(back2 > min2[zone] && back2 > s2[zone] * Variance[i]))
+                    {
+                        Mean[i] = Anchor[i];
+                        d = back;
+                        d2 = back2;
+                        isForeground = false;
+                    }
+                }
+
                 if (ignored is not null && ignored[i] != 0)
                 {
                     isForeground = false;
@@ -309,14 +328,17 @@ public sealed class VectorStepsTests
                     count++;
                 }
 
-                var rate = isForeground && Settled[i] != 0 ? fg : bg;
-                if (!isForeground)
+                if (isForeground && state == 1)
                 {
-                    Settled[i] = 1;
+                    Anchor[i] = Mean[i];
                 }
 
+                var stopped = isForeground && state != 0;
+                var rate = stopped ? fg : bg;
+                State[i] = isForeground ? (state == 0 ? (byte)0 : (byte)2) : (byte)1;
                 Mean[i] += rate * d;
-                Variance[i] = Math.Clamp(Variance[i] + (rate * (d2 - Variance[i])), 9f, 2500f);
+                var varianceRate = stopped ? 0f : rate;
+                Variance[i] = Math.Clamp(Variance[i] + (varianceRate * (d2 - Variance[i])), 9f, 2500f);
             }
 
             return looked > 0 ? count / (double)looked : 0;

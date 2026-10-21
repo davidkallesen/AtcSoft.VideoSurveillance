@@ -32,7 +32,7 @@
   "s02-tree-in-the-wind@15/builtIn": {
     "recall": 1,
     "precision": 0,
-    "falseBoxesPerFrame": 0.0055,
+    "falseBoxesPerFrame": 0.011,
     "meanLatencySeconds": null
   },
   "s02-tree-in-the-wind@4": {
