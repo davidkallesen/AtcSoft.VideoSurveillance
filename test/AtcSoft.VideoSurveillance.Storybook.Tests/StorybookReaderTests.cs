@@ -54,6 +54,43 @@ public sealed class StorybookReaderTests
         read.Should().Throw<StorybookException>().WithMessage("*vidoe*");
     }
 
+    [Theory]
+    [InlineData(2.2, true)]
+    [InlineData(3, true)]
+    [InlineData(3.5, false)]
+    public void An_Object_May_Be_Larger_Than_The_Picture_Up_To_Three_Times(
+        double height,
+        bool reads)
+    {
+        var size = height.ToString(CultureInfo.InvariantCulture);
+        var json = $$"""
+            { "version": 1, "name": "x",
+              "objects": [ { "id": "near", "kind": "human", "size": [1.3, {{size}}], "path": [ { "t": 1, "at": [0.5, 0.9] } ] } ] }
+            """;
+
+        var read = () => StorybookReader.Read(json);
+
+        if (reads)
+        {
+            read.Should().NotThrow();
+        }
+        else
+        {
+            read.Should().Throw<StorybookException>().WithMessage("*objects[0].size*at most 3*");
+        }
+    }
+
+    [Fact]
+    public void The_Detector_Settings_A_Scene_Is_Meant_For_Are_Read()
+    {
+        const string json = """{ "version": 1, "name": "x", "detector": { "ignoreLightingChanges": false } }""";
+
+        var scene = StorybookReader.Read(json);
+
+        scene.Detector.Settings().IgnoreLightingChanges.Should().BeFalse();
+        StorybookReader.Read("""{ "version": 1, "name": "x" }""").Detector.Settings().IgnoreLightingChanges.Should().BeTrue("the default's");
+    }
+
     [Fact]
     public void A_Span_About_An_Object_That_Does_Not_Exist_Is_Named()
     {

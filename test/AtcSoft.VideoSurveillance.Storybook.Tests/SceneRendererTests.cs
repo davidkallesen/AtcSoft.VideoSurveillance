@@ -61,6 +61,37 @@ public sealed class SceneRendererTests
     }
 
     [Fact]
+    public void An_Object_Mostly_Outside_The_Picture_Need_Not_Get_A_Box_Yet()
+    {
+        var scene = Scene();
+        scene.Objects[0].Path[0].At[0] = -0.1;
+        var renderer = new SceneRenderer(scene);
+
+        // At 1.5 s a third of the car is in the picture.
+        renderer.Render((int)(1.5 * 15)).Truth.Single(t => t.Id == "car").State.Should().Be(TruthState.DontCare);
+    }
+
+    [Fact]
+    public void Someone_Close_To_The_Lens_Needs_A_Box_Though_Most_Of_Them_Is_Outside()
+    {
+        var scene = Scene();
+        scene.Objects.Add(new StorybookObject
+        {
+            Id = "human",
+            Kind = "human",
+            Size = [1.3, 2.2],
+            Path =
+            [
+                new StorybookKeyframe { T = 1, At = [0.6, 0.95] },
+                new StorybookKeyframe { T = 5, At = [0.4, 0.95] },
+            ],
+        });
+        var renderer = new SceneRenderer(scene);
+
+        renderer.Render(3 * 15).Truth.Single(t => t.Id == "human").State.Should().Be(TruthState.MustBox);
+    }
+
+    [Fact]
     public void A_Tree_Is_A_Region_No_Box_May_Be_In()
     {
         var scene = Scene();

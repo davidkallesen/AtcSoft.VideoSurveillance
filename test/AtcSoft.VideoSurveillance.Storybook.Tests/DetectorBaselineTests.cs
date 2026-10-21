@@ -1,7 +1,7 @@
 namespace AtcSoft.VideoSurveillance.Storybook;
 
 /// <summary>
-/// Each detector on every scene, at the server's 4 pictures a second and CameraWall's 15: today's
+/// Each detector on every scene, with the scene's own settings, at the server's 4 pictures a second and CameraWall's 15: today's
 /// (<see cref="FrameDifferenceMotionDetector"/>) and the new one (<see cref="BuiltInMotionDetector"/>). The scores are kept in
 /// <c>baseline.json</c>; a test fails when a score gets worse, so every change to detection is
 /// measured. Set <c>ATCSOFT_BBOX_UPDATE_BASELINE=1</c> to write the current scores as the new
@@ -40,8 +40,8 @@ public sealed class DetectorBaselineTests
     {
         var scene = StorybookReader.ReadFile(Path.Combine(AppContext.BaseDirectory, "Scenes", sceneFile));
         IMotionDetector detector = detectorName == BuiltIn
-            ? new BuiltInMotionDetector(new MotionDetectionSettings())
-            : new FrameDifferenceMotionDetector(new MotionDetectionSettings());
+            ? new BuiltInMotionDetector(scene.Detector.Settings())
+            : new FrameDifferenceMotionDetector(scene.Detector.Settings());
 
         var score = StorybookRunner.Run(scene, detector, new StorybookRunOptions(AnalysesPerSecond: analysesPerSecond)).Score;
 

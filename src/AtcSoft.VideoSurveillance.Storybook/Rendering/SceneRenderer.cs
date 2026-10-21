@@ -216,8 +216,8 @@ public sealed class SceneRenderer
         }
 
         // Standing still is invisible to motion detection, and an object mostly outside the
-        // picture is no fair test yet.
-        if (!IsMoving(item, time) || VisibleShare(item, time) < MinVisibleShare)
+        // picture is no fair test yet, unless what is in it fills half the picture (close to the lens).
+        if (!IsMoving(item, time) || VisibleShare(item, time) is { Object: < MinVisibleShare, Picture: < MinVisibleShare })
         {
             return TruthState.DontCare;
         }
@@ -225,13 +225,14 @@ public sealed class SceneRenderer
         return TruthState.MustBox;
     }
 
-    private double VisibleShare(
+    // How much of the object is in the picture, and how much of the picture it fills there.
+    private (double Object, double Picture) VisibleShare(
         StorybookObject item,
         double time)
     {
         if (PositionAt(item, time) is not { } at)
         {
-            return 0;
+            return (0, 0);
         }
 
         var (sw, sh) = SizeAt(item, time);
@@ -241,7 +242,9 @@ public sealed class SceneRenderer
         var top = (at.Y * height) - (h / 2);
         var visibleW = Math.Min(left + w, width) - Math.Max(left, 0);
         var visibleH = Math.Min(top + h, height) - Math.Max(top, 0);
-        return visibleW <= 0 || visibleH <= 0 ? 0 : visibleW * visibleH / (w * h);
+        return visibleW <= 0 || visibleH <= 0
+            ? (0, 0)
+            : (visibleW * visibleH / (w * h), visibleW * visibleH / ((double)width * height));
     }
 
     private TruthState DistractorState(

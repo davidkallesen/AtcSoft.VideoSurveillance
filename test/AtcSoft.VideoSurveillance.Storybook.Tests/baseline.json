@@ -215,6 +215,30 @@
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": 0.733
   },
+  "s10-snow@15": {
+    "recall": 1,
+    "precision": 0.0178,
+    "falseBoxesPerFrame": 45.8453,
+    "meanLatencySeconds": 0
+  },
+  "s10-snow@15/builtIn": {
+    "recall": 1,
+    "precision": 0.0654,
+    "falseBoxesPerFrame": 11.8508,
+    "meanLatencySeconds": 0
+  },
+  "s10-snow@4": {
+    "recall": 1,
+    "precision": 0.0127,
+    "falseBoxesPerFrame": 63.5102,
+    "meanLatencySeconds": 0
+  },
+  "s10-snow@4/builtIn": {
+    "recall": 1,
+    "precision": 0.226,
+    "falseBoxesPerFrame": 2.7959,
+    "meanLatencySeconds": 0
+  },
   "s12-camera-clock@15": {
     "recall": 1,
     "precision": 1,
@@ -262,5 +286,29 @@
     "precision": 1,
     "falseBoxesPerFrame": 0,
     "meanLatencySeconds": 1
+  },
+  "s14-door-camera@15": {
+    "recall": 0.2429,
+    "precision": 0.0485,
+    "falseBoxesPerFrame": 3.4191,
+    "meanLatencySeconds": 0
+  },
+  "s14-door-camera@15/builtIn": {
+    "recall": 1,
+    "precision": 0.9793,
+    "falseBoxesPerFrame": 0.0124,
+    "meanLatencySeconds": 0.4
+  },
+  "s14-door-camera@4": {
+    "recall": 0.6667,
+    "precision": 0.2195,
+    "falseBoxesPerFrame": 1.4769,
+    "meanLatencySeconds": 0
+  },
+  "s14-door-camera@4/builtIn": {
+    "recall": 1,
+    "precision": 0.95,
+    "falseBoxesPerFrame": 0.0308,
+    "meanLatencySeconds": 0.2
   }
 }

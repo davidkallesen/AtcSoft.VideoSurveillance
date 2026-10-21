@@ -16,5 +16,10 @@ public sealed class StorybookScene
 
     public IList<StorybookObject> Objects { get; init; } = [];
 
+    /// <summary>
+    /// Gets or sets the detector settings the scene is meant for, where they differ from the defaults.
+    /// </summary>
+    public StorybookDetector Detector { get; set; } = new();
+
     public StorybookExpect Expect { get; set; } = new();
 }

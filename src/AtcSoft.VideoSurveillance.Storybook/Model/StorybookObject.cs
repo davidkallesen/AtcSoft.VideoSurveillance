@@ -13,7 +13,8 @@ public sealed class StorybookObject
     public string Kind { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the width and height, as fractions of the picture.
+    /// Gets or sets the width and height, as fractions of the picture (up to 3: someone close to
+    /// the lens is larger than the picture).
     /// </summary>
     public IList<double> Size { get; init; } = [0.05, 0.18];
 

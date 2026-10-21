@@ -29,4 +29,11 @@ public sealed class StorybookExpect
     public double MatchIou { get; set; } = 0.3;
 
     public IList<StorybookSpan> Spans { get; init; } = [];
+
+    /// <summary>
+    /// Gets or sets why the detector does not meet these expectations yet, for a scene that shows
+    /// a known problem: its scores are still kept in the baseline, its expectations are not
+    /// asserted until it meets them, and then the mark has to go.
+    /// </summary>
+    public string? KnownBad { get; set; }
 }
