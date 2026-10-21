@@ -1152,19 +1152,27 @@ public partial class CameraConfigurationDialogViewModel : ViewModelDialogBase
 
             RaisePropertyChanged();
             RaisePropertyChanged(nameof(OverrideSmallestObjectPercent));
+            RaisePropertyChanged(nameof(CameraSmallestObjectPercent));
         }
     }
 
     public decimal OverrideSmallestObjectPercent
     {
-        get => (decimal)(Camera.Overrides?.MotionDetection.SmallestObjectPercent ?? settingsService.MotionDetection.SmallestObjectPercent);
+        get => (decimal)CameraSmallestObjectPercent;
         set
         {
             EnsureOverrides();
             Camera.Overrides!.MotionDetection.SmallestObjectPercent = (double)value;
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(CameraSmallestObjectPercent));
         }
     }
+
+    /// <summary>
+    /// Gets the camera's smallest object in percent: its own, or the app's. A watch zone without its own takes it.
+    /// </summary>
+    public double CameraSmallestObjectPercent
+        => Camera.Overrides?.MotionDetection.SmallestObjectPercent ?? settingsService.MotionDetection.SmallestObjectPercent;
 
     public bool UseDefaultStoppedObjectSeconds
     {

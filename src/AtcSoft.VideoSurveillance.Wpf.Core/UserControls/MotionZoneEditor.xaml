@@ -62,7 +62,7 @@
                                             Key=Name}"
             Text="{Binding Path=ZoneName, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-        <!--  The picked zone's kind; a watch zone's own values, empty for the camera's  -->
+        <!--  The picked zone's kind; a watch zone's own values, empty for the camera's (the hint shows it when known)  -->
         <atc:GridEx
             Margin="0,0,0,10"
             Columns="*,10,*,10,*,10,*"
@@ -90,8 +90,7 @@
                 LabelText="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations,
                                                 Key=SmallestObjectPercent}"
                 Text="{Binding Path=ZoneSmallestObjectText, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Visibility="Collapsed"
-                WatermarkText="{x:Static userControls:MotionZoneEditor.DefaultSmallestObjectText}" />
+                Visibility="Collapsed" />
             <atc:LabelWellKnownColorSelector
                 x:Name="ColorBox"
                 Grid.Column="6"

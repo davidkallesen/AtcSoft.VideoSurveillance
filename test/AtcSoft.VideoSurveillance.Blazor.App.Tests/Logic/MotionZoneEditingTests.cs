@@ -36,7 +36,6 @@ public sealed class MotionZoneEditingTests
         MotionZoneEditing.MaxNameLength.Should().Be(CoreEditing.MaxNameLength);
         MotionZoneEditing.DefaultAspectRatio.Should().Be(CoreEditing.DefaultAspectRatio);
         MotionZoneEditing.GrabDistance.Should().Be(CoreEditing.GrabDistance);
-        MotionZoneEditing.DefaultSmallestObjectPercent.Should().Be(CoreEditing.DefaultSmallestObjectPercent);
         foreach (var culture in new[] { "en-US", "da-DK" })
         {
             foreach (var text in new[] { "", "5", "105", "-1", "0.05", "0,05", "x" })

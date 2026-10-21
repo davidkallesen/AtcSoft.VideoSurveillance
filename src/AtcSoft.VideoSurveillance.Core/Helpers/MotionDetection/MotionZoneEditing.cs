@@ -40,7 +40,7 @@ public static class MotionZoneEditing
 
     /// <summary>
     /// The smallest object a watch zone without its own takes, in percent of the picture: the
-    /// detector's default, which an editor shows in the empty field.
+    /// detector's default; a camera with its own smallest object gives that instead.
     /// </summary>
     public const double DefaultSmallestObjectPercent = 0.02;
 

@@ -39,12 +39,6 @@ public static class MotionZoneEditing
     public const double GrabDistance = 8;
 
     /// <summary>
-    /// The smallest object a watch zone without its own takes, in percent of the picture: the
-    /// detector's default, which an editor shows in the empty field.
-    /// </summary>
-    public const double DefaultSmallestObjectPercent = 0.02;
-
-    /// <summary>
     /// Reads a watch zone's sensitivity as typed: empty is none (the camera's), a whole number is
     /// kept from 0 to 100.
     /// </summary>

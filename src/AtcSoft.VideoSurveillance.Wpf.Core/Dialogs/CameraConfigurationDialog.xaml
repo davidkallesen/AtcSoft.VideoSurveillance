@@ -241,6 +241,7 @@
                     <atc:BusyOverlay IsBusy="{Binding Path=IsTakingZonePicture}">
                         <userControls:MotionZoneEditor
                             Margin="15"
+                            CameraSmallestObjectPercent="{Binding Path=CameraSmallestObjectPercent}"
                             Picture="{Binding Path=ZonePicture}"
                             Status="{Binding Path=ZonePictureStatus}"
                             TakePictureCommand="{Binding Path=TakeZonePictureCommand}"

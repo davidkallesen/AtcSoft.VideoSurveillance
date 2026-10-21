@@ -38,6 +38,33 @@ public sealed class CameraConfigurationDialogViewModelZoneTests
     }
 
     [Fact]
+    public void A_Zone_Without_Its_Own_Smallest_Object_Is_Shown_The_Cameras()
+    {
+        var vm = BuildVm(CameraWithZone());
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        vm.CameraSmallestObjectPercent.Should().Be(new MotionDetectionSettings().SmallestObjectPercent, "the app's, as the camera has none of its own");
+
+        vm.UseDefaultSmallestObjectPercent = false;
+        vm.OverrideSmallestObjectPercent = 0.5m;
+
+        vm.CameraSmallestObjectPercent.Should().Be(0.5);
+        changed.Should().Contain(nameof(vm.CameraSmallestObjectPercent));
+
+        vm.UseDefaultSmallestObjectPercent = true;
+        vm.CameraSmallestObjectPercent.Should().Be(new MotionDetectionSettings().SmallestObjectPercent);
+    }
+
+    [Fact]
+    public void The_Empty_Field_Shows_The_Cameras_Value_Or_Says_It_Is_The_Cameras()
+    {
+        AtcSoft.VideoSurveillance.Wpf.Core.UserControls.MotionZoneEditor.SmallestObjectHint(0.5)
+            .Should().Be(0.5.ToString(CultureInfo.CurrentCulture));
+        AtcSoft.VideoSurveillance.Wpf.Core.UserControls.MotionZoneEditor.SmallestObjectHint(cameraPercent: null)
+            .Should().Be(Translations.CamerasOwn);
+    }
+
+    [Fact]
     public void Zones_Drawn_In_The_Editor_Are_A_Change_To_Save()
     {
         var camera = CameraWithZone();

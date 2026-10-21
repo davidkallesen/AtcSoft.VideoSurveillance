@@ -44,6 +44,10 @@ public partial class MotionZoneEditor
     [DependencyProperty(PropertyChangedCallback = nameof(OnZoneColorKeyChanged))]
     private string? zoneColorKey;
 
+    // The camera's smallest object, shown in a watch zone's empty field; null shows "Camera's own".
+    [DependencyProperty(PropertyChangedCallback = nameof(OnCameraSmallestObjectPercentChanged))]
+    private double? cameraSmallestObjectPercent;
+
     // Set while the fields are filled from the picked zone, so that is not taken as an edit.
     private bool showingName;
 
@@ -59,6 +63,7 @@ public partial class MotionZoneEditor
     public MotionZoneEditor()
     {
         InitializeComponent();
+        SmallestObjectBox.WatermarkText = SmallestObjectHint(cameraPercent: null);
     }
 
     /// <summary>
@@ -71,10 +76,15 @@ public partial class MotionZoneEditor
     };
 
     /// <summary>
-    /// Gets the smallest object a watch zone takes when its field is empty, as the field shows it.
+    /// The hint a watch zone's empty smallest-object field shows: the camera's value, which the zone
+    /// then takes, or "Camera's own" when the editor is not told it.
     /// </summary>
-    public static string DefaultSmallestObjectText
-        => MotionZoneEditing.DefaultSmallestObjectPercent.ToString(CultureInfo.CurrentCulture);
+    /// <param name="cameraPercent">The camera's smallest object in percent of the picture, or null.</param>
+    /// <returns>The text to show.</returns>
+    public static string SmallestObjectHint(double? cameraPercent)
+        => cameraPercent is { } percent
+            ? percent.ToString(CultureInfo.CurrentCulture)
+            : Translations.CamerasOwn;
 
     private IReadOnlyList<MotionZone> Current
         => Zones ?? [];
@@ -202,6 +212,16 @@ public partial class MotionZoneEditor
             !EqualityComparer<double?>.Default.Equals(value, zone.SmallestObjectPercent))
         {
             editor.Change(editor.SelectedZone, z => z.SmallestObjectPercent = value);
+        }
+    }
+
+    private static void OnCameraSmallestObjectPercentChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MotionZoneEditor editor)
+        {
+            editor.SmallestObjectBox.WatermarkText = SmallestObjectHint(editor.CameraSmallestObjectPercent);
         }
     }
 
