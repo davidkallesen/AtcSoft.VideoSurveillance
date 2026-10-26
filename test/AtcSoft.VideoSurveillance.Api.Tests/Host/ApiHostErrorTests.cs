@@ -108,13 +108,40 @@ public sealed class ApiHostErrorTests(ApiHostFixture host)
     }
 
     [Fact]
-    public async Task A_Camera_From_A_Client_Built_On_Generator_V2_Is_A_Bad_Request()
+    public async Task A_Camera_From_A_Client_Built_On_Generator_V2_Is_Stored_With_The_Enum_Values_Of_The_Specification()
+    {
+        // The server reads a listed value in any casing, and every value of ours is its
+        // member name in camelCase, so what a 2.x client writes (Rtsp) is read as rtsp.
+        using var client = host.CreateClient();
+        using var created = await client.PostAsJsonAsync(
+            "/cameras",
+            new { displayName = "Member names " + Guid.NewGuid().ToString("N")[..8], ipAddress = "192.0.2.12", port = 554, protocol = "Rtsp", rotation = "Rotate90", overlayPosition = "TopLeft" },
+            TestContext.Current.CancellationToken);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var id = (await created.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("id").GetGuid();
+
+        try
+        {
+            var camera = await client.GetFromJsonAsync<JsonElement>($"/cameras/{id}", TestContext.Current.CancellationToken);
+
+            camera.GetProperty("protocol").GetString().Should().Be("rtsp");
+            camera.GetProperty("rotation").GetString().Should().Be("rotate90");
+            camera.GetProperty("overlayPosition").GetString().Should().Be("topLeft");
+        }
+        finally
+        {
+            using var deleted = await client.DeleteAsync(new Uri($"/cameras/{id}", UriKind.Relative), TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task A_Camera_With_An_Enum_Value_The_Specification_Does_Not_List_Is_A_Bad_Request()
     {
         using var client = host.CreateClient();
 
         using var created = await client.PostAsJsonAsync(
             "/cameras",
-            new { displayName = "Member names " + Guid.NewGuid().ToString("N")[..8], ipAddress = "192.0.2.12", port = 554, protocol = "Rtsp", rotation = "Rotate90", overlayPosition = "TopLeft" },
+            new { displayName = "Unknown value " + Guid.NewGuid().ToString("N")[..8], ipAddress = "192.0.2.13", port = 554, protocol = "ftp" },
             TestContext.Current.CancellationToken);
 
         await ReadProblemAsync(created, HttpStatusCode.BadRequest);

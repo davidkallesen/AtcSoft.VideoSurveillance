@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="Atc.Hosting" Version="2.0.2" />
-    <PackageReference Include="Atc.Rest.Client" Version="2.6.0" />
+    <PackageReference Include="Atc.Rest.Client" Version="2.7.0" />
     <PackageReference Include="Atc.SourceGenerators" Version="0.1.66">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.4e4b12a9" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+    <PackageReference Include="Atc.Rest.Api.SourceGenerator" Version="3.0.0-local.91104eca" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
