@@ -98,7 +98,7 @@ public sealed class TimelineHandlerTests : IDisposable
     {
         var result = await GetTimelineAsync(Nine, Nine.AddMinutes(minutes), buckets: 10);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class TimelineHandlerTests : IDisposable
             new ListTimelineEventsParameters(After: after ? Nine : null, Before: before ? Nine : null, CameraId: null, Limit: null),
             TestContext.Current.CancellationToken);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
     }
 
     private static CameraConfiguration Camera(string name)

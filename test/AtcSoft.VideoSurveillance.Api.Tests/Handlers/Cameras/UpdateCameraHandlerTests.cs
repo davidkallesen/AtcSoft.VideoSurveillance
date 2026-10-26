@@ -46,7 +46,7 @@ public class UpdateCameraHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class UpdateCameraHandlerTests
             new UpdateCameraParameters(cameraId, MinimalUpdate("Renamed") with { Source = ApiCameraSource.Usb }),
             CancellationToken.None);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         camera.Connection.Source.Should().Be(AtcSoft.VideoSurveillance.Enums.CameraSource.Network);
         camera.Display.DisplayName.Should().Be("Kept");
         storage.DidNotReceive().Save();

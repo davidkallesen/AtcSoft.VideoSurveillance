@@ -19,7 +19,7 @@ public class CaptureSnapshotHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class CaptureSnapshotHandlerTests
         var result = await executeTask;
 
         pipelineFactory.Received(1).Create(camera);
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class CaptureSnapshotHandlerTests
         // Assert
         pipelineFactory.Received(1).Create(camera);
         await pipeline.Received(1).CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
 
         // A camera that is still connecting is worth asking again shortly.
         var response = await result.Result.ExecuteAsync();
@@ -148,7 +148,7 @@ public class CaptureSnapshotHandlerTests
 
         // Assert
         await pipeline.DidNotReceive().CaptureFrameAsync(Arg.Any<CancellationToken>());
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
     }
 
     [Fact]
@@ -194,7 +194,8 @@ public class CaptureSnapshotHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable).Detail.Should().Contain("unplugged");
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+        result.Problem!.Detail.Should().Contain("unplugged");
         usb.PipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
         usb.Host.DidNotReceiveWithAnyArgs().Release(Guid.Empty, default);
     }
@@ -212,7 +213,7 @@ public class CaptureSnapshotHandlerTests
                 AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
         var result = await executing;
 
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Snapshot);
         usb.Pipeline.DidNotReceive().Dispose();
     }

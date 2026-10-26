@@ -23,7 +23,7 @@ public class CreateCameraHandlerTests
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
         // Assert
-        var created = await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
+        var created = result.ShouldBeCreated<Camera>("/cameras/");
         created.DisplayName.Should().Be("Test Camera");
         created.IpAddress.Should().Be("10.0.0.1");
         created.Port.Should().Be(554);
@@ -85,7 +85,7 @@ public class CreateCameraHandlerTests
 
         var result = await handler.ExecuteAsync(parameters, CancellationToken.None);
 
-        await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
+        result.ShouldBeCreated<Camera>("/cameras/");
         storage.Received(1).AddOrUpdateCamera(Arg.Is<CameraConfiguration>(c =>
             c.Connection.Source == CoreCameraSource.Usb &&
             c.Connection.Usb != null &&
@@ -102,7 +102,7 @@ public class CreateCameraHandlerTests
 
         var result = await handler.ExecuteAsync(new CreateCameraParameters(NetworkRequest("No address", ipAddress: " ")), CancellationToken.None);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         storage.DidNotReceive().AddOrUpdateCamera(Arg.Any<CameraConfiguration>());
     }
 
@@ -120,7 +120,7 @@ public class CreateCameraHandlerTests
 
         var result = await handler.ExecuteAsync(new CreateCameraParameters(request), CancellationToken.None);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         storage.DidNotReceive().AddOrUpdateCamera(Arg.Any<CameraConfiguration>());
     }
 
@@ -138,7 +138,7 @@ public class CreateCameraHandlerTests
 
         var result = await handler.ExecuteAsync(new CreateCameraParameters(request), CancellationToken.None);
 
-        await result.Result.ShouldBeCreatedAsync<Camera>("/cameras/");
+        result.ShouldBeCreated<Camera>("/cameras/");
     }
 
     private static CreateCameraRequest NetworkRequest(

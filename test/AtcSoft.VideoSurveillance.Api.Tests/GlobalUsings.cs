@@ -33,7 +33,6 @@ global using Microsoft.AspNetCore.DataProtection;
 global using Microsoft.AspNetCore.Hosting;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Http.HttpResults;
-global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Microsoft.AspNetCore.OutputCaching;
 global using Microsoft.AspNetCore.TestHost;

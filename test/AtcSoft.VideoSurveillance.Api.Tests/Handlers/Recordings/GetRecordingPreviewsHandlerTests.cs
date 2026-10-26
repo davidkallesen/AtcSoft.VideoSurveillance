@@ -66,7 +66,7 @@ public sealed class GetRecordingPreviewsHandlerTests : IDisposable
     {
         var result = await sut.ExecuteAsync(new GetRecordingPreviewsParameters(FilePath: "Garden/Garden_20261019_111500_000.mp4"), TestContext.Current.CancellationToken);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Theory]
@@ -77,7 +77,7 @@ public sealed class GetRecordingPreviewsHandlerTests : IDisposable
     {
         var result = await sut.ExecuteAsync(new GetRecordingPreviewsParameters(FilePath: filePath), TestContext.Current.CancellationToken);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
     }
 
     private async Task<RecordingPreviewSheet> OkAsync(string filePath)

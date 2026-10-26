@@ -44,6 +44,6 @@ public class ApplyLayoutHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 }

@@ -19,7 +19,7 @@ public class StartRecordingHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -68,7 +68,8 @@ public class StartRecordingHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.ShouldBeProblem(StatusCodes.Status409Conflict).Detail.Should().Contain("unplugged");
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+        result.Problem!.Detail.Should().Contain("unplugged");
         usb.PipelineFactory.DidNotReceiveWithAnyArgs().Create(default!);
     }
 
@@ -86,7 +87,7 @@ public class StartRecordingHandlerTests
                 AtcSoft.VideoSurveillance.Enums.ConnectionState.Error));
         var result = await executing;
 
-        result.Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Recording);
         usb.Pipeline.DidNotReceive().Dispose();
     }
@@ -100,7 +101,7 @@ public class StartRecordingHandlerTests
 
         var result = await usb.ExecuteAsync();
 
-        result.Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
         usb.Host.Received(1).Release(usb.Camera.Id, CameraPipelineUse.Recording);
         usb.Pipeline.DidNotReceive().Dispose();
     }
@@ -145,7 +146,7 @@ public class StartRecordingHandlerTests
             CancellationToken.None);
 
         // Assert
-        result.Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
     }
 
     [Fact]

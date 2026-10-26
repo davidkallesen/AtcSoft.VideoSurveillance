@@ -37,7 +37,7 @@ public class StreamLeaseHandlerTests
 
         var result = await handler.ExecuteAsync(new StartStreamParameters(cameraId), CancellationToken.None);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class StreamLeaseHandlerTests
 
         var result = await handler.ExecuteAsync(new StartStreamParameters(cameraId), CancellationToken.None);
 
-        result.Result.ShouldBeProblem(StatusCodes.Status503ServiceUnavailable);
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
         var response = await result.Result.ExecuteAsync();
         response.Headers.RetryAfter.ToString().Should().Be("10");
         ReadJson(response).GetProperty("detail").GetString().Should().Be("The camera could not be opened.");
@@ -64,7 +64,7 @@ public class StreamLeaseHandlerTests
         var unknown = await handler.ExecuteAsync(new RenewStreamLeaseParameters(cameraId, Guid.NewGuid()), CancellationToken.None);
 
         (await renewed.Result.ExecuteAsync()).StatusCode.Should().Be(StatusCodes.Status204NoContent);
-        unknown.Result.ShouldBeProblem(StatusCodes.Status404NotFound);
+        unknown.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]

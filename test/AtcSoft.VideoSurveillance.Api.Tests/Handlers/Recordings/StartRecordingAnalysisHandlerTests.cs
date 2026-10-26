@@ -46,7 +46,7 @@ public sealed class StartRecordingAnalysisHandlerTests : IDisposable
         var video = Video("b");
         await File.WriteAllTextAsync(RecordingPathHelper.BuildActivityPath(video), "{}", TestContext.Current.CancellationToken);
 
-        (await StartAsync("Gate/b.mkv")).Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        (await StartAsync("Gate/b.mkv")).StatusCode.Should().Be(StatusCodes.Status409Conflict);
         queue.DidNotReceive().TryEnqueue(Arg.Any<string>());
     }
 
@@ -56,7 +56,7 @@ public sealed class StartRecordingAnalysisHandlerTests : IDisposable
         var video = Video("c");
         recordingService.GetActiveSessions().Returns([new RecordingSession(Guid.NewGuid(), "Gate", video, isManualRecording: true)]);
 
-        (await StartAsync("Gate/c.mkv")).Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        (await StartAsync("Gate/c.mkv")).StatusCode.Should().Be(StatusCodes.Status409Conflict);
     }
 
     [Fact]
@@ -65,14 +65,14 @@ public sealed class StartRecordingAnalysisHandlerTests : IDisposable
         Video("d");
         queue.TryEnqueue(Arg.Any<string>()).Returns(false);
 
-        (await StartAsync("Gate/d.mkv")).Result.ShouldBeProblem(StatusCodes.Status409Conflict);
+        (await StartAsync("Gate/d.mkv")).StatusCode.Should().Be(StatusCodes.Status409Conflict);
     }
 
     [Fact]
     public async Task A_Missing_Recording_Or_A_Path_Outside_The_Recordings_Is_Not_Analysed()
     {
-        (await StartAsync("Gate/none.mkv")).Result.ShouldBeProblem(StatusCodes.Status404NotFound);
-        (await StartAsync("../outside.mkv")).Result.ShouldBeProblem(StatusCodes.Status400BadRequest);
+        (await StartAsync("Gate/none.mkv")).StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        (await StartAsync("../outside.mkv")).StatusCode.Should().Be(StatusCodes.Status400BadRequest);
     }
 
     private Task<global::VideoSurveillance.Generated.Recordings.Results.StartRecordingAnalysisResult> StartAsync(
