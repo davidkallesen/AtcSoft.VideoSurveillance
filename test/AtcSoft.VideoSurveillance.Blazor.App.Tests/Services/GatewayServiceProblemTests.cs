@@ -50,7 +50,17 @@ public sealed class GatewayServiceProblemTests
         var result = await server.Gateway.UpdateSettingsAsync(new UpdateSettingsRequest(), TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeFalse();
-        result.Problem.Should().Contain("503");
+        result.Problem.Should().Be(Translations.ServerCouldNotBeReached);
+    }
+
+    [Fact]
+    public async Task A_Snapshot_From_A_Server_That_Cannot_Be_Reached_Is_No_Picture_Without_An_Exception()
+    {
+        using var server = new GatewayTestServer(_ => throw new HttpRequestException("TypeError: Failed to fetch"));
+
+        var picture = await server.Gateway.CaptureSnapshotAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        picture.Should().BeNull();
     }
 
     [Fact]

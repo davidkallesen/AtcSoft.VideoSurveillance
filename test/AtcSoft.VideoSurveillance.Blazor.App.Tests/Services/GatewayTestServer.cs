@@ -2,7 +2,7 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Services;
 
 /// <summary>
 /// A <see cref="GatewayService"/> on the real generated endpoints and Atc.Rest.Client,
-/// behind the app's <see cref="ServerUnavailableHandler"/>, whose server answers
+/// whose server answers
 /// every request the same way.
 /// </summary>
 internal sealed class GatewayTestServer : IDisposable
@@ -15,8 +15,7 @@ internal sealed class GatewayTestServer : IDisposable
         var collection = new ServiceCollection();
         collection
             .AddHttpClient(Constants.HttpClientName, c => c.BaseAddress = new Uri("http://server.test"))
-            .ConfigurePrimaryHttpMessageHandler(() => new AnswerHandler(answer))
-            .AddHttpMessageHandler(() => new ServerUnavailableHandler());
+            .ConfigurePrimaryHttpMessageHandler(() => new AnswerHandler(answer));
         collection.AddVideoSurveillanceEndpoints();
         services = collection.BuildServiceProvider();
         Gateway = ActivatorUtilities.CreateInstance<GatewayService>(services);

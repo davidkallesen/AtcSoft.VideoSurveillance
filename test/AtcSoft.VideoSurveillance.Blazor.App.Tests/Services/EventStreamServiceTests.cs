@@ -22,7 +22,7 @@ public sealed class EventStreamServiceTests
                 ? Stream("event: ping\ndata:\n\n" + Event(1) + Event(2))
                 : Stream(Event(3));
         });
-        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Delay = (_, _) => Task.CompletedTask };
+        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Time = new ImmediateTimeProvider() };
         using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         var received = new List<SurveillanceEvent>();
 
@@ -55,15 +55,8 @@ public sealed class EventStreamServiceTests
                     Content = new StringContent("""{"status":503,"detail":"Starting."}""", System.Text.Encoding.UTF8, "application/problem+json"),
                 }
                 : Stream(Event(1)));
-        var waits = new List<TimeSpan>();
-        var sut = new EventStreamService(server.Get<IListEventsEndpoint>())
-        {
-            Delay = (wait, _) =>
-            {
-                waits.Add(wait);
-                return Task.CompletedTask;
-            },
-        };
+        var time = new ImmediateTimeProvider();
+        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Time = time };
         using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
 
         await sut.RunAsync(
@@ -71,14 +64,30 @@ public sealed class EventStreamServiceTests
             done.Token);
 
         calls.Should().Be(2);
-        waits.Should().ContainSingle().Which.Should().BePositive();
+        time.Waits.Should().ContainSingle().Which.Should().BePositive();
+    }
+
+    [Fact]
+    public async Task An_Event_That_Is_Not_Json_Does_Not_End_The_Reading()
+    {
+        var calls = 0;
+        using var server = new GatewayTestServer(_ =>
+            ++calls == 1
+                ? Stream("id: 1\ndata: {not json\n\n")
+                : Stream(Event(2)));
+        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Time = new ImmediateTimeProvider() };
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+
+        await sut.RunAsync(async _ => await done.CancelAsync(), done.Token);
+
+        calls.Should().Be(2);
     }
 
     [Fact]
     public async Task It_Says_When_It_Starts_And_Stops_Reading()
     {
         using var server = new GatewayTestServer(_ => Stream(Event(1)));
-        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Delay = (_, _) => Task.CompletedTask };
+        var sut = new EventStreamService(server.Get<IListEventsEndpoint>()) { Time = new ImmediateTimeProvider() };
         var changes = new List<bool>();
         sut.ReadingChanged += () => changes.Add(sut.IsReading);
         using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
@@ -110,5 +119,41 @@ public sealed class EventStreamServiceTests
             "\"connection\":{\"cameraId\":\"" + Front + "\",\"newState\":\"" + state + "\",\"timestamp\":\"" + timestamp + "\"}}";
 
         return $"id: {id}\ndata: {json}\n\n";
+    }
+
+    // Ends every wait at once and remembers how long each was.
+    private sealed class ImmediateTimeProvider : TimeProvider
+    {
+        public List<TimeSpan> Waits { get; } = [];
+
+        public override ITimer CreateTimer(
+            TimerCallback callback,
+            object? state,
+            TimeSpan dueTime,
+            TimeSpan period)
+        {
+            lock (Waits)
+            {
+                Waits.Add(dueTime);
+            }
+
+            ThreadPool.QueueUserWorkItem(_ => callback(state));
+            return new NoTimer();
+        }
+
+        private sealed class NoTimer : ITimer
+        {
+            public bool Change(
+                TimeSpan dueTime,
+                TimeSpan period)
+                => true;
+
+            public void Dispose()
+            {
+            }
+
+            public ValueTask DisposeAsync()
+                => ValueTask.CompletedTask;
+        }
     }
 }

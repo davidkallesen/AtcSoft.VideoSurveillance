@@ -6,36 +6,26 @@ namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 public static class ProblemText
 {
     /// <summary>
-    /// Gets the text to show: the message of each field a 400 names, else the
-    /// problem's <c>detail</c>, else the <c>title</c> of a
-    /// problem body (one made up from the status alone has the English reason phrase, so the status is said in the client's language instead), else the status (also for
-    /// the answer <see cref="Services.ServerUnavailableHandler"/> makes up when
-    /// the server cannot be reached).
+    /// Gets the text to show: the generated problem text (field messages,
+    /// detail, a title that says more than the status), else the status in
+    /// the client's language.
     /// </summary>
     public static string From(EndpointResponse response)
     {
         ArgumentNullException.ThrowIfNull(response);
 
-        // Every generated result is an IEndpointResult with the problem already read.
-        var problem = response is IEndpointResult result
-            ? result.Problem
-            : response.ContentObject as ProblemDetails;
-
-        switch (problem)
+        var result = response as IEndpointResult;
+        if (result?.IsTransportFailure == true)
         {
-            case ValidationProblemDetails { Errors.Count: > 0 } validation:
-                return string.Join(" ", validation.Errors.SelectMany(field => field.Value));
-            case ProblemDetails { Detail: { Length: > 0 } detail }:
-                return detail;
-            case ProblemDetails { Title: { Length: > 0 } title } when response.ContentObject is ProblemDetails:
-                return title;
-            default:
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Translations.ServerAnswered2,
-                    (int)response.StatusCode,
-                    response.StatusCode);
+            return Translations.ServerCouldNotBeReached;
         }
+
+        return result?.Problem?.ToDisplayText()
+            ?? string.Format(
+                CultureInfo.CurrentCulture,
+                Translations.ServerAnswered2,
+                (int)response.StatusCode,
+                response.StatusCode);
     }
 
     /// <summary>

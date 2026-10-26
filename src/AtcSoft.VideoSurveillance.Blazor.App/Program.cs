@@ -23,8 +23,7 @@ builder.Services
     {
         client.BaseAddress = new Uri(apiBaseAddress);
     })
-    .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredService<BrowserSession>()))
-    .AddHttpMessageHandler(() => new ServerUnavailableHandler())
+    .AddApiCredentials((sp, credentials) => SessionCredentials.Configure(credentials, sp.GetRequiredService<BrowserSession>()))
     .AddApiResilience();
 
 // Register all generated endpoints (includes IHttpMessageFactory registration)

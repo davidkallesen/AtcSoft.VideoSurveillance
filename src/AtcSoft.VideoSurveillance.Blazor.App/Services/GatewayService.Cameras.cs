@@ -175,19 +175,27 @@ public sealed partial class GatewayService
 
     /// <summary>
     /// Gets a PNG of the camera's picture now, or <see langword="null"/> when
-    /// the camera is unknown or gives no picture.
+    /// the camera is unknown, gives no picture or the server cannot be reached.
     /// </summary>
     public async Task<byte[]?> CaptureSnapshotAsync(
         Guid cameraId,
         CancellationToken cancellationToken = default)
     {
         var parameters = new CaptureSnapshotParameters(CameraId: cameraId);
-        var result = await captureSnapshotEndpoint
-            .ExecuteAsync(parameters, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
+        try
+        {
+            var result = await captureSnapshotEndpoint
+                .ExecuteAsync(parameters, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
-        return result.IsOk
-            ? result.OkContent.Content
-            : null;
+            return result.IsOk
+                ? result.OkContent.Content
+                : null;
+        }
+        catch (Exception ex) when (ApiTransportFailure.IsTransportFailure(ex, cancellationToken))
+        {
+            // A picture is a download, which "transportFailure": "result" does not cover.
+            return null;
+        }
     }
 }

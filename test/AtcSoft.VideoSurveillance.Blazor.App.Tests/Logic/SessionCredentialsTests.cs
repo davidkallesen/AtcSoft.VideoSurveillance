@@ -1,18 +1,18 @@
-namespace AtcSoft.VideoSurveillance.Blazor.App.Services;
+namespace AtcSoft.VideoSurveillance.Blazor.App.Logic;
 
 /// <summary>
 /// Every call to the server carries the access token; one that is about to run
 /// out is renewed first, and a read the server refused for its token is sent
 /// again after a renewal.
 /// </summary>
-public sealed class BearerTokenHandlerTests : IDisposable
+public sealed class SessionCredentialsTests : IDisposable
 {
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-10-15T12:00:00Z", CultureInfo.InvariantCulture);
 
     private readonly Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
     private readonly BrowserSession session;
 
-    public BearerTokenHandlerTests()
+    public SessionCredentialsTests()
         => session = new BrowserSession(time);
 
     public void Dispose()
@@ -26,7 +26,7 @@ public sealed class BearerTokenHandlerTests : IDisposable
         using var invoker = CreateInvoker(request =>
         {
             sent.Add(request);
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         });
 
         await CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras");
@@ -48,7 +48,7 @@ public sealed class BearerTokenHandlerTests : IDisposable
         using var invoker = CreateInvoker(request =>
         {
             sent.Add(request.Headers.Authorization?.Parameter);
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         });
 
         await CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras");
@@ -69,13 +69,73 @@ public sealed class BearerTokenHandlerTests : IDisposable
         using var invoker = CreateInvoker(request =>
         {
             sent.Add(request.Headers.Authorization?.Parameter);
-            return new HttpResponseMessage(sent.Count == 1 ? HttpStatusCode.Unauthorized : HttpStatusCode.OK);
+            return new HttpResponseMessage(sent.Count == 1 ? System.Net.HttpStatusCode.Unauthorized : System.Net.HttpStatusCode.OK);
         });
 
         var response = await CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
         sent.Should().Equal("stale", "fresh");
+    }
+
+    [Fact]
+    public async Task Two_Reads_Refused_For_The_Same_Token_Renew_Once()
+    {
+        session.Apply(Session("stale", expiresIn: 3600));
+        var renewals = 0;
+        session.Renew = _ =>
+        {
+            renewals++;
+            session.Apply(Session("fresh" + renewals, expiresIn: 3600));
+            return Task.FromResult(SessionRenewalOutcome.Renewed);
+        };
+        using var bothSent = new Barrier(2);
+        using var invoker = CreateInvoker(request =>
+        {
+            if (request.Headers.Authorization?.Parameter == "stale")
+            {
+                bothSent.SignalAndWait(TimeSpan.FromSeconds(5));
+                return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        });
+
+        await Task.WhenAll(
+            Task.Run(() => CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras")),
+            Task.Run(() => CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras")));
+
+        renewals.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_Read_Refused_After_Another_Call_Renewed_Does_Not_Renew_Again()
+    {
+        session.Apply(Session("stale", expiresIn: 3600));
+        var renewals = 0;
+        session.Renew = _ =>
+        {
+            renewals++;
+            session.Apply(Session("fresh" + renewals, expiresIn: 3600));
+            return Task.FromResult(SessionRenewalOutcome.Renewed);
+        };
+        var staleAnswers = 0;
+        using var invoker = CreateInvoker(request =>
+        {
+            if (request.Headers.Authorization?.Parameter == "stale" && Interlocked.Increment(ref staleAnswers) == 2)
+            {
+                // The second read's 401 arrives after the first read has renewed.
+                SpinWait.SpinUntil(() => Volatile.Read(ref renewals) == 1, TimeSpan.FromSeconds(5));
+            }
+
+            return new HttpResponseMessage(request.Headers.Authorization?.Parameter == "stale" ? System.Net.HttpStatusCode.Unauthorized : System.Net.HttpStatusCode.OK);
+        });
+
+        await Task.WhenAll(
+            Task.Run(() => CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras")),
+            Task.Run(() => CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras")));
+
+        renewals.Should().Be(1);
     }
 
     [Fact]
@@ -83,11 +143,11 @@ public sealed class BearerTokenHandlerTests : IDisposable
     {
         session.Apply(Session("stale", expiresIn: 3600));
         session.Renew = _ => Task.FromResult(SessionRenewalOutcome.Refused);
-        using var invoker = CreateInvoker(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized));
+        using var invoker = CreateInvoker(_ => new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized));
 
         var response = await CallAsync(invoker, HttpMethod.Get, "http://server.test/cameras");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
         session.IsSignedIn.Should().BeFalse("the user signs in again");
     }
 
@@ -99,10 +159,10 @@ public sealed class BearerTokenHandlerTests : IDisposable
         using var invoker = CreateInvoker(request =>
         {
             sent.Add(request);
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         });
 
-        await CallAsync(invoker, HttpMethod.Post, "http://server.test/auth/refresh");
+        await CallAsync(invoker, HttpMethod.Post, "http://server.test/auth/refresh", ApiOperations.RefreshSession, ApiOperationSecurities.RefreshSession);
 
         sent.Single().Headers.Authorization.Should().BeNull();
     }
@@ -121,16 +181,23 @@ public sealed class BearerTokenHandlerTests : IDisposable
     private static async Task<HttpResponseMessage> CallAsync(
         HttpMessageInvoker invoker,
         HttpMethod method,
-        string url)
+        string url,
+        string operation = ApiOperations.ListCameras,
+        ApiOperationSecurity? security = null)
     {
         using var request = new HttpRequestMessage(method, url);
-        return await invoker.SendAsync(request, TestContext.Current.CancellationToken);
+        ApiRequest.Stamp(request, operation, security ?? ApiOperationSecurities.ListCameras);
+        return await invoker.SendAsync(request, TestContext.Current.CancellationToken).ConfigureAwait(false);
     }
 
-    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The invoker owns the handlers (disposeHandler) and the test disposes the invoker.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The invoker owns the handlers (disposeHandler) and the test disposes the invoker.")]
     private HttpMessageInvoker CreateInvoker(
         Func<HttpRequestMessage, HttpResponseMessage> answer)
-        => new(new BearerTokenHandler(session) { InnerHandler = new AnswerHandler(answer) }, disposeHandler: true);
+    {
+        var credentials = new ApiCredentials();
+        SessionCredentials.Configure(credentials, session);
+        return new(new ApiCredentialsHandler(credentials) { InnerHandler = new AnswerHandler(answer) }, disposeHandler: true);
+    }
 
     private sealed class AnswerHandler(Func<HttpRequestMessage, HttpResponseMessage> answer) : HttpMessageHandler
     {
