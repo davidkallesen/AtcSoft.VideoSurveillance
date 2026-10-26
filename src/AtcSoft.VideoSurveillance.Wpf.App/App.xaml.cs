@@ -387,7 +387,7 @@ public partial class App
                     {
                         client.BaseAddress = new Uri(apiBaseAddress);
                     })
-                    .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredService<ClientSession>()))
+                    .AddApiCredentials((sp, credentials) => SessionCredentials.Configure(credentials, sp.GetRequiredService<ClientSession>()))
                     .AddApiResilience();
 
                 // Source-generated endpoint DI

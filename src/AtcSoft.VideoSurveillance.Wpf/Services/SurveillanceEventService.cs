@@ -20,15 +20,6 @@ namespace AtcSoft.VideoSurveillance.Wpf.Services;
     Justification = "Action<T> events are intentional for terse WPF consumption.")]
 public sealed class SurveillanceEventService : BackgroundServiceBase<SurveillanceEventService>
 {
-    private static readonly TimeSpan[] Backoff =
-    [
-        TimeSpan.FromSeconds(1),
-        TimeSpan.FromSeconds(2),
-        TimeSpan.FromSeconds(5),
-        TimeSpan.FromSeconds(10),
-        TimeSpan.FromSeconds(30),
-    ];
-
     private readonly IListEventsEndpoint endpoint;
     private readonly ClientSession? session;
 
@@ -88,9 +79,9 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     public bool IsConnected { get; private set; }
 
     /// <summary>
-    /// Gets or sets how the service waits before it asks again (tests replace it).
+    /// Gets or sets the clock the waits between connections run on (tests replace it).
     /// </summary>
-    public Func<TimeSpan, CancellationToken, Task> Delay { get; set; } = Task.Delay;
+    public TimeProvider Time { get; set; } = TimeProvider.System;
 
     /// <inheritdoc />
     public override Task DoWorkAsync(CancellationToken stoppingToken)
@@ -101,93 +92,70 @@ public sealed class SurveillanceEventService : BackgroundServiceBase<Surveillanc
     /// </summary>
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        string? lastEventId = null;
-        var failures = 0;
-        var opened = false;
-        while (!cancellationToken.IsCancellationRequested)
+        // The server answers a client that is not signed in with 401.
+        if (session is not null)
         {
-            // The server answers a client that is not signed in with 401.
-            if (session is not null)
-            {
-                try
-                {
-                    await session.WaitUntilSignedInAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-            }
-
-            var read = false;
-            var answered = false;
             try
             {
-                using var result = await endpoint
-                    .ExecuteAsync(new ListEventsParameters(CameraId: null, HeartbeatSeconds: null, LastEventId: lastEventId), cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
-
-                answered = result.IsOk;
-                SetConnected(result.IsOk);
-                if (result.IsOk)
-                {
-                    var missed = opened
-                        ? result.XEventsMissedHeader is > 0
-                        : failures > 0;
-                    opened = true;
-                    SetReading(true);
-                    if (missed)
-                    {
-                        OnMissedEvents?.Invoke();
-                    }
-
-                    try
-                    {
-                        await foreach (var surveillanceEvent in result.Content!.WithCancellation(cancellationToken).ConfigureAwait(false))
-                        {
-                            read = true;
-                            if (surveillanceEvent is not null)
-                            {
-                                Raise(surveillanceEvent);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        SetReading(false);
-                        lastEventId = result.LastEventId is { Length: > 0 } id ? id : lastEventId;
-                    }
-                }
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-            catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or JsonException)
-            {
-                // The stream dropped, or the server could not be reached: asked
-                // again below, after the last event read.
-                if (!answered)
-                {
-                    SetConnected(connected: false);
-                }
-            }
-
-            // A stream that gave events is asked again at once; one that gave none waits.
-            failures = read ? 0 : failures + 1;
-            if (failures == 0)
-            {
-                continue;
-            }
-
-            try
-            {
-                await Delay(Backoff[Math.Min(failures, Backoff.Length) - 1], cancellationToken).ConfigureAwait(false);
+                await session.WaitUntilSignedInAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
+        }
+
+        var opened = false;
+        var failedBeforeOpening = false;
+        var policy = new ServerSentEventReconnectPolicy
+        {
+            TimeProvider = Time,
+            OnConnected = result =>
+            {
+                // The first stream may have missed what came while the server was away;
+                // a later one, what the server could not send again (it restarted).
+                var missed = opened
+                    ? (result as IListEventsEndpointResult)?.XEventsMissedHeader is > 0
+                    : failedBeforeOpening;
+                opened = true;
+                SetConnected(connected: true);
+                SetReading(true);
+                if (missed)
+                {
+                    OnMissedEvents?.Invoke();
+                }
+            },
+            OnDisconnected = (exception, status) =>
+            {
+                if (IsReading)
+                {
+                    SetReading(false);
+                }
+
+                // A stream the server ended (or the caller left) keeps the server connected.
+                if (exception is not null || status is not null)
+                {
+                    failedBeforeOpening |= !opened;
+                    SetConnected(connected: false);
+                }
+            },
+        };
+
+        try
+        {
+            await foreach (var surveillanceEvent in endpoint
+                .ReadResumingAsync(new ListEventsParameters(CameraId: null, HeartbeatSeconds: null, LastEventId: null), policy, cancellationToken: cancellationToken)
+                .ConfigureAwait(false))
+            {
+                if (surveillanceEvent is not null)
+                {
+                    Raise(surveillanceEvent);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The app stops.
         }
     }
 

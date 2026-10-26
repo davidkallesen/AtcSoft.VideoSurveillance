@@ -80,20 +80,16 @@ public sealed class SurveillanceEventServiceTests
                     Content = new StringContent("""{"status":503,"detail":"Starting."}""", System.Text.Encoding.UTF8, "application/problem+json"),
                 }
                 : Stream(ConnectionEvent(1)));
-        var waits = new List<TimeSpan>();
+        var time = new ImmediateTimeProvider();
         using var sut = CreateSut(server);
-        sut.Delay = (wait, _) =>
-        {
-            waits.Add(wait);
-            return Task.CompletedTask;
-        };
+        sut.Time = time;
         using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         sut.OnConnectionStateChanged += _ => done.Cancel();
 
         await sut.RunAsync(done.Token);
 
         calls.Should().Be(2);
-        waits.Should().ContainSingle().Which.Should().BePositive();
+        time.Waits.Should().ContainSingle().Which.Should().BePositive();
     }
 
     [Fact]
@@ -227,7 +223,7 @@ public sealed class SurveillanceEventServiceTests
             new SurveillanceEventServiceOptions(),
             session)
         {
-            Delay = (_, _) => Task.CompletedTask,
+            Time = new ImmediateTimeProvider(),
         };
         using var done = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         sut.OnConnectionStateChanged += _ => done.Cancel();
@@ -248,7 +244,7 @@ public sealed class SurveillanceEventServiceTests
             Microsoft.Extensions.Logging.Abstractions.NullLogger<SurveillanceEventService>.Instance,
             new SurveillanceEventServiceOptions())
         {
-            Delay = (_, _) => Task.CompletedTask,
+            Time = new ImmediateTimeProvider(),
         };
 
     private static HttpResponseMessage Stream(
@@ -288,5 +284,41 @@ public sealed class SurveillanceEventServiceTests
             (part.Length > 0 ? "," + part : string.Empty) + "}";
 
         return $"id: {id}\ndata: {json}\n\n";
+    }
+
+    // Ends every wait at once and remembers how long each was.
+    private sealed class ImmediateTimeProvider : TimeProvider
+    {
+        public List<TimeSpan> Waits { get; } = [];
+
+        public override ITimer CreateTimer(
+            TimerCallback callback,
+            object? state,
+            TimeSpan dueTime,
+            TimeSpan period)
+        {
+            lock (Waits)
+            {
+                Waits.Add(dueTime);
+            }
+
+            ThreadPool.QueueUserWorkItem(_ => callback(state));
+            return new NoTimer();
+        }
+
+        private sealed class NoTimer : ITimer
+        {
+            public bool Change(
+                TimeSpan dueTime,
+                TimeSpan period)
+                => true;
+
+            public void Dispose()
+            {
+            }
+
+            public ValueTask DisposeAsync()
+                => ValueTask.CompletedTask;
+        }
     }
 }
