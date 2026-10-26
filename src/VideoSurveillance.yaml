@@ -34,6 +34,8 @@ paths:
         Only while the server has no user. The setup code is in the file setup-code.txt in the server's data folder,
         so only someone who can read the server's disk can create the first admin.
       operationId: completeSetup
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       security: []
       x-retry-enabled: false
       # Guessing passwords or the setup code: ten tries a minute from one address.
@@ -85,6 +87,8 @@ paths:
     post:
       summary: Sign in
       operationId: createSession
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       security: []
       x-retry-enabled: false
       # Guessing passwords or the setup code: ten tries a minute from one address.
@@ -131,6 +135,8 @@ paths:
       summary: Renew a session
       description: Gives a new access token and a new refresh token for a refresh token, which can then not be used again.
       operationId: refreshSession
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       security: []
       x-retry-enabled: false
       # A refresh token cannot be guessed, so not the sign-in limit: the web client renews its
@@ -179,6 +185,8 @@ paths:
       summary: Sign out
       description: Ends the session the refresh token belongs to. One that is already gone is no error.
       operationId: endSession
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       security: []
       x-retry-enabled: false
       tags:
@@ -918,6 +926,8 @@ paths:
       summary: Renew a stream lease
       description: A viewer still watching renews its lease; a lease the server does not have (it ended, or the server restarted) is not found, and the viewer starts the stream again.
       operationId: renewStreamLease
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       # A PUT named renew: it changes nothing in the lease but how long it lasts.
       x-atc-suppress: ATC_API_OPR005
       x-retry-enabled: false
@@ -949,6 +959,8 @@ paths:
       summary: Give a stream lease back
       description: The viewer stopped watching. A lease that is already gone is given back all the same.
       operationId: deleteStreamLease
+      # Not a change for the audit log: sign-in writes its own entries, a lease renewal is no change.
+      x-audit: false
       x-retry-enabled: false
       tags:
         - cameras

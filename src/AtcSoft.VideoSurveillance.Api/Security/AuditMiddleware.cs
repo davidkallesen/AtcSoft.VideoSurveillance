@@ -2,25 +2,13 @@ namespace AtcSoft.VideoSurveillance.Api.Security;
 
 /// <summary>
 /// Writes every change a caller made into the <see cref="IAuditLog"/>: a request
-/// that is not a read, to one of the API's operations, that succeeded. The
-/// sign-in operations write their own entries (with the name that was given),
-/// and watching a stream is no change.
+/// that is not a read, to one of the API's operations, that succeeded. An operation
+/// the specification marks <c>x-audit: false</c> is left out.
 /// </summary>
 public sealed class AuditMiddleware(
     RequestDelegate next,
     IAuditLog audit)
 {
-    // Endpoint names, as the generated endpoints name them (the operationId in Pascal case).
-    private static readonly HashSet<string> NotRecorded = new(StringComparer.Ordinal)
-    {
-        "CompleteSetup",
-        "CreateSession",
-        "RefreshSession",
-        "EndSession",
-        "RenewStreamLease",
-        "DeleteStreamLease",
-    };
-
     public async Task InvokeAsync(HttpContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -31,8 +19,9 @@ public sealed class AuditMiddleware(
             HttpMethods.IsHead(context.Request.Method) ||
             HttpMethods.IsOptions(context.Request.Method) ||
             context.Response.StatusCode >= StatusCodes.Status400BadRequest ||
-            context.GetEndpoint()?.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName is not { Length: > 0 } name ||
-            NotRecorded.Contains(name))
+            context.GetEndpoint() is not { } endpoint ||
+            endpoint.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName is not { Length: > 0 } name ||
+            global::VideoSurveillance.Generated.ApiOperationExtension.Find(endpoint, "x-audit") == "false")
         {
             return;
         }
