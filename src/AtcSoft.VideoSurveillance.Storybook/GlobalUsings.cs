@@ -6,6 +6,7 @@ global using System.Text;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 
+global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoEngine.Capture;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;

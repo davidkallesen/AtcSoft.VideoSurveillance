@@ -28,7 +28,7 @@ public static class StorybookRunner
         options ??= new StorybookRunOptions();
         var renderer = new SceneRenderer(scene);
         var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
-        return Score(scene, detector, DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight), analysisWidth, analysisHeight);
+        return Score(scene, detector, DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight), analysisWidth, analysisHeight, options.KeepPictures);
     }
 
     /// <summary>
@@ -64,7 +64,43 @@ public static class StorybookRunner
                 var frame = truth[Math.Clamp((int)Math.Round(grey.Position.TotalSeconds * scene.Video.Fps), 0, truth.Count - 1)];
                 return new AnalysisPicture(frame.Time, grey.Pixels, frame.Truth, frame.IgnoreAll);
             });
-        return Score(scene, detector, pictures, analysisWidth, analysisHeight);
+        return Score(scene, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
+    }
+
+    /// <summary>
+    /// Runs a recording without a storybook, as <i>Analyse recording</i> reads it: its grey
+    /// pictures at the analysis size of its shown picture (turned as it is displayed). There is
+    /// no truth, so every box counts as false; the run is for looking at the boxes. Needs the
+    /// engine started.
+    /// </summary>
+    /// <param name="videoPath">The recording.</param>
+    /// <param name="detector">A fresh detector.</param>
+    /// <param name="options">How the recording is fed to the detector.</param>
+    /// <param name="cancellationToken">Stops the reading; the run then holds the pictures read so far.</param>
+    /// <returns>The frames, and a score without truth.</returns>
+    public static StorybookRun RunRecording(
+        string videoPath,
+        IMotionDetector detector,
+        StorybookRunOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(videoPath);
+        ArgumentNullException.ThrowIfNull(detector);
+
+        options ??= new StorybookRunOptions();
+        var (displayWidth, displayHeight) = MediaProbe.GetDisplaySize(videoPath);
+        var scene = new StorybookScene
+        {
+            Name = Path.GetFileName(videoPath),
+            Video = new StorybookVideo { Width = displayWidth, Height = displayHeight },
+        };
+
+        var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
+        using var reader = GreyFrameFileReader.Open(videoPath, analysisWidth, analysisHeight, (VideoRotation)MediaProbe.GetRotation(videoPath));
+        var pictures = reader
+            .ReadFrames(options.AnalysesPerSecond, cancellationToken)
+            .Select(grey => new AnalysisPicture(grey.Position.TotalSeconds, grey.Pixels, [], IgnoreAll: false));
+        return Score(scene, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
     }
 
     /// <summary>
@@ -143,7 +179,8 @@ public static class StorybookRunner
         IMotionDetector detector,
         IEnumerable<AnalysisPicture> pictures,
         int analysisWidth,
-        int analysisHeight)
+        int analysisHeight,
+        bool keepPictures)
     {
         var frames = new List<ScoredFrame>();
         IReadOnlyList<BoundingBox> shown = [];
@@ -164,10 +201,16 @@ public static class StorybookRunner
                 .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
                 .ToList();
 
-            frames.Add(new ScoredFrame(picture.Time, picture.Truth, picture.IgnoreAll, detected));
+            frames.Add(new ScoredFrame(picture.Time, picture.Truth, picture.IgnoreAll, detected, keepPictures ? picture.Pixels : null));
         }
 
-        return new StorybookRun(StorybookScorer.Score(frames, scene.Expect), frames);
+        return new StorybookRun(StorybookScorer.Score(frames, scene.Expect), frames)
+        {
+            AnalysisWidth = analysisWidth,
+            AnalysisHeight = analysisHeight,
+            VideoWidth = scene.Video.Width,
+            VideoHeight = scene.Video.Height,
+        };
     }
 
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "A picture is handed on as it is.")]

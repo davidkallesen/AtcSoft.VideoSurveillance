@@ -46,4 +46,37 @@ public sealed class StorybookEncoderTests : IDisposable
         positions.Select((p, i) => Math.Abs(p - truth[i].Time)).Should().OnlyContain(d => d < 0.002, "each picture at its frame's time");
         TruthFile.Read(TruthFile.PathFor(video)).Should().BeEquivalentTo(truth, o => o.WithStrictOrdering());
     }
+
+    [Fact]
+    public void A_Recording_Is_Run_Without_A_Truth_At_The_Size_Of_Its_Picture()
+    {
+        var tool = EncodedScenes.RequireTool();
+        var scene = StorybookReader.Read(Scene);
+        Directory.CreateDirectory(directory);
+        var video = Path.Combine(directory, "recording.mkv");
+        StorybookEncoder.Encode(scene, tool, video, TestContext.Current.CancellationToken);
+
+        // The sample app keeps the pictures to show them; the tests do not.
+        var run = StorybookRunner.RunRecording(
+            video,
+            new BuiltInMotionDetector(new MotionDetectionSettings()),
+            new StorybookRunOptions(AnalysisWidth: 80, AnalysesPerSecond: 5, KeepPictures: true),
+            TestContext.Current.CancellationToken);
+
+        (run.VideoWidth, run.VideoHeight).Should().Be((160, 120));
+        (run.AnalysisWidth, run.AnalysisHeight).Should().Be((80, 60), "the longer side scaled to 80, the other following the picture");
+        run.Frames.Should().HaveCount(10, "five pictures a second for two seconds");
+        run.Frames.Should().OnlyContain(f => f.Truth.Count == 0 && f.Pixels != null && f.Pixels.Length == 80 * 60);
+    }
+
+    [Fact]
+    public void A_Run_Keeps_No_Pictures_Unless_Asked()
+    {
+        var scene = StorybookReader.Read(Scene);
+
+        var run = StorybookRunner.Run(scene, new BuiltInMotionDetector(new MotionDetectionSettings()), new StorybookRunOptions(AnalysesPerSecond: 5));
+
+        run.Frames.Should().NotBeEmpty().And.OnlyContain(f => f.Pixels == null);
+        (run.VideoWidth, run.VideoHeight).Should().Be((160, 120));
+    }
 }
