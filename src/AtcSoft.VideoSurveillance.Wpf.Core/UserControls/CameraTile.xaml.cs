@@ -2840,7 +2840,7 @@ public partial class CameraTile : IDisposable
         var motionOverlay = GetMotionBoundingBoxOverlay();
         if (motionOverlay is null)
         {
-            Debug.WriteLine("[MotionDetection] UpdateMotionBoundingBoxes - overlay not found!");
+            LogMotionOverlayNotFound(Camera?.Display.DisplayName ?? "<no-camera>");
             return;
         }
 

@@ -9,6 +9,7 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 {
     private readonly IApplicationSettingsService settingsService;
     private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
+    private readonly ILogger logger;
 
     // Original values for restoration on cancel
     private string originalThemeBase = "Dark";
@@ -17,10 +18,12 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
 
     public SettingsDialogViewModel(
         IApplicationSettingsService settingsService,
-        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null)
+        IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null,
+        ILogger<SettingsDialogViewModel>? logger = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
+        this.logger = logger ?? (ILogger)NullLogger.Instance;
         LoadSettings();
     }
 
@@ -447,13 +450,16 @@ public partial class SettingsDialogViewModel : ViewModelDialogBase
         {
             // The settings are saved; files that could not be moved stay
             // readable where they are and are picked up at the next start.
-            System.Diagnostics.Debug.WriteLine($"Moving recordings to the new folder layout failed: {ex.Message}");
+            LogRecordingLayoutMoveFailed(ex);
         }
         finally
         {
             IsApplyingRecordingLayout = false;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Moving recordings to the new folder layout failed; the files left behind are moved at the next start")]
+    private partial void LogRecordingLayoutMoveFailed(Exception ex);
 
     [RelayCommand]
     private void Cancel()

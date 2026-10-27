@@ -35,6 +35,9 @@ public partial class CameraTile
     [LoggerMessage(Level = LogLevel.Information, Message = "Reconnecting '{CameraName}' on tile reload (state was {PreviousState}) — recovering from a transient WPF unload")]
     private partial void LogReconnectingAfterReload(string cameraName, string previousState);
 
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Motion boxes for camera '{CameraName}' not drawn: the tile has no motion overlay yet")]
+    private partial void LogMotionOverlayNotFound(string cameraName);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Snapshot capture or save failed")]
     private partial void LogSnapshotFailed(Exception ex);
 }

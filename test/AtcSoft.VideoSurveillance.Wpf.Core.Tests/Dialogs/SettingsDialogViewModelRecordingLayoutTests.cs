@@ -123,4 +123,19 @@ public sealed class SettingsDialogViewModelRecordingLayoutTests : IDisposable
         sut.IsApplyingRecordingLayout.Should().BeFalse();
         closed.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task A_Failed_Move_Is_Written_To_The_Log()
+    {
+        var synchronizer = Substitute.For<IRecordingLayoutSynchronizer>();
+        synchronizer.SynchronizeAsync(Arg.Any<CancellationToken>())
+            .Returns<Task<RecordingLayoutReorganizeResult>>(_ => throw new System.IO.IOException("disk gone"));
+        var logger = new CollectingLogger<SettingsDialogViewModel>();
+        var sut = new SettingsDialogViewModel(settingsService, synchronizer, logger);
+
+        sut.UseDailySubfolders = !settingsService.Recording.UseDailySubfolders;
+        await sut.SaveAsync();
+
+        logger.Entries.Should().ContainSingle(e => e.Level == LogLevel.Warning && e.Message.Contains("new folder layout failed", StringComparison.Ordinal));
+    }
 }

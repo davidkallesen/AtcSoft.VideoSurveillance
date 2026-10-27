@@ -15,6 +15,7 @@ public class DialogService : IDialogService
     private readonly ICameraStorageService? cameraStorage;
     private readonly IRecordingLayoutSynchronizer? recordingLayoutSynchronizer;
     private readonly IRecordingPreviews? recordingPreviews;
+    private readonly ILoggerFactory loggerFactory;
     private RecordingsBrowserState? lastRecordingsBrowserState;
 
     /// <summary>
@@ -44,7 +45,8 @@ public class DialogService : IDialogService
         AtcSoft.VideoSurveillance.Services.ICameraConnectionTypeDetector? connectionTypeDetector = null,
         IRecordingLayoutSynchronizer? recordingLayoutSynchronizer = null,
         ICameraStorageService? cameraStorage = null,
-        IRecordingPreviews? recordingPreviews = null)
+        IRecordingPreviews? recordingPreviews = null,
+        ILoggerFactory? loggerFactory = null)
     {
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         this.motionDetectionService = motionDetectionService ?? throw new ArgumentNullException(nameof(motionDetectionService));
@@ -54,6 +56,7 @@ public class DialogService : IDialogService
         this.recordingLayoutSynchronizer = recordingLayoutSynchronizer;
         this.cameraStorage = cameraStorage;
         this.recordingPreviews = recordingPreviews;
+        this.loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
     }
 
     /// <inheritdoc />
@@ -303,7 +306,7 @@ public class DialogService : IDialogService
             CultureManager.UiCulture = new CultureInfo(lcid);
         }
 
-        var viewModel = new SettingsDialogViewModel(settingsService, recordingLayoutSynchronizer);
+        var viewModel = new SettingsDialogViewModel(settingsService, recordingLayoutSynchronizer, loggerFactory.CreateLogger<SettingsDialogViewModel>());
         var dialog = new SettingsDialog(viewModel)
         {
             Owner = Application.Current.MainWindow,
