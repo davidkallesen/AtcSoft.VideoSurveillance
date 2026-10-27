@@ -19,7 +19,8 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host (REST, `GET /events`, HLS streams)
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
 - `AtcSoft.VideoSurveillance.Blazor.App` - Blazor WebAssembly client for the API server (MudBlazor). Its logic lives in plain classes under `Logic/`, tested in `AtcSoft.VideoSurveillance.Blazor.App.Tests`
-- `AtcSoft.VideoSurveillance.Storybook` - Scenes with known content for measuring motion detection: the storybook model, a deterministic renderer with its truth, the scorer (net10.0, not published; see `plans/roadmap-boundingbox.md`)
+- `AtcSoft.VideoSurveillance.Storybook` - Scenes with known content for measuring motion detection: the storybook model, a deterministic renderer with its truth, the scorer (net10.0, not published; see `docs/motion-detection-storybook.md`)
+- `sample/BoundingBoxWpfApp` - Developer tool, not published: a storybook or a recording through the real detector and box overlay, picture by picture, with the truth and the score; walked by `BoundingBoxSampleSmokeTests`
 - `test/*` - xUnit v3 test projects, one per source project that has tests (Core, VideoEngine, VideoEngine.Windows, Api, Wpf.Core, Wpf, CameraWall.Wpf, Blazor.App, Storybook), plus `AtcSoft.VideoSurveillance.E2E.Tests` (smoke tests of the running apps, see below). The storybook tests keep every detector score in `baseline.json` and fail when one gets worse; `ATCSOFT_BBOX_UPDATE_BASELINE=1` writes new scores after an improvement. A scene with `video.bitrateKbps` is encoded by the FFmpeg tool and scored as the apps read a recording; it skips without FFmpeg
 
 ## NuGet Packages

@@ -209,7 +209,30 @@ S11 is S5 at 400 kbps, where the noise is smeared into blotches. The shipped det
 | S13 | `s13-coming-closer` | Someone walking up to the camera stays one track |
 | S14 | `s14-door-camera` | A door camera (lighting changes not ignored): a person close to the lens is found throughout, no ghost after |
 
-S7 (rotation) is not a file: the fast path already sees the shown picture, so it is checked through the player in the sample app (phase 3 of the plan).
+S7 (rotation) is not a file: the fast path already sees the shown picture, so it is to be checked through the player, in the sample app's live clock (still open).
+
+---
+
+## 🖥️ The Sample App
+
+`sample/BoundingBoxWpfApp` shows a run picture by picture: the grey picture the detector was given, its boxes in red (smoothed, as the apps show them), the objects to box in green and the distractors in orange, with the score beside it as a line and as JSON.
+
+```bash
+dotnet run --project sample/BoundingBoxWpfApp -- --storybook test/AtcSoft.VideoSurveillance.Storybook.Tests/Scenes/s05-car-human-cat.storybook.json --rate 15
+dotnet run --project sample/BoundingBoxWpfApp -- --recording path/to/recording.mp4
+```
+
+Or open a file from the window. *Previous*, *Next*, *Play* and the slider move through the pictures; the rate (4 or 15 a second) runs the file again.
+
+| Opened | Way | Needs |
+|---|---|---|
+| A storybook without a bitrate | The fast path: its score is the one in `baseline.json` | Nothing |
+| A storybook with a bitrate | Encoded once (kept in `{data}\videos`, named by the storybook's hash), then read back | FFmpeg; the set-up dialog offers it |
+| A recording | As *Analyse recording* reads it, with the default settings; no truth, so the score only counts boxes | FFmpeg |
+
+The clock is deterministic: every picture is analysed before it is shown, so the same file always shows the same boxes. It does not play the video through the engine's player, which plays streams and cannot pause or seek a file. Its data and logs are in `%ProgramData%\AtcSoft\BoundingBoxSample` (or under `ATCSOFT_DATA_PATH`).
+
+Each box the overlay draws is shown to UI Automation, with the automation id `box-{trackId}` (`box-at-{place}` without a track) and the detector's box in video pixels as its help text. `BoundingBoxSampleSmokeTests` reads them; see [End-to-end smoke tests](e2e-smoke-tests.md).
 
 ---
 

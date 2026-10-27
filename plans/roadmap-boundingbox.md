@@ -347,7 +347,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 0 | Quick fixes in today's pipeline | S | ✅ |
 | 1 | Storybook, generator, truth and scorer; today's baseline | L | ✅ fast path, scorer, the encoder pipe with `*.truth.jsonl`, fourteen scenes (S11 through the encoder) |
 | 2 | Grey frames with their time from the engine | M | ✅ the offline file reader and the live grey pictures; both apps analyse without PNG |
-| 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | ⬜ |
+| 3 | `sample/BoundingBoxWpfApp` and its FlaUI test | M | 🟨 deterministic clock for storybooks and recordings, the truth on screen, the score, boxes in UI Automation, the FlaUI walk; live clock, debug layers and tuning panel open |
 | 4 | Detector v2 in Core (background model, morphology, merge) | L | 🟨 detector built and used by both apps, its settings in plain words in all three apps, analysis in the picture's shape, the steps on vectors (5× faster), every scene, S11 through the encoder included (snow known bad); real cameras open |
 | 5 | Tracker: persistence, travel, ids; smoothing by id | M | ✅ tracker, ids on the wire, smoothing by id in all three clients |
 | 6 | Masks and zones | L | ✅ done 2026-10-20: ignore and watch zones, drawn on a snapshot in all three apps; an event in its watch zone's colour on the timeline |
@@ -407,7 +407,12 @@ It shows both complaints: a tree gives two to four boxes in every frame, and a s
 
 **Test:** engine tests against the live test stream (pts increase, size and rotation right); the CPU cost against the PNG path in the test output.
 
-### Phase 3 — Sample app and FlaUI test ⬜ (M)
+### Phase 3 — Sample app and FlaUI test 🟨 (M)
+
+**Done 2026-10-27:** `sample/BoundingBoxWpfApp` (in the solution under `sample`, not packable, not translated) opens a storybook or a recording (from the window or `--storybook` / `--recording` with `--rate`), runs it through `BuiltInMotionDetector` and shows each analysed picture with three `MotionBoundingBoxOverlay`s: the detector's boxes in red (smoothed, as the apps show them), the objects to box in green, the distractors in orange. Step, play and a slider; 4 or 15 pictures a second; the score as a line and as JSON. A storybook without a bitrate runs on the fast path, so its score is the baseline's (S5 at 4/s: recall 1.000, no false box, 3 tracks); one with a bitrate is encoded once into `{data}\videos`, named by the storybook's hash; a recording runs as *Analyse recording* reads it (`StorybookRunner.RunRecording`), without a truth. `StorybookRunOptions.KeepPictures` keeps each grey picture for the window; the tests leave it off. The overlay (Wpf.Core) now shows each box to UI Automation: automation id `box-{trackId}` (`box-at-{place}` without a track) and, as help text, the detector's box in video pixels before smoothing and fitting, so the apps' walks can read boxes too. `BoundingBoxSampleSmokeTests` opens S5, compares the score panel with a run made in the test and with `baseline.json`, and at two pictures compares the automation boxes (detector and truth) with that run; a second walk opens a recording made from S3 and checks its boxes, without a truth. A picture of the window is saved in the run folder.
+
+**Changed from the design:** the engine's player plays a stream, not a file: it has no pause or seek, and a file runs to its end at once. So the deterministic clock does not use `VideoHost`: it shows the grey pictures the detector was given (what the detector sees), read with the same reader as the tests. **Still open:** the live clock (`VideoHost` fed by a paced stream, `ffmpeg -re` over UDP as the test cameras are, with the boxes in its overlay window; this is also where S7, rotation through the player, and the question whether FlaUI sees the overlay window get answered); the debug layers (the foreground mask and rejected blobs need a seam of their own, `IMotionDetector` does not give them); the tuning panel; CPU per picture in the score panel.
+
 
 - `sample/BoundingBoxWpfApp` as described above, added to `AtcSoft.VideoSurveillance.slnx` under `sample`.
 - The overlay exposes each box to UI Automation (useful for the apps' E2E walks too).

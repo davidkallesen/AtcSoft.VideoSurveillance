@@ -40,6 +40,12 @@ Leave the mouse alone while the CameraWall walk runs: a few steps are real click
   `ATCSOFT_FFMPEG_SEARCH=explicit`, so the installed FFmpeg is not found. CameraWall takes the real
   FFmpeg folder typed into the dialog and starts; the client exits from the dialog. The install
   itself (a 100 MB download) is covered by the unit tests only.
+- **The bounding box sample** (`BoundingBoxSampleSmokeTests`, `sample/BoundingBoxWpfApp`), started with
+  `--storybook` or `--recording` in a scratch folder of its own. It opens S5 and checks the score panel
+  against a run made in the test and against `baseline.json`, then at two pictures compares the boxes
+  the overlays show to UI Automation (`box-{trackId}`, the box in video pixels as help text) with that
+  run, the detector's and the truth's. A second walk opens a recording made from S3 with the FFmpeg
+  tool (skipped without it). A picture of the window at each checked picture is saved in its folder.
 - **The web client**, served by its development server on the port the test server allows as a CORS
   origin. The browser is pointed at the test server by answering the app's `appsettings.json` request.
 
