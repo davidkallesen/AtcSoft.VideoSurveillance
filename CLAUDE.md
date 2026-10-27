@@ -14,7 +14,7 @@ A multi-assembly video surveillance platform with a WPF desktop app and a headle
 - `AtcSoft.CameraWall.Wpf.App` - Thin shell WPF application using the library (standalone, connects directly to cameras)
 - `AtcSoft.VideoSurveillance.Wpf` - WPF library for the VideoSurveillance API client (GatewayService, SurveillanceEventService, OpenAPI-generated client)
 - `AtcSoft.VideoSurveillance.Wpf.App` - WPF management application for the API server (Fluent.Ribbon, Serilog, splash screen)
-- `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via atc-rest-api-source-generator v3; until v3 is on nuget.org it comes from a local package, see `nuget.config` and `plans/roadmap-rest-api-sg.md`)
+- `AtcSoft.VideoSurveillance.Api.Contracts` - Generated API models, endpoints, handler interfaces (OpenAPI-first via Atc.Rest.Api.SourceGenerator 3.0.1 from nuget.org)
 - `AtcSoft.VideoSurveillance.Api.Domain` - Handler implementations calling Core services
 - `AtcSoft.VideoSurveillance.Api` - ASP.NET Core host (REST, `GET /events`, HLS streams)
 - `AtcSoft.VideoSurveillance.Aspire` - Aspire AppHost for orchestrated startup and developer dashboard
