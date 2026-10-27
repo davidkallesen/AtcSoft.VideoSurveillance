@@ -19,6 +19,13 @@ public sealed class StorybookVideo
     public double Noise { get; set; } = 2;
 
     /// <summary>
+    /// Gets or sets the bitrate the scene is encoded at, in kilobits a second, as a camera would
+    /// send it; <see langword="null"/> for a scene that is only fed to the detector as drawn. A
+    /// scene with a bitrate is scored through the encoder and the decoder, with their artefacts.
+    /// </summary>
+    public int? BitrateKbps { get; set; }
+
+    /// <summary>
     /// Gets the number of frames.
     /// </summary>
     public int FrameCount

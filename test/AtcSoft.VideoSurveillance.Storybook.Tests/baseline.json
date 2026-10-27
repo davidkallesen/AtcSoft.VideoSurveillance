@@ -239,6 +239,30 @@
     "falseBoxesPerFrame": 2.7959,
     "meanLatencySeconds": 0
   },
+  "s11-low-bitrate@15": {
+    "recall": 0.8333,
+    "precision": 0.362,
+    "falseBoxesPerFrame": 2.35,
+    "meanLatencySeconds": 0
+  },
+  "s11-low-bitrate@15/builtIn": {
+    "recall": 0.9943,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.333
+  },
+  "s11-low-bitrate@4": {
+    "recall": 0.9265,
+    "precision": 0.3057,
+    "falseBoxesPerFrame": 3.3125,
+    "meanLatencySeconds": 0
+  },
+  "s11-low-bitrate@4/builtIn": {
+    "recall": 1,
+    "precision": 1,
+    "falseBoxesPerFrame": 0,
+    "meanLatencySeconds": 0.267
+  },
   "s12-camera-clock@15": {
     "recall": 1,
     "precision": 1,

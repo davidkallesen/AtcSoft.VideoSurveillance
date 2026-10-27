@@ -1,9 +1,12 @@
+global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.Runtime.InteropServices;
+global using System.Text;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 
+global using AtcSoft.VideoEngine.Capture;
 global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 global using AtcSoft.VideoSurveillance.Models;

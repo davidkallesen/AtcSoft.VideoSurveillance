@@ -1,16 +1,17 @@
 namespace AtcSoft.VideoSurveillance.Storybook.Scoring;
 
 /// <summary>
-/// Runs a scene through a detector on the fast path: the frames go straight to the detector,
-/// without encoding. The boxes scored are the boxes the apps show: a detector's boxes stay on
-/// screen until it reports new ones or motion ends, as in the tiles.
+/// Runs a scene through a detector and scores it. On the fast path the frames go straight to the
+/// detector, without encoding; on the encoded path they are read back from the scene's video, the
+/// way the apps analyse a recording. The boxes scored are the boxes the apps show: a detector's
+/// boxes stay on screen until it reports new ones or motion ends, as in the tiles.
 /// </summary>
 public static class StorybookRunner
 {
     private static readonly DateTimeOffset Epoch = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     /// <summary>
-    /// Runs a scene.
+    /// Runs a scene on the fast path.
     /// </summary>
     /// <param name="scene">The storybook.</param>
     /// <param name="detector">A fresh detector.</param>
@@ -26,38 +27,44 @@ public static class StorybookRunner
 
         options ??= new StorybookRunOptions();
         var renderer = new SceneRenderer(scene);
-        var frames = new List<ScoredFrame>();
-        IReadOnlyList<BoundingBox> shown = [];
-        var step = 1 / options.AnalysesPerSecond;
-        var (analysisWidth, analysisHeight) = options.AnalysisHeight is { } squeezed
-            ? (options.AnalysisWidth, squeezed)
-            : MotionAnalysisSize.For(options.AnalysisWidth, scene.Video.Width, scene.Video.Height);
+        var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
+        return Score(scene, detector, DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight), analysisWidth, analysisHeight);
+    }
 
-        for (var k = 0; k * step <= scene.Video.DurationSeconds; k++)
-        {
-            var time = k * step;
-            var frameIndex = Math.Min((int)Math.Round(time * scene.Video.Fps), renderer.FrameCount - 1);
-            var frame = renderer.Render(frameIndex);
-            var analysis = Resize(frame.Luma, frame.Width, frame.Height, analysisWidth, analysisHeight);
-            var result = detector.Process(new MotionFrame(analysis, analysisWidth, analysisHeight, Epoch.AddSeconds(frame.Time)));
+    /// <summary>
+    /// Runs a scene on the encoded path: its video (see <see cref="Encoding.StorybookEncoder"/>) is
+    /// read back as grey pictures at the analysis size, as the apps read a recording, and each
+    /// picture is scored with the truth of the frame it came from. Needs the engine started.
+    /// </summary>
+    /// <param name="scene">The storybook.</param>
+    /// <param name="detector">A fresh detector.</param>
+    /// <param name="videoPath">The scene's video.</param>
+    /// <param name="truth">The truth of every frame of it.</param>
+    /// <param name="options">How the scene is fed to the detector.</param>
+    /// <returns>The score and the frames.</returns>
+    public static StorybookRun RunEncoded(
+        StorybookScene scene,
+        IMotionDetector detector,
+        string videoPath,
+        IReadOnlyList<FrameTruth> truth,
+        StorybookRunOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentException.ThrowIfNullOrWhiteSpace(videoPath);
+        ArgumentNullException.ThrowIfNull(truth);
 
-            shown = result.Change switch
+        options ??= new StorybookRunOptions();
+        var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
+        using var reader = GreyFrameFileReader.Open(videoPath, analysisWidth, analysisHeight);
+        var pictures = reader
+            .ReadFrames(options.AnalysesPerSecond)
+            .Select(grey =>
             {
-                MotionHoldChange.Started or MotionHoldChange.Continues => result.Boxes,
-                MotionHoldChange.Ended => [],
-                _ => result.IsActive ? shown : [],
-            };
-
-            var scaleX = frame.Width / (double)analysisWidth;
-            var scaleY = frame.Height / (double)analysisHeight;
-            var detected = shown
-                .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
-                .ToList();
-
-            frames.Add(new ScoredFrame(frame.Time, frame.Truth, frame.IgnoreAll, detected));
-        }
-
-        return new StorybookRun(StorybookScorer.Score(frames, scene.Expect), frames);
+                var frame = truth[Math.Clamp((int)Math.Round(grey.Position.TotalSeconds * scene.Video.Fps), 0, truth.Count - 1)];
+                return new AnalysisPicture(frame.Time, grey.Pixels, frame.Truth, frame.IgnoreAll);
+            });
+        return Score(scene, detector, pictures, analysisWidth, analysisHeight);
     }
 
     /// <summary>
@@ -106,4 +113,67 @@ public static class StorybookRunner
 
         return result;
     }
+
+    private static (int Width, int Height) AnalysisSize(
+        StorybookScene scene,
+        StorybookRunOptions options)
+        => options.AnalysisHeight is { } squeezed
+            ? (options.AnalysisWidth, squeezed)
+            : MotionAnalysisSize.For(options.AnalysisWidth, scene.Video.Width, scene.Video.Height);
+
+    private static IEnumerable<AnalysisPicture> DrawnPictures(
+        StorybookScene scene,
+        SceneRenderer renderer,
+        double analysesPerSecond,
+        int analysisWidth,
+        int analysisHeight)
+    {
+        var step = 1 / analysesPerSecond;
+        for (var k = 0; k * step <= scene.Video.DurationSeconds; k++)
+        {
+            var time = k * step;
+            var frameIndex = Math.Min((int)Math.Round(time * scene.Video.Fps), renderer.FrameCount - 1);
+            var frame = renderer.Render(frameIndex);
+            yield return new AnalysisPicture(frame.Time, Resize(frame.Luma, frame.Width, frame.Height, analysisWidth, analysisHeight), frame.Truth, frame.IgnoreAll);
+        }
+    }
+
+    private static StorybookRun Score(
+        StorybookScene scene,
+        IMotionDetector detector,
+        IEnumerable<AnalysisPicture> pictures,
+        int analysisWidth,
+        int analysisHeight)
+    {
+        var frames = new List<ScoredFrame>();
+        IReadOnlyList<BoundingBox> shown = [];
+        var scaleX = scene.Video.Width / (double)analysisWidth;
+        var scaleY = scene.Video.Height / (double)analysisHeight;
+        foreach (var picture in pictures)
+        {
+            var result = detector.Process(new MotionFrame(picture.Pixels, analysisWidth, analysisHeight, Epoch.AddSeconds(picture.Time)));
+
+            shown = result.Change switch
+            {
+                MotionHoldChange.Started or MotionHoldChange.Continues => result.Boxes,
+                MotionHoldChange.Ended => [],
+                _ => result.IsActive ? shown : [],
+            };
+
+            var detected = shown
+                .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
+                .ToList();
+
+            frames.Add(new ScoredFrame(picture.Time, picture.Truth, picture.IgnoreAll, detected));
+        }
+
+        return new StorybookRun(StorybookScorer.Score(frames, scene.Expect), frames);
+    }
+
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "A picture is handed on as it is.")]
+    private sealed record AnalysisPicture(
+        double Time,
+        byte[] Pixels,
+        IReadOnlyList<TruthBox> Truth,
+        bool IgnoreAll);
 }

@@ -45,6 +45,16 @@ public sealed class StorybookReaderTests
     }
 
     [Fact]
+    public void A_Bitrate_Of_Nothing_Is_Named()
+    {
+        const string json = """{ "version": 1, "name": "x", "video": { "bitrateKbps": 0 } }""";
+
+        var read = () => StorybookReader.Read(json);
+
+        read.Should().Throw<StorybookException>().WithMessage("*video.bitrateKbps*");
+    }
+
+    [Fact]
     public void A_Misspelt_Property_Is_Named()
     {
         const string json = """{ "version": 1, "name": "x", "vidoe": { } }""";

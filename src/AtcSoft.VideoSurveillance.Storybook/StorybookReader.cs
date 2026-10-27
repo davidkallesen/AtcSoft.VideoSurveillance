@@ -95,6 +95,11 @@ public static class StorybookReader
             yield return "video.durationSeconds: above 0, at most 3600";
         }
 
+        if (video.BitrateKbps is <= 0 or > 100_000)
+        {
+            yield return "video.bitrateKbps: above 0, at most 100000";
+        }
+
         var ids = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < scene.Objects.Count; i++)
         {

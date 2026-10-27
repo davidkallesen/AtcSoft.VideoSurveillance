@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AtcSoft.VideoSurveillance.Core\AtcSoft.VideoSurveillance.Core.csproj" />
+    <!-- The encoded path reads a scene's video back as the apps read a recording. -->
+    <ProjectReference Include="..\AtcSoft.VideoEngine\AtcSoft.VideoEngine.csproj" />
   </ItemGroup>
 
 </Project>
