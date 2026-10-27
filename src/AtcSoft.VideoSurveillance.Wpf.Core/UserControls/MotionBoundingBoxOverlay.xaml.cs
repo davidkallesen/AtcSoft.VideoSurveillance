@@ -190,6 +190,8 @@ public partial class MotionBoundingBoxOverlay
             rect.Width = Math.Max(1, smoothed[i].Width);
             rect.Height = Math.Max(1, smoothed[i].Height);
             rect.Visibility = Visibility.Visible;
+            System.Windows.Automation.AutomationProperties.SetAutomationId(rect, boundingBoxes[i].TrackId is { } trackId ? $"box-{trackId}" : $"box-at-{i}");
+            System.Windows.Automation.AutomationProperties.SetHelpText(rect, DescribeBox(boundingBoxes[i]));
         }
 
         // Hide unused rectangles
@@ -197,6 +199,32 @@ public partial class MotionBoundingBoxOverlay
         {
             rectanglePool[i].Visibility = Visibility.Collapsed;
         }
+
+        System.Windows.Automation.Peers.UIElementAutomationPeer.FromElement(this)?.InvalidatePeer();
+    }
+
+    /// <summary>
+    /// Gets the rectangles of the boxes on screen, for UI Automation.
+    /// </summary>
+    internal IEnumerable<Rectangle> ShownBoxRectangles()
+        => rectanglePool.Where(r => r.Visibility == Visibility.Visible);
+
+    /// <inheritdoc />
+    protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
+        => new MotionBoundingBoxOverlayAutomationPeer(this);
+
+    /// <summary>
+    /// Describes a box as the detector gave it, before smoothing and fitting to the screen:
+    /// <c>x,y,width,height</c> in video pixels (in analysis pixels without a video size), so a
+    /// UI test can compare it with the detector's output or the truth.
+    /// </summary>
+    private string DescribeBox(BoundingBox box)
+    {
+        var scaleX = VideoWidth > 0 && AnalysisWidth > 0 ? VideoWidth / (double)AnalysisWidth : 1;
+        var scaleY = VideoHeight > 0 && AnalysisHeight > 0 ? VideoHeight / (double)AnalysisHeight : 1;
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"{box.X * scaleX:0.##},{box.Y * scaleY:0.##},{box.Width * scaleX:0.##},{box.Height * scaleY:0.##}");
     }
 
     /// <summary>
@@ -231,6 +259,7 @@ public partial class MotionBoundingBoxOverlay
         }
 
         smoother?.Reset();
+        System.Windows.Automation.Peers.UIElementAutomationPeer.FromElement(this)?.InvalidatePeer();
     }
 
     /// <summary>

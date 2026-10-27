@@ -68,6 +68,53 @@ public sealed class MotionBoundingBoxOverlayTests
         drawn.Should().Be(0);
     }
 
+    [Fact]
+    public void Each_Box_On_Screen_Is_Shown_To_UI_Automation_In_Video_Pixels()
+    {
+        List<(string Id, string Box)> boxes = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            // 100 x 50 analysed from a 1000 x 500 video: ten times the size. Smoothing and the
+            // fitting to the screen do not change what UI Automation is told.
+            var overlay = Arranged(new MotionBoundingBoxOverlay { AnalysisWidth = 100, AnalysisHeight = 50, VideoWidth = 1000, VideoHeight = 500 });
+            overlay.MotionBoxes = [Box(10, trackId: 7), new AtcSoft.VideoSurveillance.Models.BoundingBox { X = 50, Y = 20, Width = 5.5, Height = 4 }];
+
+            boxes = AutomationBoxes(overlay);
+        });
+
+        error.Should().BeNull();
+        boxes.Should().Equal(("box-7", "100,100,100,100"), ("box-at-1", "500,200,55,40"));
+    }
+
+    [Fact]
+    public void Hidden_Boxes_Leave_The_UI_Automation_Tree()
+    {
+        List<(string Id, string Box)> boxes = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var overlay = Arranged(new MotionBoundingBoxOverlay { AnalysisWidth = 100, AnalysisHeight = 50 });
+            overlay.MotionBoxes = [Box(10, trackId: 1), Box(30, trackId: 2)];
+            overlay.MotionBoxes = [Box(12, trackId: 2)];
+
+            boxes = AutomationBoxes(overlay);
+        });
+
+        error.Should().BeNull();
+        boxes.Should().Equal(("box-2", "12,10,10,10"));
+    }
+
+    private static List<(string Id, string Box)> AutomationBoxes(
+        MotionBoundingBoxOverlay overlay)
+    {
+        var peer = System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(overlay);
+        peer.ResetChildrenCache();
+        return (peer.GetChildren() ?? [])
+            .Select(child => (child.GetAutomationId(), child.GetHelpText()))
+            .ToList();
+    }
+
     private static MotionBoundingBoxOverlay Arranged(
         MotionBoundingBoxOverlay overlay)
     {
