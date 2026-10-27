@@ -1,0 +1,325 @@
+namespace BoundingBoxWpfApp;
+
+/// <summary>
+/// The sample's window: a run's pictures one at a time, with the boxes the apps would show,
+/// the truth, and the score. The clock is deterministic: every picture was analysed by its time
+/// before it is shown, so stepping, playing or opening the same file again shows the same boxes.
+/// </summary>
+[SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
+public sealed partial class MainWindowViewModel : ViewModelBase
+{
+    private readonly DispatcherTimer playTimer;
+    private SampleRun? current;
+    private string? openPath;
+    private bool openIsStorybook;
+    private bool settingRate;
+
+    [ObservableProperty]
+    private string title = "Bounding box sample";
+
+    [ObservableProperty]
+    private string status = "Open a storybook or a recording.";
+
+    [ObservableProperty]
+    private WriteableBitmap? picture;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnFrameIndexChanged))]
+    private int frameIndex;
+
+    [ObservableProperty]
+    private int lastFrameIndex;
+
+    [ObservableProperty]
+    private string frameInfo = string.Empty;
+
+    [ObservableProperty]
+    private IReadOnlyList<BoundingBox>? detectedBoxes;
+
+    [ObservableProperty]
+    private IReadOnlyList<BoundingBox>? truthBoxes;
+
+    [ObservableProperty]
+    private IReadOnlyList<BoundingBox>? mustNotBoxes;
+
+    [ObservableProperty]
+    private int videoWidth = 1280;
+
+    [ObservableProperty]
+    private int videoHeight = 720;
+
+    [ObservableProperty]
+    private string scoreSummary = string.Empty;
+
+    [ObservableProperty]
+    private string scoreJson = string.Empty;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnAnalysesPerSecondChanged))]
+    private double analysesPerSecond = StartupOptions.DefaultAnalysesPerSecond;
+
+    [ObservableProperty]
+    private bool isPlaying;
+
+    public MainWindowViewModel()
+    {
+        playTimer = new DispatcherTimer(DispatcherPriority.Normal);
+        playTimer.Tick += OnPlayTick;
+    }
+
+    /// <summary>
+    /// Gets the analysis rates to choose from: the server's and CameraWall's.
+    /// </summary>
+    public IReadOnlyList<double> Rates { get; } = [4, 15];
+
+    /// <summary>
+    /// Opens a storybook and runs it.
+    /// </summary>
+    /// <param name="path">The storybook file.</param>
+    /// <param name="rate">How many pictures a second are analysed.</param>
+    public Task OpenStorybookAsync(
+        string path,
+        double rate)
+    {
+        openPath = path;
+        openIsStorybook = true;
+        SetRateQuietly(rate);
+        return LoadAsync();
+    }
+
+    /// <summary>
+    /// Opens a recording and runs it.
+    /// </summary>
+    /// <param name="path">The recording.</param>
+    /// <param name="rate">How many pictures a second are analysed.</param>
+    public Task OpenRecordingAsync(
+        string path,
+        double rate)
+    {
+        openPath = path;
+        openIsStorybook = false;
+        SetRateQuietly(rate);
+        return LoadAsync();
+    }
+
+    [RelayCommand("OpenStorybook", CanExecute = nameof(CanOpen))]
+    private async Task OpenStorybookFromDialogAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Storybook (*.storybook.json)|*.storybook.json|All files (*.*)|*.*" };
+        if (dialog.ShowDialog() == true)
+        {
+            await OpenStorybookAsync(dialog.FileName, AnalysesPerSecond).ConfigureAwait(true);
+        }
+    }
+
+    [RelayCommand("OpenRecording", CanExecute = nameof(CanOpen))]
+    private async Task OpenRecordingFromDialogAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Video (*.mp4;*.mkv)|*.mp4;*.mkv|All files (*.*)|*.*" };
+        if (dialog.ShowDialog() == true)
+        {
+            await OpenRecordingAsync(dialog.FileName, AnalysesPerSecond).ConfigureAwait(true);
+        }
+    }
+
+    private bool CanOpen()
+        => !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(HasRun))]
+    private void PlayPause()
+    {
+        if (IsPlaying)
+        {
+            Stop();
+            return;
+        }
+
+        if (FrameIndex >= LastFrameIndex)
+        {
+            FrameIndex = 0;
+        }
+
+        playTimer.Interval = TimeSpan.FromSeconds(1 / AnalysesPerSecond);
+        playTimer.Start();
+        IsPlaying = true;
+    }
+
+    [RelayCommand(CanExecute = nameof(HasRun))]
+    private void PreviousFrame()
+    {
+        Stop();
+        FrameIndex = Math.Max(0, FrameIndex - 1);
+    }
+
+    [RelayCommand(CanExecute = nameof(HasRun))]
+    private void NextFrame()
+    {
+        Stop();
+        FrameIndex = Math.Min(LastFrameIndex, FrameIndex + 1);
+    }
+
+    private bool HasRun()
+        => current is not null && !IsBusy;
+
+    private async Task LoadAsync()
+    {
+        if (openPath is not { } path)
+        {
+            return;
+        }
+
+        Stop();
+        IsBusy = true;
+        CommandManager.InvalidateRequerySuggested();
+        Status = "Analysing…";
+        try
+        {
+            var rate = AnalysesPerSecond;
+            SampleRun run;
+            if (openIsStorybook)
+            {
+                var scene = StorybookReader.ReadFile(path);
+                if (SampleRunner.NeedsEngine(scene) && !EnsureEngine())
+                {
+                    Status = "FFmpeg is needed for a storybook with a bitrate.";
+                    return;
+                }
+
+                run = await Task.Run(() => SampleRunner.RunStorybook(path, scene, rate, Path.Combine(App.DataFolder, "videos"))).ConfigureAwait(true);
+            }
+            else
+            {
+                if (!EnsureEngine())
+                {
+                    Status = "FFmpeg is needed to read a recording.";
+                    return;
+                }
+
+                run = await Task.Run(() => SampleRunner.RunRecording(path, rate)).ConfigureAwait(true);
+            }
+
+            Show(run);
+            Log.Information("Opened {Name} ({Way}, {Rate}/s): {Score}", run.Name, run.Way, rate, run.Run.Score.Summary);
+            Status = "Ready";
+        }
+        catch (Exception ex) when (ex is StorybookException or IOException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
+        {
+            Log.Error(ex, "Opening {Path} failed", path);
+            Status = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    private static bool EnsureEngine()
+    {
+        if (VideoEngineBootstrap.IsInitialized)
+        {
+            return true;
+        }
+
+        if (FFmpegSetup.EnsureReady() is not { } folder)
+        {
+            return false;
+        }
+
+        VideoEngineBootstrap.Initialize(new VideoEngineConfig { FFmpegPath = folder });
+        return true;
+    }
+
+    private void Show(SampleRun run)
+    {
+        current = run;
+        Title = $"Bounding box sample - {run.Name}";
+        VideoWidth = run.Run.VideoWidth;
+        VideoHeight = run.Run.VideoHeight;
+        Picture = new WriteableBitmap(run.Run.AnalysisWidth, run.Run.AnalysisHeight, 96, 96, PixelFormats.Gray8, palette: null);
+        ScoreJson = run.ScoreJson;
+        ScoreSummary = run.HasTruth ? run.Run.Score.Summary : $"{run.Run.Frames.Count(f => f.Detected.Count > 0)} of {run.Run.Frames.Count} pictures with boxes (no truth)";
+        LastFrameIndex = Math.Max(0, run.Run.Frames.Count - 1);
+
+        // Always draw, also when the index does not change.
+        if (FrameIndex == 0)
+        {
+            ShowFrame();
+        }
+        else
+        {
+            FrameIndex = 0;
+        }
+
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void ShowFrame()
+    {
+        if (current is null || current.Run.Frames.Count == 0 || Picture is not { } bitmap)
+        {
+            return;
+        }
+
+        var index = Math.Clamp(FrameIndex, 0, current.Run.Frames.Count - 1);
+        var frame = current.Run.Frames[index];
+        if (frame.Pixels is { } pixels)
+        {
+            bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), pixels, bitmap.PixelWidth, 0);
+        }
+
+        DetectedBoxes = frame.Detected.Select(d => ToBox(d.Box, d.TrackId)).ToList();
+        TruthBoxes = frame.Truth.Where(t => !t.IsDistractor && t.State == TruthState.MustBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
+        MustNotBoxes = frame.Truth.Where(t => t.State == TruthState.MustNotBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
+        FrameInfo = string.Create(
+            CultureInfo.InvariantCulture,
+            $"{frame.Time:0.00} s · picture {index + 1} of {current.Run.Frames.Count} · {frame.Detected.Count} boxes · {TruthBoxes.Count} objects to box");
+    }
+
+    private static BoundingBox ToBox(
+        PixelBox box,
+        int? trackId)
+        => new() { X = box.X, Y = box.Y, Width = box.Width, Height = box.Height, TrackId = trackId };
+
+    private void OnFrameIndexChanged()
+        => ShowFrame();
+
+    private void OnAnalysesPerSecondChanged()
+    {
+        // A rate chosen in the window runs the file again; one set while opening a file does not.
+        if (!settingRate)
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    private void SetRateQuietly(double rate)
+    {
+        settingRate = true;
+        try
+        {
+            AnalysesPerSecond = rate;
+        }
+        finally
+        {
+            settingRate = false;
+        }
+    }
+
+    private void OnPlayTick(
+        object? sender,
+        EventArgs e)
+    {
+        if (FrameIndex >= LastFrameIndex)
+        {
+            Stop();
+            return;
+        }
+
+        FrameIndex++;
+    }
+
+    private void Stop()
+    {
+        playTimer.Stop();
+        IsPlaying = false;
+    }
+}

@@ -42,6 +42,20 @@ internal static class E2ESettings
     public static string ServerExe
         => AppPath("AtcSoft.VideoSurveillance.Api", ServerTargetFramework);
 
+    /// <summary>
+    /// Gets the bounding box sample, a developer tool under <c>sample/</c>.
+    /// </summary>
+    public static string BoundingBoxSampleExe
+    {
+        get
+        {
+            var path = Path.Combine(RepositoryRoot, "sample", "BoundingBoxWpfApp", "bin", Configuration, AppTargetFramework, "BoundingBoxWpfApp.exe");
+            return File.Exists(path)
+                ? path
+                : throw new FileNotFoundException($"Build BoundingBoxWpfApp ({Configuration}) first; the smoke tests start its executable.", path);
+        }
+    }
+
     public static string BlazorProjectFolder
         => Path.Combine(RepositoryRoot, "src", "AtcSoft.VideoSurveillance.Blazor.App");
 

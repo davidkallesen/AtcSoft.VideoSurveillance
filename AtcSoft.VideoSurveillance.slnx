@@ -2,6 +2,7 @@
   <Folder Name="/docs/">
     <File Path="docs/architecture.md" />
     <File Path="docs/motion-detection.md" />
+    <File Path="docs/motion-detection-storybook.md" />
     <File Path="docs/server.md" />
     <File Path="docs/settings.md" />
     <File Path="docs/disk-space-guard.md" />
@@ -13,7 +14,9 @@
   <Folder Name="/plans/">
     <File Path="plans/roadmap.md" />
     <File Path="plans/roadmap-boundingbox.md" />
-    <File Path="plans/roadmap-rest-api-sg.md" />
+  </Folder>
+  <Folder Name="/sample/">
+    <Project Path="sample/BoundingBoxWpfApp/BoundingBoxWpfApp.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/AtcSoft.VideoSurveillance.Aspire/AtcSoft.VideoSurveillance.Aspire.csproj" />

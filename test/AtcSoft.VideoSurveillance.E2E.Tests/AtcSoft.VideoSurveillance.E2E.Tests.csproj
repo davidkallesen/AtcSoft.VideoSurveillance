@@ -16,6 +16,8 @@
   <ItemGroup>
     <!-- Seeds CameraWall's scratch folder with the app's own storage types. -->
     <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Wpf.Core\AtcSoft.VideoSurveillance.Wpf.Core.csproj" />
+    <!-- Runs the storybook the bounding box sample opens, to compare with what it shows. -->
+    <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Storybook\AtcSoft.VideoSurveillance.Storybook.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,7 @@
     <ProjectReference Include="..\..\src\AtcSoft.CameraWall.Wpf.App\AtcSoft.CameraWall.Wpf.App.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Wpf.App\AtcSoft.VideoSurveillance.Wpf.App.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Api\AtcSoft.VideoSurveillance.Api.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\sample\BoundingBoxWpfApp\BoundingBoxWpfApp.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\..\src\AtcSoft.VideoSurveillance.Blazor.App\AtcSoft.VideoSurveillance.Blazor.App.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
