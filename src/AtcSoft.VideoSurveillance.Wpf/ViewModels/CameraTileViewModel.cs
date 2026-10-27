@@ -45,7 +45,7 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// <see cref="AtcSoft.VideoSurveillance.Services.IUsbCameraWatcher"/>
     /// events back to the right tile.
     /// </summary>
-    [ObservableProperty(DependentPropertyNames = [nameof(IsUsbSource), nameof(ShowUsbBadge)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(IsUsbSource)])]
     private string usbDeviceId = string.Empty;
 
     /// <summary>True when this tile represents a USB camera source.</summary>
@@ -54,13 +54,13 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Effective connection type reported by the server (USB cameras are always USB).
     /// </summary>
-    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType), nameof(ShowUsbBadge)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType)])]
     private CoreCameraConnectionType connectionType;
 
     /// <summary>
     /// Whether the connection-type icon is enabled in the server settings.
     /// </summary>
-    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType), nameof(ShowUsbBadge)])]
+    [ObservableProperty(DependentPropertyNames = [nameof(DisplayedConnectionType)])]
     private bool showConnectionTypeIcon;
 
     /// <summary>
@@ -76,12 +76,6 @@ public sealed partial class CameraTileViewModel : ViewModelBase, IDisposable
     /// </summary>
     public CoreCameraConnectionType DisplayedConnectionType
         => ShowConnectionTypeIcon ? ConnectionType : CoreCameraConnectionType.None;
-
-    /// <summary>
-    /// Gets a value indicating whether the legacy "USB" text shows: only while
-    /// the connection-type icon is off (scheduled for removal, connection-icon roadmap Phase 8).
-    /// </summary>
-    public bool ShowUsbBadge => IsUsbSource && !ShowConnectionTypeIcon;
 
     /// <summary>
     /// True when the underlying USB device is currently unplugged.

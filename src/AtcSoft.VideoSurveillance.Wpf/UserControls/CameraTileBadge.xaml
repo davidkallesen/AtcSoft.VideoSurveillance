@@ -53,24 +53,6 @@
                                 IconSize="10"
                                 ShowBackground="False" />
                         </StackPanel>
-                        <!--  Legacy USB source badge: only while the connection-type icon is off (roadmap Phase 8 removes it)  -->
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=HostDataContext.ShowUsbBadge}" Value="True">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock
-                                FontSize="9"
-                                FontWeight="SemiBold"
-                                Foreground="#7EB8D4"
-                                Text="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=ConnectionTypeUsb}" />
-                        </StackPanel>
 
                         <!--  Recording indicator (red dot, visible when IsRecording)  -->
                         <StackPanel Orientation="Horizontal">
