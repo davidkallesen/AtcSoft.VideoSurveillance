@@ -419,7 +419,8 @@ public sealed partial class LiveViewViewModel : ViewModelBase, IDisposable
             tile.CameraId,
             tile.Player,
             tile.DisplayName,
-            tile.Description);
+            tile.Description,
+            tile.Rotation);
 
         var window = new FullScreenCameraWindow(viewModel);
         window.Show();

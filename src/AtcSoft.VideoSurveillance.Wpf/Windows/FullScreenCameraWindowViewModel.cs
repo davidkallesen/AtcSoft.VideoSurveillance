@@ -12,6 +12,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
 {
     private readonly SurveillanceEventService eventService;
     private readonly Guid cameraId;
+    private readonly AtcSoft.VideoSurveillance.Enums.CameraRotation rotation;
     private DispatcherTimer? overlayHideTimer;
     private bool disposed;
 
@@ -49,17 +50,26 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
     [ObservableProperty]
     private int analysisHeight = 240;
 
+    // The picture's size as shown, so the boxes land on a rotated picture too.
+    [ObservableProperty]
+    private int motionVideoWidth;
+
+    [ObservableProperty]
+    private int motionVideoHeight;
+
     public FullScreenCameraWindowViewModel(
         SurveillanceEventService eventService,
         Guid cameraId,
         IVideoPlayer? existingPlayer,
         string cameraName,
-        string cameraDescription)
+        string cameraDescription,
+        AtcSoft.VideoSurveillance.Enums.CameraRotation rotation)
     {
         ArgumentNullException.ThrowIfNull(eventService);
 
         this.eventService = eventService;
         this.cameraId = cameraId;
+        this.rotation = rotation;
         CameraName = cameraName;
         CameraDescription = cameraDescription;
 
@@ -78,6 +88,8 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
                 _ => ConnectionState.Disconnected,
             };
         }
+
+        UpdateMotionVideoSize();
 
         eventService.OnConnectionStateChanged += OnHubConnectionStateChanged;
         eventService.OnRecordingStateChanged += OnHubRecordingStateChanged;
@@ -185,6 +197,7 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
             IsMotionDetected = e.IsMotionActive;
             AnalysisWidth = e.AnalysisWidth;
             AnalysisHeight = e.AnalysisHeight;
+            UpdateMotionVideoSize();
 
             if (e.IsMotionActive && e.BoundingBoxes.Count > 0)
             {
@@ -198,6 +211,14 @@ public sealed partial class FullScreenCameraWindowViewModel : ViewModelBase, IDi
                 CurrentBoundingBoxes = [];
             }
         });
+    }
+
+    private void UpdateMotionVideoSize()
+    {
+        if (Player?.StreamInfo is { Width: > 0, Height: > 0 } stream)
+        {
+            (MotionVideoWidth, MotionVideoHeight) = AtcSoft.VideoSurveillance.Helpers.MotionBoxMapper.GetDisplaySize(stream.Width, stream.Height, rotation);
+        }
     }
 
     private void UpdateRecordingDurationTimer(bool nowRecording)
