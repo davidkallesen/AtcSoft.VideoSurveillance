@@ -106,6 +106,7 @@
                                 <Button
                                     Margin="2"
                                     Padding="0"
+                                    AutomationProperties.Name="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Thumbnail}"
                                     Command="{Binding Path=DataContext.PreviewThumbnailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
                                     Cursor="Hand"

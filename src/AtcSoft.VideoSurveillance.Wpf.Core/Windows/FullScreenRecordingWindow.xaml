@@ -109,6 +109,7 @@
                         Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">
+                                <Setter Property="AutomationProperties.Name" Value="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Play}" />
                                 <Setter Property="Background" Value="Transparent" />
                                 <Setter Property="BorderThickness" Value="0" />
                                 <Setter Property="Template">
@@ -128,6 +129,9 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter Property="Background" Value="#33FFFFFF" />
                                     </Trigger>
+                                    <DataTrigger Binding="{Binding Path=IsPlaying}" Value="True">
+                                        <Setter Property="AutomationProperties.Name" Value="{atcTranslation:Resx ResxName=AtcSoft.VideoSurveillance.Resources.Translations, Key=Pause}" />
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
