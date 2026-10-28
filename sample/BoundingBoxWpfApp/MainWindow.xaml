@@ -17,6 +17,10 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
+    <atc:NiceWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </atc:NiceWindow.Resources>
+
     <DockPanel Margin="8">
 
         <!--  Open, rate, step and play  -->
@@ -116,6 +120,84 @@
                 DockPanel.Dock="Top"
                 Text="Red: the detector's boxes, as the apps show them. Green: objects to box. Orange: must not be boxed."
                 TextWrapping="Wrap" />
+
+            <!--  Review mode, for a recording: marked stretches with verdicts, saved beside it  -->
+            <StackPanel
+                Margin="0,4,0,8"
+                DockPanel.Dock="Top"
+                Visibility="{Binding Path=IsReviewing, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="SemiBold"
+                    Text="Review" />
+                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Text="Verdict:" />
+                    <ComboBox
+                        Width="110"
+                        Margin="0,0,8,0"
+                        AutomationProperties.AutomationId="VerdictComboBox"
+                        ItemsSource="{Binding Path=Verdicts}"
+                        SelectedItem="{Binding Path=SelectedVerdict}" />
+                    <TextBlock
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Text="Count:" />
+                    <TextBox
+                        Width="32"
+                        Margin="0,0,8,0"
+                        AutomationProperties.AutomationId="CountTextBox"
+                        Text="{Binding Path=SpanCount, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="How many things move" />
+                    <TextBlock
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Text="Label:" />
+                    <TextBox
+                        Width="70"
+                        AutomationProperties.AutomationId="LabelTextBox"
+                        Text="{Binding Path=SpanLabel, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="What moves: person, car, cat, ..." />
+                </StackPanel>
+                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                    <Button
+                        Margin="0,0,4,0"
+                        Padding="8,3"
+                        AutomationProperties.AutomationId="MarkStartButton"
+                        Command="{Binding Path=MarkStartCommand}"
+                        Content="Mark start" />
+                    <Button
+                        Padding="8,3"
+                        AutomationProperties.AutomationId="AddSpanButton"
+                        Command="{Binding Path=AddSpanCommand}"
+                        Content="Add stretch to here" />
+                </StackPanel>
+                <ListBox
+                    Height="90"
+                    Margin="0,0,0,4"
+                    AutomationProperties.AutomationId="ReviewSpans"
+                    ItemsSource="{Binding Path=ReviewSpans}"
+                    SelectedIndex="{Binding Path=SelectedSpanIndex}" />
+                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                    <Button
+                        Margin="0,0,4,0"
+                        Padding="8,3"
+                        AutomationProperties.AutomationId="RemoveSpanButton"
+                        Command="{Binding Path=RemoveSpanCommand}"
+                        Content="Remove" />
+                    <Button
+                        Padding="8,3"
+                        AutomationProperties.AutomationId="SaveReviewButton"
+                        Command="{Binding Path=SaveReviewCommand}"
+                        Content="Save review" />
+                </StackPanel>
+                <TextBlock
+                    AutomationProperties.AutomationId="ReviewInfo"
+                    Text="{Binding Path=ReviewInfo}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
             <TextBox
                 AutomationProperties.AutomationId="ScoreJson"
                 FontFamily="Consolas"

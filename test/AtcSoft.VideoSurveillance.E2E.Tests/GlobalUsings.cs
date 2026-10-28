@@ -14,6 +14,7 @@ global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Helpers.Activity;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;
+global using AtcSoft.VideoSurveillance.Helpers.Review;
 global using AtcSoft.VideoSurveillance.Storybook;
 global using AtcSoft.VideoSurveillance.Storybook.Encoding;
 global using AtcSoft.VideoSurveillance.Storybook.Scoring;

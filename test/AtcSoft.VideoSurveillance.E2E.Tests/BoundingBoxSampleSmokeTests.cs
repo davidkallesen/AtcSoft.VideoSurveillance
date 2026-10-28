@@ -58,10 +58,7 @@ public sealed class BoundingBoxSampleSmokeTests
                 $"the objects to box in picture {index}");
 
             // A picture of the window in the run folder, to look at.
-            window.SetForeground();
-            window.Move(0, 0);
-            DesktopApp.Settle(TimeSpan.FromMilliseconds(500));
-            FlaUI.Core.Capturing.Capture.MainScreen().ToFile(Path.Combine(run.DataFolder, $"s05-picture-{index}.png"));
+            WindowPicture.Save(window, Path.Combine(run.DataFolder, $"s05-picture-{index}.png"));
         }
 
         var closed = app.CloseApp(window);
@@ -70,7 +67,7 @@ public sealed class BoundingBoxSampleSmokeTests
     }
 
     [Fact]
-    public void A_Recording_Shows_The_Detectors_Boxes_Without_A_Truth()
+    public void A_Recording_Shows_The_Detectors_Boxes_And_Is_Reviewed()
     {
         E2ESettings.SkipUnlessEnabled();
         var folder = VideoEngineBootstrap.FindFFmpegPath();
@@ -83,7 +80,10 @@ public sealed class BoundingBoxSampleSmokeTests
         scene.Video.BitrateKbps = 2000;
         var recording = Path.Combine(E2ESettings.NewFolder("bounding-box-recording"), "slow-walker.mkv");
         StorybookEncoder.Encode(scene, tool, recording, TestContext.Current.CancellationToken);
-        var expected = StorybookRunner.RunRecording(recording, new BuiltInMotionDetector(new AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings()), new StorybookRunOptions(AnalysesPerSecond: 4), TestContext.Current.CancellationToken);
+
+        // As Analyse recording reads it: the first seconds only teach the scene.
+        var detector = new BuiltInMotionDetector(new AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings()) { WarmUpSeconds = RecordingAnalysis.WarmUpSeconds };
+        var expected = StorybookRunner.RunRecording(recording, detector, new StorybookRunOptions(AnalysesPerSecond: 4), TestContext.Current.CancellationToken);
 
         using var run = new BoundingBoxSampleRun(["--recording", recording]);
         var app = run.App;
@@ -97,6 +97,28 @@ public sealed class BoundingBoxSampleSmokeTests
         Boxes(app, window, "DetectorBoxes").Should().BeEquivalentTo(
             expected.Frames[boxed].Detected.Select((d, i) => (d.TrackId is { } id ? $"box-{id}" : $"box-at-{i}", Describe(d.Box))));
         Boxes(app, window, "TruthBoxes").Should().BeEmpty("a recording has no truth");
+
+        // Review: the walker marked as one person moving for two seconds, then saved beside the recording.
+        Element(app, window, "ReviewInfo").Name.Should().Contain("No review yet");
+        Element(app, window, "MarkStartButton").AsButton().Invoke();
+        GoTo(app, window, boxed + 8, expected.Frames.Count);
+        Element(app, window, "AddSpanButton").AsButton().Invoke();
+        WaitFor(app, () => Element(app, window, "ScoreSummary").Name.StartsWith("Review: recall", StringComparison.Ordinal), "the run scored by the review");
+        Element(app, window, "ReviewSpans").FindAllChildren().Should().ContainSingle();
+        using (var json = JsonDocument.Parse(Element(app, window, "ScoreJson").Patterns.Value.Pattern.Value.Value))
+        {
+            json.RootElement.GetProperty("scoredBy").GetString().Should().Be("review");
+            json.RootElement.GetProperty("score").GetProperty("recall").GetDouble().Should().BeGreaterThan(0.9, "the walker is boxed in the stretch marked");
+        }
+
+        Element(app, window, "SaveReviewButton").AsButton().Invoke();
+        var reviewPath = RecordingPathHelper.BuildReviewPath(recording);
+        WaitFor(app, () => File.Exists(reviewPath), "the review saved beside the recording");
+        var saved = RecordingReviewFile.Read(reviewPath);
+        saved.Recording.Sha256.Should().Be(RecordingReviewFile.Sha256Of(recording));
+        saved.Spans.Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Correct);
+        saved.Spans[0].From.TotalSeconds.Should().BeApproximately(expected.Frames[boxed].Time, 0.001);
+        WindowPicture.Save(window, Path.Combine(run.DataFolder, "recording-review.png"));
 
         var closed = app.CloseApp(window);
         LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
@@ -158,6 +180,23 @@ public sealed class BoundingBoxSampleSmokeTests
             if (DateTime.UtcNow >= deadline)
             {
                 throw app.Fail($"The sample did not show {expected}.");
+            }
+
+            Thread.Sleep(100);
+        }
+    }
+
+    private static void WaitFor(
+        DesktopApp app,
+        Func<bool> condition,
+        string what)
+    {
+        var deadline = DateTime.UtcNow + DesktopApp.ElementTimeout;
+        while (!condition())
+        {
+            if (DateTime.UtcNow >= deadline)
+            {
+                throw app.Fail($"The sample did not show {what}.");
             }
 
             Thread.Sleep(100);

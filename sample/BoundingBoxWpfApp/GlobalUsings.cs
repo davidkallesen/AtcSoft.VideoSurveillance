@@ -1,5 +1,6 @@
 global using System;
 global using System.Collections.Generic;
+global using System.Collections.ObjectModel;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.IO;
@@ -19,8 +20,11 @@ global using Atc.XamlToolkit.Mvvm;
 
 global using AtcSoft.VideoEngine;
 global using AtcSoft.VideoSurveillance.Helpers;
+global using AtcSoft.VideoSurveillance.Helpers.Activity;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;
+global using AtcSoft.VideoSurveillance.Helpers.Review;
 global using AtcSoft.VideoSurveillance.Models;
+global using AtcSoft.VideoSurveillance.Models.Settings;
 global using AtcSoft.VideoSurveillance.Storybook;
 global using AtcSoft.VideoSurveillance.Storybook.Encoding;
 global using AtcSoft.VideoSurveillance.Storybook.Model;

@@ -4,6 +4,8 @@ namespace BoundingBoxWpfApp;
 /// The sample's window: a run's pictures one at a time, with the boxes the apps would show,
 /// the truth, and the score. The clock is deterministic: every picture was analysed by its time
 /// before it is shown, so stepping, playing or opening the same file again shows the same boxes.
+/// A recording can be reviewed: stretches marked with a verdict are saved beside it as
+/// <c>{video}.review.json</c> and score the run by count.
 /// </summary>
 [SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
 public sealed partial class MainWindowViewModel : ViewModelBase
@@ -13,6 +15,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private string? openPath;
     private bool openIsStorybook;
     private bool settingRate;
+    private RecordingReview? review;
+    private double? markFrom;
 
     [ObservableProperty]
     private string title = "Bounding box sample";
@@ -59,6 +63,24 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool isPlaying;
 
+    [ObservableProperty]
+    private bool isReviewing;
+
+    [ObservableProperty]
+    private string reviewInfo = string.Empty;
+
+    [ObservableProperty]
+    private int selectedSpanIndex = -1;
+
+    [ObservableProperty]
+    private string selectedVerdict = ReviewVerdicts.Correct;
+
+    [ObservableProperty]
+    private int spanCount = 1;
+
+    [ObservableProperty]
+    private string spanLabel = string.Empty;
+
     public MainWindowViewModel()
     {
         playTimer = new DispatcherTimer(DispatcherPriority.Normal);
@@ -69,6 +91,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     /// Gets the analysis rates to choose from: the server's and CameraWall's.
     /// </summary>
     public IReadOnlyList<double> Rates { get; } = [4, 15];
+
+    /// <summary>
+    /// Gets the verdicts a marked stretch can have.
+    /// </summary>
+    public IReadOnlyList<string> Verdicts { get; } = ReviewVerdicts.All;
+
+    /// <summary>
+    /// Gets the review's marked stretches, as shown in the list.
+    /// </summary>
+    public ObservableCollection<string> ReviewSpans { get; } = [];
 
     /// <summary>
     /// Opens a storybook and runs it.
@@ -159,6 +191,80 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private bool HasRun()
         => current is not null && !IsBusy;
 
+    [RelayCommand(CanExecute = nameof(CanReview))]
+    private void MarkStart()
+    {
+        Stop();
+        markFrom = CurrentTime();
+        ReviewInfo = string.Create(CultureInfo.InvariantCulture, $"Stretch from {markFrom:0.00} s: go to its last picture and add it.");
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAddSpan))]
+    private void AddSpan()
+    {
+        Stop();
+        var from = markFrom!.Value;
+
+        // To the end of the picture shown, so the last picture marked is in the stretch.
+        var to = CurrentTime() + (1 / AnalysesPerSecond);
+        if (to <= from)
+        {
+            ReviewInfo = "The stretch must end after it starts.";
+            return;
+        }
+
+        review!.Spans.Add(new ReviewSpan
+        {
+            From = TimeSpan.FromSeconds(from),
+            To = TimeSpan.FromSeconds(to),
+            Verdict = SelectedVerdict,
+            Count = SelectedVerdict == ReviewVerdicts.FalseBox ? null : Math.Max(1, SpanCount),
+            Label = string.IsNullOrWhiteSpace(SpanLabel) ? null : SpanLabel.Trim(),
+        });
+        markFrom = null;
+        ReviewInfo = "Stretch added; save the review to keep it.";
+        RefreshReview();
+    }
+
+    private bool CanAddSpan()
+        => CanReview() && markFrom is not null;
+
+    [RelayCommand(CanExecute = nameof(CanRemoveSpan))]
+    private void RemoveSpan()
+    {
+        review!.Spans.RemoveAt(SelectedSpanIndex);
+        RefreshReview();
+    }
+
+    private bool CanRemoveSpan()
+        => CanReview() && SelectedSpanIndex >= 0 && SelectedSpanIndex < review!.Spans.Count;
+
+    [RelayCommand(CanExecute = nameof(CanReview))]
+    private void SaveReview()
+    {
+        var path = RecordingPathHelper.BuildReviewPath(openPath!);
+        try
+        {
+            RecordingReviewFile.Write(path, review!);
+            ReviewInfo = $"Saved {Path.GetFileName(path)}.";
+            Log.Information("Saved the review {Path} with {Count} stretches", path, review!.Spans.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Log.Error(ex, "Saving the review {Path} failed", path);
+            ReviewInfo = $"Not saved: {ex.Message}";
+        }
+    }
+
+    private bool CanReview()
+        => IsReviewing && review is not null && HasRun();
+
+    private double CurrentTime()
+        => current is { } run && run.Run.Frames.Count > 0
+            ? run.Run.Frames[Math.Clamp(FrameIndex, 0, run.Run.Frames.Count - 1)].Time
+            : 0;
+
     private async Task LoadAsync()
     {
         if (openPath is not { } path)
@@ -193,14 +299,26 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                     return;
                 }
 
-                run = await Task.Run(() => SampleRunner.RunRecording(path, rate)).ConfigureAwait(true);
+                var (found, note, isSaved) = await Task.Run(() => ReviewOf(path)).ConfigureAwait(true);
+                run = await Task.Run(() => SampleRunner.RunRecording(path, rate, isSaved ? found : null)).ConfigureAwait(true);
+                review = found;
+                ReviewInfo = note;
             }
 
+            if (openIsStorybook)
+            {
+                review = null;
+                ReviewInfo = string.Empty;
+            }
+
+            markFrom = null;
+            IsReviewing = !openIsStorybook;
             Show(run);
+            RefreshReview();
             Log.Information("Opened {Name} ({Way}, {Rate}/s): {Score}", run.Name, run.Way, rate, run.Run.Score.Summary);
             Status = "Ready";
         }
-        catch (Exception ex) when (ex is StorybookException or IOException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
+        catch (Exception ex) when (ex is StorybookException or IOException or InvalidOperationException or InvalidDataException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
         {
             Log.Error(ex, "Opening {Path} failed", path);
             Status = $"Failed: {ex.Message}";
@@ -210,6 +328,55 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             IsBusy = false;
             CommandManager.InvalidateRequerySuggested();
         }
+    }
+
+    // The recording's review beside it (saved), or a new one (not saved); one of another file is not used.
+    private static (RecordingReview Review, string Note, bool IsSaved) ReviewOf(
+        string path)
+    {
+        var sha256 = RecordingReviewFile.Sha256Of(path);
+        var fresh = new RecordingReview { Recording = new ReviewRecording { File = Path.GetFileName(path), Sha256 = sha256 } };
+        var reviewPath = RecordingPathHelper.BuildReviewPath(path);
+        if (!File.Exists(reviewPath))
+        {
+            return (fresh, "No review yet: mark stretches and save.", false);
+        }
+
+        try
+        {
+            var read = RecordingReviewFile.Read(reviewPath);
+            return string.Equals(read.Recording.Sha256, sha256, StringComparison.Ordinal)
+                ? (read, $"Review with {read.Spans.Count} stretches.", true)
+                : (fresh, "The review beside it is of another file; starting a new one.", false);
+        }
+        catch (InvalidDataException ex)
+        {
+            return (fresh, $"The review beside it cannot be read ({ex.Message}); starting a new one.", false);
+        }
+    }
+
+    // Shows the review's stretches and scores the run by them.
+    private void RefreshReview()
+    {
+        ReviewSpans.Clear();
+        foreach (var span in review?.Spans ?? [])
+        {
+            var count = span.Count is { } c ? $" x{c}" : string.Empty;
+            var label = span.Label is { } l ? " " + l : string.Empty;
+            ReviewSpans.Add(string.Create(CultureInfo.InvariantCulture, $"{span.From.TotalSeconds:0.00}-{span.To.TotalSeconds:0.00} s  {span.Verdict}{count}{label}"));
+        }
+
+        if (current is { HasTruth: false } run)
+        {
+            var score = review is { Spans.Count: > 0 } reviewed ? ReviewScorer.Score(run.Run.Frames, reviewed) : null;
+            ScoreSummary = score is not null
+                ? "Review: " + score.Summary
+                : $"{run.Run.Frames.Count(f => f.Detected.Count > 0)} of {run.Run.Frames.Count} pictures with boxes (no truth)";
+            ScoreJson = SampleRunner.ScoreJson(run, score);
+        }
+
+        ShowFrame();
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private static bool EnsureEngine()
@@ -269,9 +436,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         DetectedBoxes = frame.Detected.Select(d => ToBox(d.Box, d.TrackId)).ToList();
         TruthBoxes = frame.Truth.Where(t => !t.IsDistractor && t.State == TruthState.MustBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
         MustNotBoxes = frame.Truth.Where(t => t.State == TruthState.MustNotBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
+        var marked = review?.Spans.Where(s => s.From.TotalSeconds <= frame.Time && frame.Time < s.To.TotalSeconds).Select(s => s.Verdict + (s.Count is { } c ? $" x{c}" : string.Empty)).ToList() ?? [];
         FrameInfo = string.Create(
             CultureInfo.InvariantCulture,
-            $"{frame.Time:0.00} s · picture {index + 1} of {current.Run.Frames.Count} · {frame.Detected.Count} boxes · {TruthBoxes.Count} objects to box");
+            $"{frame.Time:0.00} s · picture {index + 1} of {current.Run.Frames.Count} · {frame.Detected.Count} boxes · {TruthBoxes.Count} objects to box{(marked.Count > 0 ? " · marked: " + string.Join(", ", marked) : string.Empty)}");
     }
 
     private static BoundingBox ToBox(

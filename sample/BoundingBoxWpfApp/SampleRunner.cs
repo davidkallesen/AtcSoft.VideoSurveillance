@@ -57,21 +57,32 @@ public static class SampleRunner
     }
 
     /// <summary>
-    /// Runs a recording with the default motion settings. Needs the engine started.
+    /// Runs a recording as <i>Analyse recording</i> does: the first seconds only teach the scene,
+    /// with the review's settings and zones when it has one, else the default settings. Needs the
+    /// engine started.
     /// </summary>
     /// <param name="path">The recording.</param>
     /// <param name="analysesPerSecond">How many pictures a second are analysed.</param>
+    /// <param name="review">The recording's review, or <see langword="null"/>.</param>
     /// <param name="cancellationToken">Stops the reading.</param>
-    /// <returns>The run; it has no truth.</returns>
+    /// <returns>The run; it has no truth (a review is scored by count, see <see cref="ReviewScorer"/>).</returns>
     public static SampleRun RunRecording(
         string path,
         double analysesPerSecond,
+        RecordingReview? review = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
-        var detector = new BuiltInMotionDetector(new AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings());
-        var options = new StorybookRunOptions(AnalysesPerSecond: analysesPerSecond, KeepPictures: true);
+        var settings = review?.Detector.Settings ?? new MotionDetectionSettings();
+        var detector = new BuiltInMotionDetector(settings, zones: review is null ? null : [.. review.Detector.Zones])
+        {
+            WarmUpSeconds = RecordingAnalysis.WarmUpSeconds,
+        };
+        var options = new StorybookRunOptions(
+            AnalysisWidth: settings.AnalysisWidth > 0 ? settings.AnalysisWidth : MotionAnalysisSize.DefaultLongerSide,
+            AnalysesPerSecond: analysesPerSecond,
+            KeepPictures: true);
         var run = StorybookRunner.RunRecording(path, detector, options, cancellationToken);
         return Result(Path.GetFileName(path), "recording", analysesPerSecond, run, hasTruth: false);
     }
@@ -119,6 +130,39 @@ public static class SampleRunner
         return (video, StorybookEncoder.Encode(scene, tool, video, cancellationToken));
     }
 
+    /// <summary>
+    /// Gets the score panel's JSON: how the run was made and its score. A recording has no truth;
+    /// with a review it is scored by the review instead.
+    /// </summary>
+    /// <param name="run">The run.</param>
+    /// <param name="review">The recording's review score, or <see langword="null"/>.</param>
+    /// <returns>The JSON.</returns>
+    public static string ScoreJson(
+        SampleRun run,
+        ReviewScore? review)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+
+        object score = review is not null
+            ? review
+            : run.HasTruth
+                ? run.Run.Score
+                : new { picturesWithBoxes = run.Run.Frames.Count(f => f.Detected.Count > 0), pictures = run.Run.Frames.Count, trackCount = run.Run.Score.TrackCount };
+        return JsonSerializer.Serialize(
+            new
+            {
+                name = run.Name,
+                way = run.Way,
+                analysesPerSecond = run.AnalysesPerSecond,
+                detector = "builtIn",
+                analysisWidth = run.Run.AnalysisWidth,
+                analysisHeight = run.Run.AnalysisHeight,
+                scoredBy = review is not null ? "review" : run.HasTruth ? "truth" : "nothing",
+                score,
+            },
+            JsonOptions);
+    }
+
     private static SampleRun Result(
         string name,
         string way,
@@ -126,18 +170,7 @@ public static class SampleRunner
         StorybookRun run,
         bool hasTruth)
     {
-        var json = JsonSerializer.Serialize(
-            new
-            {
-                name,
-                way,
-                analysesPerSecond,
-                detector = "builtIn",
-                analysisWidth = run.AnalysisWidth,
-                analysisHeight = run.AnalysisHeight,
-                score = run.Score,
-            },
-            JsonOptions);
-        return new SampleRun(name, way, run, hasTruth, json);
+        var result = new SampleRun(name, way, analysesPerSecond, run, hasTruth, string.Empty);
+        return result with { ScoreJson = ScoreJson(result, review: null) };
     }
 }
