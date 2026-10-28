@@ -48,6 +48,8 @@ Leave the mouse alone while the CameraWall walk runs: a few steps are real click
   tool (skipped without it), marks the walker as a reviewed stretch, checks the score by the review and
   saves it, then reads `{video}.review.json` back. A picture of the window is saved in its folder:
   Windows draws the window alone (`WindowPicture`), so a picture never holds the rest of the desktop.
+  A third walk sweeps the motion settings over two short scenes (`--sweep`, an empty `--corpus`) and
+  checks the ranked report in the window and in `{data}\sweeps`.
 - **The web client**, served by its development server on the port the test server allows as a CORS
   origin. The browser is pointed at the test server by answering the app's `appsettings.json` request.
 

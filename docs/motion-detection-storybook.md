@@ -273,6 +273,14 @@ $env:ATCSOFT_BBOX_CORPUS = "D:\corpus"
 dotnet test test/AtcSoft.VideoSurveillance.Storybook.Tests --filter CorpusTests
 ```
 
+### The sweep
+
+Which defaults do best? *Sweep scenes…* in the sample app (or `--sweep folder`, with `--corpus folder` or `ATCSOFT_BBOX_CORPUS` for reviewed recordings) tries combinations of the settings a person can change: sensitivity 10 to 70 in steps of 10, the smallest object 0.01, 0.02 and 0.05 % of the picture, the stopped-object time 60 s. Each goes on top of a scene's own settings (S14 keeps its lighting), at 4 and 15 pictures a second, and over every reviewed recording as *Analyse recording* reads it (the review's zones). The combinations are ranked: the most scene runs meeting their expectations first (known-bad scenes not judged), then the corpus's recall and false boxes, then the scenes' mean recall and false boxes. The report (Markdown, in `{data}\sweeps`) says where the shipped defaults stand and in which scenes the best differs from them. Scenes run on the fast path, each drawn once per rate (`StorybookRunner.Draw`), so a scene with a bitrate is not encoded here.
+
+```powershell
+dotnet run --project sample/BoundingBoxWpfApp -- --sweep test/AtcSoft.VideoSurveillance.Storybook.Tests/Scenes
+```
+
 ---
 
 ## ➕ Adding a Scene
