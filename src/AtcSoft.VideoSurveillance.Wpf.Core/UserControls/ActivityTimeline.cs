@@ -12,6 +12,9 @@ namespace AtcSoft.VideoSurveillance.Wpf.Core.UserControls;
 /// moment most moved in it; <see cref="PreviewAt"/>) above the time there, how many things moved and
 /// in which watch zone (<see cref="DescribeAt"/>), the time from <see cref="RecordingStart"/> and
 /// <see cref="DurationSeconds"/>.
+/// A right-click offers verdicts on the stretch there through <see cref="VerdictCommand"/> (on an
+/// event: boxed correctly or a false alarm; anywhere: something missed; see <see cref="VerdictsAt"/>),
+/// saved in the recording's review.
 /// </summary>
 public sealed partial class ActivityTimeline : FrameworkElement
 {
@@ -60,6 +63,10 @@ public sealed partial class ActivityTimeline : FrameworkElement
     // Takes an ActivityTimelineZoomRequest: where the mouse is in the recording, and which way.
     [DependencyProperty]
     private ICommand? zoomCommand;
+
+    // Takes a TimelineVerdict, chosen from the menu a right-click opens; no menu while null.
+    [DependencyProperty]
+    private ICommand? verdictCommand;
 
     [DependencyProperty(PropertyChangedCallback = nameof(OnLookChanged))]
     private Brush? barBrush;
@@ -224,6 +231,63 @@ public sealed partial class ActivityTimeline : FrameworkElement
             e.Handled = true;
         }
     }
+
+    /// <summary>
+    /// Gets the verdicts a right-click at a point of the strip offers: on an event's band (as wide
+    /// as it is drawn), boxed correctly and false alarm over the event; anywhere, something missed
+    /// around the place.
+    /// </summary>
+    /// <param name="x">The point, in pixels from the left.</param>
+    /// <returns>The verdicts; none without activity.</returns>
+    public IReadOnlyList<TimelineVerdict> VerdictsAt(double x)
+    {
+        if (Buckets is not { Count: > 0 } stretches || ActualWidth <= 0 || DurationSeconds <= 0)
+        {
+            return [];
+        }
+
+        var (start, end) = Window();
+        events ??= ActivityTimelineLayout.FindEvents(stretches, DurationSeconds);
+        var slack = (end - start) * (ActivityTimelineLayout.MinimumEventWidth / 2) / ActualWidth;
+        return TimelineVerdicts.At(events, PlaceAt(x), DurationSeconds, slack);
+    }
+
+    /// <inheritdoc />
+    protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        base.OnMouseRightButtonUp(e);
+
+        if (VerdictCommand is not { } command || VerdictsAt(e.GetPosition(this).X).Where(command.CanExecute).ToList() is not { Count: > 0 } verdicts)
+        {
+            return;
+        }
+
+        var menu = new ContextMenu
+        {
+            PlacementTarget = this,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint,
+        };
+        foreach (var verdict in verdicts)
+        {
+            var item = new MenuItem { Header = VerdictText(verdict.Verdict), Command = command, CommandParameter = verdict };
+            System.Windows.Automation.AutomationProperties.SetAutomationId(item, "Verdict-" + verdict.Verdict);
+            menu.Items.Add(item);
+        }
+
+        hoverTip.IsOpen = false;
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    // The menu's words for a verdict.
+    private static string VerdictText(string verdict)
+        => verdict switch
+        {
+            AtcSoft.VideoSurveillance.Helpers.Review.ReviewVerdicts.Correct => Translations.VerdictCorrect,
+            AtcSoft.VideoSurveillance.Helpers.Review.ReviewVerdicts.FalseBox => Translations.VerdictFalseAlarm,
+            _ => Translations.VerdictMissed,
+        };
 
     // The part shown; the whole recording when the window is not a sensible one.
     private (double Start, double End) Window()

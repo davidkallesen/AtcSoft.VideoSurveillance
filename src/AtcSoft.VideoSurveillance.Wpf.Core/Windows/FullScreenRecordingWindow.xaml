@@ -335,11 +335,22 @@
                             Previews="{Binding Path=ActivityPreviews}"
                             RecordingStart="{Binding Path=ActivityRecordingStart}"
                             SeekCommand="{Binding Path=SeekActivityCommand}"
+                            VerdictCommand="{Binding Path=GiveVerdictCommand}"
                             VisibleEnd="{Binding Path=ActivityEnd}"
                             VisibleStart="{Binding Path=ActivityStart}"
                             ZoomCommand="{Binding Path=ZoomActivityCommand}"
                             ZoneBrushes="{Binding Path=ZoneBrushes}"
                             Visibility="{Binding Path=HasActivity, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+
+                        <!--  What became of a verdict given on the timeline  -->
+                        <TextBlock
+                            Margin="5,0,5,2"
+                            AutomationProperties.AutomationId="VerdictMessage"
+                            FontSize="12"
+                            Foreground="White"
+                            Text="{Binding Path=VerdictMessage}"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding Path=VerdictMessage, Converter={x:Static atcValueConverters:StringNullOrEmptyToVisibilityCollapsedValueConverter.Instance}}" />
 
                         <!--  Seek Slider  -->
                         <Slider

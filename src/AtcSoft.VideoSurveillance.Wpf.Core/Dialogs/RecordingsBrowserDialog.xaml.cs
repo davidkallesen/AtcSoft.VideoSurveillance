@@ -202,7 +202,8 @@ public partial class RecordingsBrowserDialog : IDisposable
             overlaySettings,
             activityLoader: RecordingActivityLoaders.FromFile(recording.FilePath),
             zonesLoader: _ => Task.FromResult(viewModel.ZonesFor(recording)),
-            previewLoader: RecordingPreviewLoaders.FromFile(recording.FilePath, viewModel.Previews));
+            previewLoader: RecordingPreviewLoaders.FromFile(recording.FilePath, viewModel.Previews),
+            verdictSaver: viewModel.VerdictSaverFor(recording));
         using var fullScreenWindow = new FullScreenRecordingWindow(fullScreenViewModel)
         {
             // A browser that closed itself cannot own the player

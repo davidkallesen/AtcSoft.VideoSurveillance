@@ -2817,4 +2817,19 @@ Miniature:
   <data name="IgnoreLightingChangesInfo" xml:space="preserve">
     <value>En ændring af det meste af billedet på én gang, fx en sky eller en lampe, der tændes, er ikke bevægelse. Slå det fra for et kamera ved en dør, hvor en person kan fylde det meste af billedet; så ses bevægelse ikke et stykke tid efter en ændring af lyset.</value>
   </data>
+  <data name="VerdictCorrect" xml:space="preserve">
+    <value>Korrekt markeret</value>
+  </data>
+  <data name="VerdictFalseAlarm" xml:space="preserve">
+    <value>Falsk alarm</value>
+  </data>
+  <data name="VerdictMissed" xml:space="preserve">
+    <value>Her blev noget overset</value>
+  </data>
+  <data name="VerdictSaved" xml:space="preserve">
+    <value>Gemt i optagelsens gennemgang.</value>
+  </data>
+  <data name="VerdictNotSaved1" xml:space="preserve">
+    <value>Vurderingen blev ikke gemt: {0}</value>
+  </data>
 </root>

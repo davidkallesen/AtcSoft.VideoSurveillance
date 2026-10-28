@@ -37,6 +37,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private DateTime? recordingStartTime;
     private RecordingActivityLoader? activityLoader;
     private RecordingPreviewLoader? previewLoader;
+    private RecordingVerdictSaver? verdictSaver;
     private TimeSpan startPosition;
 
     // Counts the recordings played in this window: an activity that arrives for an earlier one is dropped.
@@ -153,6 +154,12 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private double activityEnd = 1;
 
     /// <summary>
+    /// What became of the last verdict given on the timeline: saved, or why not.
+    /// </summary>
+    [ObservableProperty]
+    private string verdictMessage = string.Empty;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="FullScreenRecordingWindowViewModel"/> class.
     /// </summary>
     /// <param name="filePath">The path to the recording file.</param>
@@ -181,6 +188,10 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     /// Gets the recording's preview pictures, shown under the mouse on the timeline; asked again a
     /// while when they are being made. Without one, the timeline shows words only.
     /// </param>
+    /// <param name="verdictSaver">
+    /// Saves a verdict given on the timeline (a right-click) in the recording's review; without one,
+    /// the timeline offers no verdicts.
+    /// </param>
     public FullScreenRecordingWindowViewModel(
         string filePath,
         string fileName,
@@ -190,7 +201,8 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         TimeSpan? startPosition = null,
         Func<RecordingSegment?>? nextSegment = null,
         Func<CancellationToken, Task<IReadOnlyList<MotionZone>>>? zonesLoader = null,
-        RecordingPreviewLoader? previewLoader = null)
+        RecordingPreviewLoader? previewLoader = null,
+        RecordingVerdictSaver? verdictSaver = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
@@ -198,6 +210,7 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         this.filePath = filePath;
         this.activityLoader = activityLoader;
         this.previewLoader = previewLoader;
+        this.verdictSaver = verdictSaver;
         this.zonesLoader = zonesLoader;
         this.startPosition = startPosition ?? TimeSpan.Zero;
         this.nextSegment = nextSegment;
@@ -533,6 +546,34 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
     private void SeekActivity(double fraction)
         => SeekTo(fraction);
 
+    // A verdict given on the timeline, saved in the review of the recording playing now.
+    [RelayCommand("GiveVerdict", CanExecute = nameof(CanGiveVerdict))]
+    private async Task GiveVerdictAsync(TimelineVerdict? verdict)
+    {
+        if (verdict is null || verdictSaver is not { } saver)
+        {
+            return;
+        }
+
+        try
+        {
+            await saver(verdict, activityCancellation.Token).ConfigureAwait(true);
+            VerdictMessage = Translations.VerdictSaved;
+        }
+        catch (OperationCanceledException)
+        {
+            // The window is closing.
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or HttpRequestException)
+        {
+            VerdictMessage = string.Format(CultureInfo.CurrentCulture, Translations.VerdictNotSaved1, ex.Message);
+        }
+    }
+
+    // The timeline offers verdicts only where it has activity.
+    private bool CanGiveVerdict(TimelineVerdict? verdict)
+        => verdictSaver is not null;
+
     [RelayCommand]
     private void ZoomActivity(ActivityTimelineZoomRequest? request)
     {
@@ -713,6 +754,8 @@ public sealed partial class FullScreenRecordingWindowViewModel : ViewModelDialog
         recordingStartTime = next.RecordingStartTime ?? ParseRecordingStartTime(next.FileName);
         activityLoader = next.ActivityLoader;
         previewLoader = next.PreviewLoader;
+        verdictSaver = next.VerdictSaver;
+        VerdictMessage = string.Empty;
         startPosition = TimeSpan.Zero;
 
         activityEvents = [];

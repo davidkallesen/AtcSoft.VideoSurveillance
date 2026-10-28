@@ -2817,4 +2817,19 @@ Vorschaubild:
   <data name="IgnoreLightingChangesInfo" xml:space="preserve">
     <value>Eine Änderung fast des ganzen Bildes auf einmal, etwa eine Wolke oder eine eingeschaltete Lampe, ist keine Bewegung. Für eine Kamera an einer Tür ausschalten, wo eine Person den Großteil des Bildes füllen kann; dann wird nach einer Lichtänderung eine Weile keine Bewegung erkannt.</value>
   </data>
+  <data name="VerdictCorrect" xml:space="preserve">
+    <value>Richtig markiert</value>
+  </data>
+  <data name="VerdictFalseAlarm" xml:space="preserve">
+    <value>Fehlalarm</value>
+  </data>
+  <data name="VerdictMissed" xml:space="preserve">
+    <value>Hier wurde etwas übersehen</value>
+  </data>
+  <data name="VerdictSaved" xml:space="preserve">
+    <value>In der Überprüfung der Aufnahme gespeichert.</value>
+  </data>
+  <data name="VerdictNotSaved1" xml:space="preserve">
+    <value>Die Bewertung wurde nicht gespeichert: {0}</value>
+  </data>
 </root>

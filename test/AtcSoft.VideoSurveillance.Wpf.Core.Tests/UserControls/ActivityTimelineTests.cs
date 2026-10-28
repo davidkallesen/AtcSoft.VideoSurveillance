@@ -210,6 +210,31 @@ public sealed class ActivityTimelineTests
         hit.Should().BeTrue();
     }
 
+    [Fact]
+    public void A_Right_Click_On_An_Event_Offers_It_Correct_Or_A_False_Alarm_And_Anywhere_Something_Missed()
+    {
+        IReadOnlyList<AtcSoft.VideoSurveillance.Helpers.Review.TimelineVerdict> onEvent = [];
+        IReadOnlyList<AtcSoft.VideoSurveillance.Helpers.Review.TimelineVerdict> beside = [];
+
+        var error = WpfTestThread.Run(() =>
+        {
+            var timeline = new ActivityTimeline
+            {
+                Buckets = [.. Enumerable.Range(0, 10).Select(i => new ActivityBucket(i == 5 ? 30 : 1, i == 5 ? 1 : 0, IsAnalysed: true))],
+                DurationSeconds = 100,
+            };
+            Render(timeline);
+
+            onEvent = timeline.VerdictsAt(55);
+            beside = timeline.VerdictsAt(20);
+        });
+
+        error.Should().BeNull();
+        onEvent.Select(v => v.Verdict).Should().Equal("correct", "falseBox", "missed");
+        onEvent.Select(v => (Math.Round(v.FromSeconds, 6), Math.Round(v.ToSeconds, 6))).Should().Equal((50d, 60d), (50d, 60d), (52.5, 57.5));
+        beside.Select(v => v.Verdict).Should().Equal("missed");
+    }
+
     private static byte[] Render(ActivityTimeline timeline)
     {
         timeline.Measure(new System.Windows.Size(Width, Height));

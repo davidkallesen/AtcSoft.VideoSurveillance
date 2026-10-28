@@ -427,6 +427,18 @@ public partial class RecordingsBrowserDialogViewModel : ViewModelDialogBase, IDi
         return cameraByFolder?.Invoke(recording.CameraName)?.MotionZones ?? [];
     }
 
+    /// <summary>
+    /// Gets the saver of the verdicts given on a recording's timeline: they are written to the
+    /// review beside it, a new one with its camera's settings and zones.
+    /// </summary>
+    /// <param name="recording">The recording.</param>
+    public RecordingVerdictSaver VerdictSaverFor(RecordingEntry recording)
+    {
+        ArgumentNullException.ThrowIfNull(recording);
+
+        return RecordingVerdictSavers.ToFile(recording.FilePath, cameraByFolder?.Invoke(recording.CameraName), settingsService.MotionDetection);
+    }
+
     [RelayCommand("Analyse", CanExecute = nameof(CanAnalyse))]
     private async Task AnalyseAsync()
     {

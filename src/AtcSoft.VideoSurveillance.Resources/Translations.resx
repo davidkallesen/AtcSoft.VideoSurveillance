@@ -2817,4 +2817,19 @@ Thumbnail:
   <data name="IgnoreLightingChangesInfo" xml:space="preserve">
     <value>A change over most of the picture at once, such as a cloud or a lamp switched on, is not motion. Turn it off for a camera at a door, where a person can fill most of the picture; then, after a change of light, motion is not seen for a while.</value>
   </data>
+  <data name="VerdictCorrect" xml:space="preserve">
+    <value>Boxed correctly</value>
+  </data>
+  <data name="VerdictFalseAlarm" xml:space="preserve">
+    <value>False alarm</value>
+  </data>
+  <data name="VerdictMissed" xml:space="preserve">
+    <value>Missed something here</value>
+  </data>
+  <data name="VerdictSaved" xml:space="preserve">
+    <value>Saved in the recording's review.</value>
+  </data>
+  <data name="VerdictNotSaved1" xml:space="preserve">
+    <value>The verdict was not saved: {0}</value>
+  </data>
 </root>
