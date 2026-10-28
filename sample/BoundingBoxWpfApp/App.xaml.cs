@@ -54,6 +54,10 @@ public partial class App
         {
             _ = viewModel.OpenRecordingAsync(recording, options.AnalysesPerSecond);
         }
+        else if (options.SweepFolder is { } sweep)
+        {
+            _ = viewModel.SweepAsync(sweep, options.CorpusFolder ?? Environment.GetEnvironmentVariable(StartupOptions.CorpusVariable));
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -155,6 +155,92 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private bool CanOpen()
         => !IsBusy;
 
+    /// <summary>
+    /// Sweeps the motion settings over the storybooks in a folder (all of them, at 4 and 15 pictures
+    /// a second) and the reviewed recordings in a corpus folder, writes the report to
+    /// <c>{data}\sweeps</c> and shows it in the score panel.
+    /// </summary>
+    /// <param name="scenesFolder">The folder of storybooks.</param>
+    /// <param name="corpusFolder">The folder of recordings with their reviews, or <see langword="null"/>.</param>
+    public async Task SweepAsync(
+        string scenesFolder,
+        string? corpusFolder)
+    {
+        Stop();
+        IsBusy = true;
+        CommandManager.InvalidateRequerySuggested();
+        Status = "Sweeping…";
+        try
+        {
+            SweepScene[] scenes = [.. Directory.GetFiles(scenesFolder, "*.storybook.json").Order(StringComparer.Ordinal)
+                .Select(f => new SweepScene(Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(f)), StorybookReader.ReadFile(f)))];
+            var corpus = CorpusIn(corpusFolder);
+            if (corpus.Count > 0 && !EnsureEngine())
+            {
+                Status = "FFmpeg is needed to read the corpus.";
+                return;
+            }
+
+            var progress = new Progress<double>(share => Status = string.Create(CultureInfo.InvariantCulture, $"Sweeping… {share:0%}"));
+            var ranked = await Task.Run(() => StorybookSweep.Run(scenes, corpus, progress: progress)).ConfigureAwait(true);
+            var report = StorybookSweep.Report(ranked);
+            var folder = Path.Combine(App.DataFolder, "sweeps");
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, string.Create(CultureInfo.InvariantCulture, $"sweep-{DateTime.Now:yyyyMMdd-HHmmss}.md"));
+            await File.WriteAllTextAsync(path, report).ConfigureAwait(true);
+
+            current = null;
+            IsReviewing = false;
+            Title = "Bounding box sample - sweep";
+            ScoreSummary = report.Split('\n').Skip(4).FirstOrDefault()?.Trim() ?? string.Empty;
+            ScoreJson = report;
+            Log.Information("Swept {Combinations} combinations over {Scenes} scenes and {Recordings} reviewed recordings: {Report}", ranked.Count, scenes.Length, corpus.Count, path);
+            Status = "Ready";
+        }
+        catch (Exception ex) when (ex is StorybookException or IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
+        {
+            Log.Error(ex, "Sweeping {Folder} failed", scenesFolder);
+            Status = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    [RelayCommand("Sweep", CanExecute = nameof(CanOpen))]
+    private async Task SweepFromDialogAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Folder of storybooks to sweep" };
+        if (dialog.ShowDialog() == true)
+        {
+            await SweepAsync(dialog.FolderName, Environment.GetEnvironmentVariable(StartupOptions.CorpusVariable)).ConfigureAwait(true);
+        }
+    }
+
+    // The recordings under a folder with their reviews beside them; one without its recording is left out.
+    private static List<SweepRecording> CorpusIn(string? folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            return [];
+        }
+
+        var corpus = new List<SweepRecording>();
+        foreach (var reviewPath in Directory.GetFiles(folder, "*" + RecordingPathHelper.ReviewExtension, SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+        {
+            var reviewed = RecordingReviewFile.Read(reviewPath);
+            var video = Path.Combine(Path.GetDirectoryName(reviewPath)!, reviewed.Recording.File);
+            if (File.Exists(video))
+            {
+                corpus.Add(new SweepRecording(video, reviewed));
+            }
+        }
+
+        return corpus;
+    }
+
     [RelayCommand(CanExecute = nameof(HasRun))]
     private void PlayPause()
     {

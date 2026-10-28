@@ -40,6 +40,13 @@
                 AutomationProperties.AutomationId="OpenRecordingButton"
                 Command="{Binding Path=OpenRecordingCommand}"
                 Content="Open recording…" />
+            <Button
+                Margin="0,0,16,0"
+                Padding="10,4"
+                AutomationProperties.AutomationId="SweepButton"
+                Command="{Binding Path=SweepCommand}"
+                Content="Sweep scenes…"
+                ToolTip="Try combinations of the motion settings over a folder of storybooks (and the corpus of reviewed recordings named by ATCSOFT_BBOX_CORPUS), and rank them" />
             <TextBlock
                 Margin="0,0,6,0"
                 VerticalAlignment="Center"

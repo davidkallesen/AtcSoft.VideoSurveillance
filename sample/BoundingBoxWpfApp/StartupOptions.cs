@@ -1,18 +1,29 @@
 namespace BoundingBoxWpfApp;
 
 /// <summary>
-/// What the sample opens when it starts: <c>--storybook file</c> or <c>--recording file</c>, with
-/// <c>--rate</c> pictures a second (4 by default, the server's; CameraWall's is 15). The E2E walk
-/// uses them instead of the file dialogs.
+/// What the sample does when it starts: open <c>--storybook file</c> or <c>--recording file</c>,
+/// with <c>--rate</c> pictures a second (4 by default, the server's; CameraWall's is 15), or sweep
+/// the motion settings over the scenes in <c>--sweep folder</c> and the reviewed recordings in
+/// <c>--corpus folder</c> (<c>ATCSOFT_BBOX_CORPUS</c> when not given). The E2E walk uses them
+/// instead of the file dialogs.
 /// </summary>
 /// <param name="StorybookPath">A storybook to open, or <see langword="null"/>.</param>
 /// <param name="RecordingPath">A recording to open, or <see langword="null"/>.</param>
 /// <param name="AnalysesPerSecond">How many pictures a second are analysed.</param>
+/// <param name="SweepFolder">A folder of storybooks to sweep, or <see langword="null"/>.</param>
+/// <param name="CorpusFolder">A folder of reviewed recordings to sweep too, or <see langword="null"/>.</param>
 public sealed record StartupOptions(
     string? StorybookPath,
     string? RecordingPath,
-    double AnalysesPerSecond)
+    double AnalysesPerSecond,
+    string? SweepFolder = null,
+    string? CorpusFolder = null)
 {
+    /// <summary>
+    /// The variable naming the corpus of reviewed recordings, as for the corpus test.
+    /// </summary>
+    public const string CorpusVariable = "ATCSOFT_BBOX_CORPUS";
+
     /// <summary>
     /// The rate when none is given: the server's.
     /// </summary>
@@ -29,6 +40,8 @@ public sealed record StartupOptions(
 
         string? storybook = null;
         string? recording = null;
+        string? sweep = null;
+        string? corpus = null;
         var rate = DefaultAnalysesPerSecond;
 
         // Each option is a name and the value after it.
@@ -42,12 +55,18 @@ public sealed record StartupOptions(
                 case "--recording":
                     recording = value;
                     break;
+                case "--sweep":
+                    sweep = value;
+                    break;
+                case "--corpus":
+                    corpus = value;
+                    break;
                 case "--rate" when double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) && parsed > 0:
                     rate = parsed;
                     break;
             }
         }
 
-        return new StartupOptions(storybook, recording, rate);
+        return new StartupOptions(storybook, recording, rate, sweep, corpus);
     }
 }

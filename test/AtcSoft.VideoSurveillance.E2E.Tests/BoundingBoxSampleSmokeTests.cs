@@ -125,6 +125,35 @@ public sealed class BoundingBoxSampleSmokeTests
         closed.Should().BeTrue("the sample closes with its window");
     }
 
+    [Fact]
+    public void A_Sweep_Ranks_The_Motion_Settings_Over_A_Folder_Of_Scenes()
+    {
+        E2ESettings.SkipUnlessEnabled();
+
+        // Two short scenes, and an empty corpus, so the sweep is quick and the same on every machine.
+        var scenes = E2ESettings.NewFolder("sweep-scenes-" + Guid.NewGuid().ToString("N")[..8]);
+        foreach (var file in new[] { "s01-empty-noise.storybook.json", "s02-tree-in-the-wind.storybook.json" })
+        {
+            File.Copy(Path.Combine(ScenesFolder, file), Path.Combine(scenes, file));
+        }
+
+        var corpus = E2ESettings.NewFolder("sweep-corpus-" + Guid.NewGuid().ToString("N")[..8]);
+        using var run = new BoundingBoxSampleRun(["--sweep", scenes, "--corpus", corpus]);
+        var app = run.App;
+        var window = app.WaitForWindowTitled(BoundingBoxSampleRun.WindowTitle, DesktopApp.StartTimeout);
+        WaitUntilReady(app, window);
+
+        Element(app, window, "ScoreSummary").Name.Should().Contain("shipped defaults");
+        Element(app, window, "ScoreJson").Patterns.Value.Pattern.Value.Value.Should().StartWith("# Motion settings sweep")
+            .And.Contain(" (defaults) |");
+        Directory.GetFiles(Path.Combine(run.DataFolder, "sweeps"), "sweep-*.md").Should().ContainSingle("the report is kept in the data folder");
+        WindowPicture.Save(window, Path.Combine(run.DataFolder, "sweep.png"));
+
+        var closed = app.CloseApp(window);
+        LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
+        closed.Should().BeTrue("the sample closes with its window");
+    }
+
     private static string Describe(PixelBox box)
         => string.Create(CultureInfo.InvariantCulture, $"{box.X:0.##},{box.Y:0.##},{box.Width:0.##},{box.Height:0.##}");
 
