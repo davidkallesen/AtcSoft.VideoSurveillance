@@ -75,7 +75,7 @@ public sealed class MotionDetectionPartsTests
     {
         var tracker = new MotionTracker();
         var options = new MotionDetectorOptions();
-        var shown = new List<(Blob Box, int Id)>();
+        var shown = new List<(Blob Box, int Id, bool Certain)>();
 
         for (var i = 0; i < 40; i++)
         {
@@ -91,7 +91,7 @@ public sealed class MotionDetectionPartsTests
     {
         var tracker = new MotionTracker();
         var options = new MotionDetectorOptions();
-        var shown = new List<(Blob Box, int Id)>();
+        var shown = new List<(Blob Box, int Id, bool Certain)>();
 
         for (var i = 0; i < 20; i++)
         {
@@ -101,6 +101,8 @@ public sealed class MotionDetectionPartsTests
 
         shown.Should().NotBeEmpty();
         shown.Select(s => s.Id).Distinct().Should().ContainSingle();
+        shown[0].Certain.Should().BeFalse("it has only just travelled far enough to show");
+        shown[^1].Certain.Should().BeTrue("by now it has gone three times as far: an object for certain");
     }
 
     private static byte[] Mask(params (int X, int Y, int W, int H)[] rects)

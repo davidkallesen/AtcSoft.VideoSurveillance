@@ -79,10 +79,11 @@ public sealed class VectorStepsTests
         var pseudo = new Pseudo(width + (height * 7));
         var pixels = width * height;
         var ignored = pseudo.Mask(pixels, 0.2);
+        var heldPixels = pseudo.Mask(pixels, 0.3);
 
         // Slow foreground learning, and fast, where the block is taken in while it stays and its
-        // pixels stay covered until it leaves.
-        foreach (var (ignore, foregroundRate) in new[] { (null, 0.001), (ignored, 0.001), (null, 0.6), (ignored, 0.6) })
+        // pixels stay covered until it leaves; with and without pixels held (no flicker).
+        foreach (var (ignore, foregroundRate, held) in new[] { (null, 0.001, null), (ignored, 0.001, heldPixels), (null, 0.6, heldPixels), (ignored, 0.6, null) })
         {
             var model = new BackgroundModel();
             var plain = new PlainBackground();
@@ -94,13 +95,14 @@ public sealed class VectorStepsTests
                 var mask = new byte[pixels];
                 var plainMask = new byte[pixels];
 
-                var share = model.Apply(picture, mask, 2.5, 12, 0.02, foregroundRate, ignore);
-                var plainShare = plain.Apply(picture, plainMask, 2.5, 12, 0.02, foregroundRate, ignore);
+                var share = model.Apply(picture, mask, 2.5, 12, 0.02, foregroundRate, ignore, held);
+                var plainShare = plain.Apply(picture, plainMask, 2.5, 12, 0.02, foregroundRate, ignore, held);
 
                 share.Should().Be(plainShare);
                 mask.Should().Equal(plainMask);
                 Bits(model.Mean).Should().Equal(Bits(plain.Mean));
                 Bits(model.Variance).Should().Equal(Bits(plain.Variance));
+                Bits(model.Flicker).Should().Equal(Bits(plain.Flicker));
             }
         }
     }
@@ -115,6 +117,7 @@ public sealed class VectorStepsTests
         var pixels = width * height;
         var watched = pseudo.Bytes(pixels).Select(b => (byte)(b % 3)).ToArray();
         var ignored = pseudo.Mask(pixels, 0.1);
+        var held = pseudo.Mask(pixels, 0.2);
         double[] sigmas = [2.5, 1.5, 4];
         double[] mins = [12, 6, 20];
         var model = new BackgroundModel();
@@ -135,18 +138,20 @@ public sealed class VectorStepsTests
             var mask = new byte[pixels];
             var plainMask = new byte[pixels];
 
-            var share = model.ApplyZoned(picture, mask, sigmas, mins, watched, 0.05, 0.002, ignored);
-            var plainShare = plain.ApplyZoned(picture, plainMask, sigmas, mins, watched, 0.05, 0.002, ignored);
+            var share = model.ApplyZoned(picture, mask, sigmas, mins, watched, 0.05, 0.002, ignored, held);
+            var plainShare = plain.ApplyZoned(picture, plainMask, sigmas, mins, watched, 0.05, 0.002, ignored, held);
 
             share.Should().Be(plainShare);
             mask.Should().Equal(plainMask);
             Bits(model.Mean).Should().Equal(Bits(plain.Mean));
             Bits(model.Variance).Should().Equal(Bits(plain.Variance));
+            Bits(model.Flicker).Should().Equal(Bits(plain.Flicker));
         }
     }
 
     // A dozen pictures: noise around the first, a block that comes in the third, moves slowly (most of it stays
-    // covered) and leaves after seven, then a jump in brightness.
+    // covered) and leaves after seven, then a jump in brightness. The bottom quarter sways: every other picture
+    // it is bright, so its pixels keep going back to the background (flicker).
     private static IEnumerable<byte[]> Pictures(
         Pseudo pseudo,
         byte[] first,
@@ -162,6 +167,11 @@ public sealed class VectorStepsTests
                 {
                     picture[(y * width) + x] = 250;
                 }
+            }
+
+            for (var i = height * 3 / 4 * width; turn % 2 == 1 && i < picture.Length; i++)
+            {
+                picture[i] = 250;
             }
 
             yield return picture;
@@ -260,6 +270,8 @@ public sealed class VectorStepsTests
 
         public float[] Variance { get; private set; } = [];
 
+        public float[] Flicker { get; private set; } = [];
+
         // 0 never background yet, 1 background, 2 covered (with the background from before in Anchor).
         private byte[] State { get; set; } = [];
 
@@ -271,6 +283,7 @@ public sealed class VectorStepsTests
             Variance = Enumerable.Repeat(36f, frame.Length).ToArray();
             State = new byte[frame.Length];
             Anchor = new float[frame.Length];
+            Flicker = new float[frame.Length];
         }
 
         public double Apply(
@@ -280,8 +293,9 @@ public sealed class VectorStepsTests
             double minThreshold,
             double backgroundRate,
             double foregroundRate,
-            byte[]? ignored)
-            => ApplyZoned(frame, mask, [sigmas], [minThreshold], new byte[frame.Length], backgroundRate, foregroundRate, ignored);
+            byte[]? ignored,
+            byte[]? held)
+            => ApplyZoned(frame, mask, [sigmas], [minThreshold], new byte[frame.Length], backgroundRate, foregroundRate, ignored, held);
 
         public double ApplyZoned(
             byte[] frame,
@@ -291,7 +305,8 @@ public sealed class VectorStepsTests
             byte[] watched,
             double backgroundRate,
             double foregroundRate,
-            byte[]? ignored)
+            byte[]? ignored,
+            byte[]? held)
         {
             var s2 = sigmas.Select(s => (float)(s * s)).ToArray();
             var min2 = minThresholds.Select(m => (float)(m * m)).ToArray();
@@ -341,8 +356,17 @@ public sealed class VectorStepsTests
                 var stopped = isForeground && state != 0;
                 var rate = stopped ? fg : bg;
                 State[i] = isForeground ? (state == 0 ? (byte)0 : (byte)2) : (state == 2 && !restored ? (byte)2 : (byte)1);
+                var inside = held is not null && held[i] != 0;
+                var f = Flicker[i] * (1 - bg);
+                if (restored && !inside && bg > 0)
+                {
+                    f = Math.Min(1f, f + 0.5f);
+                }
+
+                Flicker[i] = f;
                 Mean[i] += rate * d;
-                var varianceRate = stopped ? 0f : rate;
+                var swaying = Math.Clamp((f - 0.3f) * (1 / (1 - 0.3f)), 0f, 1f);
+                var varianceRate = stopped ? (inside ? 0f : bg * swaying) : rate;
                 Variance[i] = Math.Clamp(Variance[i] + (varianceRate * (d2 - Variance[i])), 9f, 2500f);
             }
 

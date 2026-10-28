@@ -8,6 +8,14 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// only once it has matched the background since it was learnt anew: until then the background
 /// is the more likely mistake (something that was in the first picture and left), and the pixel
 /// learns at the background's speed, so its ghost goes within a second.
+/// <para>
+/// A covered pixel learns no variance, or something that stopped would be taken in within
+/// seconds. A pixel that keeps going back to the background (a branch or a net in the wind) is
+/// swaying, not covered: each return adds to its flicker, which fades at the background's speed,
+/// and a covered pixel with enough flicker learns its variance from its swings, so wind is taken
+/// in. Pixels inside an object being followed (the caller's <c>held</c>) do neither: a walker's
+/// legs swing too.
+/// </para>
 /// </summary>
 /// <remarks>
 /// The per-pixel step runs on <see cref="Vector{T}"/>, with the plain loop for the last pixels.
@@ -23,6 +31,13 @@ internal sealed class BackgroundModel
     private const byte StateBackground = 1;
     private const byte StateCovered = 2;
 
+    // What each return to the background adds to a pixel's flicker (at most 1), and from how much
+    // flicker a covered pixel learns its variance (fully at 1). Two returns within the
+    // background's time: a branch swaying, not something that stopped.
+    private const float FlickerStep = 0.5f;
+    private const float FlickerLearnsFrom = 0.3f;
+    private const float FlickerScale = 1 / (1 - FlickerLearnsFrom);
+
     private float[] mean = [];
     private float[] variance = [];
 
@@ -32,6 +47,7 @@ internal sealed class BackgroundModel
     // most of the picture differs), until the picture is that background again.
     private byte[] settled = [];
     private float[] anchor = [];
+    private float[] flicker = [];
 
     // The watch zones' thresholds spread per pixel, kept while the zones and their values stay.
     private byte[]? zonedFor;
@@ -59,6 +75,12 @@ internal sealed class BackgroundModel
     public ReadOnlySpan<float> Variance
         => variance;
 
+    /// <summary>
+    /// Gets the flicker per pixel, read only.
+    /// </summary>
+    public ReadOnlySpan<float> Flicker
+        => flicker;
+
     public void Reset(
         byte[] frame,
         int width,
@@ -72,10 +94,12 @@ internal sealed class BackgroundModel
             variance = new float[frame.Length];
             settled = new byte[frame.Length];
             anchor = new float[frame.Length];
+            flicker = new float[frame.Length];
         }
         else
         {
             Array.Clear(settled);
+            Array.Clear(flicker);
         }
 
         for (var i = 0; i < frame.Length; i++)
@@ -117,6 +141,7 @@ internal sealed class BackgroundModel
     /// <param name="backgroundRate">How much a background pixel learns now (0 to 1).</param>
     /// <param name="foregroundRate">How much a foreground pixel learns now (0 to 1).</param>
     /// <param name="ignored">Pixels never counted as foreground (1), still learnt; <see langword="null"/> for none.</param>
+    /// <param name="held">Pixels of objects being followed (1): no flicker, so they are not taken in as wind; <see langword="null"/> for none.</param>
     /// <returns>The share of the pixels looked at that is foreground.</returns>
     public double Apply(
         byte[] frame,
@@ -125,7 +150,8 @@ internal sealed class BackgroundModel
         double minThreshold,
         double backgroundRate,
         double foregroundRate,
-        byte[]? ignored = null)
+        byte[]? ignored = null,
+        byte[]? held = null)
         => Learn(
             frame,
             mask,
@@ -135,7 +161,8 @@ internal sealed class BackgroundModel
             pixelMins: default,
             (float)backgroundRate,
             (float)foregroundRate,
-            ignored);
+            ignored,
+            held);
 
     /// <summary>
     /// As <see cref="Apply"/>, with the thresholds of the watch zone each pixel is in: index 0 of
@@ -149,6 +176,7 @@ internal sealed class BackgroundModel
     /// <param name="backgroundRate">How much the background learns of a pixel that is not foreground.</param>
     /// <param name="foregroundRate">How much it learns of one that is.</param>
     /// <param name="ignored">The ignored pixels, or <see langword="null"/>.</param>
+    /// <param name="held">The pixels of objects being followed, or <see langword="null"/>.</param>
     /// <returns>The share of the pixels looked at that are foreground.</returns>
     public double ApplyZoned(
         byte[] frame,
@@ -158,7 +186,8 @@ internal sealed class BackgroundModel
         byte[] watched,
         double backgroundRate,
         double foregroundRate,
-        byte[]? ignored = null)
+        byte[]? ignored = null,
+        byte[]? held = null)
     {
         ArgumentNullException.ThrowIfNull(sigmas);
         ArgumentNullException.ThrowIfNull(minThresholds);
@@ -176,7 +205,8 @@ internal sealed class BackgroundModel
             pixelMins,
             (float)backgroundRate,
             (float)foregroundRate,
-            ignored);
+            ignored,
+            held);
     }
 
     // Each pixel's squared thresholds from its zone; spread again only when the zones or their values
@@ -223,9 +253,14 @@ internal sealed class BackgroundModel
         ReadOnlySpan<float> pixelMins,
         float bg,
         float fg,
-        byte[]? ignored)
+        byte[]? ignored,
+        byte[]? held)
     {
         var perPixel = !pixelSigmas.IsEmpty;
+
+        // Flicker fades at the background's speed; with no time passed nothing is added.
+        var flickerKeep = 1 - bg;
+        var flickerStep = bg > 0 ? FlickerStep : 0f;
         var count = 0;
         var looked = frame.Length;
         var i = 0;
@@ -233,7 +268,7 @@ internal sealed class BackgroundModel
         var step = Vector<byte>.Count;
         if (Vector.IsHardwareAccelerated && frame.Length >= step)
         {
-            var thresholds = new LearnStep(sigmas2, mins2, bg, fg);
+            var thresholds = new LearnStep(sigmas2, mins2, bg, fg, flickerKeep, flickerStep);
             var counted = Vector<int>.Zero;
             var lookedAt = Vector<int>.Zero;
             for (; i + step <= frame.Length; i += step)
@@ -249,15 +284,21 @@ internal sealed class BackgroundModel
                 Vector.Widen(Vector.AsVectorSByte(keep), out var keepLow, out var keepHigh);
                 Vector.Widen(keepLow, out var keep0, out var keep1);
                 Vector.Widen(keepHigh, out var keep2, out var keep3);
+                var holds = held is null
+                    ? Vector<byte>.Zero
+                    : ~Vector.Equals(new Vector<byte>(held.AsSpan(i, step)), Vector<byte>.Zero);
+                Vector.Widen(Vector.AsVectorSByte(holds), out var holdLow, out var holdHigh);
+                Vector.Widen(holdLow, out var hold0, out var hold1);
+                Vector.Widen(holdHigh, out var hold2, out var hold3);
                 var states = new Vector<byte>(settled.AsSpan(i, step));
                 Vector.Widen(states, out var statesLow, out var statesHigh);
                 Vector.Widen(statesLow, out var states0, out var states1);
                 Vector.Widen(statesHigh, out var states2, out var states3);
 
-                var foreground0 = LearnLanes(i, pixels0, keep0, Vector.AsVectorInt32(states0), pixelSigmas, pixelMins, thresholds, out var next0);
-                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, Vector.AsVectorInt32(states1), pixelSigmas, pixelMins, thresholds, out var next1);
-                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, Vector.AsVectorInt32(states2), pixelSigmas, pixelMins, thresholds, out var next2);
-                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, Vector.AsVectorInt32(states3), pixelSigmas, pixelMins, thresholds, out var next3);
+                var foreground0 = LearnLanes(i, pixels0, keep0, hold0, Vector.AsVectorInt32(states0), pixelSigmas, pixelMins, thresholds, out var next0);
+                var foreground1 = LearnLanes(i + lanes, pixels1, keep1, hold1, Vector.AsVectorInt32(states1), pixelSigmas, pixelMins, thresholds, out var next1);
+                var foreground2 = LearnLanes(i + (2 * lanes), pixels2, keep2, hold2, Vector.AsVectorInt32(states2), pixelSigmas, pixelMins, thresholds, out var next2);
+                var foreground3 = LearnLanes(i + (3 * lanes), pixels3, keep3, hold3, Vector.AsVectorInt32(states3), pixelSigmas, pixelMins, thresholds, out var next3);
 
                 // -1 per foreground pixel and per pixel looked at.
                 counted += foreground0 + foreground1 + foreground2 + foreground3;
@@ -314,6 +355,14 @@ internal sealed class BackgroundModel
 
             var stopped = isForeground && state != StateUnsettled;
             var rate = stopped ? fg : bg;
+            var inside = held is not null && held[i] != 0;
+            var f = flicker[i] * flickerKeep;
+            if (restored && !inside)
+            {
+                f = Math.Min(1f, f + flickerStep);
+            }
+
+            flicker[i] = f;
             settled[i] = isForeground
                 ? (state == StateUnsettled ? StateUnsettled : StateCovered)
                 : (state == StateCovered && !restored ? StateCovered : StateBackground);
@@ -321,8 +370,10 @@ internal sealed class BackgroundModel
             mean[i] += rate * d;
 
             // The variance learns how much the background varies (swaying leaves raise theirs),
-            // not how far something that stopped differs from it, or that would hide it in seconds.
-            var varianceRate = stopped ? 0f : rate;
+            // not how far something that stopped differs from it, or that would hide it in seconds;
+            // a covered pixel that keeps going back (swaying) learns from its swings.
+            var swaying = Math.Clamp((f - FlickerLearnsFrom) * FlickerScale, 0f, 1f);
+            var varianceRate = stopped ? (inside ? 0f : bg * swaying) : rate;
             variance[i] = Math.Clamp(variance[i] + (varianceRate * (d2 - variance[i])), MinVariance, MaxVariance);
         }
 
@@ -335,6 +386,7 @@ internal sealed class BackgroundModel
         int at,
         Vector<uint> pixels,
         Vector<int> keep,
+        Vector<int> hold,
         Vector<int> states,
         ReadOnlySpan<float> pixelSigmas,
         ReadOnlySpan<float> pixelMins,
@@ -373,8 +425,16 @@ internal sealed class BackgroundModel
             Vector.ConditionalSelect(covered, new Vector<int>(StateCovered), new Vector<int>(StateBackground)));
         var stopped = Vector.AndNot(isForeground, unsettled);
         var rate = Vector.ConditionalSelect(stopped, step.Foreground, step.Background);
+        var flickers = flicker.AsSpan(at, lanes);
+        var f = new Vector<float>(flickers) * step.FlickerKeep;
+        f = Vector.ConditionalSelect(Vector.AndNot(restore, hold), Vector.Min(f + step.FlickerAdd, Vector<float>.One), f);
+        f.CopyTo(flickers);
         (m + (rate * d)).CopyTo(means);
-        var varianceRate = Vector.ConditionalSelect(stopped, Vector<float>.Zero, rate);
+        var swaying = Vector.Min(Vector.Max((f - step.FlickerFrom) * step.FlickerSpread, Vector<float>.Zero), Vector<float>.One);
+        var varianceRate = Vector.ConditionalSelect(
+            stopped,
+            Vector.ConditionalSelect(hold, Vector<float>.Zero, step.Background * swaying),
+            rate);
         Vector.Min(Vector.Max(v + (varianceRate * (d2 - v)), step.Low), step.High).CopyTo(variances);
         return isForeground;
     }
@@ -385,7 +445,9 @@ internal sealed class BackgroundModel
         float sigmas2,
         float mins2,
         float background,
-        float foreground)
+        float foreground,
+        float flickerKeep,
+        float flickerStep)
     {
         public Vector<float> Sigmas { get; } = new(sigmas2);
 
@@ -398,5 +460,13 @@ internal sealed class BackgroundModel
         public Vector<float> Low { get; } = new(MinVariance);
 
         public Vector<float> High { get; } = new(MaxVariance);
+
+        public Vector<float> FlickerKeep { get; } = new(flickerKeep);
+
+        public Vector<float> FlickerAdd { get; } = new(flickerStep);
+
+        public Vector<float> FlickerFrom { get; } = new(FlickerLearnsFrom);
+
+        public Vector<float> FlickerSpread { get; } = new(FlickerScale);
     }
 }

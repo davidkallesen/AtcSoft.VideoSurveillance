@@ -34,6 +34,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
     private bool lastHadBoxes;
+    private bool holding;
     private double lastShare;
 
     /// <summary>
@@ -69,6 +70,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         {
             background.Reset(blurred, frame.Width, frame.Height);
             tracker.Reset();
+            holding = false;
             return Result(moving: false, frame.Time, 0, []);
         }
 
@@ -99,6 +101,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             {
                 background.Reset(blurred, frame.Width, frame.Height);
                 tracker.Reset();
+                holding = false;
             }
 
             settleUntil = frame.Time.AddSeconds(options.LightingSettleSeconds);
@@ -121,6 +124,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
 
         var time = (frame.Time - DateTimeOffset.UnixEpoch).TotalSeconds;
         var tracks = tracker.Update(blobs, time, options, frame.Width);
+        Hold(tracks, frame.Width);
         var boxes = tracks
             .Select(t => new BoundingBox { X = t.Box.MinX, Y = t.Box.MinY, Width = t.Box.Width, Height = t.Box.Height, TrackId = t.Id, Zone = ZoneOf(t.Box, frame.Width, frame.Height) })
             .OrderByDescending(b => b.Area)
@@ -138,6 +142,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     {
         background.Reset([], 0, 0);
         tracker.Reset();
+        holding = false;
         lastTime = null;
         settleUntil = null;
         lastHadBoxes = false;
@@ -192,8 +197,34 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         double foregroundRate,
         byte[]? ignore)
         => watched is { } zoneOf
-            ? background.ApplyZoned(blurred, mask, zoneSigmas, zoneMinThresholds, zoneOf, backgroundRate, foregroundRate, ignore)
-            : background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, backgroundRate, foregroundRate, ignore);
+            ? background.ApplyZoned(blurred, mask, zoneSigmas, zoneMinThresholds, zoneOf, backgroundRate, foregroundRate, ignore, Held)
+            : background.Apply(blurred, mask, options.ThresholdSigmas, options.MinThreshold, backgroundRate, foregroundRate, ignore, Held);
+
+    private byte[]? Held
+        => holding ? buffers.Held : null;
+
+    // Marks the boxes of the objects shown that have travelled for certain, so the background does
+    // not take their swinging limbs in as wind in the next picture. Not every track: a false one on
+    // a branch would keep its own pixels from learning the sway, and so keep itself alive.
+    private void Hold(
+        List<(Blob Box, int Id, bool Certain)> tracks,
+        int width)
+    {
+        if (holding)
+        {
+            Array.Clear(buffers.Held);
+        }
+
+        holding = false;
+        foreach (var (box, _, _) in tracks.Where(t => t.Certain))
+        {
+            holding = true;
+            for (var y = box.MinY; y <= box.MaxY; y++)
+            {
+                Array.Fill(buffers.Held, (byte)1, (y * width) + box.MinX, box.Width);
+            }
+        }
+    }
 
     // The name of the watch zone a box's middle is in, or null.
     private string? ZoneOf(

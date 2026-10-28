@@ -16,6 +16,12 @@ internal sealed class DetectorBuffers
 
     public byte[] Temp { get; private set; } = [];
 
+    /// <summary>
+    /// Gets the pixels of the objects shown in the last picture that have travelled for certain
+    /// (1), kept out of the background's flicker.
+    /// </summary>
+    public byte[] Held { get; private set; } = [];
+
     public int[] Labels { get; private set; } = [];
 
     public List<int> Parent { get; } = [];
@@ -43,6 +49,7 @@ internal sealed class DetectorBuffers
             Rows = new ushort[pixels];
             Mask = new byte[pixels];
             Temp = new byte[pixels];
+            Held = new byte[pixels];
             Labels = new int[pixels];
         }
     }

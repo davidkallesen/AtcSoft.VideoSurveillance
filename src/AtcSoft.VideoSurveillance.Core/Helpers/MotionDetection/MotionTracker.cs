@@ -9,13 +9,19 @@ namespace AtcSoft.VideoSurveillance.Helpers.MotionDetection;
 /// </summary>
 internal sealed class MotionTracker
 {
+    // A track that has gone this many times the travel that confirms it is an object for certain
+    // (a walker, or someone coming closer); a false track on a swaying branch jitters about where
+    // it began.
+    private const double CertainTravel = 3;
+
     private readonly List<Track> tracks = [];
     private int nextId = 1;
 
     /// <summary>
-    /// Takes the blobs of a picture and gets the confirmed tracks seen in it.
+    /// Takes the blobs of a picture and gets the confirmed tracks seen in it, each with whether it
+    /// has travelled far enough to be an object for certain.
     /// </summary>
-    public List<(Blob Box, int Id)> Update(
+    public List<(Blob Box, int Id, bool Certain)> Update(
         List<Blob> blobs,
         double time,
         MotionDetectorOptions options,
@@ -59,7 +65,7 @@ internal sealed class MotionTracker
 
         tracks.RemoveAll(t => time - t.LastSeen > options.TrackLostSeconds);
 
-        var shown = new List<(Blob Box, int Id)>();
+        var shown = new List<(Blob Box, int Id, bool Certain)>();
         foreach (var track in tracks)
         {
             if (!track.Confirmed && time - track.FirstSeen >= options.ConfirmSeconds && track.Travel >= minTravel)
@@ -69,7 +75,7 @@ internal sealed class MotionTracker
 
             if (track.Confirmed && Math.Abs(track.LastSeen - time) < 1e-9)
             {
-                shown.Add((track.Box, track.Id));
+                shown.Add((track.Box, track.Id, track.Travel >= CertainTravel * minTravel));
             }
         }
 
