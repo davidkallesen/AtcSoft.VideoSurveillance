@@ -81,10 +81,27 @@
                 </Button.Style>
             </Button>
             <Button
+                Margin="0,0,16,0"
                 Padding="10,4"
                 AutomationProperties.AutomationId="NextFrameButton"
                 Command="{Binding Path=NextFrameCommand}"
                 Content="Next ▶" />
+            <TextBlock
+                Margin="0,0,6,0"
+                VerticalAlignment="Center"
+                Text="Turned:" />
+            <ComboBox
+                Width="60"
+                Margin="0,0,4,0"
+                AutomationProperties.AutomationId="LiveRotationComboBox"
+                ItemsSource="{Binding Path=Rotations}"
+                SelectedItem="{Binding Path=LiveRotation}" />
+            <Button
+                Padding="10,4"
+                AutomationProperties.AutomationId="PlayLiveButton"
+                Command="{Binding Path=PlayLiveCommand}"
+                Content="Play live…"
+                ToolTip="Stream what is open to the engine's player as a camera sends it, turned as chosen, and run the detector on the player's pictures, as CameraWall does" />
         </StackPanel>
 
         <!--  Where in the run, and what the sample is doing  -->

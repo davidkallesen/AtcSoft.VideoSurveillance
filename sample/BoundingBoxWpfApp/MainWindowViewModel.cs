@@ -136,6 +136,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private string tuningInfo = string.Empty;
 
     [ObservableProperty]
+    private int liveRotation;
+
+    [ObservableProperty]
     private bool isReviewing;
 
     [ObservableProperty]
@@ -168,6 +171,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     /// Gets the analysis rates to choose from: the server's and CameraWall's.
     /// </summary>
     public IReadOnlyList<double> Rates { get; } = [4, 15];
+
+    /// <summary>
+    /// Gets the turns the live clock can play the picture at, clockwise.
+    /// </summary>
+    public IReadOnlyList<int> Rotations { get; } = [0, 90, 180, 270];
 
     /// <summary>
     /// Gets the verdicts a marked stretch can have.
@@ -356,6 +364,92 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private bool HasRun()
         => current is not null && !IsBusy;
+
+    /// <summary>
+    /// Plays what is open live, in a window of its own: the video streamed to the engine's player
+    /// as a camera sends it (a storybook encoded first), turned as chosen, with the tuning.
+    /// </summary>
+    public async Task PlayLiveAsync()
+    {
+        if (openPath is not { } path || fileDetector is not { } file || current is null)
+        {
+            return;
+        }
+
+        if (!EnsureEngine())
+        {
+            Status = "FFmpeg is needed for the live clock.";
+            return;
+        }
+
+        var tool = Path.Combine(VideoEngineBootstrap.FFmpegFolder!, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
+        if (!File.Exists(tool))
+        {
+            Status = "The FFmpeg command-line tool is needed for the live clock.";
+            return;
+        }
+
+        Stop();
+        IsBusy = true;
+        CommandManager.InvalidateRequerySuggested();
+        Status = "Preparing the live stream…";
+        try
+        {
+            var detector = Tuned(file, fromFile: false);
+            var rate = AnalysesPerSecond;
+            LiveSource source;
+            if (openIsStorybook)
+            {
+                var scene = StorybookReader.ReadFile(path);
+                var (video, truth) = await Task.Run(() => SampleRunner.VideoToStream(path, scene, Path.Combine(App.DataFolder, "videos"))).ConfigureAwait(true);
+                source = new LiveSource(scene.Name, video, truth, scene.Video.Fps, scene.Video.Width, scene.Video.Height, scene.Video.DurationSeconds, scene.Expect, detector, rate);
+            }
+            else
+            {
+                // The stream does not carry a recording's turn, so the player is told it.
+                var stored = (VideoRotation)MediaProbe.GetRotation(path);
+                var (shownWidth, shownHeight) = MediaProbe.GetDisplaySize(path);
+                var turned = stored is VideoRotation.Rotate90 or VideoRotation.Rotate270;
+                source = new LiveSource(
+                    Path.GetFileName(path),
+                    path,
+                    Truth: null,
+                    Fps: 0,
+                    turned ? shownHeight : shownWidth,
+                    turned ? shownWidth : shownHeight,
+                    MediaProbe.GetDuration(path).TotalSeconds,
+                    new StorybookExpect(),
+                    detector,
+                    rate,
+                    stored);
+            }
+
+            var window = new LiveWindow(new LiveWindowViewModel(source, (VideoRotation)LiveRotation, tool, Path.Combine(App.DataFolder, "logs"), PlayerFactory.Value))
+            {
+                Owner = Application.Current.MainWindow,
+            };
+            window.Show();
+            Status = "Ready";
+        }
+        catch (Exception ex) when (ex is StorybookException or IOException or InvalidOperationException or AtcSoft.VideoEngine.FFmpeg.FFmpegException)
+        {
+            Log.Error(ex, "Playing {Path} live failed", path);
+            Status = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    [RelayCommand("PlayLive", CanExecute = nameof(CanTune))]
+    private Task PlayLiveFromWindowAsync()
+        => PlayLiveAsync();
+
+    // One factory for every live window, with the GPU as in the apps.
+    private static readonly Lazy<IVideoPlayerFactory> PlayerFactory = new(
+        () => new VideoPlayerFactory(new Serilog.Extensions.Logging.SerilogLoggerFactory(Log.Logger), new D3D11AcceleratorFactory()));
 
     [RelayCommand(CanExecute = nameof(CanTune))]
     private void ResetTuning()

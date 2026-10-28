@@ -48,15 +48,29 @@ public partial class App
 
         if (options.StorybookPath is { } storybook)
         {
-            _ = viewModel.OpenStorybookAsync(storybook, options.AnalysesPerSecond);
+            _ = OpenAsync(viewModel, viewModel.OpenStorybookAsync(storybook, options.AnalysesPerSecond), options.LiveRotation);
         }
         else if (options.RecordingPath is { } recording)
         {
-            _ = viewModel.OpenRecordingAsync(recording, options.AnalysesPerSecond);
+            _ = OpenAsync(viewModel, viewModel.OpenRecordingAsync(recording, options.AnalysesPerSecond), options.LiveRotation);
         }
         else if (options.SweepFolder is { } sweep)
         {
             _ = viewModel.SweepAsync(sweep, options.CorpusFolder ?? Environment.GetEnvironmentVariable(StartupOptions.CorpusVariable));
+        }
+    }
+
+    // Opens a file, then plays it live when asked to.
+    private static async Task OpenAsync(
+        MainWindowViewModel viewModel,
+        Task opening,
+        int? liveRotation)
+    {
+        await opening.ConfigureAwait(true);
+        if (liveRotation is { } rotation)
+        {
+            viewModel.LiveRotation = rotation;
+            await viewModel.PlayLiveAsync().ConfigureAwait(true);
         }
     }
 

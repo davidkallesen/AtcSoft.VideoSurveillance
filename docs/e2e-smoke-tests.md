@@ -49,7 +49,12 @@ Leave the mouse alone while the CameraWall walk runs: a few steps are real click
   saves it, then reads `{video}.review.json` back. A third opens a copy of S5 and checks the debug
   layers (the debug line and a label for every blob the detector found, as a run made in the test with
   its diagnostics), sets the smallest object to 0.5 % in the tuning panel and waits for the score of
-  that run, saves the settings into the copy and reads them back. A picture of the window is saved in its folder:
+  that run, saves the settings into the copy and reads them back. A fourth plays S3 on the live clock
+  (`--live`, the video streamed to the engine's player) turned 0, 90, 180 and 270° (S7), and checks
+  that a box in `VideoHost`'s overlay lies on the walker as the truth turned the same way, and the
+  score at the end. `VideoHost` puts its picture and its overlay in child windows WPF does not know
+  of, so they are not in the window's UI Automation tree; `ChildWindows.Find` asks UI Automation for
+  each child window by its handle, and reads the overlay's boxes from there. A picture of the window is saved in its folder:
   Windows draws the window alone (`WindowPicture`), so a picture never holds the rest of the desktop.
   A third walk sweeps the motion settings over two short scenes (`--sweep`, an empty `--corpus`) and
   checks the ranked report in the window and in `{data}\sweeps`.

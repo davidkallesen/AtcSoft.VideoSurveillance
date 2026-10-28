@@ -12,12 +12,14 @@ namespace BoundingBoxWpfApp;
 /// <param name="AnalysesPerSecond">How many pictures a second are analysed.</param>
 /// <param name="SweepFolder">A folder of storybooks to sweep, or <see langword="null"/>.</param>
 /// <param name="CorpusFolder">A folder of reviewed recordings to sweep too, or <see langword="null"/>.</param>
+/// <param name="LiveRotation">With <c>--live 0|90|180|270</c>, what is opened is also played live, turned so; else <see langword="null"/>.</param>
 public sealed record StartupOptions(
     string? StorybookPath,
     string? RecordingPath,
     double AnalysesPerSecond,
     string? SweepFolder = null,
-    string? CorpusFolder = null)
+    string? CorpusFolder = null,
+    int? LiveRotation = null)
 {
     /// <summary>
     /// The variable naming the corpus of reviewed recordings, as for the corpus test.
@@ -42,6 +44,7 @@ public sealed record StartupOptions(
         string? recording = null;
         string? sweep = null;
         string? corpus = null;
+        int? live = null;
         var rate = DefaultAnalysesPerSecond;
 
         // Each option is a name and the value after it.
@@ -61,12 +64,15 @@ public sealed record StartupOptions(
                 case "--corpus":
                     corpus = value;
                     break;
+                case "--live" when int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var turn) && turn is 0 or 90 or 180 or 270:
+                    live = turn;
+                    break;
                 case "--rate" when double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) && parsed > 0:
                     rate = parsed;
                     break;
             }
         }
 
-        return new StartupOptions(storybook, recording, rate, sweep, corpus);
+        return new StartupOptions(storybook, recording, rate, sweep, corpus, live);
     }
 }

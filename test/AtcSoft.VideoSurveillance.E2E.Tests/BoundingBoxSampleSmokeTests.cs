@@ -129,6 +129,65 @@ public sealed class BoundingBoxSampleSmokeTests
         closed.Should().BeTrue("the sample closes with its window");
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void The_Live_Clock_Plays_Through_The_Player_With_The_Boxes_On_The_Walker(
+        int rotation)
+    {
+        E2ESettings.SkipUnlessEnabled();
+        var folder = VideoEngineBootstrap.FindFFmpegPath();
+        Assert.SkipUnless(folder is not null && File.Exists(Path.Combine(folder, "ffmpeg.exe")), "The FFmpeg command-line tool streams the video.");
+
+        // S3 streamed to the engine's player and turned by it (S7): the boxes are found in
+        // VideoHost's overlay window, and lie on the walker as the truth turned the same way.
+        using var run = new BoundingBoxSampleRun(["--storybook", Path.Combine(ScenesFolder, "s03-slow-walker.storybook.json"), "--rate", "4", "--live", rotation.ToString(CultureInfo.InvariantCulture)]);
+        var app = run.App;
+        var window = app.WaitForWindowTitled(BoundingBoxSampleRun.WindowTitle, DesktopApp.StartTimeout);
+        var live = app.WaitForWindowTitled("Live - ", AnalysisTimeout);
+        live.Title.Should().Contain($"turned {rotation}°");
+
+        var onTheWalker = 0;
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(1);
+        string status;
+        while (true)
+        {
+            status = LiveElement(app, "LiveStatus")?.Name ?? string.Empty;
+            if (status.StartsWith("Ended", StringComparison.Ordinal) || status.StartsWith("Stopped", StringComparison.Ordinal) || DateTime.UtcNow > deadline)
+            {
+                break;
+            }
+
+            var detected = LiveBoxes(app, "LiveDetectorBoxes");
+            var truth = LiveBoxes(app, "LiveTruthBoxes");
+            if (detected.Any(d => truth.Any(t => Overlap(d, t) > 0.3)))
+            {
+                if (onTheWalker == 0)
+                {
+                    WindowPicture.Save(live, Path.Combine(run.DataFolder, $"live-{rotation}.png"));
+                }
+
+                onTheWalker++;
+            }
+
+            DesktopApp.Settle(TimeSpan.FromMilliseconds(200));
+        }
+
+        status.Should().StartWith("Ended", "S3 plays to its end");
+        onTheWalker.Should().BePositive("a box in the overlay window lies on the walker at least once (seen through UI Automation)");
+        var score = LiveElement(app, "LiveScore")?.Name ?? string.Empty;
+        score.Should().StartWith("recall ");
+        var recall = double.Parse(score["recall ".Length..score.IndexOf(',', StringComparison.Ordinal)], CultureInfo.InvariantCulture);
+        recall.Should().BeGreaterThan(0.5, $"the walker is boxed for most of the stretch it must be ({score})");
+
+        live.Close();
+        var closed = app.CloseApp(window);
+        LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
+        closed.Should().BeTrue("the sample closes with its window");
+    }
+
     [Fact]
     public void A_Recording_Shows_The_Detectors_Boxes_And_Is_Reviewed()
     {
@@ -215,6 +274,67 @@ public sealed class BoundingBoxSampleSmokeTests
         var closed = app.CloseApp(window);
         LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
         closed.Should().BeTrue("the sample closes with its window");
+    }
+
+    // An element of the live window or of VideoHost's overlay window, a child window WPF does not
+    // know of: it is not in the live window's tree, so it is asked for by its handle.
+    private static AutomationElement? LiveElement(
+        DesktopApp app,
+        string automationId)
+    {
+        foreach (var window in app.Windows().Where(w => w.Title.StartsWith("Live - ", StringComparison.Ordinal)))
+        {
+            try
+            {
+                if (ChildWindows.Find(app, window, automationId) is { } found)
+                {
+                    return found;
+                }
+            }
+            catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or TimeoutException or InvalidOperationException)
+            {
+                // The window went while it was searched.
+            }
+        }
+
+        return null;
+    }
+
+    // The boxes an overlay in the live window shows, in video pixels.
+    private static List<(double X, double Y, double Width, double Height)> LiveBoxes(
+        DesktopApp app,
+        string overlayId)
+    {
+        try
+        {
+            return LiveElement(app, overlayId)?
+                .FindAllChildren()
+                .Select(b => b.Properties.HelpText.ValueOrDefault ?? string.Empty)
+                .Select(t => t.Split(',').Select(v => double.Parse(v, CultureInfo.InvariantCulture)).ToArray())
+                .Where(v => v.Length == 4)
+                .Select(v => (v[0], v[1], v[2], v[3]))
+                .ToList() ?? [];
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or TimeoutException or InvalidOperationException or FormatException)
+        {
+            return [];
+        }
+    }
+
+    // The overlap of two boxes over their union.
+    private static double Overlap(
+        (double X, double Y, double Width, double Height) a,
+        (double X, double Y, double Width, double Height) b)
+    {
+        var across = Math.Min(a.X + a.Width, b.X + b.Width) - Math.Max(a.X, b.X);
+        var down = Math.Min(a.Y + a.Height, b.Y + b.Height) - Math.Max(a.Y, b.Y);
+        if (across <= 0 || down <= 0)
+        {
+            return 0;
+        }
+
+        var shared = across * down;
+        return shared / ((a.Width * a.Height) + (b.Width * b.Height) - shared);
     }
 
     // The labels of the blobs drawn over the picture.

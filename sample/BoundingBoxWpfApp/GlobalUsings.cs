@@ -19,6 +19,9 @@ global using System.Windows.Threading;
 global using Atc.XamlToolkit.Mvvm;
 
 global using AtcSoft.VideoEngine;
+global using AtcSoft.VideoEngine.Capture;
+global using AtcSoft.VideoEngine.DirectX;
+global using AtcSoft.VideoSurveillance.Enums;
 global using AtcSoft.VideoSurveillance.Helpers;
 global using AtcSoft.VideoSurveillance.Helpers.Activity;
 global using AtcSoft.VideoSurveillance.Helpers.MotionDetection;

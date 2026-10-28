@@ -54,7 +54,7 @@ public static class SampleRunner
             return Result(scene.Name, "fast", analysesPerSecond, StorybookRunner.Run(scene, detector.Create(), options), hasTruth: true, scene.Expect, detector);
         }
 
-        var (video, truth) = Encoded(path, scene, videoFolder, cancellationToken);
+        var (video, truth) = Encoded(EncodedVideoPath(path, videoFolder), scene, cancellationToken);
         return Result(scene.Name, "encoded", analysesPerSecond, StorybookRunner.RunEncoded(scene, detector.Create(), video, truth, options), hasTruth: true, scene.Expect, detector);
     }
 
@@ -132,13 +132,35 @@ public static class SampleRunner
         return Path.Combine(videoFolder, $"{name}-{hash}.mkv");
     }
 
-    private static (string Video, IReadOnlyList<FrameTruth> Truth) Encoded(
+    /// <summary>
+    /// Gets a storybook as a video to stream to the player (the live clock), with its truth: the
+    /// encoded scene for one with a bitrate, else the scene encoded at a high quality once. Needs
+    /// the engine started.
+    /// </summary>
+    /// <param name="path">The storybook file.</param>
+    /// <param name="scene">The storybook, as read from it.</param>
+    /// <param name="videoFolder">Where the video is kept.</param>
+    /// <param name="cancellationToken">Stops the encoding.</param>
+    /// <returns>The video and the truth of each of its frames.</returns>
+    public static (string Video, IReadOnlyList<FrameTruth> Truth) VideoToStream(
         string path,
         StorybookScene scene,
         string videoFolder,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(scene);
+
+        var video = EncodedVideoPath(path, videoFolder);
+        return Encoded(NeedsEngine(scene) ? video : Path.ChangeExtension(video, null) + "-live.mkv", scene, cancellationToken);
+    }
+
+    private static (string Video, IReadOnlyList<FrameTruth> Truth) Encoded(
+        string video,
+        StorybookScene scene,
         CancellationToken cancellationToken)
     {
-        var video = EncodedVideoPath(path, videoFolder);
+        var videoFolder = Path.GetDirectoryName(video)!;
         var truthPath = TruthFile.PathFor(video);
         if (File.Exists(video) && File.Exists(truthPath))
         {
