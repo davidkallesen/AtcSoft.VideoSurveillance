@@ -468,7 +468,7 @@ public static class MediaCleanupRunner
             }
         }
 
-        foreach (var ending in new[] { RecordingPathHelper.ActivityExtension, RecordingPathHelper.PreviewImageExtension, RecordingPathHelper.PreviewIndexExtension })
+        foreach (var ending in new[] { RecordingPathHelper.ActivityExtension, RecordingPathHelper.PreviewImageExtension, RecordingPathHelper.PreviewIndexExtension, RecordingPathHelper.ReviewExtension })
         {
             bytesFreed += RemoveOrphanSidecars(fullRoot, ending, videoExtensions, skipPaths, newestAllowedUtc, excluded, deletedThumbnails, errors);
         }
@@ -476,7 +476,7 @@ public static class MediaCleanupRunner
         return new MediaCleanupRunResult([], deletedThumbnails, bytesFreed, errors);
     }
 
-    // An activity index and the previews always sit beside their video, in every layout.
+    // An activity index, the previews and a review always sit beside their video, in every layout.
     private static long RemoveOrphanSidecars(
         string fullRoot,
         string ending,

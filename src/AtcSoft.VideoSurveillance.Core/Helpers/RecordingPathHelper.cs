@@ -37,6 +37,12 @@ public static partial class RecordingPathHelper
     /// </summary>
     public const string PreviewIndexExtension = ".previews.json";
 
+    /// <summary>
+    /// The ending of a recording's review (a person's verdicts on its motion boxes), in place of the
+    /// video's extension.
+    /// </summary>
+    public const string ReviewExtension = ".review.json";
+
     private const string TimestampFormat = "yyyyMMdd_HHmmss_fff";
     private const string ThumbnailExtension = ".png";
 
@@ -217,16 +223,28 @@ public static partial class RecordingPathHelper
     }
 
     /// <summary>
+    /// Builds the path of a recording's review: a person's verdicts on its motion boxes
+    /// (<c>Helpers.Review.RecordingReviewFile</c>). It always sits next to the video, in every layout.
+    /// </summary>
+    /// <param name="videoPath">The recording path.</param>
+    public static string BuildReviewPath(string videoPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(videoPath);
+
+        return Path.ChangeExtension(videoPath, ReviewExtension);
+    }
+
+    /// <summary>
     /// Gets the files that always sit next to a recording's video, in every layout: its activity
-    /// index and its preview pictures with their index.
+    /// index, its preview pictures with their index, and its review.
     /// </summary>
     /// <param name="videoPath">The recording path.</param>
     public static IReadOnlyList<string> GetSidecarPaths(string videoPath)
-        => [BuildActivityPath(videoPath), BuildPreviewImagePath(videoPath), BuildPreviewIndexPath(videoPath)];
+        => [BuildActivityPath(videoPath), BuildPreviewImagePath(videoPath), BuildPreviewIndexPath(videoPath), BuildReviewPath(videoPath)];
 
     /// <summary>
     /// Gets every file that belongs to a recording besides the video: the places its thumbnail
-    /// may be, its activity index and its preview pictures. Use it to delete or protect a
+    /// may be, its activity index, its preview pictures and its review. Use it to delete or protect a
     /// recording with all it has.
     /// </summary>
     /// <param name="videoPath">The recording path.</param>
