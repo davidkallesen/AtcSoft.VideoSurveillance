@@ -75,7 +75,10 @@ words over it when the mouse rests on it. The web and
 WPF client walks also open the Timeline view and wait for the live camera's lane, then press *Play all
 from here*: the live camera's tile must leave "Loading..." (the web walk accepts a tile the browser cannot
 play, and saves `play-all.png`), and Pause must turn into Play. CameraWall's walk opens its Timeline
-window (ribbon View) over the seeded recordings and does the same with a tile per camera. It then selects the oldest recording, seeded without an activity index, presses *Analyze recording* and waits for the message that it has its timeline now: the engine decodes the file and the detector writes the index for real. The server
+window (ribbon View) over the seeded recordings and does the same with a tile per camera. In the player,
+each walk right-clicks the middle of the timeline and gives a verdict from the menu: CameraWall *Boxed
+correctly* (on the seeded event), the WPF and web clients *Missed something here* (always offered); the
+player says it is saved, and the WPF walks read the review back (`VerdictWalk`). It then selects the oldest recording, seeded without an activity index, presses *Analyze recording* and waits for the message that it has its timeline now: the engine decodes the file and the detector writes the index for real. The server
 fixture records one camera, so the API client walks never see two tiles kept in step.
 
 ## Where to look after a run

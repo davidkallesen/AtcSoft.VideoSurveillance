@@ -239,7 +239,7 @@ Each box the overlay draws is shown to UI Automation, with the automation id `bo
 
 ## 📝 Reviewing a Real Recording
 
-A real recording has no truth until someone says what happens in it. Open it in the sample app and mark stretches in the *Review* panel: go to the first picture, *Mark start*, go to the last picture, choose the verdict, how many things move and what they are, then *Add stretch to here*. *Save review* writes `{video}.review.json` beside the recording; it moves, is protected and is deleted with it, like the activity index.
+A real recording has no truth until someone says what happens in it. In the apps, a right-click on a recording player's activity timeline gives a quick verdict: on an event, *Boxed correctly* or *False alarm* over it; anywhere, *Missed something here* over five seconds around the place. CameraWall writes the review itself, the WPF and web clients through the server (`POST /recordings/review/verdicts`). For a closer review, open the recording in the sample app and mark stretches in the *Review* panel: go to the first picture, *Mark start*, go to the last picture, choose the verdict, how many things move and what they are, then *Add stretch to here*. *Save review* writes `{video}.review.json` beside the recording; it moves, is protected and is deleted with it, like the activity index.
 
 | Verdict | Means | Expects |
 |---|---|---|
