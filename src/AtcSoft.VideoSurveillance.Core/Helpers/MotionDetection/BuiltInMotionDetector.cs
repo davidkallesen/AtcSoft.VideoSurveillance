@@ -55,6 +55,14 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         hold = new MotionHold(TimeSpan.FromSeconds(Math.Max(0, settings.PostMotionDurationSeconds)));
     }
 
+    /// <summary>
+    /// Gets how long after its first picture the detector only learns the scene and shows no
+    /// box (0 by default). A recording read from its start sets it: until the background has
+    /// been learnt, swaying things and the scene itself give wrong boxes. A live camera leaves it
+    /// at 0, as it runs all day and something at its start should not be missed.
+    /// </summary>
+    public double WarmUpSeconds { get; init; }
+
     /// <inheritdoc />
     public MotionDetectorResult Process(MotionFrame frame)
     {
@@ -71,6 +79,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             background.Reset(blurred, frame.Width, frame.Height);
             tracker.Reset();
             holding = false;
+            settleUntil = WarmUpSeconds > 0 ? frame.Time.AddSeconds(WarmUpSeconds) : null;
             return Result(moving: false, frame.Time, 0, []);
         }
 

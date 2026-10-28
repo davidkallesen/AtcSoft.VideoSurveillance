@@ -114,6 +114,24 @@ public sealed class RecordingAnalysisTests : IDisposable
         moving.Should().Contain(s => s.Zones.Count == 0, "it is outside the zone at first");
     }
 
+    [Fact]
+    public void The_First_Seconds_Of_A_Recording_Only_Teach_The_Scene()
+    {
+        // The square already moves when the recording starts.
+        var warmed = Video();
+        var cold = Path.Combine(folder, "Garden", "Garden_20261019_090100_000.mkv");
+        File.WriteAllText(cold, "video");
+
+        RecordingAnalysis.Run(Pictures(from: 0, to: 10), Width, Height, RecordingAnalysis.DetectorFor(null, new MotionDetectionSettings(), recordingRotation: 0), warmed, DateTimeOffset.UnixEpoch, TestContext.Current.CancellationToken);
+        RecordingAnalysis.Run(Pictures(from: 0, to: 10), Width, Height, new BuiltInMotionDetector(new MotionDetectionSettings()), cold, DateTimeOffset.UnixEpoch, TestContext.Current.CancellationToken);
+
+        var moving = ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(warmed))!.Seconds.Where(s => s.Tracks > 0).Select(s => s.Offset).ToList();
+        moving.Should().NotBeEmpty().And.OnlyContain(offset => offset >= RecordingAnalysis.WarmUpSeconds, "no box while the scene is learnt");
+        moving.Should().Contain(offset => offset < 5, "the square is found soon after");
+        ActivityLogReader.Read(RecordingPathHelper.BuildActivityPath(cold))!.Seconds.Where(s => s.Tracks > 0).Min(s => s.Offset)
+            .Should().BeLessThan((int)RecordingAnalysis.WarmUpSeconds, "a detector without the warm-up, as a live camera's, boxes it at once");
+    }
+
     [Theory]
     [InlineData(90, 0.1, 0.2)]
     [InlineData(0, 0.2, 0.9)]
@@ -148,15 +166,17 @@ public sealed class RecordingAnalysisTests : IDisposable
     }
 
     // Twenty seconds at four pictures a second: a grey yard, and a dark square crossing it from 5 to 15 s.
-    private static IEnumerable<(TimeSpan Position, byte[] Pixels)> Pictures()
+    private static IEnumerable<(TimeSpan Position, byte[] Pixels)> Pictures(
+        double from = 5,
+        double to = 15)
     {
         for (var i = 0; i < 80; i++)
         {
             var pixels = Enumerable.Repeat((byte)128, Width * Height).ToArray();
             var seconds = i / 4.0;
-            if (seconds is >= 5 and < 15)
+            if (seconds >= from && seconds < to)
             {
-                var left = (int)((seconds - 5) * 12);
+                var left = (int)((seconds - from) * 12);
                 for (var y = 50; y < 70; y++)
                 {
                     for (var x = left; x < left + 20; x++)

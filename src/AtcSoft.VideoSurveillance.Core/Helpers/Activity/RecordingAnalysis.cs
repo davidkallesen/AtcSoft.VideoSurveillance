@@ -20,6 +20,13 @@ public static class RecordingAnalysis
     public const int DecoderThreads = 2;
 
     /// <summary>
+    /// How long the detector only learns the scene at the start of a recording, with no box: it
+    /// starts cold on every file, and until the background is learnt the scene itself gives wrong
+    /// boxes. Something already moving then is boxed from this time on.
+    /// </summary>
+    public const double WarmUpSeconds = 3;
+
+    /// <summary>
     /// Gets the settings an older recording of a camera is analysed with: the camera's own, or the
     /// app's when the camera is not known (any more).
     /// </summary>
@@ -52,7 +59,8 @@ public static class RecordingAnalysis
 
     /// <summary>
     /// Gets the detector an older recording of a camera is analysed with: the camera's settings
-    /// and its zones (see <see cref="SettingsFor"/> and <see cref="ZonesFor"/>).
+    /// and its zones (see <see cref="SettingsFor"/> and <see cref="ZonesFor"/>), learning the scene
+    /// for <see cref="WarmUpSeconds"/> first.
     /// </summary>
     /// <param name="camera">The camera the recording is of, or <see langword="null"/>.</param>
     /// <param name="appSettings">The app's motion settings.</param>
@@ -61,7 +69,10 @@ public static class RecordingAnalysis
         CameraConfiguration? camera,
         MotionDetectionSettings appSettings,
         int recordingRotation)
-        => new MotionDetection.BuiltInMotionDetector(SettingsFor(camera, appSettings), zones: ZonesFor(camera, recordingRotation));
+        => new MotionDetection.BuiltInMotionDetector(SettingsFor(camera, appSettings), zones: ZonesFor(camera, recordingRotation))
+        {
+            WarmUpSeconds = WarmUpSeconds,
+        };
 
     /// <summary>
     /// Gets when a recording started: the time in its name, read in the zone it was written in,
