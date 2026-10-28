@@ -26,7 +26,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 | What | Why now |
 |---|---|
 | **Bounding boxes and activity timeline** ([plan](roadmap-boundingbox.md)) | Next to build: today's motion detection draws many boxes for a tree in the wind and misses small objects, and nothing shows where in a recording something happened |
-| **No release before generator v3 is released** | The build stays on the unreleased Atc.Rest.Api.SourceGenerator v3 through a local package ([REST API generator v3](roadmap-rest-api-sg.md)). CI cannot restore it, so nothing is pushed or released until v3 is on nuget.org |
+| **Push and see CI green on generator 3.0.1** | The build left the local package for the released Atc.Rest.Api.SourceGenerator 3.0.1 on 2026-10-27; nothing of the v3 work has been through CI yet. Generator findings go to its `issues/feedback-from-VideoSurveillance.md` |
 | The hands-on checks below | Much of what was built since 2026-10-12 has unit, host and E2E tests but has not been looked at with real cameras |
 | Run the E2E smoke tests before a release | `ATCSOFT_E2E=1 dotnet test test/AtcSoft.VideoSurveillance.E2E.Tests` (see [`docs/e2e-smoke-tests.md`](../docs/e2e-smoke-tests.md)) |
 
@@ -36,8 +36,7 @@ Sizes: **S** an hour or two, **M** a day, **L** several days.
 
 | Area | Plan | Status | Open |
 |---|---|:--:|---|
-| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`), the activity timeline under the player in all three clients. Built too: the server timeline (`GET /timeline`) and a Timeline view of every camera in the web and WPF clients. Built too: gaps tell their reason (offline, not recording, disk full, server down). Built too: *play all from here* in both API clients, and CameraWall's own Timeline window over its folders. Built too: *play events only*. Built too: sparklines in the recordings lists, and *Analyse recording* for older recordings in all three apps. Built too: grey frames from the engine, and ignore and watch zones in the detector, stored with each camera and drawn on a snapshot in all three apps, an event in its watch zone's colour on the timeline, and the timeline's zoom and hover with a picture of the moment (preview pictures of every recording), events close together joined. Open: `sample/BoundingBoxWpfApp`, the feedback loop; AI detection is planned in [AI support](roadmap-AI-support.md) |
-| 🧬 REST API source generator v3 | [roadmap-rest-api-sg.md](roadmap-rest-api-sg.md) | 🟨 | Everything is built on v3; waits for v3 on nuget.org, then the switch from the local package |
+| 🟥 Bounding boxes and activity timeline | [roadmap-boundingbox.md](roadmap-boundingbox.md) | 🟨 | Built: storybook harness, the new detector with tracking, track ids on the wire, the activity index beside every recording (`GET /recordings/activity`), the activity timeline under the player in all three clients. Built too: the server timeline (`GET /timeline`) and a Timeline view of every camera in the web and WPF clients. Built too: gaps tell their reason (offline, not recording, disk full, server down). Built too: *play all from here* in both API clients, and CameraWall's own Timeline window over its folders. Built too: *play events only*. Built too: sparklines in the recordings lists, and *Analyse recording* for older recordings in all three apps. Built too: grey frames from the engine, and ignore and watch zones in the detector, stored with each camera and drawn on a snapshot in all three apps, an event in its watch zone's colour on the timeline, and the timeline's zoom and hover with a picture of the moment (preview pictures of every recording), events close together joined. Built too: `sample/BoundingBoxWpfApp` with a deterministic clock and its FlaUI walk. Built too: strong wind taken in, *Analyse recording*'s 3 s warm-up, and the feedback loop (reviews of real recordings, verdicts from a right-click on the timeline in all three apps, the corpus test, the settings sweep). Open: the sample's live clock, debug layers and tuning panel, rain on a real camera, the first reviewed recordings; AI detection is planned in [AI support](roadmap-AI-support.md) |
 | 🧠 AI support (object labels on motion tracks) | [roadmap-AI-support.md](roadmap-AI-support.md) | ⬜ | Planned: an `IObjectDetector` seam, in-process ONNX first (permissive model), a CodeProject.AI-compatible HTTP client second; labels on tracks, the activity index, the timeline, webhooks and `GET /events`; per-camera classes and minimum score. Takes over the bounding-box plan's phase 10 |
 | 🧪 24/7 soak | [`docs/soak-test.md`](../docs/soak-test.md) | ⬜ | The procedure has never been run |
 
@@ -51,15 +50,11 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 
 | Item | Where it stands | Test |
 |---|---|---|
-| Remove the legacy USB pills | Still in the client's `CameraTileBadge.xaml` and `CameraTileViewModel` (`ShowUsbBadge`); the connection-type icon replaced them | E2E walks catch a binding left behind |
-| Rotation: the client's `Wpf/Windows/FullScreenCameraWindow` sizes boxes without the rotation | Nothing in the client opens that window today; fix it or remove the window | Unit, once the sizing leaves the code-behind |
 | A message for a stored USB device that is not plugged in (`UsbDeviceMissing`) | No key or message exists; the picker may already cover it | Unit on the dialog view model |
-| Two `Debug.WriteLine` left: `CameraTile` (overlay not found) and `SettingsDialogViewModel` (a layout move that failed) | Should go to the log | None needed |
 | A rate limit on starting a recording or a stream | Neither has `x-ratelimit-*`. A second start only adds a lease, so it may not be needed | Host test |
 | Remote-access notes (VPN, reverse proxy) in the docs | Nothing in `docs/` | — |
 | A severity filter and an unread badge for notifications in the client | Only time, title, message and type columns | Unit and E2E |
 | A theme toggle in the ribbon | Only in the settings dialog | E2E |
-| `AutomationProperties.Name` on the remaining icon buttons and status dots | Done in some views; the rest still announce as a plain "Button" | E2E (the walks find controls by name) |
 | Spike: RTSP `SET_PARAMETER` as keep-alive (new in FFmpeg 9) | Not tried | Engine test with the live test stream |
 
 ### Medium (M)
@@ -92,7 +87,7 @@ Nothing here needs a camera or a person. Each item says how it can be tested.
 
 ## 💡 Ideas (not planned)
 
-From the market comparison of 2026-04; none is picked up yet.
+Mostly from the market comparison of 2026-04; none is picked up yet.
 
 | Idea | Note |
 |---|---|
@@ -106,6 +101,7 @@ From the market comparison of 2026-04; none is picked up yet.
 | Alarm panels, inbound triggers from sensors | The REST API can start a recording; nothing aimed at low-code callers |
 | Picture-in-picture; numeric zoom levels on a tile | Zoom is rubber-band only |
 | Standby recording server | No failover |
+| Generator client options (Atc.Rest.Api.SourceGenerator markers) | `"strictRequiredProperties": true` makes a response without a required property fail loudly; trim- and AOT-safe clients for a smaller Blazor publish without JSON trim warnings; `"readEnumMemberNames": true` if installed desktop clients of another version must ever read both enum spellings |
 
 ---
 
@@ -131,7 +127,13 @@ Built and tested, but not closed without hands, eyes or hardware.
 | The FFmpeg set-up dialog's *Install FFmpeg* on a machine without FFmpeg 9; the release pipeline's FFmpeg step in CI | A clean machine; a release run |
 | The disk-space guard on a really full disk and on a network share | A small disk; a share |
 | The event stream through a reverse proxy for longer than its idle timeout | A proxy |
+| The browser's six HTTP/1.1 connections per origin: one event stream plus the HLS requests of a 3×3 live view | The web client and nine cameras |
 | The 24/7 soak ([procedure](../docs/soak-test.md)) | A machine, three cameras and a day |
+| The web client's E2E walk (`ATCSOFT_E2E=1`, `WebClientSmokeTests`) on a steady network, then the whole E2E suite after the timeline verdicts and the sweep. On 2026-10-28 every step passed but the walk failed: a USB network adapter without a cable ("Ethernet 3", Realtek USB GbE #2) came and went every ten seconds, and Edge dropped its downloads on each change (`ERR_NETWORK_CHANGED`) | A network cable in the dock, or the adapter unplugged |
+| The motion detector in wind and rain on live cameras: the balcony through the cat net, the trees seen through the kitchen window (not helped by the wind fix), a camera in rain (no footage yet) | Cameras on a windy and a rainy day |
+| *Analyse recording*'s 3 s warm-up on a recording that motion started: the timeline should show the event from 3 s on, with no wrong boxes in the first seconds | A motion-triggered recording |
+| Right-click verdicts on the recording player's timeline in CameraWall, the WPF client and the web client: the menu where the mouse is, its words in Danish and German, the saved message; a viewer is refused in the server's words; the `{video}.review.json` beside the recording (the server's for the API clients) | The three apps and a recording with an event |
+| The first reviewed real recordings: review a few in the sample app (*Review* panel) or with the right-click, put them with their reviews in a folder outside git, run `CorpusTests` with `ATCSOFT_BBOX_CORPUS` and `ATCSOFT_BBOX_UPDATE_BASELINE=1` once, then *Sweep scenes…* with the corpus to see whether other defaults do better on real footage | Recordings and someone to judge them |
 
 ---
 
