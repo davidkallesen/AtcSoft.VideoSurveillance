@@ -125,7 +125,7 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
 
         // A right-click anywhere offers "missed something here"; the server writes the review.
         VerdictWalk.Give(app, player, timeline, "Missed something here");
-        VerdictWalk.ReviewUnder(serverFolder).Spans.Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Missed);
+        VerdictWalk.SpansUnder(serverFolder).Should().Contain(s => s.Verdict == ReviewVerdicts.Missed);
         foreach (var name in new[] { "Next event", "Previous event" })
         {
             if (app.Find(player, name, ControlType.Button) is { IsEnabled: true } button)

@@ -2,6 +2,7 @@
 @inject IJSRuntime JS
 @inject GatewayService Gateway
 @inject BrowserSession Session
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 <MudDialog>
@@ -61,6 +62,24 @@
                             <div>@hoverLine</div>
                         }
                     </div>
+                }
+                @if (verdictChoices.Count > 0)
+                {
+                    @* A right-click's verdicts on the place, saved in the recording's review on the server. *@
+                    <MudPaper role="menu"
+                              aria-label="@Translations.ActivityTimeline"
+                              Elevation="8"
+                              Style="@($"position: absolute; top: 100%; left: {ActivityHoverText.Left(verdictShare)}; transform: translateX(-50%); margin-top: 4px; z-index: 2;")"
+                              @onmouseleave="CloseVerdicts">
+                        @foreach (var choice in verdictChoices)
+                        {
+                            <MudButton role="menuitem"
+                                       Variant="Variant.Text"
+                                       FullWidth="true"
+                                       Size="Size.Small"
+                                       OnClick="@(() => GiveVerdictAsync(choice))">@TimelineVerdicts.Text(choice.Verdict)</MudButton>
+                        }
+                    </MudPaper>
                 }
                 <svg @ref="timeline"
                      role="img"
@@ -134,6 +153,8 @@
     private ElementReference timeline;
     private IReadOnlyList<RecordingActivityBucket>? buckets;
     private IReadOnlyList<ActivityTimelineEvent> events = [];
+    private IReadOnlyList<TimelineVerdict> verdictChoices = [];
+    private double verdictShare;
     private IReadOnlyList<TimelineRect> bars = [];
     private IReadOnlyList<TimelineRect> notAnalysed = [];
     private IReadOnlyList<(TimelineRect Band, string Fill)> bands = [];
@@ -405,7 +426,49 @@
     }
 
     private async Task SeekAtAsync(MouseEventArgs e)
-        => await JS.InvokeVoidAsync("recordingTimeline.seekAt", videoId, timeline, e.ClientX, zoomStart, zoomEnd);
+    {
+        CloseVerdicts();
+        await JS.InvokeVoidAsync("recordingTimeline.seekAt", videoId, timeline, e.ClientX, zoomStart, zoomEnd);
+    }
+
+    /// <summary>
+    /// A right-click on the timeline: offer the verdicts on the place (TimelineVerdicts).
+    /// </summary>
+    /// <param name="share">Where the click was on the timeline, 0 (left) to 1 (right).</param>
+    [JSInvokable]
+    public void OnTimelineContextMenu(double share)
+    {
+        if (!HasActivity || share < 0)
+        {
+            return;
+        }
+
+        verdictShare = share;
+        verdictChoices = TimelineVerdicts.At(
+            events,
+            ActivityTimelineZoom.ToRecording(zoomStart, zoomEnd, share),
+            ShownSeconds,
+            (zoomEnd - zoomStart) * ActivityHoverText.HalfWidth);
+        StateHasChanged();
+    }
+
+    private void CloseVerdicts()
+        => verdictChoices = [];
+
+    // Saved in the review of the recording playing now; the server's words when it refuses.
+    private async Task GiveVerdictAsync(TimelineVerdict verdict)
+    {
+        CloseVerdicts();
+        var result = await Gateway.AddRecordingVerdictAsync(FilePath, verdict);
+        if (result.IsSuccess)
+        {
+            Snackbar.Add(Translations.VerdictSaved, Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(string.Format(CultureInfo.CurrentCulture, Translations.VerdictNotSaved1, result.Problem), Severity.Warning);
+        }
+    }
 
     // The length the zoom stops at a minute of: the player's, else the listing's.
     private double ShownSeconds

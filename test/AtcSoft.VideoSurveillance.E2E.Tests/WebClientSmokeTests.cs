@@ -134,6 +134,12 @@ public sealed class WebClientSmokeTests(ServerFixture server)
         await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Tooltip).Filter(new LocatorFilterOptions { HasText = ":" })
             .WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
 
+        // A right-click offers verdicts on the place; "missed something here" is saved by the server.
+        await page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Img, new LocatorGetByRoleOptions { Name = "Activity", Exact = true })
+            .ClickAsync(new LocatorClickOptions { Button = MouseButton.Right });
+        await page.GetByRole(AriaRole.Menuitem, new PageGetByRoleOptions { Name = "Missed something here", Exact = true }).ClickAsync();
+        await page.GetByText(VerdictWalk.Saved).WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
+
         // Its tooltip stays while the pointer rests on it, over the dialog's buttons.
         await page.Mouse.MoveAsync(0, 0);
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Close", Exact = true }).Last.ClickAsync();

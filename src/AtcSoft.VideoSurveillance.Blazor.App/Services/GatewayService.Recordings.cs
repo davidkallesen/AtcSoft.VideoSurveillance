@@ -85,6 +85,30 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
+    /// Adds a verdict given on a recording's timeline to the review beside it on the server.
+    /// </summary>
+    /// <param name="filePath">The recording's path, as the listing gave it.</param>
+    /// <param name="verdict">The verdict and the stretch it is about.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>Saved, or the server's reason.</returns>
+    public async Task<GatewayResult> AddRecordingVerdictAsync(
+        string filePath,
+        TimelineVerdict verdict,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(verdict);
+
+        var request = new AddRecordingVerdictRequest(verdict.FromSeconds, verdict.ToSeconds, new ReviewVerdict(verdict.Verdict), Count: null, Label: null);
+        var result = await addRecordingVerdictEndpoint
+            .ExecuteAsync(new AddRecordingVerdictParameters(FilePath: filePath, Request: request), cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.IsNoContent
+            ? GatewayResult.Done
+            : GatewayResult.Refused(result);
+    }
+
+    /// <summary>
     /// Deletes a finished recording on the server.
     /// </summary>
     /// <param name="filePath">The recording's path, as the listing gave it.</param>

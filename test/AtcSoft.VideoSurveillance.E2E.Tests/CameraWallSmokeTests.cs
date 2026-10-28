@@ -150,7 +150,7 @@ public sealed class CameraWallSmokeTests
 
         // A right-click on the event: boxed correctly, written to the review beside the recording.
         VerdictWalk.Give(app, player, timeline, "Boxed correctly");
-        VerdictWalk.ReviewUnder(dataFolder).Spans.Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Correct);
+        VerdictWalk.SpansUnder(dataFolder).Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Correct);
         DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Play events only"));

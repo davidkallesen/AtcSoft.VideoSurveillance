@@ -54,14 +54,12 @@ internal static class VerdictWalk
     }
 
     /// <summary>
-    /// Reads the one review written under a folder.
+    /// Reads the marked stretches of every review written under a folder (the server's is shared by
+    /// the walks of both API clients).
     /// </summary>
     /// <param name="folder">The app's or the server's data folder.</param>
-    /// <returns>The review.</returns>
-    public static RecordingReview ReviewUnder(string folder)
-    {
-        var reviews = Directory.GetFiles(folder, "*" + RecordingPathHelper.ReviewExtension, SearchOption.AllDirectories);
-        reviews.Should().ContainSingle("the verdict is saved beside the recording played");
-        return RecordingReviewFile.Read(reviews[0]);
-    }
+    /// <returns>The stretches.</returns>
+    public static IReadOnlyList<ReviewSpan> SpansUnder(string folder)
+        => [.. Directory.GetFiles(folder, "*" + RecordingPathHelper.ReviewExtension, SearchOption.AllDirectories)
+            .SelectMany(review => RecordingReviewFile.Read(review).Spans)];
 }

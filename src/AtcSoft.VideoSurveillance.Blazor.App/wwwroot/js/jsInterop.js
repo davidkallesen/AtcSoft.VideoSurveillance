@@ -180,6 +180,17 @@ window.recordingTimeline = {
             tell(-1);
         });
 
+        // A right-click offers verdicts on the place, in the page's own menu.
+        element.addEventListener('contextmenu', function (e) {
+            var share = shareAt(e.clientX);
+            if (share < 0) {
+                return;
+            }
+
+            e.preventDefault();
+            dotNetRef.invokeMethodAsync('OnTimelineContextMenu', share).catch(function () { });
+        });
+
         element.addEventListener('wheel', function (e) {
             var box = element.getBoundingClientRect();
             if (box.width <= 0 || e.deltaY === 0) {
