@@ -229,11 +229,49 @@ Or open a file from the window. *Previous*, *Next*, *Play* and the slider move t
 |---|---|---|
 | A storybook without a bitrate | The fast path: its score is the one in `baseline.json` | Nothing |
 | A storybook with a bitrate | Encoded once (kept in `{data}\videos`, named by the storybook's hash), then read back | FFmpeg; the set-up dialog offers it |
-| A recording | As *Analyse recording* reads it, with the default settings; no truth, so the score only counts boxes | FFmpeg |
+| A recording | As *Analyse recording* reads it: the first 3 s only teach the scene, with its review's settings and zones or the defaults; no truth, so without a review the score only counts boxes | FFmpeg |
 
 The clock is deterministic: every picture is analysed before it is shown, so the same file always shows the same boxes. It does not play the video through the engine's player, which plays streams and cannot pause or seek a file. Its data and logs are in `%ProgramData%\AtcSoft\BoundingBoxSample` (or under `ATCSOFT_DATA_PATH`).
 
 Each box the overlay draws is shown to UI Automation, with the automation id `box-{trackId}` (`box-at-{place}` without a track) and the detector's box in video pixels as its help text. `BoundingBoxSampleSmokeTests` reads them; see [End-to-end smoke tests](e2e-smoke-tests.md).
+
+---
+
+## 📝 Reviewing a Real Recording
+
+A real recording has no truth until someone says what happens in it. Open it in the sample app and mark stretches in the *Review* panel: go to the first picture, *Mark start*, go to the last picture, choose the verdict, how many things move and what they are, then *Add stretch to here*. *Save review* writes `{video}.review.json` beside the recording; it moves, is protected and is deleted with it, like the activity index.
+
+| Verdict | Means | Expects |
+|---|---|---|
+| `correct` | Boxed as it should be | `count` boxes (1 when not given) |
+| `missed` | Something moved and was not boxed | `count` boxes |
+| `wrongCount` | Boxed, with the wrong number of boxes | `count` boxes |
+| `falseBox` | Boxed, but nothing that matters moves (a tree, a reflection) | No box |
+
+Only the marked stretches are judged; the rest of the recording is not. A picture expects the counts of the stretches over it added up, a box beyond that is false, and the first second of a stretch with things moving is not judged (the detector needs a moment to be sure). The score panel shows the review's score as soon as there is a stretch.
+
+```json
+{
+  "version": 1,
+  "recording": { "file": "garden.mkv", "sha256": "…" },
+  "detector": { "name": "builtIn", "settings": { "sensitivity": 30, "…": "…" }, "zones": [] },
+  "spans": [
+    { "from": "00:00:47.500", "to": "00:00:53.000", "verdict": "correct", "count": 1, "label": "person" },
+    { "from": "00:12:00.000", "to": "00:14:30.000", "verdict": "falseBox", "note": "tree" }
+  ]
+}
+```
+
+Times are positions in the video, as a player shows them. The review names its recording by SHA-256, so a review of another file is not used, and carries the settings and zones the recording is analysed with (the camera's, turned to the recording's rotation).
+
+### The corpus
+
+Put reviewed recordings with their reviews in one folder, outside git (they show the user's cameras), and point `ATCSOFT_BBOX_CORPUS` at it. `CorpusTests` runs each as *Analyse recording* reads it and fails when a score is worse than the accepted one; `ATCSOFT_BBOX_UPDATE_BASELINE=1` accepts the current scores. They are kept in `accepted-scores.json` in the same folder, by the recording's SHA-256.
+
+```powershell
+$env:ATCSOFT_BBOX_CORPUS = "D:\corpus"
+dotnet test test/AtcSoft.VideoSurveillance.Storybook.Tests --filter CorpusTests
+```
 
 ---
 

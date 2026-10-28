@@ -355,7 +355,7 @@ The recordings stay out of git (size, privacy). The small review files may go in
 | 8 | Activity timeline in both WPF apps and the web client | L | ✅ timeline, jumps, click to seek, play events only, sparklines, zoom, hover with a picture, events close together joined, in all three clients |
 | 8b | Server timeline: activity summaries, `GET /timeline`, next / previous event | M | ✅ |
 | 8c | Timeline view of every camera: web page and WPF client view, playback across segments, live events (`activityStarted` / `activityEnded`), gap reasons | L | ✅ both API clients and CameraWall: playing on across segments, growing live (CameraWall: on recording changes and every 15 s), zoom, gap reasons (API clients), play all from here |
-| 9 | Feedback loop: review mode and the regression corpus | M | ⬜ |
+| 9 | Feedback loop: review mode and the regression corpus | M | 🟨 the review file, scoring by count, the corpus test, review mode in the sample app; the apps' timeline verdicts and the sweep open |
 | 10 | Local AI detection (ONNX) on motion regions: moved to the [AI support plan](roadmap-AI-support.md) | L | ⏸️ |
 
 ### Phase 0 — Quick fixes ✅ (S)
@@ -544,7 +544,9 @@ Covers the backlog row *Motion zones / exclusion masks*.
 
 **Test:** unit (lane layout, the click-to-recording mapping across segment boundaries, live growth from events); E2E steps for the web page and the WPF view against the test server.
 
-### Phase 9 — Feedback loop ⬜ (M)
+### Phase 9 — Feedback loop 🟨 (M)
+
+**Done 2026-10-28:** the review file in Core (`Helpers.Review`: `RecordingReview`, `RecordingReviewFile`; `{video}.review.json` through `RecordingPathHelper.BuildReviewPath`, a sidecar, so it moves, is protected and is deleted with its recording). Times are positions in the video; the recording is named by SHA-256; the detector settings and zones it is analysed with are in the review. Scoring by count (`ReviewScorer`, Storybook): only marked stretches are judged, a picture expects the counts over it added up, a box beyond that is false, the first second of a stretch with things moving is not judged. `ReviewRunner` runs a reviewed recording as *Analyse recording* does (its settings and zones, the 3 s warm-up, 4 a second). `CorpusTests` runs every review under `ATCSOFT_BBOX_CORPUS` with its recording and fails on a worse score than the accepted one (`accepted-scores.json` in that folder, outside git with the recordings and reviews: they show the user's cameras). `ReviewedRecordingTests` judges S3 encoded by the FFmpeg tool. Review mode in the sample app (mark start, add stretch with verdict, count and label, remove, save; the score panel scores by the review), walked by `BoundingBoxSampleSmokeTests`. The walks' pictures are now of their window alone (`WindowPicture`, `PrintWindow`), never the rest of the desktop. **Changed from the design:** the format keeps the verdicts and counts and an optional box, but scoring uses counts only, as a person marks stretches, not boxes. **Still open:** the timeline's right-click verdicts in the three apps (an operation in the spec with roles and audit, texts in four languages, the web copy and its equality test, both WPF clients), the sweep command, and the first real recordings reviewed by the user.
 
 - Review mode in the sample app; `*.review.json`; review → truth; the corpus test with `ATCSOFT_BBOX_CORPUS`.
 - The timeline's right-click verdicts in the apps write the same format.
