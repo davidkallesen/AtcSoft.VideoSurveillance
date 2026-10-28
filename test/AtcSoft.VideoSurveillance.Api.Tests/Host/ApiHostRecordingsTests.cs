@@ -36,6 +36,33 @@ public sealed class ApiHostRecordingsTests(ApiHostFixture host)
     }
 
     [Fact]
+    public async Task A_Verdict_From_A_Timeline_Is_Written_Beside_The_Recording_By_An_Operator_And_Audited()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var admin = host.CreateClient();
+        var recordingPath = await GetRecordingPathAsync(admin);
+        var camera = "Review " + Guid.NewGuid().ToString("N")[..8];
+        var video = Path.Combine(recordingPath, camera, camera + "_20261012_101500_000.mp4");
+        Write(video, [1, 2, 3, 4]);
+        var url = new Uri($"/recordings/review/verdicts?filePath={Uri.EscapeDataString($"{camera}/{camera}_20261012_101500_000.mp4")}", UriKind.Relative);
+        using var viewer = await CreateUserClientAsync("viewer");
+        using var operatorClient = await CreateUserClientAsync("operator");
+
+        var refused = await viewer.PostAsJsonAsync(url, new { fromSeconds = 2.5, toSeconds = 7.5, verdict = "missed" }, cancellationToken);
+        var added = await operatorClient.PostAsJsonAsync(url, new { fromSeconds = 10, toSeconds = 14, verdict = "falseBox" }, cancellationToken);
+        var none = await operatorClient.PostAsJsonAsync(url, new { fromSeconds = 14, toSeconds = 10, verdict = "correct" }, cancellationToken);
+
+        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden, "a viewer reads but does not change");
+        added.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        none.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var review = AtcSoft.VideoSurveillance.Helpers.Review.RecordingReviewFile.Read(RecordingPathHelper.BuildReviewPath(video));
+        review.Spans.Should().ContainSingle().Which.Verdict.Should().Be("falseBox");
+        review.Spans[0].From.Should().Be(TimeSpan.FromSeconds(10));
+        var audit = await admin.GetFromJsonAsync<JsonElement>("/audit?take=200", cancellationToken);
+        audit.EnumerateArray().Should().Contain(x => x.GetProperty("action").GetString() == "addRecordingVerdict");
+    }
+
+    [Fact]
     public async Task An_Older_Recording_Is_Analysed_In_The_Background_And_Gets_Its_Index()
     {
         var folder = AtcSoft.VideoEngine.VideoEngineBootstrap.FindFFmpegPath();
@@ -205,6 +232,19 @@ public sealed class ApiHostRecordingsTests(ApiHostFixture host)
 
     private static Uri FileUrl(string relativePath)
         => new("/recordings-files/" + RecordingPathHelper.EscapePathSegments(relativePath), UriKind.Relative);
+
+    private async Task<HttpClient> CreateUserClientAsync(string role)
+    {
+        using var admin = host.CreateClient();
+        var name = role + "-" + Guid.NewGuid().ToString("N")[..8];
+        (await admin.PostAsJsonAsync("/users", new { userName = name, password = "a password here", role }, TestContext.Current.CancellationToken))
+            .StatusCode.Should().Be(HttpStatusCode.Created);
+        var (_, session) = await host.SignInAsync(name, "a password here");
+
+        var client = host.CreateAnonymousClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.GetProperty("accessToken").GetString());
+        return client;
+    }
 
     private static void Write(
         string path,

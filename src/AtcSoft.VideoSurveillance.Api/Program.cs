@@ -235,6 +235,9 @@ try
     builder.Services.AddSingleton<IRecordingAnalyses>(sp => sp.GetRequiredService<RecordingAnalysisService>());
     builder.Services.AddHostedService(sp => sp.GetRequiredService<RecordingAnalysisService>());
 
+    // The verdicts on recordings that the timelines give, written to the reviews beside them.
+    builder.Services.AddSingleton<IRecordingReviewWriter, RecordingReviewWriter>();
+
     // The preview pictures of each recording that ends, one at a time in the background.
     builder.Services.AddSingleton(new RecordingPreviewServiceOptions());
     builder.Services.AddSingleton<RecordingPreviewService>();

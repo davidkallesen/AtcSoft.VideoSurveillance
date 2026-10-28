@@ -115,16 +115,7 @@ public sealed partial class RecordingAnalysisService : BackgroundServiceBase<Rec
 
     // The camera whose folder the recording is in, or null.
     private CameraConfiguration? CameraFor(string videoPath)
-    {
-        var root = settingsService.Recording.RecordingPath;
-        var folder = string.IsNullOrEmpty(root) ? null : RecordingPathHelper.GetCameraFolderFromPath(videoPath, root);
-        return folder is null
-            ? null
-            : cameraStorageService.GetAllCameras().FirstOrDefault(c => string.Equals(
-                RecordingPathHelper.GetCameraFolderName(c.Display.DisplayName, c.Id),
-                folder,
-                StringComparison.OrdinalIgnoreCase));
-    }
+        => RecordingAnalysis.CameraOf(videoPath, settingsService.Recording.RecordingPath, cameraStorageService.GetAllCameras());
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Analysed {Path}: {Pictures} pictures in {Seconds:F1} s")]
     private partial void LogAnalysed(string path, int pictures, double seconds);

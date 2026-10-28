@@ -1353,6 +1353,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
 
+  /recordings/review/verdicts:
+    post:
+      summary: Add a verdict to a recording's review
+      description: A person's verdict on the motion boxes in a stretch of a recording, as a timeline's right-click gives it (boxed as it should be, a false alarm, something missed). It is added to the review beside the recording ({video}.review.json), which a recording without one gets, with its camera's motion settings and zones. The reviews are the truth that real recordings are scored against when the detector changes; they move and are deleted with their recording.
+      operationId: addRecordingVerdict
+      x-atc-suppress: ATC_API_OPR023
+      # The POST adds to a file beside a recording named in the query, which may not
+      # exist: 404 is the answer for a path that names no file.
+      x-authorize-roles:
+        - operator
+        - admin
+      x-retry-enabled: false
+      tags:
+        - recordings
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          description: The recording's path relative to the recordings root, as the listing returns it in filePath.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddRecordingVerdictRequest"
+      responses:
+        '204':
+          description: The verdict is added to the recording's review
+        '400':
+          description: The path does not name a recording, or the stretch does not end after it starts
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '404':
+          description: Recording not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '409':
+          description: The recording is still being made, or the review beside it cannot be read (it is not written over)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
   /timeline:
     # No cache: a span that reaches now grows every second; the server keeps the summaries
     # of the activity indexes instead.
@@ -2772,6 +2821,46 @@ components:
           type: number
           format: double
           description: Where in that recording it starts, in seconds.
+
+    ReviewVerdict:
+      type: string
+      description: >-
+        A person's verdict on the motion boxes in a stretch of a recording. correct: boxed as it should be; falseBox:
+        boxed, but nothing that matters moves (a tree, a reflection); missed: something moved and was not boxed;
+        wrongCount: boxed, with the wrong number of boxes.
+      enum: [correct, falseBox, missed, wrongCount]
+
+    AddRecordingVerdictRequest:
+      title: AddRecordingVerdictRequest
+      type: object
+      description: A verdict on a stretch of a recording, its times in seconds into it (as the player and the timeline count them).
+      required:
+        - fromSeconds
+        - toSeconds
+        - verdict
+      properties:
+        fromSeconds:
+          type: number
+          format: double
+          minimum: 0
+          description: Where the stretch starts, in seconds into the recording.
+        toSeconds:
+          type: number
+          format: double
+          minimum: 0
+          description: Where it ends, after fromSeconds.
+        verdict:
+          $ref: "#/components/schemas/ReviewVerdict"
+        count:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          description: How many things move in the stretch; 1 when left out. Never for falseBox.
+        label:
+          type: string
+          maxLength: 64
+          description: What moves (person, car, cat, ...).
 
     RecordingActivity:
       title: RecordingActivity

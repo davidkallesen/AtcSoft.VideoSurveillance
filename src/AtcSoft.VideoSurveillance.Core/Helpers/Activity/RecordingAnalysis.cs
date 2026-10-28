@@ -44,6 +44,31 @@ public static class RecordingAnalysis
     }
 
     /// <summary>
+    /// Gets the camera a recording is of: the one whose folder (by its name and id) the recording
+    /// is in under the recordings root.
+    /// </summary>
+    /// <param name="videoPath">The recording.</param>
+    /// <param name="recordingRoot">The recordings root.</param>
+    /// <param name="cameras">The cameras.</param>
+    /// <returns>The camera, or <see langword="null"/> when none has that folder (any more).</returns>
+    public static CameraConfiguration? CameraOf(
+        string videoPath,
+        string? recordingRoot,
+        IEnumerable<CameraConfiguration> cameras)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(videoPath);
+        ArgumentNullException.ThrowIfNull(cameras);
+
+        var folder = string.IsNullOrEmpty(recordingRoot) ? null : RecordingPathHelper.GetCameraFolderFromPath(videoPath, recordingRoot);
+        return folder is null
+            ? null
+            : cameras.FirstOrDefault(c => string.Equals(
+                RecordingPathHelper.GetCameraFolderName(c.Display.DisplayName, c.Id),
+                folder,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
     /// Gets the zones an older recording of a camera is analysed with: the camera's, drawn at its
     /// rotation now, turned to the rotation the recording was made at, so they lie on the same part
     /// of the scene in its pictures.
