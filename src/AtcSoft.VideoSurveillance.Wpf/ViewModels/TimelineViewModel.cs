@@ -325,7 +325,8 @@ public sealed partial class TimelineViewModel : ViewModelBase
             startPosition: offset,
             nextSegment: lane is null ? null : NextSegments(lane, filePath),
             zonesLoader: lane is null ? null : cancellationToken => CameraZones.LoadAsync(gatewayService, lane.CameraId, cancellationToken),
-            previewLoader: ServerPreviews.Loader(gatewayService, FileUrl, filePath));
+            previewLoader: ServerPreviews.Loader(gatewayService, FileUrl, filePath),
+            verdictSaver: gatewayService.VerdictSaver(filePath));
 
         new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(viewModel).Show();
     }
@@ -347,13 +348,15 @@ public sealed partial class TimelineViewModel : ViewModelBase
     /// <param name="fileUrl">Turns a recording into the address the player opens.</param>
     /// <param name="loadActivity">Loads a recording's activity for the player's timeline.</param>
     /// <param name="loadPreviews">Loads a recording's preview pictures for the player's timeline; none when <see langword="null"/>.</param>
+    /// <param name="verdictSaver">Gets the saver of the verdicts given on a recording's timeline; none when <see langword="null"/>.</param>
     /// <returns>A function that gives the next recording each time, then <see langword="null"/>.</returns>
     public static Func<AtcSoft.VideoSurveillance.Wpf.Core.Windows.RecordingSegment?> NextSegments(
         TimelineLaneViewModel lane,
         string filePath,
         Func<string, Uri> fileUrl,
         Func<string, AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingActivityLoader> loadActivity,
-        Func<string, AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingPreviewLoader>? loadPreviews = null)
+        Func<string, AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingPreviewLoader>? loadPreviews = null,
+        Func<string, AtcSoft.VideoSurveillance.Wpf.Core.Services.RecordingVerdictSaver>? verdictSaver = null)
     {
         ArgumentNullException.ThrowIfNull(lane);
         ArgumentNullException.ThrowIfNull(fileUrl);
@@ -378,7 +381,8 @@ public sealed partial class TimelineViewModel : ViewModelBase
                 Title(lane.CameraName, coverage.FilePath, coverage.RecordingStart),
                 coverage.RecordingStart.LocalDateTime,
                 loadActivity(coverage.FilePath),
-                loadPreviews?.Invoke(coverage.FilePath));
+                loadPreviews?.Invoke(coverage.FilePath),
+                verdictSaver?.Invoke(coverage.FilePath));
         };
     }
 
@@ -390,7 +394,8 @@ public sealed partial class TimelineViewModel : ViewModelBase
             filePath,
             FileUrl,
             path => (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(path, buckets, durationSeconds, cancellationToken),
-            path => ServerPreviews.Loader(gatewayService, FileUrl, path));
+            path => ServerPreviews.Loader(gatewayService, FileUrl, path),
+            gatewayService.VerdictSaver);
 
     private Uri FileUrl(string path)
         => RecordingEntryViewModel.FileUrl(apiBaseUri, path, session?.MediaToken);

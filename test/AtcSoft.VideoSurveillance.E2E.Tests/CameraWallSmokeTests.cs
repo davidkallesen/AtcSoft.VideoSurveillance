@@ -47,7 +47,7 @@ public sealed class CameraWallSmokeTests
         // Ribbon: View
         steps.Run("View tab", () => SelectTab(app, main, "View"));
         steps.Run("Browse Recordings", () => Walk(app, main, "Browse Recordings"));
-        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
+        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main, run.DataFolder));
         steps.Run("Timeline and play all from here", () => TimelineAndPlayAll(app, main));
         steps.Run("analyze an older recording", () => AnalyseOlderRecording(app, main));
 
@@ -136,7 +136,8 @@ public sealed class CameraWallSmokeTests
     // and "Next event" jumps to it.
     private static void PlayWithTimeline(
         DesktopApp app,
-        Window main)
+        Window main,
+        string dataFolder)
     {
         var browser = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Browse Recordings", ControlType.Button)), "Browse Recordings");
         var row = app.FindWhere(browser, e => e.ControlType == ControlType.DataItem, "a recording row");
@@ -146,6 +147,10 @@ public sealed class CameraWallSmokeTests
         var timeline = app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
         app.ShouldCoverTheTaskbar(player);
         HoverTimeline(app, timeline);
+
+        // A right-click on the event: boxed correctly, written to the review beside the recording.
+        VerdictWalk.Give(app, player, timeline, "Boxed correctly");
+        VerdictWalk.ReviewUnder(dataFolder).Spans.Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Correct);
         DesktopApp.Press(app.Find(player, "Next event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Previous event", ControlType.Button));
         DesktopApp.Press(app.Find(player, "Play events only"));

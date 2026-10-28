@@ -36,7 +36,7 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
         }
 
         // Recordings: play the one the fixture recorded, with its activity from the server
-        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main));
+        steps.Run("play a recording with its activity timeline", () => PlayWithTimeline(app, main, server.DataFolder));
 
         // Timeline: every camera gets a lane from the server's timeline
         steps.Run("timeline lanes", () =>
@@ -112,15 +112,20 @@ public sealed class WpfClientSmokeTests(ServerFixture server)
     // when there is an event.
     private static void PlayWithTimeline(
         DesktopApp app,
-        Window main)
+        Window main,
+        string serverFolder)
     {
         ShowView(app, main, "Recordings");
         var row = app.FindWhere(main, e => e.ControlType == ControlType.DataItem, "a recording row");
         row.Patterns.SelectionItem.Pattern.Select();
 
         var player = app.OpenWindow(() => DesktopApp.Press(app.Find(main, "Play", ControlType.Button)), "Play");
-        app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
+        var timeline = app.Find(player, "Activity", timeout: TimeSpan.FromSeconds(20));
         app.ShouldCoverTheTaskbar(player);
+
+        // A right-click anywhere offers "missed something here"; the server writes the review.
+        VerdictWalk.Give(app, player, timeline, "Missed something here");
+        VerdictWalk.ReviewUnder(serverFolder).Spans.Should().ContainSingle().Which.Verdict.Should().Be(ReviewVerdicts.Missed);
         foreach (var name in new[] { "Next event", "Previous event" })
         {
             if (app.Find(player, name, ControlType.Button) is { IsEnabled: true } button)

@@ -42,6 +42,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     private readonly ActivitySummaryCache cache;
     private readonly TimeZoneInfo zone;
     private readonly IRecordingPreviews? previews;
+    private readonly Func<Guid?, string, RecordingVerdictSaver?>? verdictSaverFor;
     private DateTimeOffset from;
     private DateTimeOffset to;
     private DateTimeOffset lastLoad;
@@ -73,13 +74,19 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     /// <param name="recordings">The recordings in progress; the window grows when they change.</param>
     /// <param name="cache">The summaries of the activity indexes already read.</param>
     /// <param name="zone">The viewer's zone, which is also the zone of the files' names.</param>
+    /// <param name="previews">The app's previews in the making, for each recording's preview pictures.</param>
+    /// <param name="verdictSaverFor">
+    /// Gets the saver of the verdicts given on a recording's timeline, by the lane's camera and the
+    /// recording; without one, the player offers no verdicts.
+    /// </param>
     public LocalTimelineViewModel(
         Func<IReadOnlyList<TimelineCamera>> cameras,
         Func<IReadOnlyList<string?>> folders,
         IActiveRecordings recordings,
         ActivitySummaryCache cache,
         TimeZoneInfo? zone = null,
-        IRecordingPreviews? previews = null)
+        IRecordingPreviews? previews = null,
+        Func<Guid?, string, RecordingVerdictSaver?>? verdictSaverFor = null)
     {
         ArgumentNullException.ThrowIfNull(cameras);
         ArgumentNullException.ThrowIfNull(folders);
@@ -90,6 +97,7 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
         this.folders = folders;
         this.recordings = recordings;
         this.previews = previews;
+        this.verdictSaverFor = verdictSaverFor;
         this.cache = cache;
         this.zone = zone ?? TimeZoneInfo.Local;
         recordings.RecordingStateChanged += OnRecordingStateChanged;
@@ -158,11 +166,13 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
     /// <param name="lane">The camera's lane.</param>
     /// <param name="videoPath">The recording that plays first.</param>
     /// <param name="previews">The app's previews in the making, for each recording's preview pictures.</param>
+    /// <param name="verdictSaverFor">Gets the saver of the verdicts given on a recording's timeline, or <see langword="null"/>.</param>
     /// <returns>A function that gives the next recording each time, then <see langword="null"/>.</returns>
     public static Func<RecordingSegment?> NextSegments(
         LocalTimelineLaneViewModel lane,
         string videoPath,
-        IRecordingPreviews? previews = null)
+        IRecordingPreviews? previews = null,
+        Func<string, RecordingVerdictSaver?>? verdictSaverFor = null)
     {
         ArgumentNullException.ThrowIfNull(lane);
 
@@ -185,7 +195,8 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
                 Title(lane.CameraName, coverage.RecordingStart),
                 coverage.RecordingStart.LocalDateTime,
                 RecordingActivityLoaders.FromFile(coverage.VideoPath),
-                RecordingPreviewLoaders.FromFile(coverage.VideoPath, previews));
+                RecordingPreviewLoaders.FromFile(coverage.VideoPath, previews),
+                verdictSaverFor?.Invoke(coverage.VideoPath));
         };
     }
 
@@ -366,8 +377,9 @@ public sealed partial class LocalTimelineViewModel : ViewModelBase, IDisposable
             recordingStartTime: (moment - offset).LocalDateTime,
             activityLoader: RecordingActivityLoaders.FromFile(videoPath),
             startPosition: offset,
-            nextSegment: lane is null ? null : NextSegments(lane, videoPath, previews),
-            previewLoader: RecordingPreviewLoaders.FromFile(videoPath, previews));
+            nextSegment: lane is null ? null : NextSegments(lane, videoPath, previews, path => verdictSaverFor?.Invoke(lane.CameraId, path)),
+            previewLoader: RecordingPreviewLoaders.FromFile(videoPath, previews),
+            verdictSaver: verdictSaverFor?.Invoke(lane?.CameraId, videoPath));
 
         new FullScreenRecordingWindow(viewModel).Show();
     }

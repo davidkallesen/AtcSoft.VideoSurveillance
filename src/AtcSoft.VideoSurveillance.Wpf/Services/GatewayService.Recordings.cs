@@ -66,6 +66,38 @@ public sealed partial class GatewayService
     }
 
     /// <summary>
+    /// Adds a verdict given on a recording's timeline to the review beside it on the server.
+    /// </summary>
+    /// <param name="filePath">The recording's path as the listing gives it.</param>
+    /// <param name="verdict">The verdict and the stretch it is about.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="HttpRequestException">The server refused, in its own words.</exception>
+    public async Task AddRecordingVerdictAsync(
+        string filePath,
+        TimelineVerdict verdict,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(verdict);
+
+        var request = new AddRecordingVerdictRequest(verdict.FromSeconds, verdict.ToSeconds, new ReviewVerdict(verdict.Verdict), Count: null, Label: null);
+        var result = await addRecordingVerdictEndpoint
+            .ExecuteAsync(new AddRecordingVerdictParameters(FilePath: filePath, Request: request), cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsNoContent)
+        {
+            throw Refused(result);
+        }
+    }
+
+    /// <summary>
+    /// Gets the saver of the verdicts given on a recording's timeline: the server writes them.
+    /// </summary>
+    /// <param name="filePath">The recording's path as the listing gives it.</param>
+    public RecordingVerdictSaver VerdictSaver(string filePath)
+        => (verdict, cancellationToken) => AddRecordingVerdictAsync(filePath, verdict, cancellationToken);
+
+    /// <summary>
     /// Gets where a recording's preview pictures are; a recording without them is queued for them.
     /// </summary>
     /// <param name="filePath">The recording's path as the listing gives it.</param>

@@ -195,7 +195,8 @@ public sealed partial class RecordingsViewModel : ViewModelBase
             recordingStartTime: SelectedRecording.RecordingTime.LocalDateTime,
             activityLoader: (buckets, durationSeconds, cancellationToken) => LoadActivityAsync(filePath, buckets, durationSeconds, cancellationToken),
             zonesLoader: cancellationToken => CameraZones.LoadAsync(gatewayService, cameraId, cancellationToken),
-            previewLoader: ServerPreviews.Loader(gatewayService, path => RecordingEntryViewModel.FileUrl(apiBaseUri, path, session?.MediaToken), filePath));
+            previewLoader: ServerPreviews.Loader(gatewayService, path => RecordingEntryViewModel.FileUrl(apiBaseUri, path, session?.MediaToken), filePath),
+            verdictSaver: gatewayService.VerdictSaver(filePath));
 
         var window = new AtcSoft.VideoSurveillance.Wpf.Core.Windows.FullScreenRecordingWindow(vm);
         window.Show();

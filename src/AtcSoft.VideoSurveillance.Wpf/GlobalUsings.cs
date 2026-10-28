@@ -92,4 +92,5 @@ global using TimelineGapBand = AtcSoft.VideoSurveillance.Models.TimelineGapBand;
 global using TimelineMark = AtcSoft.VideoSurveillance.Models.TimelineMark;
 global using TimelineMarks = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineMarks;
 global using TimelineStretch = AtcSoft.VideoSurveillance.Models.TimelineStretch;
+global using TimelineVerdict = AtcSoft.VideoSurveillance.Helpers.Review.TimelineVerdict;
 global using TimelineZoom = AtcSoft.VideoSurveillance.Helpers.Activity.TimelineZoom;

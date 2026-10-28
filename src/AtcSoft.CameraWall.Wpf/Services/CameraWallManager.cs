@@ -981,7 +981,11 @@ public sealed partial class CameraWallManager : ObservableObject, ICameraWallMan
             () => [GlobalRecordingPath(), .. storageService.GetAllCameras().Select(c => c.Overrides?.Recording.RecordingPath)],
             recordingService,
             activitySummaries,
-            previews: recordingPreviews);
+            previews: recordingPreviews,
+            verdictSaverFor: (cameraId, videoPath) => RecordingVerdictSavers.ToFile(
+                videoPath,
+                storageService.GetAllCameras().FirstOrDefault(c => c.Id == cameraId),
+                settingsService.MotionDetection));
         new AtcSoft.CameraWall.Wpf.Timeline.LocalTimelineWindow(viewModel)
         {
             Owner = Application.Current.MainWindow,
