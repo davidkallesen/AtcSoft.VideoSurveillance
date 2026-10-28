@@ -10,6 +10,12 @@ namespace BoundingBoxWpfApp;
 [SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
 public sealed partial class LiveWindowViewModel : ViewModelBase, IDisposable
 {
+#if DEBUG
+    private const string BuildNote = " (a Debug build: many times slower than the apps)";
+#else
+    private const string BuildNote = "";
+#endif
+
     // A stream that sends nothing for this long after it started has ended.
     private static readonly TimeSpan Quiet = TimeSpan.FromSeconds(3);
 
@@ -175,7 +181,9 @@ public sealed partial class LiveWindowViewModel : ViewModelBase, IDisposable
                 ShowScore();
             }
 
-            var nearEnd = analysis.LastSeconds >= source.DurationSeconds - (1 / source.Fps) - 1e-6;
+            // A storybook's times start at 0, so its last picture is known; a recording ends when
+            // its stream does (its times need not start at 0).
+            var nearEnd = source.Truth is not null && source.Fps > 0 && analysis.LastSeconds >= source.DurationSeconds - (1 / source.Fps) - 1e-6;
             if (nearEnd || (stream is { HasEnded: true } && DateTime.UtcNow - lastNewPicture > Quiet) || DateTime.UtcNow - lastNewPicture > Quiet * 3)
             {
                 End("Ended");
@@ -195,8 +203,8 @@ public sealed partial class LiveWindowViewModel : ViewModelBase, IDisposable
     {
         var score = analysis.Score;
         LiveScore = source.Truth is null
-            ? string.Create(CultureInfo.InvariantCulture, $"{analysis.Pictures} pictures, tracks {score.TrackCount} (no truth) · {analysis.MeanMilliseconds:0.00} ms a picture")
-            : string.Create(CultureInfo.InvariantCulture, $"{score.Summary} · {analysis.Pictures} pictures · {analysis.MeanMilliseconds:0.00} ms a picture");
+            ? string.Create(CultureInfo.InvariantCulture, $"{analysis.Pictures} pictures, tracks {score.TrackCount} (no truth) · {analysis.MeanMilliseconds:0.00} ms a picture{BuildNote}")
+            : string.Create(CultureInfo.InvariantCulture, $"{score.Summary} · {analysis.Pictures} pictures · {analysis.MeanMilliseconds:0.00} ms a picture{BuildNote}");
     }
 
     private void End(string how)

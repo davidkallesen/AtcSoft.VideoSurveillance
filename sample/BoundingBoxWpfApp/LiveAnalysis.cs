@@ -35,7 +35,7 @@ public sealed class LiveAnalysis
             source.Detector.Settings.AnalysisWidth > 0 ? source.Detector.Settings.AnalysisWidth : MotionAnalysisSize.DefaultLongerSide,
             DisplayWidth,
             DisplayHeight);
-        detector = source.Detector.Create();
+        detector = source.Detector.Create(keepDiagnostics: false);
     }
 
     /// <summary>

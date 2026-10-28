@@ -189,6 +189,53 @@ public sealed class BoundingBoxSampleSmokeTests
     }
 
     [Fact]
+    public void The_Live_Clock_Plays_A_Recording_To_Its_End()
+    {
+        E2ESettings.SkipUnlessEnabled();
+        var folder = VideoEngineBootstrap.FindFFmpegPath();
+        var tool = folder is null ? null : Path.Combine(folder, "ffmpeg.exe");
+        Assert.SkipUnless(tool is not null && File.Exists(tool), "The FFmpeg command-line tool makes the recording and streams it.");
+
+        // A recording of a slow walker, made from the storybook: no truth, so the live clock plays it
+        // until its stream ends, not to a known last picture.
+        var scene = StorybookReader.ReadFile(Path.Combine(ScenesFolder, "s03-slow-walker.storybook.json"));
+        scene.Video.BitrateKbps = 2000;
+        var recording = Path.Combine(E2ESettings.NewFolder("bounding-box-live-recording-" + Guid.NewGuid().ToString("N")[..8]), "slow-walker.mkv");
+        StorybookEncoder.Encode(scene, tool, recording, TestContext.Current.CancellationToken);
+
+        using var run = new BoundingBoxSampleRun(["--recording", recording, "--rate", "4", "--live", "0"]);
+        var app = run.App;
+        var window = app.WaitForWindowTitled(BoundingBoxSampleRun.WindowTitle, DesktopApp.StartTimeout);
+        var live = app.WaitForWindowTitled("Live - ", AnalysisTimeout);
+
+        var boxed = false;
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(1);
+        string status;
+        while (true)
+        {
+            status = LiveElement(app, "LiveStatus")?.Name ?? string.Empty;
+            if (status.StartsWith("Ended", StringComparison.Ordinal) || DateTime.UtcNow > deadline)
+            {
+                break;
+            }
+
+            boxed |= LiveBoxes(app, "LiveDetectorBoxes").Count > 0;
+            DesktopApp.Settle(TimeSpan.FromMilliseconds(200));
+        }
+
+        status.Should().StartWith("Ended");
+        var endedAt = double.Parse(status.Split(' ')[2], CultureInfo.InvariantCulture);
+        endedAt.Should().BeGreaterThan(scene.Video.DurationSeconds - 1, "a recording plays until its stream ends");
+        boxed.Should().BeTrue("the walker is boxed in the overlay window");
+        (LiveElement(app, "LiveScore")?.Name ?? string.Empty).Should().Contain("(no truth)");
+
+        live.Close();
+        var closed = app.CloseApp(window);
+        LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
+        closed.Should().BeTrue("the sample closes with its window");
+    }
+
+    [Fact]
     public void A_Recording_Shows_The_Detectors_Boxes_And_Is_Reviewed()
     {
         E2ESettings.SkipUnlessEnabled();
