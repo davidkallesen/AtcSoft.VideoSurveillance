@@ -208,6 +208,7 @@ S11 is S5 at 400 kbps, where the noise is smeared into blotches. The shipped det
 | S12 | `s12-camera-clock` | No box for the camera clock |
 | S13 | `s13-coming-closer` | Someone walking up to the camera stays one track |
 | S14 | `s14-door-camera` | A door camera (lighting changes not ignored): a person close to the lens is found throughout, no ghost after |
+| S15 | `s15-strong-wind` | The trees of S2 in five times the wind, 40 s: after the first 15 s (not judged, the sway is learnt) no box, and a walker found within 1 s |
 
 S7 (rotation) is not a file: the fast path already sees the shown picture, so it is to be checked through the player, in the sample app's live clock (still open).
 
