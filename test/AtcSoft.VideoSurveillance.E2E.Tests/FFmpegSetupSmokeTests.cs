@@ -21,10 +21,7 @@ public sealed class FFmpegSetupSmokeTests(ServerFixture server)
         Window dialog,
         string name)
     {
-        dialog.SetForeground();
-        dialog.Move(0, 0);
-        DesktopApp.Settle(TimeSpan.FromSeconds(1));
-        FlaUI.Core.Capturing.Capture.MainScreen().ToFile(Path.Combine(E2ESettings.RunFolder, $"ffmpeg-setup-{name}.png"));
+        WindowPicture.Save(dialog, Path.Combine(E2ESettings.RunFolder, $"ffmpeg-setup-{name}.png"));
     }
 
     [Fact]
