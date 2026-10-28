@@ -231,6 +231,12 @@ Or open a file from the window. *Previous*, *Next*, *Play* and the slider move t
 | A storybook with a bitrate | Encoded once (kept in `{data}\videos`, named by the storybook's hash), then read back | FFmpeg; the set-up dialog offers it |
 | A recording | As *Analyse recording* reads it: the first 3 s only teach the scene, with its review's settings and zones or the defaults; no truth, so without a review the score only counts boxes | FFmpeg |
 
+The score panel also shows how long the detector took a picture (with its diagnostics; a Debug build is many times slower than the apps), and that time on each picture's line.
+
+**Debug layers** show what the detector saw (`BuiltInMotionDetector.KeepDiagnostics`, `MotionDiagnostics`): the foreground after the morphology in cyan, the ignore zones of a review in purple, and every blob it found with what became of it, in white when shown (`#3 2.1× held`: track 3 has travelled 2.1 times the travel that confirms it and is held out of the background's learning) and in grey when left out: *too small* (under the smallest object, before near blobs are merged), *too new* (seen for less than the confirm time) or *not travelled* (swaying on the spot). The line under the picture names the stage: learning the first picture, warming up, a change of light, settling after it, or analysed.
+
+**The tuning panel** holds the four settings of the apps and the inner options that are not settings (the confirm time and travel, the merge gap, how long a track may go unseen, the background's time, the settle after light). A change runs the detector again over the pictures kept (`StorybookRunner.Rerun`), within a second, on the picture shown; *The file's settings* goes back. *Save as storybook settings* writes the four settings into the storybook's `detector` section; the inner options are never saved. Saving into a scene of the suite asks first, as its baseline follows.
+
 The clock is deterministic: every picture is analysed before it is shown, so the same file always shows the same boxes. It does not play the video through the engine's player, which plays streams and cannot pause or seek a file. Its data and logs are in `%ProgramData%\AtcSoft\BoundingBoxSample` (or under `ATCSOFT_DATA_PATH`).
 
 Each box the overlay draws is shown to UI Automation, with the automation id `box-{trackId}` (`box-at-{place}` without a track) and the detector's box in video pixels as its help text. `BoundingBoxSampleSmokeTests` reads them; see [End-to-end smoke tests](e2e-smoke-tests.md).

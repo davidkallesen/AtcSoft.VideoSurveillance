@@ -67,6 +67,69 @@ public sealed class BoundingBoxSampleSmokeTests
     }
 
     [Fact]
+    public void The_Debug_Layers_Say_Why_And_The_Tuning_Runs_Again_At_Once()
+    {
+        E2ESettings.SkipUnlessEnabled();
+
+        // A copy of S5, so saving settings into it leaves the suite's scene alone.
+        const string sceneFile = "s05-car-human-cat.storybook.json";
+        var copy = Path.Combine(E2ESettings.NewFolder("tuning-" + Guid.NewGuid().ToString("N")[..8]), sceneFile);
+        File.Copy(Path.Combine(ScenesFolder, sceneFile), copy);
+        var scene = StorybookReader.ReadFile(copy);
+        var options = new StorybookRunOptions(AnalysesPerSecond: 4);
+        var expected = StorybookRunner.Run(scene, new BuiltInMotionDetector(scene.Detector.Settings()) { KeepDiagnostics = true }, options);
+        var coarse = new AtcSoft.VideoSurveillance.Models.Settings.MotionDetectionSettings { SmallestObjectPercent = 0.5 };
+        var tuned = StorybookRunner.Run(scene, new BuiltInMotionDetector(coarse), options);
+        tuned.Score.Recall.Should().BeLessThan(expected.Score.Recall, "a smallest object of 0.5 % loses the cat");
+
+        using var run = new BoundingBoxSampleRun(["--storybook", copy, "--rate", "4"]);
+        var app = run.App;
+        var window = app.WaitForWindowTitled(BoundingBoxSampleRun.WindowTitle, DesktopApp.StartTimeout);
+        WaitUntilReady(app, window);
+
+        // The time the detector took, beside the score and not in it.
+        Element(app, window, "DetectorTime").Name.Should().StartWith("Detector: ").And.Contain("ms a picture");
+        using (var json = JsonDocument.Parse(Element(app, window, "ScoreJson").Patterns.Value.Pattern.Value.Value))
+        {
+            json.RootElement.GetProperty("detectorMilliseconds").GetProperty("mean").GetDouble().Should().BePositive();
+        }
+
+        // The debug layers at a picture with all three boxed: the stage, the blobs and their labels.
+        var busy = expected.Frames.ToList().FindIndex(f => f.Detected.Count == 3);
+        GoTo(app, window, busy, expected.Frames.Count);
+        var diagnostics = expected.Frames[busy].Diagnostics!;
+        var shown = diagnostics.Candidates.Count(c => c.State == MotionCandidateState.Shown);
+        Element(app, window, "DebugInfo").Name.Should().StartWith("analysed").And.Contain($"{shown} shown");
+        var labels = CandidateLabels(app, window);
+        labels.Should().HaveCount(diagnostics.Candidates.Count);
+        labels.Should().Contain(l => l.EndsWith("held", StringComparison.Ordinal), "a track that has gone far is held out of the learning");
+        Element(app, window, "ShowCandidatesCheckBox").AsCheckBox().IsChecked = false;
+        WaitFor(app, () => CandidateLabels(app, window).Count == 0, "the blobs hidden");
+        Element(app, window, "ShowCandidatesCheckBox").AsCheckBox().IsChecked = true;
+        WindowPicture.Save(window, Path.Combine(run.DataFolder, "debug-layers.png"));
+
+        // The tuning: a coarser smallest object runs again over the pictures kept, as a run made here.
+        Element(app, window, "TuningInfo").Name.Should().Be("The file's own settings.");
+        Element(app, window, "SmallestObjectTextBox").AsTextBox().Text = "0.5";
+        WaitFor(app, () => Math.Abs(Score(app, window).Recall - tuned.Score.Recall) < 1e-9, "the run with a smallest object of 0.5 %");
+        Score(app, window).FalseBoxesPerFrame.Should().Be(tuned.Score.FalseBoxesPerFrame);
+        Element(app, window, "TuningInfo").Name.Should().StartWith("Tuned");
+        Element(app, window, "FrameInfo").Name.Should().Contain($"picture {busy + 1} of", "the picture shown stays");
+
+        // Saved into the storybook: only the detector section, and the file's settings are now the tuning.
+        Element(app, window, "SaveStorybookSettingsButton").AsButton().Invoke();
+        WaitFor(app, () => Element(app, window, "TuningInfo").Name.StartsWith("Saved", StringComparison.Ordinal), "the settings saved");
+        StorybookReader.ReadFile(copy).Detector.Settings().Should().BeEquivalentTo(coarse);
+        Element(app, window, "ResetTuningButton").AsButton().Invoke();
+        WaitFor(app, () => Element(app, window, "TuningInfo").Name == "The file's own settings.", "the file's settings, now the saved ones");
+        Element(app, window, "SmallestObjectTextBox").AsTextBox().Text.Should().Be("0.5");
+
+        var closed = app.CloseApp(window);
+        LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
+        closed.Should().BeTrue("the sample closes with its window");
+    }
+
+    [Fact]
     public void A_Recording_Shows_The_Detectors_Boxes_And_Is_Reviewed()
     {
         E2ESettings.SkipUnlessEnabled();
@@ -152,6 +215,24 @@ public sealed class BoundingBoxSampleSmokeTests
         var closed = app.CloseApp(window);
         LogFindings.AssertClean(run.LogFolder, "the bounding box sample");
         closed.Should().BeTrue("the sample closes with its window");
+    }
+
+    // The labels of the blobs drawn over the picture.
+    private static List<string> CandidateLabels(
+        DesktopApp app,
+        AutomationElement window)
+        => Element(app, window, "Candidates")
+            .FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))
+            .Select(t => t.Properties.Name.ValueOrDefault ?? string.Empty)
+            .ToList();
+
+    private static (double Recall, double FalseBoxesPerFrame) Score(
+        DesktopApp app,
+        AutomationElement window)
+    {
+        using var json = JsonDocument.Parse(Element(app, window, "ScoreJson").Patterns.Value.Pattern.Value.Value);
+        var score = json.RootElement.GetProperty("score");
+        return (score.GetProperty("recall").GetDouble(), score.GetProperty("falseBoxesPerFrame").GetDouble());
     }
 
     private static string Describe(PixelBox box)

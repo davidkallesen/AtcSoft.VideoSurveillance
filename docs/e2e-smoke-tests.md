@@ -46,7 +46,10 @@ Leave the mouse alone while the CameraWall walk runs: a few steps are real click
   the overlays show to UI Automation (`box-{trackId}`, the box in video pixels as help text) with that
   run, the detector's and the truth's. A second walk opens a recording made from S3 with the FFmpeg
   tool (skipped without it), marks the walker as a reviewed stretch, checks the score by the review and
-  saves it, then reads `{video}.review.json` back. A picture of the window is saved in its folder:
+  saves it, then reads `{video}.review.json` back. A third opens a copy of S5 and checks the debug
+  layers (the debug line and a label for every blob the detector found, as a run made in the test with
+  its diagnostics), sets the smallest object to 0.5 % in the tuning panel and waits for the score of
+  that run, saves the settings into the copy and reads them back. A picture of the window is saved in its folder:
   Windows draws the window alone (`WindowPicture`), so a picture never holds the rest of the desktop.
   A third walk sweeps the motion settings over two short scenes (`--sweep`, an empty `--corpus`) and
   checks the ranked report in the window and in `{data}\sweeps`.

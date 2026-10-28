@@ -4,19 +4,34 @@ namespace BoundingBoxWpfApp;
 /// The sample's window: a run's pictures one at a time, with the boxes the apps would show,
 /// the truth, and the score. The clock is deterministic: every picture was analysed by its time
 /// before it is shown, so stepping, playing or opening the same file again shows the same boxes.
-/// A recording can be reviewed: stretches marked with a verdict are saved beside it as
-/// <c>{video}.review.json</c> and score the run by count.
+/// The debug layers show what the detector saw (the foreground, every blob with what became of
+/// it, the ignore zones); the tuning panel runs the detector again over the pictures kept, at
+/// once, and can save the settings into the storybook. A recording can be reviewed: stretches
+/// marked with a verdict are saved beside it as <c>{video}.review.json</c> and score the run by
+/// count.
 /// </summary>
 [SuppressMessage("", "S2325:Make properties static", Justification = "XAML binding requires instance properties")]
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
+#if DEBUG
+    // Without the JIT's optimisations the vector steps are many times slower than in the apps.
+    private const string BuildNote = "; a Debug build, many times slower than the apps";
+#else
+    private const string BuildNote = "";
+#endif
+
     private readonly DispatcherTimer playTimer;
+    private readonly DispatcherTimer tuneTimer;
     private SampleRun? current;
     private string? openPath;
     private bool openIsStorybook;
     private bool settingRate;
+    private bool settingTuning;
+    private int runVersion;
+    private SampleDetector? fileDetector;
     private RecordingReview? review;
     private double? markFrom;
+    private byte[] composed = [];
 
     [ObservableProperty]
     private string title = "Bounding box sample";
@@ -26,6 +41,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private WriteableBitmap? picture;
+
+    [ObservableProperty]
+    private int analysisWidth = 800;
+
+    [ObservableProperty]
+    private int analysisHeight = 450;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnFrameIndexChanged))]
     private int frameIndex;
@@ -46,6 +67,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private IReadOnlyList<BoundingBox>? mustNotBoxes;
 
     [ObservableProperty]
+    private IReadOnlyList<CandidateView> candidates = [];
+
+    [ObservableProperty]
     private int videoWidth = 1280;
 
     [ObservableProperty]
@@ -55,6 +79,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private string scoreSummary = string.Empty;
 
     [ObservableProperty]
+    private string detectorTime = string.Empty;
+
+    [ObservableProperty]
     private string scoreJson = string.Empty;
 
     [ObservableProperty(AfterChangedCallback = nameof(OnAnalysesPerSecondChanged))]
@@ -62,6 +89,51 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool isPlaying;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnLayersChanged))]
+    private bool showForeground = true;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnLayersChanged))]
+    private bool showCandidates = true;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnLayersChanged))]
+    private bool showIgnored = true;
+
+    [ObservableProperty]
+    private string debugInfo = string.Empty;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private int sensitivity = 30;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double smallestObjectPercent = MotionDetectorOptions.DefaultSmallestObjectPercent;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private int stoppedObjectSeconds = MotionDetectorOptions.DefaultStoppedObjectSeconds;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private bool ignoreLightingChanges = true;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double confirmSeconds;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double minTravelPercent;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double mergeGapPercent;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double trackLostSeconds;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double backgroundSeconds;
+
+    [ObservableProperty(AfterChangedCallback = nameof(OnTuningChanged))]
+    private double lightingSettleSeconds;
+
+    [ObservableProperty]
+    private string tuningInfo = string.Empty;
 
     [ObservableProperty]
     private bool isReviewing;
@@ -85,6 +157,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         playTimer = new DispatcherTimer(DispatcherPriority.Normal);
         playTimer.Tick += OnPlayTick;
+
+        // A slider dragged or a number typed runs once it rests, not at every step.
+        tuneTimer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(250) };
+        tuneTimer.Tick += OnTuneTick;
+        SetTuning(SampleTuning.From(new MotionDetectionSettings()));
     }
 
     /// <summary>
@@ -103,7 +180,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<string> ReviewSpans { get; } = [];
 
     /// <summary>
-    /// Opens a storybook and runs it.
+    /// Opens a storybook and runs it with its own settings.
     /// </summary>
     /// <param name="path">The storybook file.</param>
     /// <param name="rate">How many pictures a second are analysed.</param>
@@ -114,11 +191,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         openPath = path;
         openIsStorybook = true;
         SetRateQuietly(rate);
-        return LoadAsync();
+        return LoadAsync(fromFile: true);
     }
 
     /// <summary>
-    /// Opens a recording and runs it.
+    /// Opens a recording and runs it as <i>Analyse recording</i> does.
     /// </summary>
     /// <param name="path">The recording.</param>
     /// <param name="rate">How many pictures a second are analysed.</param>
@@ -129,7 +206,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         openPath = path;
         openIsStorybook = false;
         SetRateQuietly(rate);
-        return LoadAsync();
+        return LoadAsync(fromFile: true);
     }
 
     [RelayCommand("OpenStorybook", CanExecute = nameof(CanOpen))]
@@ -167,6 +244,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         string? corpusFolder)
     {
         Stop();
+        runVersion++;
         IsBusy = true;
         CommandManager.InvalidateRequerySuggested();
         Status = "Sweeping…";
@@ -190,9 +268,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             await File.WriteAllTextAsync(path, report).ConfigureAwait(true);
 
             current = null;
+            fileDetector = null;
             IsReviewing = false;
             Title = "Bounding box sample - sweep";
             ScoreSummary = report.Split('\n').Skip(4).FirstOrDefault()?.Trim() ?? string.Empty;
+            DetectorTime = string.Empty;
             ScoreJson = report;
             Log.Information("Swept {Combinations} combinations over {Scenes} scenes and {Recordings} reviewed recordings: {Report}", ranked.Count, scenes.Length, corpus.Count, path);
             Status = "Ready";
@@ -277,6 +357,66 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private bool HasRun()
         => current is not null && !IsBusy;
 
+    [RelayCommand(CanExecute = nameof(CanTune))]
+    private void ResetTuning()
+    {
+        // Runs again through the change callbacks, as a change made by hand does; nothing runs when nothing changed.
+        SetTuningLoudly(SampleTuning.From(fileDetector!.Settings));
+        UpdateTuningInfo();
+    }
+
+    private bool CanTune()
+        => HasRun() && fileDetector is not null;
+
+    [RelayCommand(CanExecute = nameof(CanSaveStorybookSettings))]
+    private void SaveStorybookSettings()
+    {
+        var path = openPath!;
+        var tuning = CurrentTuning();
+        var settings = tuning.Settings(fileDetector!.Settings);
+
+        // A scene of the storybook suite: its baseline and its encoded video follow the file.
+        var inSuite = path.Contains("Storybook.Tests", StringComparison.OrdinalIgnoreCase);
+        if (inSuite && !Confirm($"{Path.GetFileName(path)} is a scene of the storybook suite: its baseline scores change on the next test run, and an encoded scene is encoded again. Save the settings into it?"))
+        {
+            return;
+        }
+
+        try
+        {
+            StorybookWriter.SaveDetector(path, settings);
+            fileDetector = fileDetector with { Settings = StorybookReader.ReadFile(path).Detector.Settings() };
+            var saved = SampleTuning.From(settings);
+            var inner = tuning with
+            {
+                Sensitivity = saved.Sensitivity,
+                SmallestObjectPercent = saved.SmallestObjectPercent,
+                StoppedObjectSeconds = saved.StoppedObjectSeconds,
+                IgnoreLightingChanges = saved.IgnoreLightingChanges,
+            };
+            var innerChanged = inner != saved;
+            TuningInfo = $"Saved the settings into {Path.GetFileName(path)}." + (innerChanged ? " The inner options are not settings and were not saved." : string.Empty);
+            Log.Information("Saved the detector settings {Settings} into {Path}", SweepSettings.From(settings), path);
+        }
+        catch (Exception ex) when (ex is StorybookException or IOException or UnauthorizedAccessException)
+        {
+            Log.Error(ex, "Saving the detector settings into {Path} failed", path);
+            TuningInfo = $"Not saved: {ex.Message}";
+        }
+    }
+
+    private bool CanSaveStorybookSettings()
+        => CanTune() && openIsStorybook;
+
+    private static bool Confirm(string message)
+    {
+        var dialog = new Atc.Wpf.Components.Dialogs.QuestionDialogBox(Application.Current.MainWindow!, "Save into the suite?", message)
+        {
+            Width = 460,
+        };
+        return dialog.ShowDialog() == true;
+    }
+
     [RelayCommand(CanExecute = nameof(CanReview))]
     private void MarkStart()
     {
@@ -351,7 +491,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             ? run.Run.Frames[Math.Clamp(FrameIndex, 0, run.Run.Frames.Count - 1)].Time
             : 0;
 
-    private async Task LoadAsync()
+    // Opens what is chosen: with the file's own settings (fromFile), or again with the tuning (a new rate).
+    private async Task LoadAsync(bool fromFile)
     {
         if (openPath is not { } path)
         {
@@ -359,6 +500,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
 
         Stop();
+        runVersion++;
         IsBusy = true;
         CommandManager.InvalidateRequerySuggested();
         Status = "Analysing…";
@@ -375,7 +517,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                     return;
                 }
 
-                run = await Task.Run(() => SampleRunner.RunStorybook(path, scene, rate, Path.Combine(App.DataFolder, "videos"))).ConfigureAwait(true);
+                var detector = Tuned(new SampleDetector(scene.Detector.Settings()), fromFile);
+                run = await Task.Run(() => SampleRunner.RunStorybook(path, scene, rate, Path.Combine(App.DataFolder, "videos"), detector)).ConfigureAwait(true);
+                review = null;
+                ReviewInfo = string.Empty;
             }
             else
             {
@@ -386,20 +531,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 }
 
                 var (found, note, isSaved) = await Task.Run(() => ReviewOf(path)).ConfigureAwait(true);
-                run = await Task.Run(() => SampleRunner.RunRecording(path, rate, isSaved ? found : null)).ConfigureAwait(true);
+                var detector = Tuned(SampleRunner.RecordingDetector(isSaved ? found : null), fromFile);
+                run = await Task.Run(() => SampleRunner.RunRecording(path, rate, detector)).ConfigureAwait(true);
                 review = found;
                 ReviewInfo = note;
             }
 
-            if (openIsStorybook)
-            {
-                review = null;
-                ReviewInfo = string.Empty;
-            }
-
             markFrom = null;
             IsReviewing = !openIsStorybook;
-            Show(run);
+            Show(run, keepFrame: false);
             RefreshReview();
             Log.Information("Opened {Name} ({Way}, {Rate}/s): {Score}", run.Name, run.Way, rate, run.Run.Score.Summary);
             Status = "Ready";
@@ -414,6 +554,115 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             IsBusy = false;
             CommandManager.InvalidateRequerySuggested();
         }
+    }
+
+    // The file's detector, kept to tune from; with the file's settings shown, or with the tuning on top.
+    private SampleDetector Tuned(
+        SampleDetector file,
+        bool fromFile)
+    {
+        fileDetector = file;
+        if (fromFile)
+        {
+            SetTuning(SampleTuning.From(file.Settings));
+        }
+
+        var tuning = CurrentTuning();
+        var settings = tuning.Settings(file.Settings);
+        return file with { Settings = settings, Options = tuning.Options(settings) };
+    }
+
+    // Runs the detector again over the pictures kept, with the tuning; a newer run or file wins.
+    private async Task RetuneAsync()
+    {
+        if (current is not { } run || fileDetector is not { } file || IsBusy)
+        {
+            return;
+        }
+
+        var version = ++runVersion;
+        var detector = Tuned(file, fromFile: false);
+        Status = "Retuning…";
+        var result = await Task.Run(() => SampleRunner.Rerun(run, detector)).ConfigureAwait(true);
+        if (version != runVersion)
+        {
+            return;
+        }
+
+        Show(result, keepFrame: true);
+        RefreshReview();
+        Log.Information("Retuned {Name} with {Settings} and {Options}: {Score}", result.Name, SweepSettings.From(detector.Settings), detector.Options, result.Run.Score.Summary);
+        Status = "Ready";
+    }
+
+    private SampleTuning CurrentTuning()
+        => new(
+            Sensitivity,
+            SmallestObjectPercent,
+            StoppedObjectSeconds,
+            IgnoreLightingChanges,
+            ConfirmSeconds,
+            MinTravelPercent,
+            MergeGapPercent,
+            TrackLostSeconds,
+            BackgroundSeconds,
+            LightingSettleSeconds);
+
+    // Shows a tuning without running again.
+    private void SetTuning(SampleTuning tuning)
+    {
+        settingTuning = true;
+        try
+        {
+            SetTuningLoudly(tuning);
+        }
+        finally
+        {
+            settingTuning = false;
+        }
+
+        UpdateTuningInfo();
+    }
+
+    private void SetTuningLoudly(SampleTuning tuning)
+    {
+        Sensitivity = tuning.Sensitivity;
+        SmallestObjectPercent = tuning.SmallestObjectPercent;
+        StoppedObjectSeconds = tuning.StoppedObjectSeconds;
+        IgnoreLightingChanges = tuning.IgnoreLightingChanges;
+        ConfirmSeconds = tuning.ConfirmSeconds;
+        MinTravelPercent = tuning.MinTravelPercent;
+        MergeGapPercent = tuning.MergeGapPercent;
+        TrackLostSeconds = tuning.TrackLostSeconds;
+        BackgroundSeconds = tuning.BackgroundSeconds;
+        LightingSettleSeconds = tuning.LightingSettleSeconds;
+    }
+
+    private void UpdateTuningInfo()
+        => TuningInfo = fileDetector is null
+            ? string.Empty
+            : CurrentTuning() == SampleTuning.From(fileDetector.Settings)
+                ? "The file's own settings."
+                : "Tuned: not the file's own settings.";
+
+    private void OnTuningChanged()
+    {
+        if (settingTuning)
+        {
+            return;
+        }
+
+        UpdateTuningInfo();
+        tuneTimer.Stop();
+        tuneTimer.Start();
+    }
+
+    private void OnTuneTick(
+        object? sender,
+        EventArgs e)
+    {
+        tuneTimer.Stop();
+        _ = RetuneAsync();
     }
 
     // The recording's review beside it (saved), or a new one (not saved); one of another file is not used.
@@ -481,25 +730,36 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return true;
     }
 
-    private void Show(SampleRun run)
+    private void Show(
+        SampleRun run,
+        bool keepFrame)
     {
         current = run;
         Title = $"Bounding box sample - {run.Name}";
         VideoWidth = run.Run.VideoWidth;
         VideoHeight = run.Run.VideoHeight;
-        Picture = new WriteableBitmap(run.Run.AnalysisWidth, run.Run.AnalysisHeight, 96, 96, PixelFormats.Gray8, palette: null);
+        if (Picture is not { } bitmap || bitmap.PixelWidth != run.Run.AnalysisWidth || bitmap.PixelHeight != run.Run.AnalysisHeight)
+        {
+            Picture = new WriteableBitmap(run.Run.AnalysisWidth, run.Run.AnalysisHeight, 96, 96, PixelFormats.Bgra32, palette: null);
+            composed = new byte[run.Run.AnalysisWidth * run.Run.AnalysisHeight * 4];
+        }
+
+        AnalysisWidth = run.Run.AnalysisWidth;
+        AnalysisHeight = run.Run.AnalysisHeight;
         ScoreJson = run.ScoreJson;
         ScoreSummary = run.HasTruth ? run.Run.Score.Summary : $"{run.Run.Frames.Count(f => f.Detected.Count > 0)} of {run.Run.Frames.Count} pictures with boxes (no truth)";
+        DetectorTime = string.Create(CultureInfo.InvariantCulture, $"Detector: {run.MeanMilliseconds:0.00} ms a picture on average, at most {run.MaxMilliseconds:0.00} ms ({run.Run.AnalysisWidth} × {run.Run.AnalysisHeight}, with the diagnostics{BuildNote})");
         LastFrameIndex = Math.Max(0, run.Run.Frames.Count - 1);
 
         // Always draw, also when the index does not change.
-        if (FrameIndex == 0)
+        var index = keepFrame ? Math.Min(FrameIndex, LastFrameIndex) : 0;
+        if (FrameIndex == index)
         {
             ShowFrame();
         }
         else
         {
-            FrameIndex = 0;
+            FrameIndex = index;
         }
 
         CommandManager.InvalidateRequerySuggested();
@@ -514,18 +774,42 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         var index = Math.Clamp(FrameIndex, 0, current.Run.Frames.Count - 1);
         var frame = current.Run.Frames[index];
+        var diagnostics = frame.Diagnostics;
         if (frame.Pixels is { } pixels)
         {
-            bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), pixels, bitmap.PixelWidth, 0);
+            DebugPicture.Compose(pixels, diagnostics, ShowForeground, ShowIgnored, bitmap.PixelWidth, bitmap.PixelHeight, composed);
+            bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), composed, bitmap.PixelWidth * 4, 0);
         }
 
         DetectedBoxes = frame.Detected.Select(d => ToBox(d.Box, d.TrackId)).ToList();
         TruthBoxes = frame.Truth.Where(t => !t.IsDistractor && t.State == TruthState.MustBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
         MustNotBoxes = frame.Truth.Where(t => t.State == TruthState.MustNotBox).Select(t => ToBox(t.Box, trackId: null)).ToList();
+        Candidates = ShowCandidates && diagnostics is not null ? [.. diagnostics.Candidates.Select(CandidateView.Of)] : [];
+        DebugInfo = diagnostics is null ? string.Empty : DescribeDiagnostics(diagnostics);
         var marked = review?.Spans.Where(s => s.From.TotalSeconds <= frame.Time && frame.Time < s.To.TotalSeconds).Select(s => s.Verdict + (s.Count is { } c ? $" x{c}" : string.Empty)).ToList() ?? [];
         FrameInfo = string.Create(
             CultureInfo.InvariantCulture,
-            $"{frame.Time:0.00} s · picture {index + 1} of {current.Run.Frames.Count} · {frame.Detected.Count} boxes · {TruthBoxes.Count} objects to box{(marked.Count > 0 ? " · marked: " + string.Join(", ", marked) : string.Empty)}");
+            $"{frame.Time:0.00} s · picture {index + 1} of {current.Run.Frames.Count} · {frame.Detected.Count} boxes · {TruthBoxes.Count} objects to box · {frame.DetectorMilliseconds:0.00} ms{(marked.Count > 0 ? " · marked: " + string.Join(", ", marked) : string.Empty)}");
+    }
+
+    // The detector's stage and its blobs by what became of them, e.g. "analysed · 2 shown, 1 too small".
+    private static string DescribeDiagnostics(MotionDiagnostics diagnostics)
+    {
+        var counts = diagnostics.Candidates
+            .GroupBy(c => c.State)
+            .OrderBy(g => g.Key)
+            .Select(g => $"{g.Count()} {Words(g.Key)}")
+            .ToList();
+        return CandidateView.Describe(diagnostics.Stage) + (counts.Count > 0 ? " · " + string.Join(", ", counts) : string.Empty);
+
+        static string Words(MotionCandidateState state)
+            => state switch
+            {
+                MotionCandidateState.TooSmall => "too small",
+                MotionCandidateState.TooNew => "too new",
+                MotionCandidateState.NotTravelled => "not travelled",
+                _ => "shown",
+            };
     }
 
     private static BoundingBox ToBox(
@@ -536,12 +820,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private void OnFrameIndexChanged()
         => ShowFrame();
 
+    private void OnLayersChanged()
+        => ShowFrame();
+
     private void OnAnalysesPerSecondChanged()
     {
-        // A rate chosen in the window runs the file again; one set while opening a file does not.
+        // A rate chosen in the window runs the file again with the tuning; one set while opening a file does not.
         if (!settingRate)
         {
-            _ = LoadAsync();
+            _ = LoadAsync(fromFile: false);
         }
     }
 
