@@ -28,7 +28,7 @@ public static class StorybookRunner
         options ??= new StorybookRunOptions();
         var renderer = new SceneRenderer(scene);
         var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
-        return Score(scene, detector, DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight), analysisWidth, analysisHeight, options.KeepPictures);
+        return Score(scene.Expect, scene.Video.Width, scene.Video.Height, detector, DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight), analysisWidth, analysisHeight, options.KeepPictures);
     }
 
     /// <summary>
@@ -71,7 +71,34 @@ public static class StorybookRunner
         ArgumentNullException.ThrowIfNull(detector);
         ArgumentNullException.ThrowIfNull(pictures);
 
-        return Score(scene, detector, pictures.Pictures, pictures.AnalysisWidth, pictures.AnalysisHeight, keepPictures: false);
+        return Score(scene.Expect, scene.Video.Width, scene.Video.Height, detector, pictures.Pictures, pictures.AnalysisWidth, pictures.AnalysisHeight, keepPictures: false);
+    }
+
+    /// <summary>
+    /// Runs a detector again over the pictures a run kept (<see cref="StorybookRunOptions.KeepPictures"/>),
+    /// with their truth: the same run as the first with the same detector, without drawing or
+    /// reading the video again. For trying other settings on what is open (the sample's tuning).
+    /// </summary>
+    /// <param name="run">A run that kept its pictures.</param>
+    /// <param name="expect">What the scene expects; a recording's is empty.</param>
+    /// <param name="detector">A fresh detector.</param>
+    /// <returns>The new run, keeping the pictures too.</returns>
+    public static StorybookRun Rerun(
+        StorybookRun run,
+        StorybookExpect expect,
+        IMotionDetector detector)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+        ArgumentNullException.ThrowIfNull(expect);
+        ArgumentNullException.ThrowIfNull(detector);
+
+        if (run.Frames.Any(f => f.Pixels is null))
+        {
+            throw new ArgumentException("The run did not keep its pictures.", nameof(run));
+        }
+
+        var pictures = run.Frames.Select(f => new AnalysisPicture(f.Time, f.Pixels!, f.Truth, f.IgnoreAll));
+        return Score(expect, run.VideoWidth, run.VideoHeight, detector, pictures, run.AnalysisWidth, run.AnalysisHeight, keepPictures: true);
     }
 
     /// <summary>
@@ -107,7 +134,7 @@ public static class StorybookRunner
                 var frame = truth[Math.Clamp((int)Math.Round(grey.Position.TotalSeconds * scene.Video.Fps), 0, truth.Count - 1)];
                 return new AnalysisPicture(frame.Time, grey.Pixels, frame.Truth, frame.IgnoreAll);
             });
-        return Score(scene, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
+        return Score(scene.Expect, scene.Video.Width, scene.Video.Height, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
     }
 
     /// <summary>
@@ -143,7 +170,7 @@ public static class StorybookRunner
         var pictures = reader
             .ReadFrames(options.AnalysesPerSecond, cancellationToken)
             .Select(grey => new AnalysisPicture(grey.Position.TotalSeconds, grey.Pixels, [], IgnoreAll: false));
-        return Score(scene, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
+        return Score(scene.Expect, scene.Video.Width, scene.Video.Height, detector, pictures, analysisWidth, analysisHeight, options.KeepPictures);
     }
 
     /// <summary>
@@ -218,7 +245,9 @@ public static class StorybookRunner
     }
 
     private static StorybookRun Score(
-        StorybookScene scene,
+        StorybookExpect expect,
+        int videoWidth,
+        int videoHeight,
         IMotionDetector detector,
         IEnumerable<AnalysisPicture> pictures,
         int analysisWidth,
@@ -227,11 +256,14 @@ public static class StorybookRunner
     {
         var frames = new List<ScoredFrame>();
         IReadOnlyList<BoundingBox> shown = [];
-        var scaleX = scene.Video.Width / (double)analysisWidth;
-        var scaleY = scene.Video.Height / (double)analysisHeight;
+        var scaleX = videoWidth / (double)analysisWidth;
+        var scaleY = videoHeight / (double)analysisHeight;
+        var diagnosed = detector as BuiltInMotionDetector;
         foreach (var picture in pictures)
         {
+            var started = Stopwatch.GetTimestamp();
             var result = detector.Process(new MotionFrame(picture.Pixels, analysisWidth, analysisHeight, Epoch.AddSeconds(picture.Time)));
+            var milliseconds = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
 
             shown = result.Change switch
             {
@@ -244,15 +276,22 @@ public static class StorybookRunner
                 .Select(b => new DetectedBox(new PixelBox(b.X * scaleX, b.Y * scaleY, b.Width * scaleX, b.Height * scaleY), b.TrackId))
                 .ToList();
 
-            frames.Add(new ScoredFrame(picture.Time, picture.Truth, picture.IgnoreAll, detected, keepPictures ? picture.Pixels : null));
+            frames.Add(new ScoredFrame(
+                picture.Time,
+                picture.Truth,
+                picture.IgnoreAll,
+                detected,
+                keepPictures ? picture.Pixels : null,
+                milliseconds,
+                diagnosed is { KeepDiagnostics: true } ? diagnosed.LastDiagnostics : null));
         }
 
-        return new StorybookRun(StorybookScorer.Score(frames, scene.Expect), frames)
+        return new StorybookRun(StorybookScorer.Score(frames, expect), frames)
         {
             AnalysisWidth = analysisWidth,
             AnalysisHeight = analysisHeight,
-            VideoWidth = scene.Video.Width,
-            VideoHeight = scene.Video.Height,
+            VideoWidth = videoWidth,
+            VideoHeight = videoHeight,
         };
     }
 

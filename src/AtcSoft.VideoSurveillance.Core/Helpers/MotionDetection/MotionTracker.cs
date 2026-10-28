@@ -19,13 +19,15 @@ internal sealed class MotionTracker
 
     /// <summary>
     /// Takes the blobs of a picture and gets the confirmed tracks seen in it, each with whether it
-    /// has travelled far enough to be an object for certain.
+    /// has travelled far enough to be an object for certain. With <paramref name="seen"/>, every
+    /// track seen in the picture is added to it with what became of it, for the diagnostics.
     /// </summary>
     public List<(Blob Box, int Id, bool Certain)> Update(
         List<Blob> blobs,
         double time,
         MotionDetectorOptions options,
-        int width)
+        int width,
+        List<(Blob Box, int Id, MotionCandidateState State, double Travel, bool Certain)>? seen = null)
     {
         var minTravel = options.MinTravelShare * width;
         var pairs = new List<(int Track, int Blob, double Score)>();
@@ -73,9 +75,21 @@ internal sealed class MotionTracker
                 track.Confirmed = true;
             }
 
-            if (track.Confirmed && Math.Abs(track.LastSeen - time) < 1e-9)
+            var isSeen = Math.Abs(track.LastSeen - time) < 1e-9;
+            var certain = track.Travel >= CertainTravel * minTravel;
+            if (track.Confirmed && isSeen)
             {
-                shown.Add((track.Box, track.Id, track.Travel >= CertainTravel * minTravel));
+                shown.Add((track.Box, track.Id, certain));
+            }
+
+            if (seen is not null && isSeen)
+            {
+                var state = track.Confirmed
+                    ? MotionCandidateState.Shown
+                    : time - track.FirstSeen < options.ConfirmSeconds
+                        ? MotionCandidateState.TooNew
+                        : MotionCandidateState.NotTravelled;
+                seen.Add((track.Box, track.Id, state, minTravel > 0 ? track.Travel / minTravel : 0, track.Confirmed && certain));
             }
         }
 

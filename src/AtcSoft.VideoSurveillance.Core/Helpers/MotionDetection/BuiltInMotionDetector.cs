@@ -33,6 +33,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     private double[] zoneSmallestShares = [];
     private DateTimeOffset? lastTime;
     private DateTimeOffset? settleUntil;
+    private bool settleIsWarmUp;
     private bool lastHadBoxes;
     private bool holding;
     private double lastShare;
@@ -63,6 +64,17 @@ public sealed class BuiltInMotionDetector : IMotionDetector
     /// </summary>
     public double WarmUpSeconds { get; init; }
 
+    /// <summary>
+    /// Gets whether each picture leaves what the detector saw in <see cref="LastDiagnostics"/>:
+    /// for a person tuning it (the bounding box sample). Off by default, and off it costs nothing.
+    /// </summary>
+    public bool KeepDiagnostics { get; init; }
+
+    /// <summary>
+    /// Gets what the detector saw in the last picture, when <see cref="KeepDiagnostics"/> is on.
+    /// </summary>
+    public MotionDiagnostics? LastDiagnostics { get; private set; }
+
     /// <inheritdoc />
     public MotionDetectorResult Process(MotionFrame frame)
     {
@@ -80,6 +92,8 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             tracker.Reset();
             holding = false;
             settleUntil = WarmUpSeconds > 0 ? frame.Time.AddSeconds(WarmUpSeconds) : null;
+            settleIsWarmUp = true;
+            Diagnose(MotionDiagnosticsStage.Learning, frame, mask: null, []);
             return Result(moving: false, frame.Time, 0, []);
         }
 
@@ -114,11 +128,14 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             }
 
             settleUntil = frame.Time.AddSeconds(options.LightingSettleSeconds);
+            settleIsWarmUp = false;
+            Diagnose(MotionDiagnosticsStage.LightingChange, frame, mask: null, []);
             return Result(moving: false, frame.Time, share * 100, []);
         }
 
         if (settleUntil is { } settle && frame.Time < settle)
         {
+            Diagnose(settleIsWarmUp ? MotionDiagnosticsStage.WarmUp : MotionDiagnosticsStage.Settling, frame, mask: null, []);
             return Result(moving: false, frame.Time, share * 100, []);
         }
 
@@ -126,13 +143,26 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         MaskOperations.Close(mask, frame.Width, frame.Height, radius: 3, buffers.Temp);
 
         var area = frame.Width * frame.Height;
-        var blobs = ConnectedComponents.Find(mask, frame.Width, frame.Height, buffers)
+        var found = ConnectedComponents.Find(mask, frame.Width, frame.Height, buffers);
+        var blobs = found
             .Where(b => b.Pixels >= SmallestShare(b, frame.Width, frame.Height) * area)
             .ToList();
+        var tooSmall = KeepDiagnostics ? found.Except(blobs).ToList() : null;
         blobs = ConnectedComponents.Merge(blobs, (int)Math.Ceiling(options.MergeGapShare * frame.Width));
 
         var time = (frame.Time - DateTimeOffset.UnixEpoch).TotalSeconds;
-        var tracks = tracker.Update(blobs, time, options, frame.Width);
+        var seen = KeepDiagnostics ? new List<(Blob Box, int Id, MotionCandidateState State, double Travel, bool Certain)>() : null;
+        var tracks = tracker.Update(blobs, time, options, frame.Width, seen);
+        if (seen is not null)
+        {
+            MotionCandidate[] candidates =
+            [
+                .. tooSmall!.Select(b => new MotionCandidate(ToBox(b), MotionCandidateState.TooSmall, TrackId: null, Travel: 0, Held: false)),
+                .. seen.Select(t => new MotionCandidate(ToBox(t.Box), t.State, t.Id, t.Travel, t.Certain)),
+            ];
+            Diagnose(MotionDiagnosticsStage.Analysed, frame, mask, candidates);
+        }
+
         Hold(tracks, frame.Width);
         var boxes = tracks
             .Select(t => new BoundingBox { X = t.Box.MinX, Y = t.Box.MinY, Width = t.Box.Width, Height = t.Box.Height, TrackId = t.Id, Zone = ZoneOf(t.Box, frame.Width, frame.Height) })
@@ -156,6 +186,7 @@ public sealed class BuiltInMotionDetector : IMotionDetector
         settleUntil = null;
         lastHadBoxes = false;
         lastShare = 0;
+        LastDiagnostics = null;
     }
 
     /// <inheritdoc />
@@ -234,6 +265,31 @@ public sealed class BuiltInMotionDetector : IMotionDetector
             }
         }
     }
+
+    // Keeps what the detector saw in this picture, when asked to: the mask packed to a bit a pixel.
+    private void Diagnose(
+        MotionDiagnosticsStage stage,
+        MotionFrame frame,
+        byte[]? mask,
+        IReadOnlyList<MotionCandidate> candidates)
+    {
+        if (!KeepDiagnostics)
+        {
+            return;
+        }
+
+        var pixels = frame.Width * frame.Height;
+        LastDiagnostics = new MotionDiagnostics(
+            stage,
+            frame.Width,
+            frame.Height,
+            mask is null ? new byte[(pixels + 7) / 8] : MotionDiagnostics.Pack(mask, pixels),
+            ignoredWidth == frame.Width && ignoredHeight == frame.Height ? ignored : null,
+            candidates);
+    }
+
+    private static BoundingBox ToBox(Blob blob)
+        => new() { X = blob.MinX, Y = blob.MinY, Width = blob.Width, Height = blob.Height };
 
     // The name of the watch zone a box's middle is in, or null.
     private string? ZoneOf(
