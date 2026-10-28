@@ -10,6 +10,24 @@ namespace AtcSoft.VideoSurveillance.Storybook.Scoring;
 public static class StorybookScorer
 {
     /// <summary>
+    /// Gets whether a score meets a scene's expectations: its recall, its false boxes per frame
+    /// and, where it gives them, its number of tracks and id switches.
+    /// </summary>
+    /// <param name="expect">The scene's expectations.</param>
+    /// <param name="score">The score.</param>
+    public static bool Meets(
+        StorybookExpect expect,
+        StorybookScore score)
+    {
+        ArgumentNullException.ThrowIfNull(expect);
+        ArgumentNullException.ThrowIfNull(score);
+
+        return score.Recall >= expect.MinRecall &&
+               score.FalseBoxesPerFrame <= expect.MaxFalseBoxesPerFrame &&
+               (expect.Tracks is not { } tracks || (score.TrackCount == tracks && score.Objects.All(o => o.IdSwitches <= expect.MaxIdSwitchesPerObject)));
+    }
+
+    /// <summary>
     /// Scores a run.
     /// </summary>
     /// <param name="frames">The analysed frames, in time order.</param>

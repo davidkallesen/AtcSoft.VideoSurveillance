@@ -32,7 +32,7 @@ public abstract class BuiltInDetectorExpectationTests(int analysesPerSecond)
 
         if (scene.Expect.KnownBad is { } knownBad)
         {
-            Meets(scene.Expect, score).Should().BeFalse($"{sceneFile} meets its expectations now: take off its knownBad mark");
+            StorybookScorer.Meets(scene.Expect, score).Should().BeFalse($"{sceneFile} meets its expectations now: take off its knownBad mark");
             Assert.Skip($"Known bad: {knownBad}");
         }
 
@@ -44,11 +44,4 @@ public abstract class BuiltInDetectorExpectationTests(int analysesPerSecond)
             score.Objects.Should().OnlyContain(o => o.IdSwitches <= scene.Expect.MaxIdSwitchesPerObject);
         }
     }
-
-    private static bool Meets(
-        StorybookExpect expect,
-        StorybookScore score)
-        => score.Recall >= expect.MinRecall &&
-           score.FalseBoxesPerFrame <= expect.MaxFalseBoxesPerFrame &&
-           (expect.Tracks is not { } tracks || (score.TrackCount == tracks && score.Objects.All(o => o.IdSwitches <= expect.MaxIdSwitchesPerObject)));
 }

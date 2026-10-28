@@ -13,6 +13,7 @@ public static class ReviewRunner
     /// <param name="videoPath">The recording.</param>
     /// <param name="review">Its review.</param>
     /// <param name="keepPictures">Whether each analysed picture is kept (for showing them).</param>
+    /// <param name="settings">Other motion settings to run with (a sweep); the review's when <see langword="null"/>.</param>
     /// <param name="cancellationToken">Stops the run.</param>
     /// <returns>The run and its score.</returns>
     /// <exception cref="InvalidDataException">The review is of another file (its SHA-256 differs).</exception>
@@ -20,6 +21,7 @@ public static class ReviewRunner
         string videoPath,
         RecordingReview review,
         bool keepPictures = false,
+        MotionDetectionSettings? settings = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(videoPath);
@@ -31,12 +33,13 @@ public static class ReviewRunner
             throw new InvalidDataException($"The review of {review.Recording.File} is of another file than {Path.GetFileName(videoPath)} (SHA-256 {sha256}).");
         }
 
-        var detector = new BuiltInMotionDetector(review.Detector.Settings, zones: [.. review.Detector.Zones])
+        settings ??= review.Detector.Settings;
+        var detector = new BuiltInMotionDetector(settings, zones: [.. review.Detector.Zones])
         {
             WarmUpSeconds = RecordingAnalysis.WarmUpSeconds,
         };
         var options = new StorybookRunOptions(
-            AnalysisWidth: review.Detector.Settings.AnalysisWidth > 0 ? review.Detector.Settings.AnalysisWidth : MotionAnalysisSize.DefaultLongerSide,
+            AnalysisWidth: settings.AnalysisWidth > 0 ? settings.AnalysisWidth : MotionAnalysisSize.DefaultLongerSide,
             AnalysesPerSecond: RecordingAnalysis.FramesPerSecond,
             KeepPictures: keepPictures);
         var run = StorybookRunner.RunRecording(videoPath, detector, options, cancellationToken);

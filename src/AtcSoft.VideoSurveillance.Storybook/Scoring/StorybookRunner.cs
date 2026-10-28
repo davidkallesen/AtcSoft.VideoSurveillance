@@ -32,6 +32,49 @@ public static class StorybookRunner
     }
 
     /// <summary>
+    /// Draws a scene's pictures on the fast path once, at the analysis size, to run several
+    /// detectors over (<see cref="RunDrawn"/>): a
+    /// sweep of settings draws each scene once.
+    /// </summary>
+    /// <param name="scene">The storybook.</param>
+    /// <param name="options">How the scene is fed to a detector.</param>
+    /// <returns>The pictures.</returns>
+    public static StorybookPictures Draw(
+        StorybookScene scene,
+        StorybookRunOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+
+        options ??= new StorybookRunOptions();
+        var renderer = new SceneRenderer(scene);
+        var (analysisWidth, analysisHeight) = AnalysisSize(scene, options);
+        return new StorybookPictures(
+            [.. DrawnPictures(scene, renderer, options.AnalysesPerSecond, analysisWidth, analysisHeight)],
+            analysisWidth,
+            analysisHeight);
+    }
+
+    /// <summary>
+    /// Runs a scene over pictures drawn before (<see cref="Draw"/>): the same run as on the fast
+    /// path, without drawing again.
+    /// </summary>
+    /// <param name="scene">The storybook the pictures were drawn from.</param>
+    /// <param name="detector">A fresh detector.</param>
+    /// <param name="pictures">The pictures.</param>
+    /// <returns>The score and the frames, without the pictures.</returns>
+    public static StorybookRun RunDrawn(
+        StorybookScene scene,
+        IMotionDetector detector,
+        StorybookPictures pictures)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(pictures);
+
+        return Score(scene, detector, pictures.Pictures, pictures.AnalysisWidth, pictures.AnalysisHeight, keepPictures: false);
+    }
+
+    /// <summary>
     /// Runs a scene on the encoded path: its video (see <see cref="Encoding.StorybookEncoder"/>) is
     /// read back as grey pictures at the analysis size, as the apps read a recording, and each
     /// picture is scored with the truth of the frame it came from. Needs the engine started.
@@ -214,7 +257,7 @@ public static class StorybookRunner
     }
 
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "A picture is handed on as it is.")]
-    private sealed record AnalysisPicture(
+    internal sealed record AnalysisPicture(
         double Time,
         byte[] Pixels,
         IReadOnlyList<TruthBox> Truth,
