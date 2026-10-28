@@ -107,7 +107,7 @@ Coordinates and sizes are fractions of the picture (0–1), as shown. A size may
 
 ### `detector`
 
-The settings the scene is meant for, where they differ from the defaults. Today only `ignoreLightingChanges` (S14, a door camera, sets it to `false`). Both the baseline and the expectation tests run the scene with them.
+The settings the scene is meant for, where they differ from the defaults: `sensitivity` (0 to 100), `smallestObjectPercent` (0 to 100), `stoppedObjectSeconds` (10 to 600) and `ignoreLightingChanges` (S14, a door camera, sets it to `false`). Both the baseline and the expectation tests run the scene with them. The sample's *Save as storybook settings* writes this section (`StorybookWriter`), only what differs from the defaults, and leaves the rest of the file as it is; saving into a scene of the suite changes its baseline.
 
 ### `expect`
 

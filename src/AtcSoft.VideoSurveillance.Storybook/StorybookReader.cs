@@ -151,6 +151,31 @@ public static class StorybookReader
                 yield return $"expect.spans[{i}].to: before from";
             }
         }
+
+        foreach (var error in ValidateDetector(scene.Detector))
+        {
+            yield return error;
+        }
+    }
+
+    // The same limits as the apps' settings dialogs.
+    private static IEnumerable<string> ValidateDetector(
+        StorybookDetector detector)
+    {
+        if (detector.Sensitivity is < 0 or > 100)
+        {
+            yield return "detector.sensitivity: 0 to 100";
+        }
+
+        if (detector.SmallestObjectPercent is { } smallest && (double.IsNaN(smallest) || smallest < 0 || smallest > MotionDetectorOptions.MaxSmallestObjectPercent))
+        {
+            yield return "detector.smallestObjectPercent: 0 to 100";
+        }
+
+        if (detector.StoppedObjectSeconds is < MotionDetectorOptions.MinStoppedObjectSeconds or > MotionDetectorOptions.MaxStoppedObjectSeconds)
+        {
+            yield return $"detector.stoppedObjectSeconds: {MotionDetectorOptions.MinStoppedObjectSeconds} to {MotionDetectorOptions.MaxStoppedObjectSeconds}";
+        }
     }
 
     private static IEnumerable<string> ValidateObject(
