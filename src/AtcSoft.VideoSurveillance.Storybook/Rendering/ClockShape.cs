@@ -2,7 +2,7 @@ namespace AtcSoft.VideoSurveillance.Storybook.Rendering;
 
 /// <summary>
 /// A camera's clock burnt into the picture: <c>HH:MM:SS</c> in seven-segment digits that change
-/// every second, from 12:00:00. It must never get a box.
+/// every second, from the clock's <c>startsAt</c> (12:00:00 unless set). It must never get a box.
 /// </summary>
 internal static class ClockShape
 {
@@ -23,7 +23,8 @@ internal static class ClockShape
 
         canvas.FillRect(left, top, boxW, boxH, (_, _) => 15);
 
-        var seconds = (12 * 3600) + (int)Math.Floor(time);
+        var start = TimeSpan.ParseExact(clock.StartsAt, @"hh\:mm\:ss", CultureInfo.InvariantCulture);
+        var seconds = (int)start.TotalSeconds + (int)Math.Floor(time);
         var text = string.Create(CultureInfo.InvariantCulture, $"{(seconds / 3600) % 24:00}:{(seconds / 60) % 60:00}:{seconds % 60:00}");
         var cellW = boxW / text.Length;
         var pad = cellW * 0.15;

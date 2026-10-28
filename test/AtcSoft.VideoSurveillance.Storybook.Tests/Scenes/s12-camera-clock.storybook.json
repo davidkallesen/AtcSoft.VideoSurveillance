@@ -14,7 +14,8 @@
       {
         "id": "clock",
         "kind": "clockOverlay",
-        "corner": "topRight"
+        "corner": "topRight",
+        "startsAt": "12:59:55"
       }
     ]
   },

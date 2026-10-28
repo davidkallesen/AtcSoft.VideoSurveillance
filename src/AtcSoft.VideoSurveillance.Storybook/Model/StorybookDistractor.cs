@@ -36,6 +36,11 @@ public sealed class StorybookDistractor
     public string Corner { get; set; } = "topRight";
 
     /// <summary>
+    /// Gets or sets the time of day a clock shows at the start of the scene, <c>HH:MM:SS</c>.
+    /// </summary>
+    public string StartsAt { get; set; } = "12:00:00";
+
+    /// <summary>
     /// Gets or sets when it happens, in seconds (a lighting step).
     /// </summary>
     public double AtSeconds { get; set; }

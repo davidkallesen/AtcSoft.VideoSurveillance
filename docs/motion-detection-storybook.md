@@ -91,7 +91,7 @@ Coordinates and sizes are fractions of the picture (0–1), as shown. A size may
 | Distractor `kind` | Fields |
 |---|---|
 | `swayingTree` | `at`, `size`, `amplitude`, `periodSeconds` |
-| `clockOverlay` | `corner` (`topRight` by default): a camera clock that ticks |
+| `clockOverlay` | `corner` (`topRight` by default), `startsAt` (`HH:MM:SS`, `12:00:00` by default): a camera clock that ticks |
 | `brightnessStep` | `atSeconds`, `delta`: the whole picture gets brighter or darker at once (lamp, IR switch) |
 | `rain`, `snow` | `count`: drops per frame (rain) or flakes in the scene (snow) |
 
@@ -205,7 +205,7 @@ S11 is S5 at 400 kbps, where the noise is smeared into blotches. The shipped det
 | S9 | `s09-stop-and-go` | A person stops and walks on with the same track |
 | S10 | `s10-rain`, `s10-snow` | No box for rain; snow near the lens is known bad |
 | S11 | `s11-low-bitrate` | S5 encoded at 400 kbps scores as S5 |
-| S12 | `s12-camera-clock` | No box for the camera clock |
+| S12 | `s12-camera-clock` | No box for the camera clock, also when every digit after the hour changes at once (12:59:59 to 13:00:00) |
 | S13 | `s13-coming-closer` | Someone walking up to the camera stays one track |
 | S14 | `s14-door-camera` | A door camera (lighting changes not ignored): a person close to the lens is found throughout, no ghost after |
 | S15 | `s15-strong-wind` | The trees of S2 in five times the wind, 40 s: after the first 15 s (not judged, the sway is learnt) no box, and a walker found within 1 s |

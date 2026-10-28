@@ -55,6 +55,16 @@ public sealed class StorybookReaderTests
     }
 
     [Fact]
+    public void A_Clock_Start_That_Is_No_Time_Is_Named()
+    {
+        const string json = """{ "version": 1, "name": "x", "background": { "distractors": [ { "id": "clock", "kind": "clockOverlay", "startsAt": "25:00" } ] } }""";
+
+        var read = () => StorybookReader.Read(json);
+
+        read.Should().Throw<StorybookException>().WithMessage("*distractors[0].startsAt*25:00*");
+    }
+
+    [Fact]
     public void A_Misspelt_Property_Is_Named()
     {
         const string json = """{ "version": 1, "name": "x", "vidoe": { } }""";

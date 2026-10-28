@@ -121,6 +121,11 @@ public static class StorybookReader
             {
                 yield return $"background.distractors[{i}].id: missing or not unique";
             }
+
+            if (!TimeSpan.TryParseExact(distractor.StartsAt, @"hh\:mm\:ss", CultureInfo.InvariantCulture, out _))
+            {
+                yield return $"background.distractors[{i}].startsAt: '{distractor.StartsAt}' is not HH:MM:SS";
+            }
         }
 
         for (var i = 0; i < scene.Expect.Spans.Count; i++)
